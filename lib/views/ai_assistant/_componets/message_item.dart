@@ -1,0 +1,236 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../common/constants.dart';
+import '../../../models/chat_competion/com_cc_resp.dart';
+import '../../../models/chat_competion/com_cc_state.dart';
+import 'voice_chat_bubble.dart';
+
+class MessageItem extends StatelessWidget {
+  final ChatMessage message;
+  // 2024-07-26 是否头像在顶部
+  // (默认头像在左右两侧，就像对话一样。如果在顶部，文本内容更宽一点)
+  final bool isAvatarTop;
+
+  const MessageItem({
+    super.key,
+    required this.message,
+    this.isAvatarTop = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // 根据是否是用户输入跳转文本内容布局
+    bool isFromUser = message.role == "user";
+
+    // 如果是用户输入，头像显示在右边
+    CrossAxisAlignment crossAlignment =
+        isFromUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+
+    // 所有的文字颜色，暂定用户蓝色AI黑色
+    Color textColor = isFromUser ? Colors.blue : Colors.black;
+
+    /// 这里暂时不考虑外边框的距离，使用时在外面加padding之类的
+    /// 如果头像在上方，那么头像和正文是两行放在一个column中
+    /// 否则，就是头像和正文放在一个row中
+    return isAvatarTop
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// 头像和时间戳
+              _buildAvatarAndTimestamp(context, isFromUser, textColor),
+
+              /// 消息内容
+              Column(
+                crossAxisAlignment: crossAlignment,
+                children: [
+                  // 消息正文
+                  _buildMessageContent(context, textColor),
+                  // 消息引用
+                  if (message.quotes != null && message.quotes!.isNotEmpty)
+                    ..._buildQuotes(context, message.quotes!),
+                ],
+              ),
+            ],
+          )
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// 头像，根据是否用户输入放在左边或右边
+              if (!isFromUser) _buildAvatar(isFromUser),
+              SizedBox(width: 3.sp),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: crossAlignment,
+                  children: [
+                    /// 时间戳
+                    _buildTimestamp(context, textColor),
+
+                    /// 消息正文
+                    _buildMessageContent(context, textColor),
+
+                    /// 消息引用
+                    if (message.quotes != null && message.quotes!.isNotEmpty)
+                      ..._buildQuotes(context, message.quotes!),
+                  ],
+                ),
+              ),
+              if (isFromUser) _buildAvatar(isFromUser),
+            ],
+          );
+  }
+
+  Widget _buildAvatarAndTimestamp(
+      BuildContext context, bool isFromUser, Color textColor) {
+    return SizedBox(
+      height: 40.sp,
+      child: Row(
+        // 来自用户，头像在右边；不是来自用户头像在左边。对齐方向同理
+        mainAxisAlignment:
+            isFromUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!isFromUser) _buildAvatar(isFromUser),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 3.sp),
+            child: Text(
+              DateFormat(constDatetimeFormat).format(message.dateTime),
+              style: TextStyle(fontSize: 12.sp, color: textColor),
+            ),
+          ),
+          if (isFromUser) _buildAvatar(isFromUser),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(bool isFromUser) {
+    return CircleAvatar(
+      radius: 18.sp,
+      backgroundColor: isFromUser ? Colors.lightBlue : Colors.grey,
+      child: Icon(isFromUser ? Icons.person : Icons.code),
+    );
+  }
+
+  Widget _buildTimestamp(BuildContext context, Color textColor) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 3.sp),
+      child: Text(
+        DateFormat(constDatetimeFormat).format(message.dateTime),
+        style: TextStyle(fontSize: 12.sp, color: textColor),
+      ),
+    );
+  }
+
+  Widget _buildMessageContent(BuildContext context, Color textColor) {
+    return Card(
+      elevation: 3,
+      child: Padding(
+        padding: EdgeInsets.all(5.sp),
+        child: (message.isPlaceholder == true)
+            // 如果是占位的消息，则显示装圈圈
+            ? Builder(
+                builder: (context) {
+                  // RichText 组件允许在文本中嵌入其他小部件，并应用文本缩放因子。
+                  // 因为richtext无法自动获取到缩放因子，所以需要手动获取全局的文本缩放因子
+                  return RichText(
+                    // 应用文本缩放因子
+                    textScaler: MediaQuery.of(context).textScaler,
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: message.content,
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                        // 设置一个固定宽度，以确保 CircularProgressIndicator 不会占用太多空间
+                        WidgetSpan(
+                          child: SizedBox(
+                            width: 15.sp,
+                            height: 15.sp,
+                            child: CircularProgressIndicator(strokeWidth: 2.sp),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              )
+            // Wrap(
+            //     children: [
+            //       Text(
+            //         message.content,
+            //         softWrap: true,
+            //         style: const TextStyle(color: Colors.black),
+            //       ),
+            //       SizedBox(
+            //         height: 20.sp,
+            //         width: 20.sp,
+            //         child: const CircularProgressIndicator(),
+            //       ),
+            //     ],
+            //   )
+            // 如果不是占位的消息，则正常显示
+            // : SingleChildScrollView(
+            //     child: MarkdownBody(
+            //       data: message.content,
+            //       selectable: true,
+            //       styleSheet: MarkdownStyleSheet(
+            //         p: TextStyle(color: textColor),
+            //       ),
+            //     ),
+            //   ),
+            : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    MarkdownBody(
+                      data: message.content,
+                      selectable: true,
+                      styleSheet: MarkdownStyleSheet(
+                        p: TextStyle(color: textColor),
+                      ),
+                    ),
+                    // Text(message.contentVoicePath ?? ''),
+                    if (message.contentVoicePath != null &&
+                        message.contentVoicePath!.trim() != "")
+                      VoiceWaveBubble(
+                        path: message.contentVoicePath!,
+                      ),
+                  ],
+                ),
+              ),
+      ),
+    );
+  }
+
+  List<Widget> _buildQuotes(BuildContext context, List<CCQuote> quotes) {
+    return List.generate(
+      quotes.length,
+      (index) => GestureDetector(
+        onTap: () =>
+            quotes[index].url != null ? _launchUrl(quotes[index].url!) : null,
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 5.sp),
+          child: Text(
+            '${index + 1}. ${quotes[index].title}',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: Theme.of(context).primaryColor,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchUrl(String url) async {
+    if (!await launchUrl(Uri.parse(url))) {
+      throw Exception('Could not launch $url');
+    }
+  }
+}

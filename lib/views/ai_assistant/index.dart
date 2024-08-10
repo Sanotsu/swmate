@@ -6,6 +6,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../common/components/tool_widget.dart';
 import '../../services/cus_get_storage.dart';
+import '_bak_stream_chat/index.dart';
+import 'ai_tools/chat_bot/index.dart';
 
 ///
 /// 规划一系列有AI加成的使用工具，这里是主入口
@@ -114,22 +116,28 @@ class _AIToolIndexState extends State<AIToolIndex> {
                   "你问我答",
                   icon: const Icon(Icons.chat_outlined),
                   color: Colors.blue[100],
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ChatBat(),
+                      ),
+                    );
+                  },
                 ),
-
-                // buildAIToolEntrance(
-                //   "语音输入",
-                //   icon: const Icon(Icons.newspaper),
-                //   color: Colors.blue[100],
-                //   onTap: () {
-                //     Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //         builder: (context) => const AudioSendScreen(),
-                //       ),
-                //     );
-                //   },
-                // ),
+                buildToolEntrance(
+                  "[测试页]",
+                  icon: const Icon(Icons.chat_outlined),
+                  color: Colors.blue[100],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ChatPage(),
+                      ),
+                    );
+                  },
+                ),
 
                 // buildAIToolEntrance(
                 //   "功能\n占位(TODO)",
