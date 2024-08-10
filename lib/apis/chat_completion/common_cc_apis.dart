@@ -290,7 +290,18 @@ Future<StreamWithCancel<ComCCResp>> lingyiwanwuCCRespWithCancel(
 }) async {
   model = model ?? CCM_SPEC_LIST.firstWhere((e) => e.ccm == CCM.YiSpark).model;
 
-  var body = ComCCReq(model: model, messages: messages, stream: stream);
+  var body = model == "yi-vision"
+      ? ComCCReq.yiVision(model: model, messages: messages, stream: stream)
+      : ComCCReq(model: model, messages: messages, stream: stream);
+
+  // var temp = body.toJson();
+
+  // Map<String, dynamic> tb = {
+  //   "model": "yi-vision",
+  //   "messages": "${temp['messages']}",
+  //   "stream": true,
+  //   "max_tokens": 1024
+  // };
 
   var header = {
     "Content-Type": "application/json",
@@ -301,7 +312,7 @@ Future<StreamWithCancel<ComCCResp>> lingyiwanwuCCRespWithCancel(
     platUrls[PlatUrl.lingyiwanwuCCUrl]!,
     header,
     body.toJson(),
+    // tb,
     stream: stream,
   );
 }
-// 

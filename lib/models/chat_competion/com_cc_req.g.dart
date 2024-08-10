@@ -11,19 +11,19 @@ ComCCReq _$ComCCReqFromJson(Map<String, dynamic> json) => ComCCReq(
       messages: (json['messages'] as List<dynamic>?)
           ?.map((e) => CCMessage.fromJson(e as Map<String, dynamic>))
           .toList(),
-      tools: (json['tools'] as List<dynamic>?)
-          ?.map((e) => CCTool.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      toolChoice: json['tool_choice'] as String?,
-      maxTokens: (json['max_tokens'] as num?)?.toInt(),
-      topP: (json['top_p'] as num?)?.toDouble(),
-      temperature: (json['temperature'] as num?)?.toDouble(),
+      maxTokens: (json['max_tokens'] as num?)?.toInt() ?? 5012,
+      topP: (json['top_p'] as num?)?.toDouble() ?? 0.7,
+      temperature: (json['temperature'] as num?)?.toDouble() ?? 0.7,
       stream: json['stream'] as bool? ?? false,
       n: (json['n'] as num?)?.toInt(),
       topK: (json['top_k'] as num?)?.toDouble(),
       frequencyPenalty: (json['frequency_penalty'] as num?)?.toDouble(),
       stop: (json['stop'] as List<dynamic>?)?.map((e) => e as String).toList(),
-    );
+    )
+      ..tools = (json['tools'] as List<dynamic>?)
+          ?.map((e) => CCTool.fromJson(e as Map<String, dynamic>))
+          .toList()
+      ..toolChoice = json['tool_choice'] as String?;
 
 Map<String, dynamic> _$ComCCReqToJson(ComCCReq instance) => <String, dynamic>{
       'model': instance.model,

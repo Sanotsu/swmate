@@ -124,3 +124,35 @@ final SAVE_MODEL_BATTLE_DIR =
 
 /// 智能群聊的对话语音文件目录
 final CHAT_AUDIO_DIR = Directory('/storage/emulated/0/AILightLife/chat_audio');
+
+// 可供翻译的目标语言
+enum TargetLanguage {
+  simplifiedChinese, // 中文(简体)
+  traditionalChinese, // 中文(繁体)
+  english, // 英语
+  japanese, // 日语
+  french, // 法语
+  russian, // 俄语
+  korean, // 韩语
+  spanish, // 西班牙语
+  portuguese, // 葡萄牙语
+  german, // 德语
+  vietnamese, // 越南语
+  arabic, // 阿拉伯语
+}
+
+// 语言标签
+Map<TargetLanguage, String> langLabel = {
+  TargetLanguage.simplifiedChinese: "中文(简体)",
+  TargetLanguage.traditionalChinese: "中文(繁体)",
+  TargetLanguage.english: "英语",
+  TargetLanguage.japanese: "日语",
+  TargetLanguage.french: "法语",
+  TargetLanguage.russian: "俄语",
+  TargetLanguage.korean: "韩语",
+  TargetLanguage.spanish: "西班牙语",
+  TargetLanguage.portuguese: "葡萄牙语",
+  TargetLanguage.german: "德语",
+  TargetLanguage.vietnamese: "越南语",
+  TargetLanguage.arabic: "阿拉伯语",
+};

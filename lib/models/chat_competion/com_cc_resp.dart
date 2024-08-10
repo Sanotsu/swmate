@@ -245,13 +245,13 @@ class CCMessage {
   //       }
   //     ]
   // 就不过多处理，直接拼成字符串传入
-  @JsonKey(name: 'tool_call_id')
-  String? toolCallId;
+  // @JsonKey(name: 'tool_call_id')
+  // String? toolCallId;
 
   CCMessage({
     required this.role,
     required this.content,
-    this.toolCallId,
+    // this.toolCallId,
   });
 
   // 从字符串转

@@ -60,17 +60,32 @@ class ComCCReq {
   ComCCReq({
     this.model,
     this.messages,
-    this.tools,
-    this.toolChoice,
-    this.maxTokens,
-    this.topP,
-    this.temperature,
+    // this.tools,
+    // this.toolChoice,
+    this.maxTokens = 5012,
+    this.topP = 0.7,
+    this.temperature = 0.7,
     this.stream = false,
     this.n,
     this.topK,
     this.frequencyPenalty,
     this.stop,
   });
+
+  // 命名构造函数
+  ComCCReq.yiVision({
+    this.model,
+    this.messages,
+    this.maxTokens = 5012,
+    this.stream = false,
+  })  : tools = null,
+        toolChoice = null,
+        topP = null,
+        temperature = null,
+        n = null,
+        topK = null,
+        frequencyPenalty = null,
+        stop = null;
 
   factory ComCCReq.fromJson(Map<String, dynamic> srcJson) =>
       _$ComCCReqFromJson(srcJson);

@@ -70,6 +70,14 @@ dependencies:
   image_gallery_saver: ^2.0.3
   logger: ^2.4.0
   proste_logger: ^1.0.0
+  docx_to_text: ^1.0.1
+  flutter_charset_detector: ^3.1.0
+  doc_text: ^0.0.1
+  syncfusion_flutter_pdf: ^26.2.8
+  html_unescape: ^2.0.0
+  markdown: ^7.2.2
+  pdf: ^3.11.1
+  htmltopdfwidgets: ^1.0.3
 
 dev_dependencies:
   flutter_test:
