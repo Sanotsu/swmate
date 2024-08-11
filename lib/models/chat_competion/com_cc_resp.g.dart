@@ -66,9 +66,6 @@ CCChoice _$CCChoiceFromJson(Map<String, dynamic> json) => CCChoice(
       json['delta'] == null
           ? null
           : CCDelta.fromJson(json['delta'] as Map<String, dynamic>),
-      (json['quote'] as List<dynamic>?)
-          ?.map((e) => CCQuote.fromJson(e as Map<String, dynamic>))
-          .toList(),
       json['finish_reason'] as String?,
     );
 
@@ -76,7 +73,6 @@ Map<String, dynamic> _$CCChoiceToJson(CCChoice instance) => <String, dynamic>{
       'index': instance.index,
       'message': instance.message?.toJson(),
       'delta': instance.delta?.toJson(),
-      'quote': instance.quote?.map((e) => e.toJson()).toList(),
       'finish_reason': instance.finishReason,
     };
 
@@ -93,9 +89,13 @@ Map<String, dynamic> _$CCMessageToJson(CCMessage instance) => <String, dynamic>{
 CCDelta _$CCDeltaFromJson(Map<String, dynamic> json) => CCDelta(
       json['role'] as String?,
       json['content'] as String?,
+      (json['quote'] as List<dynamic>?)
+          ?.map((e) => CCQuote.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$CCDeltaToJson(CCDelta instance) => <String, dynamic>{
       'role': instance.role,
       'content': instance.content,
+      'quote': instance.quote?.map((e) => e.toJson()).toList(),
     };

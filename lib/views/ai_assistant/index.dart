@@ -6,10 +6,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../common/components/tool_widget.dart';
 import '../../services/cus_get_storage.dart';
-import '_bak_stream_chat/index.dart';
 import 'ai_tools/chat_bot/index.dart';
 import 'ai_tools/multi_translator/index.dart';
 import 'ai_tools/photo_translation/index.dart';
+import 'ai_tools/test_page.dart';
 
 ///
 /// 规划一系列有AI加成的使用工具，这里是主入口
@@ -164,7 +164,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ChatPage(),
+                        builder: (context) => const TestPage(),
                       ),
                     );
                   },

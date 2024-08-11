@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../models/voice_recognition/xunfei_voice_dictation.dart';
@@ -33,6 +34,8 @@ Future<String> sendAudioToServer(String audioPath) async {
   final completer = Completer<String>();
 
   try {
+    EasyLoading.show(status: '【语音转文字中...】');
+
     await channel.ready;
   } catch (e) {
     print("channel.ready error: $e");
@@ -65,10 +68,14 @@ Future<String> sendAudioToServer(String audioPath) async {
       if (!completer.isCompleted) {
         completer.complete(transcription);
       }
+
+      EasyLoading.dismiss();
     },
     onError: (error) {
       print('WebSocket error: ${error.toString()}');
       completer.completeError(error);
+
+      EasyLoading.dismiss();
     },
   );
 

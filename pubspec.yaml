@@ -78,6 +78,8 @@ dependencies:
   markdown: ^7.2.2
   pdf: ^3.11.1
   htmltopdfwidgets: ^1.0.3
+  flutter_client_sse: ^2.0.1
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:

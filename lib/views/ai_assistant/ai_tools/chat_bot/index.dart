@@ -32,6 +32,8 @@ import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.
 ///     lib/views/ai_assistant/ai_tools/chat_bot/index.dart
 ///     lib/views/ai_assistant/ai_tools/aggregate_search/index.dart
 ///
+/// 2024-08-11 把http请求等待响应的加载圈放在拦截器里面，这里的对话列表中就不再需要占位的消息了
+///
 ///
 class ChatBat extends StatefulWidget {
   const ChatBat({super.key});
@@ -76,15 +78,6 @@ class _ChatBatState extends State<ChatBat> {
   // 最近对话需要的记录历史对话的变量
   List<ChatSession> chatHistory = [];
 
-  // 等待AI响应时的占位的消息，在构建真实对话的list时要删除
-  var placeholderMessage = ChatMessage(
-    messageId: "placeholderMessage",
-    dateTime: DateTime.now(),
-    role: "assistant",
-    content: "努力思考中，请耐心等待  ",
-    isPlaceholder: true,
-  );
-
   // 进入对话页面简单预设的一些问题
   List<String> defaultQuestions = chatQuestionSamples;
 
@@ -103,6 +96,20 @@ class _ChatBatState extends State<ChatBat> {
     _scrollController.dispose();
     _userInputController.dispose();
     super.dispose();
+  }
+
+  // 在用户输入或者AI响应后，需要把对话列表滚动到最下面
+  // 调用时放在状态改变函数中
+  chatListScrollToBottom() {
+    // 每收到一点新的响应文本，就都滚动到ListView的底部
+    // 注意：ai响应的消息卡片下方还有一行功能按钮，这里滚动了那个还没显示的话是看不到的
+    // 所以滚动到最大还加一点高度（大于实际功能按钮高度也没问题）
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent + 80,
+      curve: Curves.easeOut,
+      // 注意：sse的间隔比较短，这个滚动也要快一点
+      duration: const Duration(milliseconds: 50),
+    );
   }
 
   // 进入自行配置的对话页面，看看用户配置有没有生效
@@ -212,18 +219,7 @@ class _ChatBatState extends State<ChatBat> {
       _saveToDb();
 
       _userInputController.clear();
-      // 滚动到ListView的底部
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        curve: Curves.easeOut,
-        duration: const Duration(milliseconds: 300),
-      );
-
-      // 如果是用户发送了消息，则开始等到AI响应(如果不是用户提问，则不会去调用接口)
-      // 如果是用户输入时，在列表中添加一个占位的消息，以便思考时的装圈和已加载的消息可以放到同一个list进行滑动
-      // 一定注意要记得AI响应后要删除此占位的消息
-      placeholderMessage.dateTime = DateTime.now();
-      messages.add(placeholderMessage);
+      chatListScrollToBottom();
 
       _getCCResponse();
     });
@@ -264,9 +260,8 @@ class _ChatBatState extends State<ChatBat> {
   // 根据不同的平台、选中的不同模型，调用对应的接口，得到回复
   // 虽然返回的响应通用了，但不同的平台和模型实际取值还是没有抽出来的
   _getCCResponse() async {
-    // 将已有的消息处理成Ernie支出的消息列表格式(构建查询条件时要删除占位的消息)
+    // 将已有的消息处理成Ernie支出的消息列表格式
     List<CCMessage> msgs = messages
-        .where((e) => e.isPlaceholder != true)
         .map((e) => CCMessage(
               content: e.content,
               role: e.role,
@@ -279,6 +274,7 @@ class _ChatBatState extends State<ChatBat> {
     // 后续可手动终止响应时的写法
     StreamWithCancel<ComCCResp> temp;
     if (selectedPlatform == ApiPlatform.lingyiwanwu) {
+      // temp = await lingyiHTTP(msgs, model: model, stream: isStream);
       temp = await lingyiwanwuCCRespWithCancel(msgs,
           model: model, stream: isStream);
     } else {
@@ -291,10 +287,25 @@ class _ChatBatState extends State<ChatBat> {
       respStream = temp;
     });
 
-    // 在请求前创建当前响应的消息和文本内容，当前请求完之后，就重置为空
+    // 在得到响应后，就直接把响应的消息加入对话列表
+    // 又因为是流式的,所有需要在有更新的数据时,更新响应消息体
     // csMsg => currentStreamingMessage
     ChatMessage? csMsg;
     final StringBuffer messageBuffer = StringBuffer();
+    csMsg = ChatMessage(
+      messageId: const Uuid().v4(),
+      role: "assistant",
+      content: messageBuffer.toString(),
+      contentVoicePath: "",
+      dateTime: DateTime.now(),
+    );
+
+    setState(() {
+      // 有响应了才清空用户输入？？？可能不准确
+      _userInputController.clear();
+      messages.add(csMsg!);
+    });
+
     // 上面赋值了，这里应该可以监听到新的流了
     respStream?.stream.listen(
       (crb) {
@@ -304,75 +315,97 @@ class _ChatBatState extends State<ChatBat> {
           messages.removeWhere((e) => e.isPlaceholder == true);
         });
 
-        // 当前响应流处理完了，就不是AI响应中了
+        // 流式非流式两种都会触发，因为在请求的ondone时有补发一条[DONE]，所以直接在这里当作收到最后一条消息
+        // 为什么不在下面的ondone中处理？是因为可能这里的ondone触发了，消息的响应还在继续，那后续的数据就丢掉了
         if (crb.cusText == '[DONE]') {
+          print("DONEDONEDONE--${crb.cusText.length}");
+
           if (!mounted) return;
+          // 流式响应结束了，就保存数据到db，并重置流式变量和aip响应标志
           setState(() {
             _saveToDb();
-            _userInputController.clear();
-            // 滚动到ListView的底部
-            _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
-              curve: Curves.easeOut,
-              duration: const Duration(milliseconds: 300),
-            );
-
             csMsg = null;
             isBotThinking = false;
           });
         } else {
+          // isBotThinking = true;
+          // messageBuffer.write(crb.cusText);
+          // // 只有第一次响应时才创建消息体，后续接收的响应流数据只更新当前的
+          // if (csMsg == null) {
+          //   csMsg = ChatMessage(
+          //     messageId: const Uuid().v4(),
+          //     role: "assistant",
+          //     content: messageBuffer.toString(),
+          //     contentVoicePath: "",
+          //     dateTime: DateTime.now(),
+          //     promptTokens: crb.usage?.promptTokens ?? 0,
+          //     completionTokens: crb.usage?.completionTokens ?? 0,
+          //     totalTokens: crb.usage?.totalTokens ?? 0,
+          //   );
+
+          //   messages.add(csMsg!);
+          // } else {
+          //   csMsg!.content = messageBuffer.toString();
+          //   // csMsg!.content = crb.content ?? "";
+          //   // token的使用就是每条返回的就是当前使用的结果，所以最后一条就是最终结果，实时更新到最后一条
+          //   csMsg!.promptTokens = crb.usage?.promptTokens ?? 0;
+          //   csMsg!.completionTokens = crb.usage?.completionTokens ?? 0;
+          //   csMsg!.totalTokens = (crb.usage?.totalTokens ?? 0);
+
+          //   // chatListScrollToBottom();
+          //   _scrollController.animateTo(
+          //     _scrollController.position.maxScrollExtent + 80,
+          //     curve: Curves.easeOut,
+          //     // 注意：sse的间隔比较短，这个滚动也要快一点
+          //     duration: const Duration(milliseconds: 10),
+          //   );
+          // }
+
+          // 正常流式的响应，都逐步追加到对话消息体中
           setState(() {
             isBotThinking = true;
 
             messageBuffer.write(crb.cusText);
+            print(crb.usage?.promptTokens);
+            csMsg!.content = messageBuffer.toString();
+            // csMsg!.content += crb.cusText;
+            // csMsg!.content = crb.content ?? "";
 
-            // 只有第一次响应时才创建消息体，后续接收的响应流数据只更新当前的
-            if (csMsg == null) {
-              csMsg = ChatMessage(
-                messageId: const Uuid().v4(),
-                role: "assistant",
-                content: messageBuffer.toString(),
-                quotes: crb.choices?.first.quote,
-                contentVoicePath: "",
-                dateTime: DateTime.now(),
-                promptTokens: crb.usage?.promptTokens ?? 0,
-                completionTokens: crb.usage?.completionTokens ?? 0,
-                totalTokens: crb.usage?.totalTokens ?? 0,
-              );
+            // token的使用就是每条返回的就是当前使用的结果，所以最后一条就是最终结果，实时更新到最后一条
+            csMsg!.promptTokens = (crb.usage?.promptTokens ?? 0);
+            csMsg!.completionTokens = (crb.usage?.completionTokens ?? 0);
+            csMsg!.totalTokens = (crb.usage?.totalTokens ?? 0);
 
-              messages.add(csMsg!);
-            } else {
-              print(crb.usage?.promptTokens);
-              csMsg!.content = messageBuffer.toString();
-              // token的使用就是每条返回的就是当前使用的结果，所以最后一条就是最终结果，实时更新到最后一条
-              csMsg!.promptTokens = (crb.usage?.promptTokens ?? 0);
-              csMsg!.completionTokens = (crb.usage?.completionTokens ?? 0);
-              csMsg!.totalTokens = (crb.usage?.totalTokens ?? 0);
-
-              // 模型为rag时，当最后一条时，才会带上引用
-              if (crb.lastOne == true) {
-                csMsg!.quotes = crb.choices?.first.quote;
-              }
+            // 模型为rag时，当最后一条时，才会带上引用
+            if (crb.choices != null &&
+                crb.choices?.first != null &&
+                crb.choices?.first.delta != null &&
+                crb.choices!.first.delta?.quote != null) {
+              csMsg!.quotes = crb.choices!.first.delta!.quote!;
             }
+
+            // 每收到一点新的响应文本，就都滚动到ListView的底部
+            // 太耗费性能了???
+            chatListScrollToBottom();
           });
         }
       },
-      // 非流式的时候，只有一条数据，永远不会触发上面监听时的DONE的情况
+      // 两种都会触发，但非流式的时候，只有一条数据，永远不会触发上面监听时的DONE的情况
+      // ??? 有问题，上面还在继续响应，这里就触发了onDone，后面的数据处理不了了
       onDone: () {
-        if (!mounted) return;
-        setState(() {
-          _saveToDb();
-          _userInputController.clear();
-          // 滚动到ListView的底部
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            curve: Curves.easeOut,
-            duration: const Duration(milliseconds: 300),
-          );
+        print("http sse 监听的【onDone】触发了");
 
-          csMsg = null;
-          isBotThinking = false;
-        });
+        // if (!mounted) return;
+        // // 流式响应结束了，就保存数据到db，并重置流式变量和aip响应标志
+        // setState(() {
+        //   _saveToDb();
+        //   csMsg = null;
+        //   isBotThinking = false;
+        // });
+      },
+      // 取消sse时不会触发，但点击取消按钮时已经做了该做的工作，这里只是打印错误
+      onError: (error) {
+        print("http sse 监听的【error】触发了0000$error");
       },
     );
   }
@@ -433,11 +466,8 @@ class _ChatBatState extends State<ChatBat> {
   /// 2024-06-20 限量的要计算token数量，所以不让重新生成(？？？但实际也没做累加的token的逻辑)
   regenerateLatestQuestion() {
     setState(() {
-      // 将最后一条消息删除，并添加占位消息，重新发送
+      // 将最后一条消息删除，重新发送
       messages.removeLast();
-      placeholderMessage.dateTime = DateTime.now();
-      messages.add(placeholderMessage);
-
       _getCCResponse();
     });
   }
@@ -605,11 +635,7 @@ class _ChatBatState extends State<ChatBat> {
                   _saveToDb();
                   _userInputController.clear();
                   // 滚动到ListView的底部
-                  _scrollController.animateTo(
-                    _scrollController.position.maxScrollExtent,
-                    curve: Curves.easeOut,
-                    duration: const Duration(milliseconds: 300),
-                  );
+                  chatListScrollToBottom();
 
                   isBotThinking = false;
                 });

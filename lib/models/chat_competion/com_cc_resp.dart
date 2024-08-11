@@ -39,7 +39,7 @@ class ComCCResp {
   String? model;
   List<CCChoice>? choices;
   CCUsage? usage;
-  // 流式有，同步没有
+  // 流式有，同步没有(chioces中是每次输出的内容，content是叠加后的内容)
   String? content;
   @JsonKey(name: 'lastOne')
   bool? lastOne;
@@ -183,10 +183,6 @@ class CCChoice {
   @JsonKey(name: 'delta')
   CCDelta? delta;
 
-  // 如果使用RAG(检索增强生成)模型，会有引用的返回
-  @JsonKey(name: 'quote')
-  List<CCQuote>? quote;
-
   // 结束原因
   //  stop：表示模型返回了完整的输出。
   //  length：由于生成长度过长导致停止生成内容.
@@ -200,7 +196,6 @@ class CCChoice {
     this.index,
     this.message,
     this.delta,
-    this.quote,
     this.finishReason,
   );
 
@@ -278,9 +273,14 @@ class CCDelta {
   @JsonKey(name: 'content')
   String? content;
 
+  // 如果使用RAG(检索增强生成)模型，会有引用的返回
+  @JsonKey(name: 'quote')
+  List<CCQuote>? quote;
+
   CCDelta(
     this.role,
     this.content,
+    this.quote,
   );
 
   // 从字符串转
