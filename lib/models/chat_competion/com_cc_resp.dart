@@ -221,25 +221,25 @@ class CCMessage {
   @JsonKey(name: 'role')
   String role;
 
-  @JsonKey(name: 'content')
-  String content;
-
-  // 零一万物中“工具消息”时，还需要工具调用id
-  // 此时content结构类似:"content" : "{"location": "San Francisco", "temperature": "172", "unit": null}"
+  // 根据不同情况，content类型不一样[String,Array],Array中的结构体也不一样
+  // 调用工具函数时，此时content结构类似:
+  //  "content" : "{"location": "San Francisco", "temperature": "172", "unit": null}"
   // 同样还有图片理解时content结构也有变化
   //  "content": [
   //       {
   //         "type": "image_url",
-  //         "image_url": {
-  //           "url": "url地址或者base64字符串"
-  //         }
+  //         "image_url": { "url": "url地址或者base64字符串"}
   //       },
   //       {
   //         "type": "text",
   //         "text": "请详细描述一下这张图片。"
   //       }
   //     ]
-  // 就不过多处理，直接拼成字符串传入
+  // 【所以不能固定为String，vsion时就会报错】
+  @JsonKey(name: 'content')
+  dynamic content;
+
+  // 零一万物中“工具消息”时，还需要工具调用id
   // @JsonKey(name: 'tool_call_id')
   // String? toolCallId;
 

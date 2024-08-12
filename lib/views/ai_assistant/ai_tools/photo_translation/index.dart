@@ -1,11 +1,8 @@
 // ignore_for_file: avoid_print
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -17,7 +14,7 @@ import '../../../../common/llm_spec/cc_spec.dart';
 import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
 import '../../_chat_screen_parts/chat_list_area.dart';
-import '../../_componets/message_item.dart';
+import '../../_helper/handle_cc_response.dart';
 import '../../_helper/save_markdown_as_pdf.dart';
 import '../../_helper/save_markdown_as_txt.dart';
 import '../../_helper/save_markdown_html_as_pdf.dart';
@@ -44,20 +41,14 @@ class _PhotoTranslationState extends State<PhotoTranslation> {
   // AI是否在思考中(如果是，则不允许再次发送)
   bool isBotThinking = false;
 
+  // 是否流式响应(暂时时固定为true)
+  bool isStream = true;
+
 // 用于存储选中的图片文件
   File? _selectedImage;
 
   // 假设的对话数据
   List<ChatMessage> messages = [];
-
-  // 等待AI响应时的占位的消息，在构建真实对话的list时要删除
-  var placeholderMessage = ChatMessage(
-    messageId: "placeholderMessage",
-    role: "assistant",
-    content: "正在处理中，请稍候  ",
-    dateTime: DateTime.now(),
-    isPlaceholder: true,
-  );
 
   // 默认的要翻译成什么语言
   TargetLanguage targetLang = TargetLanguage.simplifiedChinese;
@@ -72,7 +63,27 @@ class _PhotoTranslationState extends State<PhotoTranslation> {
   String selectedDLOption = 'TXT';
 
   // 当前正在响应的api返回流(放在全局为了可以手动取消)
-  StreamWithCancel<ComCCResp>? respStream;
+  StreamWithCancel<ComCCResp> respStream = StreamWithCancel.empty();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // 在用户输入或者AI响应后，需要把对话列表滚动到最下面
+  // 调用时放在状态改变函数中
+  chatListScrollToBottom() {
+    // 每收到一点新的响应文本，就都滚动到ListView的底部
+    // 注意：ai响应的消息卡片下方还有一行功能按钮，这里滚动了那个还没显示的话是看不到的
+    // 所以滚动到最大还加一点高度（大于实际功能按钮高度也没问题）
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent + 80,
+      curve: Curves.easeOut,
+      // 注意：sse的间隔比较短，这个滚动也要快一点
+      duration: const Duration(milliseconds: 50),
+    );
+  }
 
   ///
   /// =======================================
@@ -114,161 +125,94 @@ class _PhotoTranslationState extends State<PhotoTranslation> {
       // 当然，要在占位消息之前
 
       // 滚动到ListView的底部
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        curve: Curves.easeOut,
-        duration: const Duration(milliseconds: 300),
-      );
-
-      // 如果是用户发送了消息，则开始等到AI响应(如果不是用户提问，则不会去调用接口)
-
-      // 如果是用户输入时，在列表中添加一个占位的消息，以便思考时的装圈和已加载的消息可以放到同一个list进行滑动
-      // 一定注意要记得AI响应后要删除此占位的消息
-      placeholderMessage.dateTime = DateTime.now();
-      messages.add(placeholderMessage);
+      chatListScrollToBottom();
 
       // 用户发送之后，等待AI响应
       _getVsionLLMResponse();
     });
   }
 
+  // 处理图像理解
   // 图像识别目前使用零一大模型的v-sion实现
   _getVsionLLMResponse() async {
-    // 将已有的消息处理成大模型的消息列表格式(构建查询条件时要删除占位的消息)
-    // 2024-07-17 在翻译功能时只有3个发送消息：
-    //  1 用户点了“翻译按钮”或者“重新翻译”，2 等待占位 3 AI大模型/模拟大模型报错返回数据
-    //    其中1和2不会同时存在，所以这个消息列表只有2条
-    List<CCMessage> msgs = messages
-        .where((e) => e.isPlaceholder != true)
-        .map((e) => CCMessage(
-              content: e.content,
-              role: e.role,
-            ))
-        .toList();
+    StreamWithCancel<ComCCResp> tempStream = await getCCResponseSWC(
+      messages: messages,
+      selectedPlatform: ApiPlatform.lingyiwanwu,
+      selectedModel:
+          CCM_SPEC_LIST.firstWhere((e) => e.ccm == CCM.YiVision).model,
+      isVision: true,
+      isStream: isStream,
+      selectedImage: _selectedImage,
+      onNotImageHint: (error) {
+        commonExceptionDialog(context, "异常提示", error);
+      },
+      onImageError: (error) {
+        commonExceptionDialog(context, "异常提示", error);
+      },
+    );
 
-    // 如果请求是没有图片，模拟模型返回异常信息(理论上能点击翻译按钮不会出现这个)
-    if (_selectedImage == null) {
-      setState(() {
-        isBotThinking = false;
-        messages.removeWhere((e) => e.isPlaceholder == true);
-        messages.add(ChatMessage(
-          messageId: const Uuid().v4(),
-          role: "assistant",
-          content: "图片数据异常",
-          dateTime: DateTime.now(),
-        ));
-      });
+    if (!mounted) return;
+    setState(() {
+      respStream = tempStream;
+    });
 
-      return;
-    }
+    // 在得到响应后，就直接把响应的消息加入对话列表
+    // 又因为是流式的,所有需要在有更新的数据时,更新响应消息体
+    // csMsg => currentStreamingMessage
+    ChatMessage? csMsg = buildEmptyAssistantChatMessage();
+    setState(() {
+      messages.add(csMsg!);
+    });
 
-    // 可能会出现不存在的图片路径，那边这里转base64就会报错，那么就弹窗提示一下
-    try {
-      var tempBase64Str = base64Encode((await _selectedImage!.readAsBytes()));
-      var imageBase64String = "data:image/jpeg;base64,$tempBase64Str";
-
-      // yi-vision 暂不支持设置系统消息。
-      msgs = messages
-          .where((e) => e.isPlaceholder != true)
-          .map((e) => CCMessage(
-                content: (e.role == "assistant")
-                    ? e.content
-                    // 2024-07-12 这里就不使用VisionContent，直接拼接json
-                    : jsonEncode([
-                        {
-                          "type": "image_url",
-                          "image_url": {"url": imageBase64String}
-                        },
-                        {"type": "text", "text": e.content},
-                      ]),
-                role: e.role,
-              ))
-          .toList();
-
-      // 在请求前创建当前响应的消息和文本内容，当前请求完之后，就重置为空
-      // csMsg => currentStreamingMessage
-      ChatMessage? csMsg;
-      final StringBuffer messageBuffer = StringBuffer();
-
-      StreamWithCancel<ComCCResp> tempStream =
-          await lingyiwanwuCCRespWithCancel(
-        msgs,
-        model: CCM_SPEC_LIST.firstWhere((e) => e.ccm == CCM.YiVision).model,
-        stream: true,
-      );
-
-      if (!mounted) return;
-      setState(() {
-        respStream = tempStream;
-      });
-
-      // 上面赋值了，这里应该可以监听到新的流了
-      respStream?.stream.listen(
-        (crb) {
-          // 得到回复后要删除表示加载中的占位消息
-          if (!mounted) return;
-          setState(() {
-            messages.removeWhere((e) => e.isPlaceholder == true);
-          });
-
-          // 当前响应流处理完了，就不是AI响应中了
-          if (crb.cusText == '[DONE]') {
+    handleCCResponseSWC(
+      swc: respStream,
+      onData: (crb) {
+        commonOnDataHandler(
+          crb: crb,
+          csMsg: csMsg!,
+          // 流式响应结束了，就保存数据到db，并重置流式变量和aip响应标志
+          onStreamDone: () {
             if (!mounted) return;
             setState(() {
               csMsg = null;
               isBotThinking = false;
             });
-          } else {
+          },
+          // 处理流的过程中都是响应中
+          // (如果不设置这个，就没办法促使SSE每有一个推送都及时更新页面了)
+          setIsResponsing: () {
             setState(() {
               isBotThinking = true;
-              messageBuffer.write(crb.cusText);
-              // 只有第一次响应时才创建消息体，后续接收的响应流数据只更新当前的
-              if (csMsg == null) {
-                csMsg = ChatMessage(
-                  messageId: const Uuid().v4(),
-                  role: "assistant",
-                  content: messageBuffer.toString(),
-                  contentVoicePath: "",
-                  dateTime: DateTime.now(),
-                  promptTokens: crb.usage?.promptTokens ?? 0,
-                  completionTokens: crb.usage?.completionTokens ?? 0,
-                  totalTokens: crb.usage?.totalTokens ?? 0,
-                );
-
-                messages.add(csMsg!);
-              } else {
-                csMsg!.content = messageBuffer.toString();
-                // token的使用就是每条返回的就是当前使用的结果，所以最后一条就是最终结果，实时更新到最后一条
-                csMsg!.promptTokens = crb.usage?.promptTokens ?? 0;
-                csMsg!.completionTokens = crb.usage?.completionTokens ?? 0;
-                csMsg!.totalTokens = (crb.usage?.totalTokens ?? 0);
-              }
             });
-          }
-        },
-        // 非流式的时候，只有一条数据，永远不会触发上面监听时的DONE的情况
-        onDone: () {
+          },
+          scrollToBottom: chatListScrollToBottom,
+        );
+      },
+      onDone: () {
+        print("文本对话 监听的【onDone】触发了");
+        // 如果是流式响应，最后一条会带有[DNOE]关键字，所以在上面处理最后响应结束的操作
+        // 非流式的时候，只有一条数据，永远不会触发上面ondata监听时得到DONE的情况
+        // 但是如果是流式，还在这里处理结束操作的话会出问题(实测在数据还在推送的时候，这个ondone就触发了)
+        if (!isStream) {
           if (!mounted) return;
+          // 流式响应结束了，就保存数据到db，并重置流式变量和aip响应标志
           setState(() {
             csMsg = null;
             isBotThinking = false;
           });
-        },
-      );
-    } catch (e) {
-      if (!mounted) return;
-      commonExceptionDialog(context, "异常提示", e.toString());
-    }
+        }
+      },
+      onError: (error) {
+        commonExceptionDialog(context, "异常提示", error.toString());
+      },
+    );
   }
 
   /// 如果对结果不满意，可以重新翻译
   regenerateLatestQuestion() {
     setState(() {
-      // 将最后一条消息删除，并添加占位消息，重新发送
+      // 将最后一条消息删除， 重新发送
       messages.removeLast();
-      placeholderMessage.dateTime = DateTime.now();
-      messages.add(placeholderMessage);
-
       _getVsionLLMResponse();
     });
   }
@@ -301,6 +245,7 @@ class _PhotoTranslationState extends State<PhotoTranslation> {
               messages: messages,
               scrollController: _scrollController,
               isBotThinking: isBotThinking,
+              isAvatarTop: true,
               regenerateLatestQuestion: regenerateLatestQuestion,
             ),
           ],
@@ -491,78 +436,6 @@ class _PhotoTranslationState extends State<PhotoTranslation> {
           ),
         ],
       ),
-    );
-  }
-
-  /// 构建对话主体内容
-  buildChatListArea() {
-    return ListView.builder(
-      controller: _scrollController,
-      itemCount: messages.length,
-      itemBuilder: (context, index) {
-        // 构建MessageItem
-        return Padding(
-          padding: EdgeInsets.all(5.sp),
-          child: Column(
-            children: [
-              MessageItem(message: messages[index]),
-              // 如果是大模型回复，可以有一些功能按钮
-              if (messages[index].role == "assistant")
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    // 最左边空一个图像的大小
-                    SizedBox(width: 39.sp), // 18*2+3
-                    // 其中，是大模型最后一条回复，则可以重新生成
-                    // 注意，还要排除占位消息
-                    if ((index == messages.length - 1) &&
-                        messages[index].isPlaceholder != true) ...[
-                      TextButton(
-                        onPressed: () {
-                          regenerateLatestQuestion();
-                        },
-                        child: const Text("重新翻译"),
-                      ),
-                      // 点击复制该条回复
-                      IconButton(
-                        onPressed: () {
-                          Clipboard.setData(
-                            ClipboardData(text: messages[index].content),
-                          );
-
-                          EasyLoading.showToast(
-                            "已复制到剪贴板",
-                            duration: const Duration(seconds: 3),
-                            toastPosition: EasyLoadingToastPosition.center,
-                          );
-                        },
-                        icon: Icon(Icons.copy, size: 20.sp),
-                      ),
-                      // 点击下载翻译结果
-                      buildDLPopupMenuButton(),
-
-                      // // 其他功能(占位)
-                      // IconButton(
-                      //   onPressed: null,
-                      //   icon: Icon(Icons.thumb_down_outlined, size: 20.sp),
-                      // ),
-                      SizedBox(width: 10.sp),
-                      // 如果不是等待响应才显示token数量
-                      Expanded(
-                        child: Text(
-                          "tokens 总计: ${messages[index].totalTokens}\n输入: ${messages[index].promptTokens} 输出: ${messages[index].completionTokens}",
-                          style: TextStyle(fontSize: 10.sp),
-                          maxLines: 2,
-                        ),
-                      ),
-                    ],
-                    SizedBox(width: 10.sp),
-                  ],
-                )
-            ],
-          ),
-        );
-      },
     );
   }
 

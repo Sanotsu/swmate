@@ -12,7 +12,6 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:logger/logger.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../../apis/chat_completion/common_cc_apis.dart';
 import '../../../../common/components/tool_widget.dart';
@@ -21,7 +20,9 @@ import '../../../../common/llm_spec/cc_spec.dart';
 import '../../../../common/utils/tools.dart';
 import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
+import '../../_chat_screen_parts/chat_list_area.dart';
 import '../../_helper/document_parser.dart';
+import '../../_helper/handle_cc_response.dart';
 
 ///
 /// 翻译助理
@@ -38,33 +39,38 @@ class MultiTranslator extends StatefulWidget {
 }
 
 class _MultiTranslatorState extends State<MultiTranslator> {
+  ///
+  /// 文件上传和解析、手动输入文本 相关变量
+  ///
+  // 是否在解析文件中
+  bool isLoadingDocument = false;
   // 上传的文件(方便显示文件相关信息)
   PlatformFile? _selectedFile;
   // 文档解析出来的内容
   String _fileContent = '';
-
-  // 是否在解析文件中
-  bool isLoadingDocument = false;
-
-  // 是否在翻译中
-  bool isTranslating = false;
-
-  // 当前正在响应的api返回流(放在全局为了可以手动取消)
-  StreamWithCancel<ComCCResp>? respStream;
 
   // 用户输入的文本控制器
   final _userInputController = TextEditingController();
   // 用户输入的内容（当不是AI在思考、且输入框有非空文字时才可以点击发送按钮）
   String userInput = "";
 
-  // 翻译的结果，存入这个CM方便取值，用其他多个变量来存AI文本结果、token消耗时一样的
-  var translateResult = ChatMessage(
-    messageId: "placeholderMessage",
-    role: "assistant",
-    content: "",
-    dateTime: DateTime.now(),
-    isPlaceholder: true,
-  );
+  ///
+  /// 请求状态和配置相关
+  ///
+  // 是否在翻译中
+  bool isBotThinking = false;
+
+  // 是否流式响应(暂时时固定为true)
+  bool isStream = true;
+
+  // 对话列表(翻译器只保存一个消息，就是请求响应的内容)
+  List<ChatMessage> messages = [];
+
+  // 对话列表滚动控制器
+  final ScrollController _scrollController = ScrollController();
+
+  // 当前正在响应的api返回流(放在全局为了可以手动取消)
+  StreamWithCancel<ComCCResp> respStream = StreamWithCancel.empty();
 
   // AI充当的角色
   String systemPrompt = """您是一位精通世界上任何语言的翻译专家。将对用户输入的文本进行精准翻译。只做翻译工作，无其他行为。
@@ -79,10 +85,32 @@ class _MultiTranslatorState extends State<MultiTranslator> {
 
   var l = Logger();
 
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _userInputController.dispose();
+    super.dispose();
+  }
+
+  // 在用户输入或者AI响应后，需要把对话列表滚动到最下面
+  // 调用时放在状态改变函数中
+  chatListScrollToBottom() {
+    // 每收到一点新的响应文本，就都滚动到ListView的底部
+    // 注意：ai响应的消息卡片下方还有一行功能按钮，这里滚动了那个还没显示的话是看不到的
+    // 所以滚动到最大还加一点高度（大于实际功能按钮高度也没问题）
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent + 80,
+      curve: Curves.easeOut,
+      // 注意：sse的间隔比较短，这个滚动也要快一点
+      duration: const Duration(milliseconds: 50),
+    );
+  }
+
   ///
   /// ===================
   ///
 
+  /// 选择文件，并解析出文本内容
   Future<void> _pickAndReadFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -150,10 +178,12 @@ class _MultiTranslatorState extends State<MultiTranslator> {
   /// 这个按钮只有用户点击，每次点击效果是一样的
   ///
   getTanslatorResult() async {
-    if (isTranslating) return;
+    if (isBotThinking) return;
 
+    // 整个内容就只有翻译结果，所以每次点击翻译，都要从对话列表中清除之前的对话内容
     setState(() {
-      isTranslating = true;
+      isBotThinking = true;
+      messages.clear();
     });
 
     // 用户输入的内容不会自动清除
@@ -195,10 +225,6 @@ class _MultiTranslatorState extends State<MultiTranslator> {
       ),
     ];
 
-    // 在请求前创建当前响应的消息和文本内容，当前请求完之后，就重置为空
-    ChatMessage? currentStreamingMessage;
-    final StringBuffer messageBuffer = StringBuffer();
-
     // 后续可手动终止响应时的写法
     StreamWithCancel<ComCCResp> tempStream = await siliconFlowCCRespWithCancel(
       msgs,
@@ -212,56 +238,51 @@ class _MultiTranslatorState extends State<MultiTranslator> {
     setState(() {
       respStream = tempStream;
     });
-    // 上面赋值了，这里应该可以监听到新的流了
-    respStream?.stream.listen(
-      (crb) {
-        // 当前响应流处理完了，就不是AI响应中了
-        if (crb.cusText == '[DONE]') {
-          if (!mounted) return;
-          setState(() {
-            _userInputController.clear();
-            currentStreamingMessage = null;
-            isTranslating = false;
-          });
-        } else {
-          setState(() {
-            isTranslating = true;
-            messageBuffer.write(crb.cusText);
-            // 只有第一次响应时才创建消息体，后续接收的响应流数据只更新当前的
-            if (currentStreamingMessage == null) {
-              currentStreamingMessage = ChatMessage(
-                messageId: const Uuid().v4(),
-                role: "assistant",
-                content: messageBuffer.toString(),
-                contentVoicePath: "",
-                dateTime: DateTime.now(),
-                promptTokens: crb.usage?.promptTokens ?? 0,
-                completionTokens: crb.usage?.completionTokens ?? 0,
-                totalTokens: crb.usage?.totalTokens ?? 0,
-              );
 
-              translateResult = currentStreamingMessage!;
-            } else {
-              currentStreamingMessage!.content = messageBuffer.toString();
-              // token的使用就是每条返回的就是当前使用的结果，所以最后一条就是最终结果，实时更新到最后一条
-              currentStreamingMessage!.promptTokens =
-                  crb.usage?.promptTokens ?? 0;
-              currentStreamingMessage!.completionTokens =
-                  crb.usage?.completionTokens ?? 0;
-              currentStreamingMessage!.totalTokens =
-                  (crb.usage?.totalTokens ?? 0);
-            }
-          });
-        }
+    // 将响应结果加入对话列表(SSE有新消息就会更新)
+    ChatMessage? csMsg = buildEmptyAssistantChatMessage();
+    setState(() {
+      messages.add(csMsg!);
+    });
+
+    handleCCResponseSWC(
+      swc: respStream,
+      onData: (crb) {
+        commonOnDataHandler(
+          crb: crb,
+          csMsg: csMsg!,
+          // 流式响应结束了，就保存数据到db，并重置流式变量和aip响应标志
+          onStreamDone: () {
+            if (!mounted) return;
+            setState(() {
+              _userInputController.clear();
+              csMsg = null;
+              isBotThinking = false;
+            });
+          },
+          // 处理流的过程中都是响应中
+          // (如果不设置这个，就没办法促使SSE每有一个推送都及时更新页面了)
+          setIsResponsing: () {
+            setState(() {
+              isBotThinking = true;
+            });
+          },
+          scrollToBottom: chatListScrollToBottom,
+        );
       },
       // 非流式的时候，只有一条数据，永远不会触发上面监听时的DONE的情况
       onDone: () {
-        if (!mounted) return;
-        setState(() {
-          _userInputController.clear();
-          currentStreamingMessage = null;
-          isTranslating = false;
-        });
+        if (!isStream) {
+          if (!mounted) return;
+          setState(() {
+            _userInputController.clear();
+            csMsg = null;
+            isBotThinking = false;
+          });
+        }
+      },
+      onError: (error) {
+        commonExceptionDialog(context, "异常提示", error.toString());
       },
     );
   }
@@ -290,10 +311,13 @@ class _MultiTranslatorState extends State<MultiTranslator> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           buildLoadedFile(),
-          Expanded(child: buildUserSendArea()),
+          // Expanded(child: buildUserSendArea()),
+          SizedBox(height: 0.3.sh, child: buildUserSendArea()),
           SizedBox(height: 10.sp),
           buildChangeLangAndConfirmRow(),
           SizedBox(height: 10.sp),
+
+          /// 显示对话消息主体
           isLoadingDocument
               ? const Expanded(
                   child: Column(
@@ -305,7 +329,15 @@ class _MultiTranslatorState extends State<MultiTranslator> {
                     ],
                   ),
                 )
-              : buildReadSummaryChatArea(),
+              : ChatListArea(
+                  messages: messages,
+                  scrollController: _scrollController,
+                  isBotThinking: isBotThinking,
+                  isAvatarTop: true,
+                  regenerateLatestQuestion: getTanslatorResult,
+                ),
+
+          SizedBox(height: 10.sp),
         ],
       ),
     );
@@ -488,7 +520,7 @@ class _MultiTranslatorState extends State<MultiTranslator> {
                             ))
                         .toList(),
                     // 如果在翻译中则不允许切换目标语言
-                    onChanged: isTranslating
+                    onChanged: isBotThinking
                         ? null
                         : (val) {
                             setState(() {
@@ -519,7 +551,7 @@ class _MultiTranslatorState extends State<MultiTranslator> {
                   ),
                   // 用户输入为空同时上传文档内容为空，或者已经在翻译中了，则不允许再点击翻译按钮
                   onPressed: (userInput.isEmpty && _fileContent.isEmpty) ||
-                          isTranslating
+                          isBotThinking
                       ? null
                       : () {
                           // 在当前上下文中查找最近的 FocusScope 并使其失去焦点，从而收起键盘。
@@ -529,7 +561,7 @@ class _MultiTranslatorState extends State<MultiTranslator> {
                           getTanslatorResult();
                         },
                   child: Text(
-                    isTranslating ? "翻译中..." : "AI翻译",
+                    isBotThinking ? "翻译中..." : "AI翻译",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -550,7 +582,7 @@ class _MultiTranslatorState extends State<MultiTranslator> {
           child: Column(
             children: [
               MarkdownBody(
-                data: translateResult.content,
+                data: messages.isNotEmpty ? messages.first.content : '',
                 selectable: true,
                 // 设置Markdown文本全局样式
                 styleSheet: MarkdownStyleSheet(

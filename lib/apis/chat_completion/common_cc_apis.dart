@@ -7,7 +7,6 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:proste_logger/proste_logger.dart';
 
-import '../../common/utils/tools.dart';
 import '../../models/chat_competion/com_cc_req.dart';
 import '../../models/chat_competion/com_cc_resp.dart';
 import '../../common/llm_spec/cc_spec.dart';
@@ -38,6 +37,10 @@ const Map<PlatUrl, String> platUrls = {
   PlatUrl.lingyiwanwuCCUrl: "https://api.lingyiwanwu.com/v1/chat/completions",
 };
 
+///
+/// dio 中处理SSE的解析器
+/// 来源: https://github.com/cfug/dio/issues/1279#issuecomment-1326121953
+///
 class SseTransformer extends StreamTransformerBase<String, SseMessage> {
   const SseTransformer();
   @override
@@ -75,8 +78,9 @@ class SseEventSink implements EventSink<String> {
       return;
     }
     if (event.isEmpty) {
-      _eventSink
-          .add(SseMessage(id: _id, event: _event, data: _data, retry: _retry));
+      _eventSink.add(
+        SseMessage(id: _id, event: _event, data: _data, retry: _retry),
+      );
       _id = null;
       _event = "message";
       _data = "";
@@ -117,12 +121,16 @@ class StreamWithCancel<T> {
   final Future<void> Function() cancel;
 
   StreamWithCancel(this.stream, this.cancel);
+
+  static StreamWithCancel<T> empty<T>() {
+    return StreamWithCancel<T>(const Stream.empty(), () async {});
+  }
 }
 
 var lineRegex = RegExp(r'^([^:]*)(?::)?(?: )?(.*)?$');
 
 /// 获取流式和非流式的对话响应数据
-Future<StreamWithCancel<ComCCResp>> getCCResponseOld(
+Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
   String url,
   Map<String, dynamic> headers,
   Map<String, dynamic> data, {
@@ -155,163 +163,8 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseOld(
           },
         );
 
-        // respData.stream
-        //     .transform(unit8Transformer)
-        //     .transform(const Utf8Decoder())
-        //     .transform(const LineSplitter())
-        //     .listen((event) {
-        //   print(event);
-        // });
-
         final subscription = respData.stream
             // 创建一个自定义的 StreamTransformer 来处理 Uint8List 到 String 的转换。
-            // .transform(
-            //   StreamTransformer<Uint8List, String>.fromHandlers(
-            //     handleData: (data, sink) {
-            //       final decodedData = utf8.decoder.convert(data);
-            //       sink.add(decodedData);
-            //     },
-            //   ),
-            // )
-            .transform(unit8Transformer)
-            .transform(const Utf8Decoder())
-            // 将输入的 Stream<String> 按照行（即换行符 \n 或 \r\n）进行分割，并将每一行作为一个单独的事件发送到输出流中。
-            .transform(const LineSplitter())
-            // 处理每一行数据
-            .listen((dataLine) async {
-          // 如果包含DONE，是正常获取AI接口的结束
-          if ((dataLine).contains('[DONE]')) {
-            if (!streamController.isClosed) {
-              streamController.add(ComCCResp(cusText: '[DONE]'));
-              streamController.close();
-            }
-          } else {
-            // 其他的是正常流式数据，用正则还获取
-            Match match = lineRegex.firstMatch(dataLine)!;
-            var field = match.group(1);
-            if (field!.isEmpty) {
-              return;
-            }
-
-            // 如果栏位是data，正常解析它的数据，转为对于的类，传到下一步
-            if (field == 'data') {
-              var value = dataLine.substring(5);
-              if (isJsonString(value)) {
-                final jsonData = json.decode(value);
-                final commonRespBody = ComCCResp.fromJson(jsonData);
-                if (!streamController.isClosed) {
-                  streamController.add(commonRespBody);
-                }
-              } else {
-                l.d("SSE行数据不是json格式，元数据为:\n$dataLine");
-              }
-            } else {
-              // 这里value可能就是 event、id、retry、error等，暂时不处理
-              var value = match.group(2) ?? '';
-              print(value);
-            }
-          }
-        }, onDone: () {
-          // 流处理完手动补一个结束子串
-          if (!streamController.isClosed) {
-            streamController.add(ComCCResp(cusText: '[DONE]-onDone'));
-            streamController.close();
-          }
-        }, onError: (error) {
-          if (!streamController.isClosed) {
-            streamController.addError(error);
-            streamController.close();
-          }
-        });
-
-        Future<void> cancel() async {
-          print("执行了取消-----");
-          // ？？？占位用的，先发送最后一个手动终止的信息，再实际取消(手动的更没有token信息了)
-          if (!streamController.isClosed) {
-            streamController.add(ComCCResp(cusText: '[手动终止]'));
-          }
-          await subscription.cancel();
-          if (!streamController.isClosed) {
-            streamController.close();
-          }
-        }
-
-        return StreamWithCancel(streamController.stream, cancel);
-      } else {
-        throw HttpException(code: 500, msg: '不符合预期的数据流响应类型');
-      }
-    } else {
-      if (respData.runtimeType == String) {
-        respData = json.decode(respData);
-      }
-      return StreamWithCancel(
-        Stream.value(ComCCResp.fromJson(respData)),
-        () async {},
-      );
-    }
-  } on HttpException catch (e) {
-    return StreamWithCancel(
-      Stream.value(ComCCResp(
-        cusText: "【HttpException】${e.toString()}",
-      )),
-      () async {},
-    );
-  } catch (e) {
-    rethrow;
-  }
-}
-
-Future<StreamWithCancel<ComCCResp>> getCCResponse(
-  String url,
-  Map<String, dynamic> headers,
-  Map<String, dynamic> data, {
-  bool stream = false,
-}) async {
-  try {
-    var start = DateTime.now().millisecondsSinceEpoch;
-
-    var respData = await HttpUtils.post(
-      path: url,
-      method: CusHttpMethod.post,
-      responseType: stream ? CusRespType.stream : CusRespType.json,
-      headers: headers,
-      data: data,
-    );
-
-    var end = DateTime.now().millisecondsSinceEpoch;
-    print("API响应耗时: ${(end - start) / 1000} 秒");
-    print("-------------在转换前--------$respData)----------");
-
-    if (stream) {
-      // 处理流式响应
-      if (respData is ResponseBody) {
-        final streamController = StreamController<ComCCResp>();
-
-        StreamTransformer<Uint8List, List<int>> unit8Transformer =
-            StreamTransformer.fromHandlers(
-          handleData: (data, sink) {
-            sink.add(List<int>.from(data));
-          },
-        );
-
-        // respData.stream
-        //     .transform(unit8Transformer)
-        //     .transform(const Utf8Decoder())
-        //     .transform(const LineSplitter())
-        //     .listen((event) {
-        //   print(event);
-        // });
-
-        final subscription = respData.stream
-            // 创建一个自定义的 StreamTransformer 来处理 Uint8List 到 String 的转换。
-            // .transform(
-            //   StreamTransformer<Uint8List, String>.fromHandlers(
-            //     handleData: (data, sink) {
-            //       final decodedData = utf8.decoder.convert(data);
-            //       sink.add(decodedData);
-            //     },
-            //   ),
-            // )
             .transform(unit8Transformer)
             .transform(const Utf8Decoder())
             // 将输入的 Stream<String> 按照行（即换行符 \n 或 \r\n）进行分割，并将每一行作为一个单独的事件发送到输出流中。
@@ -319,9 +172,9 @@ Future<StreamWithCancel<ComCCResp>> getCCResponse(
             .transform(const SseTransformer())
             // 处理每一行数据
             .listen((event) async {
-          // print(
-          //   "Event: ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
-          // );
+          print(
+            "Event: ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
+          );
 
           // 如果包含DONE，是正常获取AI接口的结束
           if ((event.data).contains('[DONE]')) {
@@ -331,17 +184,7 @@ Future<StreamWithCancel<ComCCResp>> getCCResponse(
             }
           } else {
             final jsonData = json.decode(event.data);
-
             final commonRespBody = ComCCResp.fromJson(jsonData);
-            if ((event.data).contains('quote')) {
-              l.e(jsonData);
-              print("xxxxxxxxx${commonRespBody.id}");
-              print("xxxxxxxxx${commonRespBody.created}");
-              print("xxxxxxxxx${commonRespBody.cusText}");
-              print(
-                  "xxxxxxxxx${commonRespBody.choices!.first.delta!.quote?.first.title}");
-              print("xxxxxxxxx${jsonData['choices']}");
-            }
             if (!streamController.isClosed) {
               streamController.add(commonRespBody);
             }
@@ -387,7 +230,7 @@ Future<StreamWithCancel<ComCCResp>> getCCResponse(
   } on HttpException catch (e) {
     return StreamWithCancel(
       Stream.value(ComCCResp(
-        cusText: "【HttpException】${e.toString()}",
+        cusText: "【请求时的HttpException】${e.toString()}",
       )),
       () async {},
     );
@@ -479,14 +322,15 @@ Future<StreamWithCancel<ComCCResp>> siliconFlowCCRespWithCancel(
           .model;
 
   var body = ComCCReq(model: model, messages: messages, stream: stream);
+
   var headers = {
     "Content-Type": "application/json",
     "Authorization": "Bearer $SILICON_CLOUD_AK",
   };
-  return getCCResponse(
+  return getSseCcResponse(
     platUrls[PlatUrl.siliconFlowCCUrl]!,
     headers,
-    body.toJson(),
+    body.toFullJson(),
     stream: stream,
   );
 }
@@ -499,29 +343,17 @@ Future<StreamWithCancel<ComCCResp>> lingyiwanwuCCRespWithCancel(
 }) async {
   model = model ?? CCM_SPEC_LIST.firstWhere((e) => e.ccm == CCM.YiSpark).model;
 
-  var body = model == "yi-vision"
-      ? ComCCReq.yiVision(model: model, messages: messages, stream: stream)
-      : ComCCReq(model: model, messages: messages, stream: stream);
-
-  // var temp = body.toJson();
-
-  // Map<String, dynamic> tb = {
-  //   "model": "yi-vision",
-  //   "messages": "${temp['messages']}",
-  //   "stream": true,
-  //   "max_tokens": 1024
-  // };
+  var body = ComCCReq(model: model, messages: messages, stream: stream);
 
   var header = {
     "Content-Type": "application/json",
     "Authorization": "Bearer $LINGYI_AK",
   };
 
-  return getCCResponse(
+  return getSseCcResponse(
     platUrls[PlatUrl.lingyiwanwuCCUrl]!,
     header,
     body.toJson(),
-    // tb,
     stream: stream,
   );
 }

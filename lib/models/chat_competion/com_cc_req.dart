@@ -7,8 +7,8 @@ part 'com_cc_req.g.dart';
 ///
 /// 【以零一万物的出参为基准的响应类】
 ///   siliconflow 完全适配
+///  2024-08-12 参数是各种各样的参数，但有些是不同不太自己特有的，默认构造函数就用open ai的参数或者尽量精简的参数？？？
 ///
-
 @JsonSerializable(explicitToJson: true)
 class ComCCReq {
   // 选择的模型名
@@ -18,7 +18,7 @@ class ComCCReq {
   @JsonKey(name: 'messages')
   List<CCMessage>? messages;
 
-  // 	模型可调用的工具列表。目前只支持函数作为工具。
+  // 模型可调用的工具列表。目前只支持函数作为工具。
   @JsonKey(name: 'tools')
   List<CCTool>? tools;
 
@@ -57,32 +57,45 @@ class ComCCReq {
   // 将截断（停止）推理文本输出的字符串序列列表(大概意思是遇到这些字符串就停止文本输出)。
   List<String>? stop;
 
+  // 默认构造函数就少量主要参数
   ComCCReq({
     this.model,
     this.messages,
-    // this.tools,
-    // this.toolChoice,
-    this.maxTokens = 5012,
-    this.topP = 0.7,
-    this.temperature = 0.7,
     this.stream = false,
-    this.n,
-    this.topK,
-    this.frequencyPenalty,
-    this.stop,
-  });
+    this.maxTokens,
+    this.temperature,
+    this.topP,
+  })  : topK = null,
+        frequencyPenalty = null,
+        n = null,
+        tools = null,
+        toolChoice = null;
 
-  // 命名构造函数
-  ComCCReq.yiVision({
+  // 命名构造函数(各自完整的参数，排除其他平台的参数)
+  ComCCReq.siliconflow({
     this.model,
     this.messages,
-    this.maxTokens = 5012,
     this.stream = false,
+    this.maxTokens,
+    this.stop,
+    this.temperature,
+    this.topP,
+    this.topK,
+    this.frequencyPenalty,
+    this.n,
   })  : tools = null,
-        toolChoice = null,
-        topP = null,
-        temperature = null,
-        n = null,
+        toolChoice = null;
+
+  ComCCReq.lingyiwanwu({
+    this.model,
+    this.messages,
+    this.tools,
+    this.toolChoice,
+    this.maxTokens,
+    this.topP,
+    this.temperature,
+    this.stream = false,
+  })  : n = null,
         topK = null,
         frequencyPenalty = null,
         stop = null;
@@ -90,7 +103,31 @@ class ComCCReq {
   factory ComCCReq.fromJson(Map<String, dynamic> srcJson) =>
       _$ComCCReqFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$ComCCReqToJson(this);
+  // 2024-08-12 默认生成的tojsn把所有栏位都加上，不同的平台有特殊的栏位，可能会出现参数异常
+  // 【不过实际测下来:零一万物和siliconflow传入其他参数并没有报错】
+  Map<String, dynamic> toFullJson() => _$ComCCReqToJson(this);
+
+  // 自定义tojson方法，参数为null的就不加到json中
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> json = {};
+
+    if (model != null) json['model'] = model;
+    if (messages != null) {
+      json['messages'] = messages?.map((e) => e.toJson()).toList();
+    }
+    if (tools != null) json['tools'] = tools?.map((e) => e.toJson()).toList();
+    if (toolChoice != null) json['tool_choice'] = toolChoice;
+    if (maxTokens != null) json['max_tokens'] = maxTokens;
+    if (topP != null) json['top_p'] = topP;
+    if (temperature != null) json['temperature'] = temperature;
+    if (stream != null) json['stream'] = stream;
+    if (n != null) json['n'] = n;
+    if (topK != null) json['top_k'] = topK;
+    if (frequencyPenalty != null) json['frequency_penalty'] = frequencyPenalty;
+    if (stop != null) json['stop'] = stop;
+
+    return json;
+  }
 }
 
 /// 参数的工具函数类

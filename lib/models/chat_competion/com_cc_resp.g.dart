@@ -78,7 +78,7 @@ Map<String, dynamic> _$CCChoiceToJson(CCChoice instance) => <String, dynamic>{
 
 CCMessage _$CCMessageFromJson(Map<String, dynamic> json) => CCMessage(
       role: json['role'] as String,
-      content: json['content'] as String,
+      content: json['content'],
     );
 
 Map<String, dynamic> _$CCMessageToJson(CCMessage instance) => <String, dynamic>{

@@ -19,6 +19,8 @@ class ChatListArea extends StatefulWidget {
   final Function()? regenerateLatestQuestion;
   // 2024-08-08 由于流式返回的原因，这里如果还是机器思考的情况就不显示重新生成等功能按钮
   final bool? isBotThinking;
+  // 头像位置是在两侧还是在上方
+  final bool isAvatarTop;
 
   // 目前默认都显示，后续可以按需设定控制
   // 是否显示复制按钮
@@ -31,6 +33,7 @@ class ChatListArea extends StatefulWidget {
     required this.scrollController,
     this.regenerateLatestQuestion,
     this.isBotThinking = false,
+    this.isAvatarTop = false,
   });
 
   @override
@@ -68,7 +71,11 @@ class _ChatListAreaState extends State<ChatListArea> {
               child: Column(
                 children: [
                   // 构建每个对话消息
-                  MessageItem(message: msg),
+                  MessageItem(
+                    message: msg,
+                    isBotThinking: widget.isBotThinking,
+                    isAvatarTop: widget.isAvatarTop,
+                  ),
 
                   /// 如果是大模型回复，可以有一些功能按钮
                   if (msg.role == 'assistant' && msg.isPlaceholder != true)

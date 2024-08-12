@@ -15,10 +15,14 @@ class MessageItem extends StatelessWidget {
   // (默认头像在左右两侧，就像对话一样。如果在顶部，文本内容更宽一点)
   final bool isAvatarTop;
 
+  // 2024-08-12 流式响应时，数据是逐步增加的，如果还在响应中加个符号
+  final bool? isBotThinking;
+
   const MessageItem({
     super.key,
     required this.message,
     this.isAvatarTop = false,
+    this.isBotThinking = false,
   });
 
   @override
@@ -38,7 +42,7 @@ class MessageItem extends StatelessWidget {
     /// 否则，就是头像和正文放在一个row中
     return isAvatarTop
         ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: crossAlignment,
             children: [
               /// 头像和时间戳
               _buildAvatarAndTimestamp(context, isFromUser, textColor),
@@ -187,7 +191,9 @@ class MessageItem extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     MarkdownBody(
-                      data: message.content,
+                      data: message.role != "user" && isBotThinking == true
+                          ? "${message.content} >>>"
+                          : message.content,
                       selectable: true,
                       styleSheet: MarkdownStyleSheet(
                         p: TextStyle(color: textColor),

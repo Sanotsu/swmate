@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../apis/chat_completion/common_cc_apis.dart';
 import '../../../../apis/voice_recognition/xunfei_apis.dart';
+import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
 import '../../../../common/llm_spec/cc_spec.dart';
 import '../../../../common/utils/db_tools/db_helper.dart';
@@ -23,6 +24,7 @@ import '../../_chat_screen_parts/chat_plat_and_llm_area.dart';
 import '../../_chat_screen_parts/chat_title_area.dart';
 import '../../_chat_screen_parts/chat_user_send_area_with_voice.dart';
 import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
+import '../../_helper/handle_cc_response.dart';
 
 /// 2024-07-16
 /// 这个应该会复用，后续抽出chatbatindex出来
@@ -82,7 +84,7 @@ class _ChatBatState extends State<ChatBat> {
   List<String> defaultQuestions = chatQuestionSamples;
 
   // 当前正在响应的api返回流(放在全局为了可以手动取消)
-  StreamWithCancel<ComCCResp>? respStream;
+  StreamWithCancel<ComCCResp> respStream = StreamWithCancel.empty();
 
   @override
   void initState() {
@@ -196,24 +198,18 @@ class _ChatBatState extends State<ChatBat> {
     String? contentVoicePath,
     CCUsage? usage,
   }) {
-    // 发送消息的逻辑，这里只是简单地将消息添加到列表中
-    var temp = ChatMessage(
-      messageId: const Uuid().v4(),
-      role: "user",
-      content: text,
-      // 没有录音文件就存空字符串，避免内部转化为“null”字符串
-      contentVoicePath: contentVoicePath ?? "",
-      dateTime: DateTime.now(),
-      promptTokens: usage?.promptTokens,
-      completionTokens: usage?.completionTokens,
-      totalTokens: usage?.totalTokens,
-    );
-
-    if (!mounted) return;
     setState(() {
-      isBotThinking = true;
-
-      messages.add(temp);
+      // 用户发送消息的逻辑，这里只是简单地将消息添加到列表中
+      messages.add(
+        ChatMessage(
+          messageId: const Uuid().v4(),
+          role: "user",
+          content: text,
+          // 没有录音文件就存空字符串，避免内部转化为“null”字符串
+          contentVoicePath: contentVoicePath ?? "",
+          dateTime: DateTime.now(),
+        ),
+      );
 
       // 在每次添加了对话之后，都把整个对话列表存入对话历史中去
       _saveToDb();
@@ -225,7 +221,85 @@ class _ChatBatState extends State<ChatBat> {
     });
   }
 
-  // 保存对话到数据库
+  // 根据不同的平台、选中的不同模型，调用对应的接口，得到回复
+  // 虽然返回的响应通用了，但不同的平台和模型实际取值还是没有抽出来的
+  _getCCResponse() async {
+    // 在调用前，不会设置响应状态
+    if (isBotThinking) return;
+    setState(() {
+      isBotThinking = true;
+    });
+
+    // 获取响应流
+    StreamWithCancel<ComCCResp> tempStream = await getCCResponseSWC(
+      messages: messages,
+      selectedPlatform: selectedPlatform,
+      selectedModel: selectedModelSpec.model,
+      isStream: isStream,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      respStream = tempStream;
+    });
+
+    // 在得到响应后，就直接把响应的消息加入对话列表
+    // 又因为是流式的,初始时文本设为空，SSE有推送时，会更新相关栏位
+    // csMsg => currentStreamingMessage
+    ChatMessage? csMsg = buildEmptyAssistantChatMessage();
+
+    setState(() {
+      messages.add(csMsg!);
+    });
+
+    // 处理流式响应
+    handleCCResponseSWC(
+      swc: respStream,
+      onData: (crb) {
+        commonOnDataHandler(
+          crb: crb,
+          csMsg: csMsg!,
+          // 流式响应结束了，就保存数据到db，并重置流式变量和aip响应标志
+          onStreamDone: () {
+            if (!mounted) return;
+            setState(() {
+              _saveToDb();
+              csMsg = null;
+              isBotThinking = false;
+            });
+          },
+          // 处理流的过程中都是响应中
+          // (如果不设置这个，就没办法促使SSE每有一个推送都及时更新页面了)
+          setIsResponsing: () {
+            setState(() {
+              isBotThinking = true;
+            });
+          },
+          scrollToBottom: chatListScrollToBottom,
+        );
+      },
+      onDone: () {
+        print("文本对话 监听的【onDone】触发了");
+        // 如果是流式响应，最后一条会带有[DNOE]关键字，所以在上面处理最后响应结束的操作
+        // 如果不是流式，响应流就只有1条数据，那么就只有在这里才能得到流结束了，所以需要在这里完成后的操作
+        // 但是如果是流式，还在这里处理结束操作的话会出问题(实测在数据还在推送的时候，这个ondone就触发了)
+        if (!isStream) {
+          if (!mounted) return;
+          // 流式响应结束了，就保存数据到db，并重置流式变量和aip响应标志
+          setState(() {
+            _saveToDb();
+            csMsg = null;
+            isBotThinking = false;
+          });
+        }
+      },
+      onError: (error) {
+        commonExceptionDialog(context, "异常提示", error.toString());
+      },
+    );
+  }
+
+  /// 保存对话到数据库
   _saveToDb() async {
     // 如果插入时只有一条，那就是用户首次输入，截取部分内容和生成对话记录的uuid
 
@@ -255,159 +329,6 @@ class _ChatBatState extends State<ChatBat> {
     }
 
     // 其他没有对话记录、没有消息列表的情况，就不做任何处理了
-  }
-
-  // 根据不同的平台、选中的不同模型，调用对应的接口，得到回复
-  // 虽然返回的响应通用了，但不同的平台和模型实际取值还是没有抽出来的
-  _getCCResponse() async {
-    // 将已有的消息处理成Ernie支出的消息列表格式
-    List<CCMessage> msgs = messages
-        .map((e) => CCMessage(
-              content: e.content,
-              role: e.role,
-            ))
-        .toList();
-
-    // 2024-06-06 ??? 这里一定要确保存在模型名称，因为要作为http请求参数
-    var model = selectedModelSpec.model;
-
-    // 后续可手动终止响应时的写法
-    StreamWithCancel<ComCCResp> temp;
-    if (selectedPlatform == ApiPlatform.lingyiwanwu) {
-      // temp = await lingyiHTTP(msgs, model: model, stream: isStream);
-      temp = await lingyiwanwuCCRespWithCancel(msgs,
-          model: model, stream: isStream);
-    } else {
-      temp = await siliconFlowCCRespWithCancel(msgs,
-          model: model, stream: isStream);
-    }
-
-    if (!mounted) return;
-    setState(() {
-      respStream = temp;
-    });
-
-    // 在得到响应后，就直接把响应的消息加入对话列表
-    // 又因为是流式的,所有需要在有更新的数据时,更新响应消息体
-    // csMsg => currentStreamingMessage
-    ChatMessage? csMsg;
-    final StringBuffer messageBuffer = StringBuffer();
-    csMsg = ChatMessage(
-      messageId: const Uuid().v4(),
-      role: "assistant",
-      content: messageBuffer.toString(),
-      contentVoicePath: "",
-      dateTime: DateTime.now(),
-    );
-
-    setState(() {
-      // 有响应了才清空用户输入？？？可能不准确
-      _userInputController.clear();
-      messages.add(csMsg!);
-    });
-
-    // 上面赋值了，这里应该可以监听到新的流了
-    respStream?.stream.listen(
-      (crb) {
-        // 得到回复后要删除表示加载中的占位消息
-        if (!mounted) return;
-        setState(() {
-          messages.removeWhere((e) => e.isPlaceholder == true);
-        });
-
-        // 流式非流式两种都会触发，因为在请求的ondone时有补发一条[DONE]，所以直接在这里当作收到最后一条消息
-        // 为什么不在下面的ondone中处理？是因为可能这里的ondone触发了，消息的响应还在继续，那后续的数据就丢掉了
-        if (crb.cusText == '[DONE]') {
-          print("DONEDONEDONE--${crb.cusText.length}");
-
-          if (!mounted) return;
-          // 流式响应结束了，就保存数据到db，并重置流式变量和aip响应标志
-          setState(() {
-            _saveToDb();
-            csMsg = null;
-            isBotThinking = false;
-          });
-        } else {
-          // isBotThinking = true;
-          // messageBuffer.write(crb.cusText);
-          // // 只有第一次响应时才创建消息体，后续接收的响应流数据只更新当前的
-          // if (csMsg == null) {
-          //   csMsg = ChatMessage(
-          //     messageId: const Uuid().v4(),
-          //     role: "assistant",
-          //     content: messageBuffer.toString(),
-          //     contentVoicePath: "",
-          //     dateTime: DateTime.now(),
-          //     promptTokens: crb.usage?.promptTokens ?? 0,
-          //     completionTokens: crb.usage?.completionTokens ?? 0,
-          //     totalTokens: crb.usage?.totalTokens ?? 0,
-          //   );
-
-          //   messages.add(csMsg!);
-          // } else {
-          //   csMsg!.content = messageBuffer.toString();
-          //   // csMsg!.content = crb.content ?? "";
-          //   // token的使用就是每条返回的就是当前使用的结果，所以最后一条就是最终结果，实时更新到最后一条
-          //   csMsg!.promptTokens = crb.usage?.promptTokens ?? 0;
-          //   csMsg!.completionTokens = crb.usage?.completionTokens ?? 0;
-          //   csMsg!.totalTokens = (crb.usage?.totalTokens ?? 0);
-
-          //   // chatListScrollToBottom();
-          //   _scrollController.animateTo(
-          //     _scrollController.position.maxScrollExtent + 80,
-          //     curve: Curves.easeOut,
-          //     // 注意：sse的间隔比较短，这个滚动也要快一点
-          //     duration: const Duration(milliseconds: 10),
-          //   );
-          // }
-
-          // 正常流式的响应，都逐步追加到对话消息体中
-          setState(() {
-            isBotThinking = true;
-
-            messageBuffer.write(crb.cusText);
-            print(crb.usage?.promptTokens);
-            csMsg!.content = messageBuffer.toString();
-            // csMsg!.content += crb.cusText;
-            // csMsg!.content = crb.content ?? "";
-
-            // token的使用就是每条返回的就是当前使用的结果，所以最后一条就是最终结果，实时更新到最后一条
-            csMsg!.promptTokens = (crb.usage?.promptTokens ?? 0);
-            csMsg!.completionTokens = (crb.usage?.completionTokens ?? 0);
-            csMsg!.totalTokens = (crb.usage?.totalTokens ?? 0);
-
-            // 模型为rag时，当最后一条时，才会带上引用
-            if (crb.choices != null &&
-                crb.choices?.first != null &&
-                crb.choices?.first.delta != null &&
-                crb.choices!.first.delta?.quote != null) {
-              csMsg!.quotes = crb.choices!.first.delta!.quote!;
-            }
-
-            // 每收到一点新的响应文本，就都滚动到ListView的底部
-            // 太耗费性能了???
-            chatListScrollToBottom();
-          });
-        }
-      },
-      // 两种都会触发，但非流式的时候，只有一条数据，永远不会触发上面监听时的DONE的情况
-      // ??? 有问题，上面还在继续响应，这里就触发了onDone，后面的数据处理不了了
-      onDone: () {
-        print("http sse 监听的【onDone】触发了");
-
-        // if (!mounted) return;
-        // // 流式响应结束了，就保存数据到db，并重置流式变量和aip响应标志
-        // setState(() {
-        //   _saveToDb();
-        //   csMsg = null;
-        //   isBotThinking = false;
-        // });
-      },
-      // 取消sse时不会触发，但点击取消按钮时已经做了该做的工作，这里只是打印错误
-      onError: (error) {
-        print("http sse 监听的【error】触发了0000$error");
-      },
-    );
   }
 
   /// 构建用于下拉的平台列表(根据上层传入的值)
@@ -629,7 +550,7 @@ class _ChatBatState extends State<ChatBat> {
               },
               // 2024-08-08 手动点击了终止
               onStop: () async {
-                await respStream?.cancel();
+                await respStream.cancel();
                 if (!mounted) return;
                 setState(() {
                   _saveToDb();
