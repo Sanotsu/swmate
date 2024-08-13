@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:form_builder_file_picker/form_builder_file_picker.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
@@ -93,6 +94,41 @@ commonHintDialog(
         content: Text(
           message,
           style: TextStyle(fontSize: msgFontSize ?? 12.sp),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text("确定"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+commonMarkdwonHintDialog(
+  BuildContext context,
+  String title,
+  String message, {
+  double? msgFontSize,
+}) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text(title),
+        content: MarkdownBody(
+          data: message,
+          selectable: true,
+          // 设置Markdown文本全局样式
+          styleSheet: MarkdownStyleSheet(
+            // 普通段落文本颜色(假定用户输入就是普通段落文本)
+            p: const TextStyle(color: Colors.black),
+            // ... 其他级别的标题样式
+            // 可以继续添加更多Markdown元素的样式
+          ),
         ),
         actions: [
           TextButton(

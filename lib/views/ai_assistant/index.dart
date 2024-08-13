@@ -7,7 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../common/components/tool_widget.dart';
 import '../../services/cus_get_storage.dart';
 import 'ai_tools/chat_bot/index.dart';
-import 'ai_tools/multi_translator/index.dart';
+import 'ai_tools/document_interpret/index.dart';
 import 'ai_tools/photo_translation/index.dart';
 import 'ai_tools/test_page.dart';
 
@@ -129,20 +129,6 @@ class _AIToolIndexState extends State<AIToolIndex> {
                 ),
 
                 buildToolEntrance(
-                  "翻译助手",
-                  icon: const Icon(Icons.chat_outlined),
-                  color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MultiTranslator(),
-                      ),
-                    );
-                  },
-                ),
-
-                buildToolEntrance(
                   "拍照翻译",
                   icon: const Icon(Icons.chat_outlined),
                   color: Colors.blue[100],
@@ -151,6 +137,20 @@ class _AIToolIndexState extends State<AIToolIndex> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const PhotoTranslation(),
+                      ),
+                    );
+                  },
+                ),
+
+                buildToolEntrance(
+                  "文档解读",
+                  icon: const Icon(Icons.chat_outlined),
+                  color: Colors.blue[100],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DocumentInterpret(),
                       ),
                     );
                   },

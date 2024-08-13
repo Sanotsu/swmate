@@ -427,7 +427,7 @@ class _PhotoTranslationState extends State<PhotoTranslation> {
                           );
                         },
                   child: const Text(
-                    "翻译",
+                    "AI翻译",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),

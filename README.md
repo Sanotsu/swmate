@@ -55,6 +55,10 @@ dart run build_runner build --delete-conflicting-outputs
 
 - fix: 修正对话模型 API 请求流式响应和非流式响应时的相关错误，refactor:重构了“你问我答”和“拍照翻译”、“翻译助手”页面的部分代码，提高复用率。
 
+#### 2024-08-13
+
+- refactor: “文档总结”和“文档翻译”合并为“文档解读”功能页面。
+
 ### todo:
 
 - 得到流式响应的数据的处理都非常相似，可以抽出来公共函数

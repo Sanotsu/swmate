@@ -36,6 +36,15 @@ class CusLabel {
     required this.cnLabel,
     required this.value,
   });
+
+  @override
+  String toString() {
+    return '''
+    CusLabel{
+      enLabel: $enLabel, cnLabel: $cnLabel, value:$value
+    }
+    ''';
+  }
 }
 
 // 菜品的分类和标签都用预设的
