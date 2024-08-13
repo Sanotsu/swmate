@@ -24,7 +24,11 @@ ComCCReq _$ComCCReqFromJson(Map<String, dynamic> json) => ComCCReq(
       ..topK = (json['top_k'] as num?)?.toDouble()
       ..frequencyPenalty = (json['frequency_penalty'] as num?)?.toDouble()
       ..stop =
-          (json['stop'] as List<dynamic>?)?.map((e) => e as String).toList();
+          (json['stop'] as List<dynamic>?)?.map((e) => e as String).toList()
+      ..system = json['system'] as String?
+      ..userId = json['user_id'] as String?
+      ..penaltyScore = (json['penalty_score'] as num?)?.toDouble()
+      ..maxOutputTokens = (json['max_output_tokens'] as num?)?.toDouble();
 
 Map<String, dynamic> _$ComCCReqToJson(ComCCReq instance) => <String, dynamic>{
       'model': instance.model,
@@ -39,6 +43,10 @@ Map<String, dynamic> _$ComCCReqToJson(ComCCReq instance) => <String, dynamic>{
       'top_k': instance.topK,
       'frequency_penalty': instance.frequencyPenalty,
       'stop': instance.stop,
+      'system': instance.system,
+      'user_id': instance.userId,
+      'penalty_score': instance.penaltyScore,
+      'max_output_tokens': instance.maxOutputTokens,
     };
 
 CCTool _$CCToolFromJson(Map<String, dynamic> json) => CCTool(

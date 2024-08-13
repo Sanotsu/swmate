@@ -19,6 +19,14 @@ ComCCResp _$ComCCRespFromJson(Map<String, dynamic> json) => ComCCResp(
           : CCUsage.fromJson(json['usage'] as Map<String, dynamic>),
       content: json['content'] as String?,
       lastOne: json['lastOne'] as bool?,
+      sentenceId: (json['sentence_id'] as num?)?.toInt(),
+      isEnd: json['is_end'] as bool?,
+      isTruncated: json['is_truncated'] as bool?,
+      result: json['result'] as String?,
+      needClearHistory: json['need_clear_history'] as bool?,
+      banRound: (json['ban_round'] as num?)?.toInt(),
+      errorCode: (json['error_code'] as num?)?.toInt(),
+      errorMsg: json['error_msg'] as String?,
       cusText: json['cusText'] as String?,
     );
 
@@ -32,6 +40,14 @@ Map<String, dynamic> _$ComCCRespToJson(ComCCResp instance) => <String, dynamic>{
       'content': instance.content,
       'lastOne': instance.lastOne,
       'cusText': instance.cusText,
+      'sentence_id': instance.sentenceId,
+      'is_end': instance.isEnd,
+      'is_truncated': instance.isTruncated,
+      'result': instance.result,
+      'need_clear_history': instance.needClearHistory,
+      'ban_round': instance.banRound,
+      'error_code': instance.errorCode,
+      'error_msg': instance.errorMsg,
     };
 
 CCQuote _$CCQuoteFromJson(Map<String, dynamic> json) => CCQuote(

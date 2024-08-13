@@ -113,7 +113,7 @@ Future<void> saveMarkdownAsPdf(String mdString, File imageFile) async {
               pdf.Row(
                 mainAxisAlignment: pdf.MainAxisAlignment.spaceBetween,
                 children: [
-                  pdf.Text('https://github.com/Sanotsu/ai-light-life'),
+                  pdf.Text('https://github.com/Sanotsu/swmate'),
                   pdf.Text(
                     '第 ${context.pageNumber} / ${context.pagesCount} 页',
                     style: const pdf.TextStyle(fontSize: 12),

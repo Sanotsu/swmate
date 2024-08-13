@@ -57,6 +57,25 @@ class ComCCReq {
   // 将截断（停止）推理文本输出的字符串序列列表(大概意思是遇到这些字符串就停止文本输出)。
   List<String>? stop;
 
+  /// 百度的system放在外面，不是在message中(也有stop)
+  // 模型人设，主要用于人设设定，例如：你是xxx公司制作的AI助手，
+  //    说明：（1）message中的content总长度和system字段总内容不能超过24000个字符，
+  //    且不能超过6144 tokens
+  String? system;
+
+  // 表示最终用户的唯一标识符，可以监视和检测滥用行为，防止接口恶意调用
+  @JsonKey(name: 'user_id')
+  String? userId;
+
+  // 通过对已生成的token增加惩罚，减少重复生成的现象。
+  //  说明：（1）值越大表示惩罚越大。（2）默认1.0，取值范围：[1.0, 2.0]。
+  @JsonKey(name: 'penalty_score')
+  double? penaltyScore;
+
+  // 指定模型最大输出token数，范围[2, 2048]
+  @JsonKey(name: 'max_output_tokens')
+  double? maxOutputTokens;
+
   // 默认构造函数就少量主要参数
   ComCCReq({
     this.model,
@@ -100,6 +119,18 @@ class ComCCReq {
         frequencyPenalty = null,
         stop = null;
 
+  ComCCReq.baidu({
+    this.messages,
+    this.stream = false,
+    this.temperature,
+    this.topP,
+    this.penaltyScore,
+    this.system,
+    this.stop,
+    this.maxOutputTokens,
+    this.userId,
+  });
+
   factory ComCCReq.fromJson(Map<String, dynamic> srcJson) =>
       _$ComCCReqFromJson(srcJson);
 
@@ -125,6 +156,10 @@ class ComCCReq {
     if (topK != null) json['top_k'] = topK;
     if (frequencyPenalty != null) json['frequency_penalty'] = frequencyPenalty;
     if (stop != null) json['stop'] = stop;
+    if (system != null) json['system'] = system;
+    if (userId != null) json['user_id'] = userId;
+    if (penaltyScore != null) json['penalty_score'] = penaltyScore;
+    if (maxOutputTokens != null) json['max_output_tokens'] = maxOutputTokens;
 
     return json;
   }

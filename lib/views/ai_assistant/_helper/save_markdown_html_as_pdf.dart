@@ -96,7 +96,7 @@ Future<void> saveMarkdownHtmlAsPdf(String mdString, File imageFile) async {
                 htp.Row(
                   mainAxisAlignment: htp.MainAxisAlignment.spaceBetween,
                   children: [
-                    htp.Text('https://github.com/Sanotsu/ai-light-life'),
+                    htp.Text('https://github.com/Sanotsu/swmate'),
                     htp.Text(
                       '第 ${context.pageNumber} / ${context.pagesCount} 页',
                       style: const htp.TextStyle(fontSize: 12),

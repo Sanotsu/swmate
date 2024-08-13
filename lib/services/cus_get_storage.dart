@@ -16,4 +16,11 @@ class MyGetStorage {
   }
 
   double getChatListAreaScale() => box.read("chat_list_area_scale") ?? 1.0;
+
+  // 百度的token(每次获取有效期是30天，每次申请后都保存最新的，避免重复类)
+  Future<void> setBaiduTokenInfo(Map<String, String>? info) async {
+    await box.write("baidu_token_info", info);
+  }
+
+  Map<String, String> getBaiduTokenInfo() => box.read("baidu_token_info") ?? {};
 }

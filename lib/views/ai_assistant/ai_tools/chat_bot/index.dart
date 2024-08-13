@@ -58,8 +58,10 @@ class _ChatBatState extends State<ChatBat> {
   /// 级联选择效果：云平台-模型名
   ApiPlatform selectedPlatform = ApiPlatform.siliconCloud;
 
+  // 被选中的模型信息
   CCMSpec selectedModelSpec = CCM_SPEC_LIST
-      .where((spec) => spec.platform == ApiPlatform.siliconCloud)
+      .where((spec) =>
+          spec.platform == ApiPlatform.siliconCloud && spec.isVision != true)
       .toList()
       .first;
 
@@ -123,7 +125,8 @@ class _ChatBatState extends State<ChatBat> {
     setState(() {
       // 2024-07-14 同样的，选中的平台后也随机选择一个模型
       List<CCMSpec> models = CCM_SPEC_LIST
-          .where((spec) => spec.platform == selectedPlatform)
+          .where((spec) =>
+              spec.platform == selectedPlatform && spec.isVision != true)
           .toList();
 
       selectedModelSpec = models[Random().nextInt(models.length)];
@@ -152,7 +155,6 @@ class _ChatBatState extends State<ChatBat> {
           dateTime: DateTime.now(),
           role: "assistant",
           content: "问题回答已遗失，请重新提问",
-          isPlaceholder: false,
         ));
       }
 
@@ -169,15 +171,10 @@ class _ChatBatState extends State<ChatBat> {
             .where((e) => e.name == list.first.llmName)
             .toList();
 
-        // 被选中的平台也就是记录中存放的平台
-        var tempCps = ApiPlatform.values
-            .where((e) => e.name.contains(list.first.cloudPlatformName ?? ""))
-            .toList();
-
         // 避免麻烦，两个都不为空才显示；否则还是预设的
-        if (tempSpecs.isNotEmpty && tempCps.isNotEmpty) {
+        if (tempSpecs.isNotEmpty) {
           selectedModelSpec = tempSpecs.first;
-          selectedPlatform = tempCps.first;
+          selectedPlatform = tempSpecs.first.platform;
         }
 
         // 查到了db中的历史记录，则需要替换成当前的(父页面没选择历史对话进来就是空，则都不会有这个函数)
@@ -356,7 +353,8 @@ class _ChatBatState extends State<ChatBat> {
         // 切换平台后，修改选中的模型为该平台第一个
 
         selectedModelSpec = CCM_SPEC_LIST
-            .where((spec) => spec.platform == selectedPlatform)
+            .where((spec) =>
+                spec.platform == selectedPlatform && spec.isVision != true)
             .toList()
             .first;
 
@@ -369,9 +367,10 @@ class _ChatBatState extends State<ChatBat> {
   }
 
   List<DropdownMenuItem<CCMSpec>> buildPlatformLLMs() {
-    // 用于下拉的模型首先是需要以平台前缀命名的
+    // 用于下拉的模型首先需要是对话模型
     return CCM_SPEC_LIST
-        .where((spec) => spec.platform == selectedPlatform)
+        .where((spec) =>
+            spec.platform == selectedPlatform && spec.isVision != true)
         .map((e) => DropdownMenuItem<CCMSpec>(
               value: e,
               alignment: AlignmentDirectional.centerStart,
@@ -397,7 +396,7 @@ class _ChatBatState extends State<ChatBat> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: ChatAppBarArea(
-        title: '你问我答',
+        title: '智能对话',
         onNewChatPressed: () {
           setState(() {
             chatSession = null;

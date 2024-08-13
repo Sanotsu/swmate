@@ -34,7 +34,9 @@ part 'com_cc_resp.g.dart';
 class ComCCResp {
   // 这几个栏位虽然正常响应时都有，但流式响应时最后一条[DONE]就没有
   String? id;
+  // 回包类型 chat.completion：多轮对话返回
   String? object;
+  // 时间戳
   int? created;
   String? model;
   List<CCChoice>? choices;
@@ -44,9 +46,46 @@ class ComCCResp {
   @JsonKey(name: 'lastOne')
   bool? lastOne;
 
-  // 自定义的返回文本
+  /// 自定义的返回文本
   String cusText;
 
+  /// 【百度】的有一些自己的格式
+  // 表示当前子句的序号。只有在流式接口模式下会返回该字段
+  @JsonKey(name: 'sentence_id')
+  int? sentenceId;
+
+  // 表示当前子句是否是最后一句。只有在流式接口模式下会返回该字段
+  @JsonKey(name: 'is_end')
+  bool? isEnd;
+
+  // 当前生成的结果是否被截断
+  @JsonKey(name: 'is_truncated')
+  bool? isTruncated;
+
+  // 对话返回结果
+  @JsonKey(name: 'result')
+  String? result;
+
+  // 表示用户输入是否存在安全风险，是否关闭当前会话，清理历史会话信息。
+  // true：是，表示用户输入存在安全风险，建议关闭当前会话，清理历史会话信息。
+  // false：否，表示用户输入无安全风险
+  @JsonKey(name: 'need_clear_history')
+  bool? needClearHistory;
+
+  // 当need_clear_history为true时，此字段会告知第几轮对话有敏感信息，
+  // 如果是当前问题，ban_round=-1
+  @JsonKey(name: 'ban_round')
+  int? banRound;
+
+  // 错误码
+  @JsonKey(name: 'error_code')
+  int? errorCode;
+
+  // 错误描述信息，帮助理解和解决发生的错误
+  @JsonKey(name: 'error_msg')
+  String? errorMsg;
+
+  /// 2024-08-13 因为响应体目前只是用来接收API响应，所以暂时把所有平台的栏位放在一起即可
   ComCCResp({
     this.id,
     this.object,
@@ -56,11 +95,19 @@ class ComCCResp {
     this.usage,
     this.content,
     this.lastOne,
+    this.sentenceId,
+    this.isEnd,
+    this.isTruncated,
+    this.result,
+    this.needClearHistory,
+    this.banRound,
+    this.errorCode,
+    this.errorMsg,
     String? cusText,
-  }) : cusText = cusText ?? _generatecusText(choices);
+  }) : cusText = cusText ?? _generatecusText(choices, result);
 
   // 自定义的响应文本(比如流式返回最后是个[DONE]没法转型，但可以自行设定；而正常响应时可以从其他值中得到)
-  static String _generatecusText(List<CCChoice>? choices) {
+  static String _generatecusText(List<CCChoice>? choices, String? result) {
     // 非流式的
     if (choices != null && choices.isNotEmpty && choices[0].message != null) {
       return choices[0].message?.content ?? "";
@@ -69,8 +116,31 @@ class ComCCResp {
     if (choices != null && choices.isNotEmpty && choices[0].delta != null) {
       return choices[0].delta?.content ?? "";
     }
+
+    // 百度流式非流式都放在最外层的result里面，直接获取即可
+    if (result != null) {
+      return result;
+    }
+
     return '';
   }
+
+  // 百度的流式非流式都直接在最外面放的返回结果
+  ComCCResp.baidu({
+    this.id,
+    this.object,
+    this.created,
+    this.sentenceId,
+    this.isEnd,
+    this.isTruncated,
+    this.result,
+    this.needClearHistory,
+    this.banRound,
+    this.usage,
+    this.errorCode,
+    this.errorMsg,
+    String? cusText,
+  }) : cusText = result ?? cusText ?? "";
 
   // 从字符串转
   factory ComCCResp.fromRawJson(String str) =>

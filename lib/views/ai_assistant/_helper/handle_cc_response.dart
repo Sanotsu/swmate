@@ -21,6 +21,8 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
   required List<ChatMessage> messages,
   required ApiPlatform selectedPlatform,
   required String selectedModel,
+  // 百度的system是单独参数，不在消息列表中
+  // String? system,
   bool isStream = true,
   // 如果是图像理解，还需要图片文件、和图片解析出错的回调
   bool isVision = false,
@@ -80,6 +82,13 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
         model: selectedModel,
         stream: isStream,
       );
+    } else if (selectedPlatform == ApiPlatform.baidu) {
+      tempStream = await baiduCCRespWithCancel(
+        msgs,
+        model: selectedModel,
+        stream: isStream,
+        // system: system,
+      );
     } else {
       tempStream = await siliconFlowCCRespWithCancel(
         msgs,
@@ -132,15 +141,20 @@ void commonOnDataHandler({
   // 在响应进行中，时刻保持当前为机器响应状态
   required Function() setIsResponsing,
 }) {
-  if (crb.cusText == '[DONE]') {
+  // 百度的响应最后一条没有DONE关键字，我在处理流式响应时，完成的回调手动添加了DONE
+  if (crb.cusText.contains('[DONE]')) {
     onStreamDone();
   } else {
     // 为了每次有消息都能更新页面状态
     setIsResponsing();
 
     // 更新响应文本
-    csMsg.content += crb.cusText;
-    // csMsg!.content = crb.content ?? "";
+    if (crb.errorCode != null) {
+      csMsg.content +=
+          "后台响应报错:\n\n 错误代码: ${crb.errorCode}\n\n 错误原因: ${crb.errorMsg}";
+    } else {
+      csMsg.content += crb.cusText;
+    }
 
     // 更新token信息
     csMsg.promptTokens = (crb.usage?.promptTokens ?? 0);

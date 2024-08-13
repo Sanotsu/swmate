@@ -25,12 +25,7 @@ err 详情
     );
 
     /// 根据DioError创建HttpException
-    // HttpException httpException = HttpException.create(err);
-// 2024-06-20 上面的create方法有问题，暂时不用
-    HttpException httpException = HttpException(
-      code: 1000,
-      msg: err.error != null ? err.error.toString() : err.response.toString(),
-    );
+    HttpException httpException = HttpException.create(err);
 
     /// dio默认的错误实例，如果是没有网络，只能得到一个未知错误，无法精准的得知是否是无网络的情况
     /// 这里对于断网的情况，给一个特殊的code和msg，其他可以识别处理的错误也可以订好
@@ -110,53 +105,79 @@ class HttpException implements Exception {
               case 400:
                 {
                   return HttpException(
-                      code: statusCode, msg: 'Request syntax error');
+                    code: statusCode,
+                    msg: '输入格式错误。Request syntax error',
+                  );
                 }
               case 401:
                 {
                   return HttpException(
-                      code: statusCode, msg: 'Without permission');
+                    code: statusCode,
+                    msg: '权限异常。Without permission',
+                  );
                 }
               case 403:
                 {
                   return HttpException(
-                      code: statusCode, msg: 'Server rejects execution');
+                    code: statusCode,
+                    msg: '后台拒绝执行。Server rejects execution',
+                  );
                 }
               case 404:
                 {
                   return HttpException(
-                      code: statusCode, msg: 'Unable to connect to server');
+                    code: statusCode,
+                    msg: '无效的 Endpoint URL 或模型名。Unable to connect to server',
+                  );
                 }
               case 405:
                 {
                   return HttpException(
-                      code: statusCode, msg: 'The request method is disabled');
+                    code: statusCode,
+                    msg: 'The request method is disabled',
+                  );
                 }
               case 500:
                 {
                   return HttpException(
-                      code: statusCode, msg: 'Server internal error');
+                    code: statusCode,
+                    msg: '服务端内部错误，请稍后重试。Server internal error',
+                  );
                 }
               case 502:
                 {
                   return HttpException(
-                      code: statusCode, msg: 'Invalid request');
+                    code: statusCode,
+                    msg: '无效的请求。Invalid request',
+                  );
                 }
               case 503:
                 {
                   return HttpException(
-                      code: statusCode, msg: 'The server is down.');
+                    code: statusCode,
+                    msg: 'The server is down.',
+                  );
                 }
               case 505:
                 {
                   return HttpException(
-                      code: statusCode, msg: 'HTTP requests are not supported');
+                    code: statusCode,
+                    msg: 'HTTP requests are not supported',
+                  );
+                }
+              case 529:
+                {
+                  return HttpException(
+                    code: statusCode,
+                    msg: '系统繁忙，请重试，请 1 分钟后重试。System busy',
+                  );
                 }
               default:
                 {
                   return HttpException(
-                      code: statusCode,
-                      msg: error.response?.statusMessage ?? 'unknow error');
+                    code: statusCode,
+                    msg: error.response?.statusMessage ?? 'unknow error',
+                  );
                 }
             }
           } on Exception catch (_) {

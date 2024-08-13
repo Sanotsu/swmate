@@ -7,12 +7,14 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:proste_logger/proste_logger.dart';
 
+import '../../common/utils/tools.dart';
 import '../../models/chat_competion/com_cc_req.dart';
 import '../../models/chat_competion/com_cc_resp.dart';
 import '../../common/llm_spec/cc_spec.dart';
 import '../../common/utils/dio_client/cus_http_client.dart';
 import '../../common/utils/dio_client/cus_http_request.dart';
 import '../../common/utils/dio_client/interceptor_error.dart';
+import '../../services/cus_get_storage.dart';
 import '../_self_keys.dart';
 
 final l = ProsteLogger();
@@ -81,6 +83,18 @@ class SseEventSink implements EventSink<String> {
       _eventSink.add(
         SseMessage(id: _id, event: _event, data: _data, retry: _retry),
       );
+      _id = null;
+      _event = "message";
+      _data = "";
+      _retry = null;
+    }
+
+    // 自己加的，请求报错时不是一个正常的流的结构，是个json,直接添加即可
+    if (isJsonString(event)) {
+      _eventSink.add(
+        SseMessage(id: _id, event: _event, data: event, retry: _retry),
+      );
+
       _id = null;
       _event = "message";
       _data = "";
@@ -172,9 +186,9 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
             .transform(const SseTransformer())
             // 处理每一行数据
             .listen((event) async {
-          print(
-            "Event: ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
-          );
+          // print(
+          //   "Event: ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
+          // );
 
           // 如果包含DONE，是正常获取AI接口的结束
           if ((event.data).contains('[DONE]')) {
@@ -228,12 +242,15 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
       );
     }
   } on HttpException catch (e) {
-    return StreamWithCancel(
-      Stream.value(ComCCResp(
-        cusText: "【请求时的HttpException】${e.toString()}",
-      )),
-      () async {},
+    // 报错时也要流式返回，并手动添加一条结束标志
+    final streamController = StreamController<ComCCResp>();
+    streamController.add(
+      ComCCResp(cusText: "HTTP请求响应异常:\n\n错误代码: ${e.code}\n\n错误信息: ${e.msg}"),
     );
+    streamController.add(ComCCResp(cusText: '[DONE]-后台响应错误'));
+    streamController.close();
+
+    return StreamWithCancel(streamController.stream, () async {});
   } catch (e) {
     rethrow;
   }
@@ -290,25 +307,76 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
 //   );
 // }
 
-// Future<StreamWithCancel<ComCCResp>> baiduCCRespWithCancel(
-//   List<CCMessage> messages, {
-//   String? model,
-//   bool stream = false,
-//   String? system,
-// }) async {
-//   model = model ?? CCM_SPEC_MAP[CCM.baidu_Ernie_Speed_128K]!.model;
-//   String token = await getAccessToken();
-//   var body = system != null
-//       ? ComCCReq(messages: messages, stream: stream, system: system)
-//       : ComCCReq(messages: messages, stream: stream);
-//   var headers = {"Content-Type": "application/json"};
-//   return getCCResponse(
-//     "${platUrls[PlatUrl.baiduCCUrl]!}$model?access_token=$token",
-//     headers,
-//     body.toJson(),
-//     stream: stream,
-//   );
-// }
+///
+///-----------------------------------------------------------------------------
+/// 百度的请求方法
+///
+/// 使用 AK，SK 生成鉴权签名（Access Token）
+/// token 有效期是30天
+Future<String> getAccessToken() async {
+  // 这个获取的token的结果是一个_Map<String, dynamic>，不用转json直接取就得到Access Token了
+
+  try {
+    var respData = await HttpUtils.post(
+      path: platUrls[PlatUrl.baiduCCAuthUrl]!,
+      method: CusHttpMethod.post,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      data: {
+        "grant_type": "client_credentials",
+        "client_id": BAIDU_API_KEY,
+        "client_secret": BAIDU_SECRET_KEY,
+      },
+    );
+
+    // 计算今天往后的 14 天(官方过期是30甜)
+    DateTime expiredDate = DateTime.now().add(const Duration(days: 14));
+
+    // 保存token信息到缓存
+    await MyGetStorage().setBaiduTokenInfo({
+      "accessToken": respData['access_token'].toString(),
+      "expiredDate": expiredDate.toIso8601String(),
+    });
+
+    // 响应是json格式
+    return respData['access_token'];
+  } catch (e) {
+    rethrow;
+  }
+}
+
+Future<StreamWithCancel<ComCCResp>> baiduCCRespWithCancel(
+  List<CCMessage> messages, {
+  String? model,
+  bool stream = false,
+  String? system,
+}) async {
+  model = model ??
+      CCM_SPEC_LIST.firstWhere((e) => e.ccm == CCM.baidu_Ernie_Tiny_8K).model;
+
+  // 获取token信息
+  var tokenInfo = MyGetStorage().getBaiduTokenInfo();
+  String token = "";
+  if (tokenInfo["accessToken"] != null &&
+      tokenInfo["expiredDate"] != null &&
+      DateTime.now().isBefore(DateTime.parse(tokenInfo["expiredDate"]!))) {
+    token = tokenInfo["accessToken"]!;
+  } else {
+    token = await getAccessToken();
+  }
+
+  var body = ComCCReq.baidu(messages: messages, stream: stream);
+
+  var headers = {"Content-Type": "application/json"};
+
+  return getSseCcResponse(
+    "${platUrls[PlatUrl.baiduCCUrl]!}$model?access_token=$token",
+    headers,
+    body.toJson(),
+    stream: stream,
+  );
+}
 
 /// siliconFlow 的请求方法
 Future<StreamWithCancel<ComCCResp>> siliconFlowCCRespWithCancel(

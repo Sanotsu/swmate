@@ -115,7 +115,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
                 /// 使用的对话模型，可以连续问答对话
                 ///
                 buildToolEntrance(
-                  "你问我答",
+                  "智能对话",
                   icon: const Icon(Icons.chat_outlined),
                   color: Colors.blue[100],
                   onTap: () {

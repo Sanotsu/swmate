@@ -9,7 +9,7 @@
 /// 因为零一万物的API兼容openAI的api，后续付费的应该都是这样的，而不是之前免费的三大平台乱七八糟的
 ///
 enum ApiPlatform {
-  // baidu,
+  baidu,
   // tencent,
   // aliyun,
   siliconCloud,
@@ -18,7 +18,7 @@ enum ApiPlatform {
 
 // 模型对应的中文名
 final Map<ApiPlatform, String> CP_NAME_MAP = {
-  // ApiPlatform.baidu: '百度',
+  ApiPlatform.baidu: '百度',
   // ApiPlatform.tencent: '腾讯',
   // ApiPlatform.aliyun: '阿里',
   ApiPlatform.siliconCloud: '硅动科技',
@@ -36,6 +36,9 @@ enum CCM {
   // baiduErnieSpeedAppBuilder,
   baidu_Ernie_Lite_8K,
   baidu_Ernie_Tiny_8K,
+  baidu_Yi_34B_Chat_4K,
+  baidu_Fuyu_8B, // 图像理解
+
   tencent_Hunyuan_Lite,
   aliyun_Qwen_1p8B_Chat,
   aliyun_Qwen1p5_1p8B_Chat,
@@ -436,55 +439,81 @@ class CCMSpec {
 /// 具体的模型信息
 final List<CCMSpec> CCM_SPEC_LIST = [
   /// 下面是官方免费的
-  // CCMSpec(
-  //   ApiPlatform.baidu,
-  //   CCM.baidu_Ernie_Speed_8K,
-  //   "ernie_speed",
-  //   'ERNIESpeed8K',
-  //   8 * 1000,
-  //   true,
-  //   0,
-  //   0,
-  //   feature: """ERNIE Speed是百度2024年最新发布的自研高性能大语言模型，通用能力优异，
-  //       适合作为基座模型进行精调，更好地处理特定场景问题，同时具备极佳的推理性能。
-  //       ERNIE-Speed-8K是模型的一个版本，上下文窗口为8K。""",
-  // ),
-  // CCMSpec(
-  //   ApiPlatform.baidu,
-  //   CCM.baidu_Ernie_Speed_128K,
-  //   "ernie-speed-128k",
-  //   'ERNIESpeed128K',
-  //   128 * 1000,
-  //   true,
-  //   0,
-  //   0,
-  //   feature: """ERNIE Speed是百度2024年最新发布的自研高性能大语言模型，通用能力优异，
-  //   适合作为基座模型进行精调，更好地处理特定场景问题，同时具备极佳的推理性能。
-  //   ERNIE-Speed-128K是模型的一个版本，上下文窗口为128K。""",
-  // ),
-  // CCMSpec(
-  //   ApiPlatform.baidu,
-  //   CCM.baidu_Ernie_Lite_8K,
-  //   "ernie-lite-8k",
-  //   'ERNIELite8K',
-  //   8 * 1000,
-  //   true,
-  //   0,
-  //   0,
-  //   feature: "ERNIE Lite是百度自研的轻量级大语言模型，兼顾优异的模型效果与推理性能，适合低算力AI加速卡推理使用。",
-  // ),
-  // CCMSpec(
-  //   ApiPlatform.baidu,
-  //   CCM.baidu_Ernie_Tiny_8K,
-  //   "ernie-tiny-8k",
-  //   'ERNIETiny8K',
-  //   8 * 1000,
-  //   true,
-  //   0,
-  //   0,
-  //   feature: """ERNIE Tiny是百度自研的超高性能大语言模型，部署与精调成本在文心系列模型中最低。
-  //       ERNIE-Tiny-8K是模型的一个版本，上下文窗口为8K。""",
-  // ),
+  CCMSpec(
+    ApiPlatform.baidu,
+    CCM.baidu_Ernie_Speed_8K,
+    "ernie_speed",
+    'ERNIESpeed8K',
+    8 * 1000,
+    true,
+    0,
+    0,
+    feature: """ERNIE Speed是百度2024年最新发布的自研高性能大语言模型，通用能力优异，
+        适合作为基座模型进行精调，更好地处理特定场景问题，同时具备极佳的推理性能。
+        ERNIE-Speed-8K是模型的一个版本，上下文窗口为8K。""",
+  ),
+  CCMSpec(
+    ApiPlatform.baidu,
+    CCM.baidu_Ernie_Speed_128K,
+    "ernie-speed-128k",
+    'ERNIESpeed128K',
+    128 * 1000,
+    true,
+    0,
+    0,
+    feature: """ERNIE Speed是百度2024年最新发布的自研高性能大语言模型，通用能力优异，
+    适合作为基座模型进行精调，更好地处理特定场景问题，同时具备极佳的推理性能。
+    ERNIE-Speed-128K是模型的一个版本，上下文窗口为128K。""",
+  ),
+  CCMSpec(
+    ApiPlatform.baidu,
+    CCM.baidu_Ernie_Lite_8K,
+    "ernie-lite-8k",
+    'ERNIELite8K',
+    8 * 1000,
+    true,
+    0,
+    0,
+    feature: "ERNIE Lite是百度自研的轻量级大语言模型，兼顾优异的模型效果与推理性能，适合低算力AI加速卡推理使用。",
+  ),
+  CCMSpec(
+    ApiPlatform.baidu,
+    CCM.baidu_Ernie_Tiny_8K,
+    "ernie-tiny-8k",
+    'ERNIETiny8K',
+    8 * 1000,
+    true,
+    0,
+    0,
+    feature: """ERNIE Tiny是百度自研的超高性能大语言模型，部署与精调成本在文心系列模型中最低。
+        ERNIE-Tiny-8K是模型的一个版本，上下文窗口为8K。""",
+  ),
+  CCMSpec(
+    ApiPlatform.baidu,
+    CCM.baidu_Yi_34B_Chat_4K,
+    "yi_34b_chat",
+    'YI_34B_Chat_4K',
+    4 * 1000,
+    true,
+    0,
+    0,
+    feature: """Yi-34B是由零一万物开发并开源的双语大语言模型，使用4K序列长度进行训练，在推理期间可扩展到32K；
+    模型在多项评测中全球领跑，取得了多项 SOTA 国际最佳性能指标表现，该版本为支持对话的chat版本。""",
+  ),
+
+  CCMSpec(
+    ApiPlatform.baidu,
+    CCM.baidu_Fuyu_8B,
+    "fuyu-8b",
+    'Fuyu_8B',
+    4 * 1000,
+    true,
+    0,
+    0,
+    isVision: true,
+    feature: """Fuyu-8B是由Adept AI训练的多模态图像理解模型，可以支持多样的图像分辨率，回答图形图表有关问题。
+    模型在视觉问答和图像描述等任务上表现良好。""",
+  ),
   // CCMSpec(
   //   ApiPlatform.tencent,
   //   CCM.tencent_Hunyuan_Lite,
@@ -748,7 +777,7 @@ final List<CCMSpec> CCM_SPEC_LIST = [
     ApiPlatform.lingyiwanwu,
     CCM.YiLargeRag,
     "yi-large-rag",
-    'YiLargeRag',
+    'YiLargeRag_检索增强生成',
     16000,
     false,
     25,

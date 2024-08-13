@@ -58,6 +58,7 @@ dart run build_runner build --delete-conflicting-outputs
 #### 2024-08-13
 
 - refactor: “文档总结”和“文档翻译”合并为“文档解读”功能页面。
+- feat: “智能对话”部分添加了百度的免费模型。
 
 ### todo:
 

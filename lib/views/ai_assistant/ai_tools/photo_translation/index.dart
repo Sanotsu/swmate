@@ -15,9 +15,6 @@ import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
 import '../../_chat_screen_parts/chat_list_area.dart';
 import '../../_helper/handle_cc_response.dart';
-import '../../_helper/save_markdown_as_pdf.dart';
-import '../../_helper/save_markdown_as_txt.dart';
-import '../../_helper/save_markdown_html_as_pdf.dart';
 
 ///
 /// 2027-07-17 粗略布局
@@ -247,6 +244,7 @@ class _PhotoTranslationState extends State<PhotoTranslation> {
               isBotThinking: isBotThinking,
               isAvatarTop: true,
               regenerateLatestQuestion: regenerateLatestQuestion,
+              selectedImage: _selectedImage,
             ),
           ],
         ),
@@ -426,9 +424,9 @@ class _PhotoTranslationState extends State<PhotoTranslation> {
                             "${defaultCmds[0]}${langLabel[targetLang]!}.",
                           );
                         },
-                  child: const Text(
-                    "AI翻译",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  child: Text(
+                    isBotThinking ? "AI翻译中…" : "AI翻译",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -436,40 +434,6 @@ class _PhotoTranslationState extends State<PhotoTranslation> {
           ),
         ],
       ),
-    );
-  }
-
-  buildDLPopupMenuButton() {
-    return PopupMenuButton<String>(
-      icon: Icon(Icons.download_outlined, size: 20.sp),
-      // 调整弹出按钮的位置
-      position: PopupMenuPosition.under,
-      offset: Offset(25.sp, 0),
-      onSelected: (String value) async {
-        // 处理选中的菜单项
-        // 之前还有个预览页面，现在直接保存了
-        if (value == 'txt') {
-          saveMarkdownAsTxt(messages.last.content);
-        } else if (value == 'pdf') {
-          saveMarkdownHtmlAsPdf(messages.last.content, _selectedImage!);
-        } else {
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) => SaveMarkdownToPdf(
-          //       messages.last.content,
-          //       imageFile: _selectedImage!,
-          //     ),
-          //   ),
-          // );
-          saveMarkdownAsPdf(messages.last.content, _selectedImage!);
-        }
-      },
-      itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
-        const PopupMenuItem(value: 'txt', child: Text('保存为txt')),
-        const PopupMenuItem(value: 'pdf', child: Text('保存为pdf')),
-        const PopupMenuItem(value: 'pdf-test', child: Text('保存为pdf(测试)')),
-      ],
     );
   }
 }

@@ -126,14 +126,14 @@ List<String> chatQuestionSamples = [
 
 /// 保存翻译结果的目录
 final SAVE_TRANSLATION_DIR =
-    Directory('/storage/emulated/0/AILightLife/translations');
+    Directory('/storage/emulated/0/swmate/translations');
 
 /// 智能群聊的对话内容保存为json(本来应该存数据库的太麻烦了，这里保存文件意思一下)
 final SAVE_MODEL_BATTLE_DIR =
-    Directory('/storage/emulated/0/AILightLife/chat_records');
+    Directory('/storage/emulated/0/swmate/chat_records');
 
 /// 智能群聊的对话语音文件目录
-final CHAT_AUDIO_DIR = Directory('/storage/emulated/0/AILightLife/chat_audio');
+final CHAT_AUDIO_DIR = Directory('/storage/emulated/0/swmate/chat_audio');
 
 // 可供翻译的目标语言
 enum TargetLanguage {
