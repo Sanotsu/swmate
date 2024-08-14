@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../common/constants.dart';
-import '../ai_tools/document_interpret/index.dart';
- 
 
 ///
 /// 翻译和总结做为预设功能，不需要多轮对话，只需要点击功能按钮即可
 ///
 class DefaultAgentButtonRow extends StatelessWidget {
-  // 当前使用的哪个智能体
-  final CusAgent cusAgent;
-
+  // 是否显示语言切换部件
+  final bool isShowLanguageSwitch;
   // 如果是翻译模式，则需要选择目标语言
   final TargetLanguage? targetLang;
   // 如果翻译的语言变了，要触发目标语言的修改
@@ -29,7 +26,7 @@ class DefaultAgentButtonRow extends StatelessWidget {
 
   const DefaultAgentButtonRow({
     super.key,
-    this.cusAgent = CusAgent.img_translator,
+    this.isShowLanguageSwitch = true,
     this.targetLang,
     this.onLanguageChanged,
     this.langLabel,
@@ -46,8 +43,7 @@ class DefaultAgentButtonRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           SizedBox(width: 5.sp),
-          if (cusAgent == CusAgent.img_translator ||
-              cusAgent == CusAgent.doc_translator)
+          if (isShowLanguageSwitch)
             Expanded(
               flex: 3,
               child: Container(
@@ -84,9 +80,7 @@ class DefaultAgentButtonRow extends StatelessWidget {
                 ),
               ),
             ),
-          if (cusAgent == CusAgent.img_summarizer ||
-              cusAgent == CusAgent.doc_summarizer)
-            Expanded(flex: 3, child: Container()),
+          if (!isShowLanguageSwitch) Expanded(flex: 3, child: Container()),
           Expanded(
             flex: 2,
             child: Row(

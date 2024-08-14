@@ -81,7 +81,10 @@ class _ChatListAreaState extends State<ChatListArea> {
                   // 构建每个对话消息
                   MessageItem(
                     message: msg,
-                    isBotThinking: widget.isBotThinking,
+                    // 只有最后一个才显示
+                    isBotThinking: index == widget.messages.length - 1
+                        ? widget.isBotThinking
+                        : false,
                     isAvatarTop: widget.isAvatarTop,
                   ),
 

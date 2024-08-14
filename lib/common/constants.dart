@@ -152,7 +152,7 @@ enum TargetLanguage {
 }
 
 // 语言标签
-Map<TargetLanguage, String> langLabel = {
+Map<TargetLanguage, String> LangLabelMap = {
   TargetLanguage.simplifiedChinese: "中文(简体)",
   TargetLanguage.traditionalChinese: "中文(繁体)",
   TargetLanguage.english: "英语",

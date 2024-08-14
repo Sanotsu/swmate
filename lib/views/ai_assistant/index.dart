@@ -7,9 +7,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../common/components/tool_widget.dart';
 import '../../services/cus_get_storage.dart';
 import 'ai_tools/chat_bot/index.dart';
-import 'ai_tools/document_interpret/index.dart';
-import 'ai_tools/image_interpret/index.dart';
-import 'ai_tools/photo_translation/index.dart';
+import 'ai_tools/file_interpret/base/document_interpret.dart';
+import 'ai_tools/file_interpret/base/image_interpret.dart';
 import 'ai_tools/test_page.dart';
 
 ///
@@ -110,7 +109,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
               crossAxisCount: 2,
-              childAspectRatio: 2 / 1,
+              childAspectRatio: 3 / 2,
               children: <Widget>[
                 ///
                 /// 使用的对话模型，可以连续问答对话
@@ -130,22 +129,16 @@ class _AIToolIndexState extends State<AIToolIndex> {
                 ),
 
                 buildToolEntrance(
-                  "拍照翻译",
+                  "[AI群聊]",
                   icon: const Icon(Icons.chat_outlined),
                   color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PhotoTranslation(),
-                      ),
-                    );
-                  },
+                  onTap: () {},
                 ),
 
                 buildToolEntrance(
                   "文档解读",
-                  icon: const Icon(Icons.chat_outlined),
+                  subtitle: "文档翻译\n文档总结\n文档提问",
+                  icon: const Icon(Icons.newspaper_outlined),
                   color: Colors.blue[100],
                   onTap: () {
                     Navigator.push(
@@ -159,13 +152,14 @@ class _AIToolIndexState extends State<AIToolIndex> {
 
                 buildToolEntrance(
                   "图片解读",
-                  icon: const Icon(Icons.chat_outlined),
+                  subtitle: "拍照翻译\n图片总结\n图片问答",
+                  icon: const Icon(Icons.image_outlined),
                   color: Colors.blue[100],
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ImageInterpret(),
+                        builder: (context) => const ImageNewInterpret(),
                       ),
                     );
                   },

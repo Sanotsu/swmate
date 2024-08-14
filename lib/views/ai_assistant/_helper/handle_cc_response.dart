@@ -1,5 +1,7 @@
 // llm_utils.dart
 
+// ignore_for_file: camel_case_types
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -11,6 +13,12 @@ import '../../../apis/chat_completion/common_cc_apis.dart';
 import '../../../common/llm_spec/cc_spec.dart';
 import '../../../models/chat_competion/com_cc_resp.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
+
+enum CC_SWC_TYPE {
+  chat,
+  doc,
+  image,
+}
 
 ///
 /// 获取流式响应句柄
@@ -25,7 +33,9 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
   // String? system,
   bool isStream = true,
   // 如果是图像理解，还需要图片文件、和图片解析出错的回调
-  bool isVision = false,
+  /// 目前文本对话、文档解读、图片解读都会调用这个函数
+  /// 区分3者尽量简单一点:chat、doc、image
+  CC_SWC_TYPE useType = CC_SWC_TYPE.chat,
   File? selectedImage,
   // 图像理解但没图像的提示
   Function(String)? onNotImageHint,
@@ -33,7 +43,6 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
   Function(String)? onImageError,
 
   // 如果是文档解读，还需文档内容、和文档为空的出错的回调
-  bool isDoc = false,
   String? docContent,
   Function(String)? onNotDocHint,
 }) async {
@@ -45,7 +54,7 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
       .toList();
 
   // 如果是图像理解、但没有传入图片，模拟模型返回异常信息
-  if (selectedImage == null && isVision) {
+  if (selectedImage == null && useType == CC_SWC_TYPE.image) {
     var hintInfo = "图像理解模式下，必须选择图片";
     if (onNotImageHint != null) {
       onNotImageHint(hintInfo);
@@ -57,7 +66,7 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
   }
 
   // 如果是文档解析，但没有传入文档内容(文档解析提取文字部分在其他地方)，模拟模型返回异常信息
-  if (isDoc) {
+  if (useType == CC_SWC_TYPE.doc) {
     if ((docContent == null || docContent.isEmpty)) {
       var hintInfo = "文档解读模式下，必须输入文档内容";
       if (onNotDocHint != null) {
@@ -80,7 +89,7 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
   // 可能会出现不存在的图片路径，那边这里转base64就会报错，那么就弹窗提示一下
   try {
     // 如果图片解析，要对传入的对话参数做一些调整
-    if (isVision) {
+    if (useType == CC_SWC_TYPE.image) {
       var tempBase64Str = base64Encode((await selectedImage!.readAsBytes()));
       String? imageBase64String = "data:image/jpeg;base64,$tempBase64Str";
 
@@ -102,28 +111,10 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
           break; // 找到第一个满足条件的对象后退出循环
         }
       }
-
-      // msgs = messages
-      //     .map((e) => CCMessage(
-      //           // 2024-08-13 不知道user是不是每次输入都要带上图片？？？
-      //           // 实测，只需要第一个带上图片信息就好；虽然每次都带上也没问题，但token消耗更多了
-      //           content: (e.role != "user")
-      //               ? e.content
-      //               // 这里不能直接是String，但不必新搞一个类，直接拼接json
-      //               : [
-      //                   {
-      //                     "type": "image_url",
-      //                     "image_url": {"url": imageBase64String}
-      //                   },
-      //                   {"type": "text", "text": e.content},
-      //                 ],
-      //           role: e.role,
-      //         ))
-      //     .toList();
     }
 
     // 如果图片解析，要对传入的对话参数做一些调整
-    if (isDoc) {
+    if (useType == CC_SWC_TYPE.doc) {
       messages.firstWhere((e) => e.role == "user");
 
       // 遍历消息，把第一个user信息替换成图片结构，后面的保留原本输入字符

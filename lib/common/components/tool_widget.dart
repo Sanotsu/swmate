@@ -26,6 +26,7 @@ import '../constants.dart';
 /// 构建AI对话云平台入口按钮
 buildToolEntrance(
   String label, {
+  String? subtitle,
   Icon? icon,
   Color? color,
   void Function()? onTap,
@@ -50,6 +51,7 @@ buildToolEntrance(
       ),
       child: Center(
         child: ListTile(
+          // dense: true,
           leading: icon ?? const Icon(Icons.chat, color: Colors.blue),
           title: Text(
             label,
@@ -58,11 +60,21 @@ buildToolEntrance(
               color: Colors.blueAccent,
               fontWeight: FontWeight.bold,
             ),
-            maxLines: 2,
+            maxLines: 1,
             softWrap: true,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
           ),
+          subtitle: subtitle != null
+              ? Text(
+                  subtitle,
+                  // style: TextStyle(fontSize: 15.sp, color: Colors.grey),
+                  maxLines: 10,
+                  softWrap: true,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                )
+              : null,
         ),
       ),
     ),

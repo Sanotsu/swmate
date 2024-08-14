@@ -65,6 +65,7 @@ dart run build_runner build --delete-conflicting-outputs
 - refactor: “拍照翻译”重构为“图片解读”，预设支持翻译、总结、分析功能。
   - 翻译、总结是预设提问单个响应，分析是可以追问多轮问答。
 - refactor: 重构“文档解读”和“图片解读”为类似写法。
+- refactor: 使用抽象类重构了“文档解读”和“图片解读”;fix:修复了一些细节。
 
 ### todo:
 
