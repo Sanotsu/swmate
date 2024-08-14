@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, constant_identifier_names
 
 import 'dart:io';
 
@@ -11,8 +11,11 @@ import 'package:flutter_charset_detector/flutter_charset_detector.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
 
 import '../../../../apis/chat_completion/common_cc_apis.dart';
+import '../../../../apis/voice_recognition/xunfei_apis.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
 import '../../../../common/llm_spec/cc_spec.dart';
@@ -20,27 +23,39 @@ import '../../../../common/utils/tools.dart';
 import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
 import '../../_chat_screen_parts/chat_list_area.dart';
+import '../../_chat_screen_parts/chat_user_send_area_with_voice.dart';
+import '../../_chat_screen_parts/default_agent_button_row.dart';
+import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
 import '../../_helper/document_parser.dart';
 import '../../_helper/handle_cc_response.dart';
 import '../../_componets/cus_toggle_button_selector.dart';
 
-enum CusDocAgent {
-  translator,
-  summarizer,
+const docHintInfo = """1. 目前仅支持上传单个文档文件;
+2. 上传文档目前仅支持 pdf、txt、docx、doc 格式;
+3. 上传的文档和手动输入的文档总内容不超过8000字符;
+4. 如有上传文件, 点击[文档解析完成]蓝字, 可以预览解析后的文档.""";
+
+enum CusAgent {
+  doc_translator, // 翻译
+  doc_summarizer, // 总结
+  doc_analyzer, // 分析
+  img_translator,
+  img_summarizer,
+  img_analyzer,
 }
 
 /// 文档解读这页面可能需要的一些栏位
-class CusDocAgentSpec {
+class CusAgentSpec {
   // 智能体的标签
   final String label;
   // 智能体的枚举名称
-  final CusDocAgent name;
+  final CusAgent name;
   // 智能体的提示信息
   final String hintInfo;
   // 智能体的系统提示
   final String systemPrompt;
 
-  CusDocAgentSpec({
+  CusAgentSpec({
     required this.label,
     required this.name,
     required this.hintInfo,
@@ -49,18 +64,16 @@ class CusDocAgentSpec {
 }
 
 ///
-/// 文档处理（文档翻译、文档总结）
-///   可考虑支持文档上传，然后翻译文档，再下载
-///   当翻译器时，不上传文档，就输入翻译内容了
+/// 文档处理(和图片处理一样，不考虑用户自己追加的问题内容了)
 ///
-class DocumentInterpret extends StatefulWidget {
-  const DocumentInterpret({super.key});
+class DocumentNewInterpret extends StatefulWidget {
+  const DocumentNewInterpret({super.key});
 
   @override
-  State createState() => _DocumentInterpretState();
+  State createState() => _DocumentNewInterpretState();
 }
 
-class _DocumentInterpretState extends State<DocumentInterpret> {
+class _DocumentNewInterpretState extends State<DocumentNewInterpret> {
   ///
   /// 文件上传和解析、手动输入文本 相关变量
   ///
@@ -71,9 +84,9 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
   // 文档解析出来的内容
   String _fileContent = '';
 
-  // 用户输入的文本控制器
+  // 用户提问输入的文本控制器
   final _userInputController = TextEditingController();
-  // 用户输入的内容（当不是AI在思考、且输入框有非空文字时才可以点击发送按钮）
+  // 用户提问输入的内容（当不是AI在思考、且输入框有非空文字时才可以点击发送按钮）
   String userInput = "";
 
   ///
@@ -99,13 +112,10 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
 
   // 预设的文档解读的功能列表
   var items = [
-    CusDocAgentSpec(
+    CusAgentSpec(
       label: "翻译",
-      name: CusDocAgent.translator,
-      hintInfo: """1. 目前仅支持上传单个文档文件;
-2. 上传文档目前仅支持 pdf、txt、docx、doc 格式;
-3. 上传的文档和手动输入的文档总内容不超过8000字符;
-4. 如有上传文件, 点击[文档解析完成]蓝字, 可以预览解析后的文档.""",
+      name: CusAgent.doc_translator,
+      hintInfo: docHintInfo,
       systemPrompt: """您是一位精通世界上任何语言的翻译专家。将对用户输入的文本进行精准翻译。只做翻译工作，无其他行为。
       如果用户输入了多种语言的文本，统一翻译成目标语言。
       如果用户指定了翻译的目标语言，则翻译成该目标语言；如果目标语言和原版语言一致，则不做翻译直接输出原版语言。
@@ -113,20 +123,23 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
       翻译完成之后单独解释重难点词汇。
       如果翻译后内容很多，需要分段显示。""",
     ),
-    CusDocAgentSpec(
+    CusAgentSpec(
       label: "总结",
-      name: CusDocAgent.summarizer,
-      hintInfo: """1. 目前仅支持上传单个文档文件;
-2. 上传文档目前仅支持 pdf、txt、docx、doc 格式;
-3. 上传的文档和手动输入的文档总内容不超过8000字符;
-4. 如有上传文件, 点击[文档解析完成]蓝字, 可以预览解析后的文档.""",
+      name: CusAgent.doc_summarizer,
+      hintInfo: docHintInfo,
       systemPrompt: """你是一个文档分析专家，你需要根据提供的文档内容，生成一份简洁、结构化的文档摘要。
       如果原文本不是中文，总结要使用中文。""",
+    ),
+    CusAgentSpec(
+      label: "分析",
+      name: CusAgent.doc_analyzer,
+      hintInfo: docHintInfo,
+      systemPrompt: """你是一个文档分析专家，你需要根据提供的文档内容，回答用户输入的各种问题。""",
     ),
   ];
 
   // 当前选中的文档功能
-  late CusDocAgentSpec selectAgent;
+  late CusAgentSpec selectAgent;
 
   @override
   void dispose() {
@@ -139,7 +152,25 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
   void initState() {
     super.initState();
 
-    selectAgent = items.first;
+    setState(() {
+      selectAgent = items.first;
+      renewSystemAndMessages();
+    });
+  }
+
+  // 切换预设功能时，需要改变system设置，且清空对话
+  renewSystemAndMessages() {
+    setState(() {
+      messages.clear();
+      messages.add(
+        ChatMessage(
+          messageId: const Uuid().v4(),
+          role: "system",
+          content: selectAgent.systemPrompt,
+          dateTime: DateTime.now(),
+        ),
+      );
+    });
   }
 
   // 在用户输入或者AI响应后，需要把对话列表滚动到最下面
@@ -155,6 +186,10 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
       duration: const Duration(milliseconds: 50),
     );
   }
+
+// 因为点击预设的“文档翻译”、“文档总结”，“文档分析”提问时，都要把第一个用户输入作为文档内容+提问
+// 那就需要在上传文件完成、或者用户输入文档有变化时就实时更新文档内容
+  combineDocContent() {}
 
   /// 选择文件，并解析出文本内容
   Future<void> pickAndReadFile() async {
@@ -212,6 +247,35 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
     }
   }
 
+  /// 用户提问(用户提问和预设的总结、翻译功能按钮不会同时出现)
+  userSendMessage(
+    String text, {
+    // 2024-08-07 可能text是语音转的文字，保留语音文件路径
+    String? contentVoicePath,
+  }) {
+    setState(() {
+      // 发送消息的逻辑，这里只是简单地将消息添加到列表中
+      // 注意，文档解析的内容，在 getCCResponseSWC 有补充发个后台接口，对话记录中不会显示
+      messages.add(
+        ChatMessage(
+          messageId: const Uuid().v4(),
+          role: "user",
+          content: text,
+          // 没有录音文件就存空字符串，避免内部转化为“null”字符串
+          contentVoicePath: contentVoicePath ?? "",
+          dateTime: DateTime.now(),
+        ),
+      );
+
+      _userInputController.clear();
+      // 滚动到ListView的底部
+      chatListScrollToBottom();
+
+      // 用户发送之后，等待AI响应
+      getProcessedResult();
+    });
+  }
+
   ///
   /// 问答都是一次性的，不用想着多次发送的情况了
   /// 对于是否展示用户输入的内容，分为以下三种情况：
@@ -226,66 +290,20 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
     // 整个内容就只有翻译结果，所以每次点击翻译，都要从对话列表中清除之前的对话内容
     setState(() {
       isBotThinking = true;
-      messages.clear();
     });
 
-    // 用户输入的内容不会自动清除,处理的文档内容是上传的和用户输入的之和
-    var docContent = "";
-    if (selectAgent.name == CusDocAgent.translator) {
-      docContent = "请翻译下面所有文本，目标语言是：${langLabel[targetLang]}。\n\n";
-    } else if (selectAgent.name == CusDocAgent.summarizer) {
-      // docContent = "请阅读下面所有文本，并总结出文本的主要内容。\n\n";
-    }
-
-    if (_selectedFile != null) {
-      docContent += _fileContent;
-    }
-
-    // 理论上上传文档或用户输入为空不会都为true
-    if (userInput.isNotEmpty) {
-      docContent += userInput;
-    }
-
-    // if (selectAgent.name == CusDocAgent.translator) {
-    //   docContent += "\n\n请翻译上述所有文本，目标语言是：${langLabel[targetLang]}";
-    // } else if (selectAgent.name == CusDocAgent.summarizer) {
-    //   docContent += "\n\n请阅读上述所有文本，并总结出文档的主要内容。";
-    // }
-
-    var contentTotalLength = _fileContent.length + userInput.length;
-    // 文本太长了暂时就算了
-    if (contentTotalLength > 8000) {
-      EasyLoading.showInfo(
-        "文档内容太长($contentTotalLength字符)，暂不支持超过8000字符的文档处理，请谅解。",
-        duration: const Duration(seconds: 5),
-      );
-
-      setState(() {
-        isBotThinking = false;
-        messages.clear();
-      });
-      return;
-    }
-
-    // ？？？具体给大模型发送的指令，就不给用户展示了(文档解析可能不正确，内容也太多)
-    List<CCMessage> msgs = [
-      CCMessage(
-        role: "system",
-        content: selectAgent.systemPrompt,
-      ),
-      CCMessage(
-        role: "user",
-        content: docContent,
-      ),
-    ];
-
-    // 后续可手动终止响应时的写法
-    StreamWithCancel<ComCCResp> tempStream = await siliconFlowCCRespWithCancel(
-      msgs,
-      model: CCM_SPEC_LIST
+    StreamWithCancel<ComCCResp> tempStream = await getCCResponseSWC(
+      messages: messages,
+      selectedPlatform: ApiPlatform.siliconCloud,
+      selectedModel: CCM_SPEC_LIST
           .firstWhere((e) => e.ccm == CCM.siliconCloud_Qwen2_7B_Instruct)
           .model,
-      stream: true,
+      isDoc: true,
+      isStream: isStream,
+      docContent: _fileContent,
+      onNotDocHint: (error) {
+        commonExceptionDialog(context, "异常提示", error);
+      },
     );
 
     if (!mounted) return;
@@ -339,6 +357,15 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
     );
   }
 
+  /// 如果对结果不满意，可以重新翻译
+  regenerateLatestQuestion() {
+    setState(() {
+      // 将最后一条消息删除， 重新发送
+      messages.removeLast();
+      getProcessedResult();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -368,13 +395,14 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                CusToggleButtonSelector<CusDocAgentSpec>(
+                CusToggleButtonSelector<CusAgentSpec>(
                   items: items,
                   onItemSelected: (item) {
                     print('Selected item: ${item.label}');
                     setState(() {
                       selectAgent = item;
                     });
+                    renewSystemAndMessages();
                   },
                   labelBuilder: (item) => item.label,
                 ),
@@ -385,7 +413,43 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
 
           buildFileAndInputArea(),
           SizedBox(height: 10.sp),
-          buildChangeLangAndConfirmRow(),
+
+          if (selectAgent.name == CusAgent.doc_translator)
+            DefaultAgentButtonRow(
+              cusAgent: selectAgent.name,
+              targetLang: targetLang,
+              langLabel: langLabel,
+              onLanguageChanged: (newLang) {
+                setState(() {
+                  targetLang = newLang;
+                });
+              },
+              isConfirmClickable: !(_fileContent.isEmpty || isBotThinking),
+              onConfirmPressed: () {
+                setState(() {
+                  renewSystemAndMessages();
+                });
+
+                userSendMessage(
+                  "请翻译上面所有文本，目标语言是：${langLabel[targetLang]}。\n\n",
+                );
+              },
+              labelKeyword: isBotThinking ? "AI翻译中" : "AI翻译",
+            ),
+          if (selectAgent.name == CusAgent.doc_summarizer)
+            DefaultAgentButtonRow(
+              cusAgent: selectAgent.name,
+              isConfirmClickable: !(_fileContent.isEmpty || isBotThinking),
+              onConfirmPressed: () {
+                setState(() {
+                  renewSystemAndMessages();
+                });
+                // 总结时，不需要额外用户内容，直接靠system设置就好，但要显示对话，所以还是要提一下
+                userSendMessage("总结上面文档内容，给出摘要。");
+              },
+              labelKeyword: isBotThinking ? "AI总结中" : "AI总结",
+            ),
+
           SizedBox(height: 10.sp),
 
           /// 显示对话消息主体
@@ -406,14 +470,74 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
                   ),
                 )
               : ChatListArea(
+                  /// 如果不想显示system信息，这里可以移除掉(但不能修改原消息列表)
                   messages: messages,
+                  // messages: messages.where((e) => e.role != "system").toList(),
                   scrollController: _scrollController,
                   isBotThinking: isBotThinking,
                   isAvatarTop: true,
-                  regenerateLatestQuestion: () {
-                    getProcessedResult();
-                  },
+                  regenerateLatestQuestion: regenerateLatestQuestion,
                 ),
+
+          /// 如果选择的是“分析文档”功能，才显示这个提问输入框
+          /// 用户发送区域
+          if (selectAgent.name == CusAgent.doc_analyzer)
+            ChatUserVoiceSendArea(
+              controller: _userInputController,
+              hintText: '询问关于上面文档的任何问题',
+              isBotThinking: isBotThinking,
+              isSendClickable: userInput.isNotEmpty && _fileContent.isNotEmpty,
+              onInpuChanged: (text) {
+                setState(() {
+                  userInput = text.trim();
+                });
+              },
+              // onSendPressed 和 onSendSounds 理论上不会都触发的
+              onSendPressed: () {
+                userSendMessage(userInput);
+                setState(() {
+                  userInput = "";
+                });
+              },
+              // 点击了语音发送，可能是文件，也可能是语音转的文字
+              onSendSounds: (type, content) async {
+                print("语音发送的玩意儿 $type $content");
+
+                if (type == SendContentType.text) {
+                  userSendMessage(content);
+                } else if (type == SendContentType.voice) {
+                  //
+
+                  /// 同一份语言有两个部分，一个是原始录制的m4a的格式，一个是转码厚的pcm格式
+                  /// 前者用于语音识别，后者用于播放
+                  String fullPathWithoutExtension = path.join(
+                    path.dirname(content),
+                    path.basenameWithoutExtension(content),
+                  );
+
+                  var transcription =
+                      await sendAudioToServer("$fullPathWithoutExtension.pcm");
+                  // 注意：语言转换文本必须pcm格式，但是需要点击播放的语音则需要原本的m4a格式
+                  // 都在同一个目录下同一路径不同扩展名
+                  userSendMessage(
+                    transcription,
+                    // contentVoicePath: "$fullPathWithoutExtension.m4a",
+                  );
+                }
+              },
+              // 2024-08-08 手动点击了终止
+              onStop: () async {
+                await respStream.cancel();
+                if (!mounted) return;
+                setState(() {
+                  _userInputController.clear();
+                  // 滚动到ListView的底部
+                  chatListScrollToBottom();
+
+                  isBotThinking = false;
+                });
+              },
+            ),
 
           SizedBox(height: 10.sp),
         ],
@@ -433,28 +557,10 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
       ),
       child: Column(
         children: [
-          buildFileUpload(),
           Divider(thickness: 2.sp),
           SizedBox(
-            height: 0.2.sh,
-            child: TextField(
-              controller: _userInputController,
-              decoration: const InputDecoration(
-                hintText: '手动输入区域',
-                // 取消边框线
-                border: InputBorder.none,
-              ),
-              maxLines: null, // 设置为 null 以支持自动换行
-              minLines: null, // 设置为 null 以支持自动换行
-              expands: true, // 使 TextField 扩展以填充可用空间
-              onChanged: (String? text) {
-                if (text != null) {
-                  setState(() {
-                    userInput = text.trim();
-                  });
-                }
-              },
-            ),
+            height: 100.sp,
+            child: buildFileUpload(),
           ),
         ],
       ),
@@ -479,6 +585,7 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
                   },
                   // 显示文档名称
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -579,100 +686,6 @@ class _DocumentInterpretState extends State<DocumentInterpret> {
           ),
         );
       },
-    );
-  }
-
-  /// 切换目标翻译语言和确认翻译的行
-  buildChangeLangAndConfirmRow() {
-    return SizedBox(
-      height: 32.sp,
-      // 下拉框有个边框，需要放在容器中
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          SizedBox(width: 10.sp),
-          (selectAgent.name == CusDocAgent.translator)
-              ? Expanded(
-                  flex: 3,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey, width: 1.0),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        const Icon(Icons.swap_vert),
-                        DropdownButton<TargetLanguage?>(
-                          value: targetLang,
-                          underline: Container(),
-                          alignment: AlignmentDirectional.center,
-                          menuMaxHeight: 300.sp,
-                          items: TargetLanguage.values
-                              .map((e) => DropdownMenuItem<TargetLanguage>(
-                                    value: e,
-                                    alignment: AlignmentDirectional.center,
-                                    child: Text(
-                                      langLabel[e]!,
-                                      style:
-                                          const TextStyle(color: Colors.blue),
-                                    ),
-                                  ))
-                              .toList(),
-                          // 如果在翻译中则不允许切换目标语言
-                          onChanged: isBotThinking
-                              ? null
-                              : (val) {
-                                  setState(() {
-                                    targetLang = val!;
-                                  });
-                                },
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : Expanded(flex: 3, child: Container()),
-          Expanded(
-            flex: 2,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    // minimumSize: Size.zero,
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 20.sp, vertical: 5.sp),
-                    // 修改圆角大小
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15.sp),
-                    ),
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.blue,
-                  ),
-                  // 用户输入为空同时上传文档内容为空，或者已经在翻译中了，则不允许再点击翻译按钮
-                  onPressed: (userInput.isEmpty && _fileContent.isEmpty) ||
-                          isBotThinking
-                      ? null
-                      : () {
-                          // 在当前上下文中查找最近的 FocusScope 并使其失去焦点，从而收起键盘。
-                          FocusScope.of(context).unfocus();
-
-                          // 调用文档分析总结函数
-                          getProcessedResult();
-                        },
-                  child: Text(
-                    isBotThinking
-                        ? "${selectAgent.label}中..."
-                        : "AI${selectAgent.label}",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 

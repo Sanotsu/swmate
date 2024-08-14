@@ -31,8 +31,13 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
   Function(String)? onNotImageHint,
   // 有图像但转base64报错
   Function(String)? onImageError,
+
+  // 如果是文档解读，还需文档内容、和文档为空的出错的回调
+  bool isDoc = false,
+  String? docContent,
+  Function(String)? onNotDocHint,
 }) async {
-  // 将已有的消息处理成大模型的消息列表格式(构建查询条件时要删除占位的消息)
+  // 正常的文本对话，将已有的消息处理成大模型的消息列表格式(构建查询条件时要删除占位的消息)
   List<CCMessage> msgs = messages
       .map(
         (e) => CCMessage(content: e.content, role: e.role),
@@ -48,31 +53,89 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
       EasyLoading.showError(hintInfo);
     }
 
-    // return StreamWithCancel<ComCCResp>(const Stream.empty(), () async {});
     return StreamWithCancel.empty();
+  }
+
+  // 如果是文档解析，但没有传入文档内容(文档解析提取文字部分在其他地方)，模拟模型返回异常信息
+  if (isDoc) {
+    if ((docContent == null || docContent.isEmpty)) {
+      var hintInfo = "文档解读模式下，必须输入文档内容";
+      if (onNotDocHint != null) {
+        onNotDocHint(hintInfo);
+      } else {
+        EasyLoading.showError(hintInfo);
+      }
+      return StreamWithCancel.empty();
+    } else if (docContent.length > 8000) {
+      var hintInfo = "文档内容太长(${docContent.length}字符)，暂不支持超过8000字符的文档处理，请谅解。";
+      if (onNotDocHint != null) {
+        onNotDocHint(hintInfo);
+      } else {
+        EasyLoading.showError(hintInfo);
+      }
+      return StreamWithCancel.empty();
+    }
   }
 
   // 可能会出现不存在的图片路径，那边这里转base64就会报错，那么就弹窗提示一下
   try {
+    // 如果图片解析，要对传入的对话参数做一些调整
     if (isVision) {
       var tempBase64Str = base64Encode((await selectedImage!.readAsBytes()));
       String? imageBase64String = "data:image/jpeg;base64,$tempBase64Str";
 
-      msgs = messages
-          .map((e) => CCMessage(
-                content: (e.role == "assistant")
-                    ? e.content
-                    // 这里不能直接是String，但不必新搞一个类，直接拼接json
-                    : [
-                        {
-                          "type": "image_url",
-                          "image_url": {"url": imageBase64String}
-                        },
-                        {"type": "text", "text": e.content},
-                      ],
-                role: e.role,
-              ))
-          .toList();
+      messages.firstWhere((e) => e.role == "user");
+
+      // 遍历消息，把第一个user信息替换成图片结构，后面的保留原本输入字符
+      for (int i = 0; i < msgs.length; i++) {
+        var e = msgs[i];
+
+        // 找到并替换第一个满足条件的对象
+        if (e.role == "user") {
+          e.content = [
+            {
+              "type": "image_url",
+              "image_url": {"url": imageBase64String}
+            },
+            {"type": "text", "text": e.content},
+          ];
+          break; // 找到第一个满足条件的对象后退出循环
+        }
+      }
+
+      // msgs = messages
+      //     .map((e) => CCMessage(
+      //           // 2024-08-13 不知道user是不是每次输入都要带上图片？？？
+      //           // 实测，只需要第一个带上图片信息就好；虽然每次都带上也没问题，但token消耗更多了
+      //           content: (e.role != "user")
+      //               ? e.content
+      //               // 这里不能直接是String，但不必新搞一个类，直接拼接json
+      //               : [
+      //                   {
+      //                     "type": "image_url",
+      //                     "image_url": {"url": imageBase64String}
+      //                   },
+      //                   {"type": "text", "text": e.content},
+      //                 ],
+      //           role: e.role,
+      //         ))
+      //     .toList();
+    }
+
+    // 如果图片解析，要对传入的对话参数做一些调整
+    if (isDoc) {
+      messages.firstWhere((e) => e.role == "user");
+
+      // 遍历消息，把第一个user信息替换成图片结构，后面的保留原本输入字符
+      for (int i = 0; i < msgs.length; i++) {
+        var e = msgs[i];
+
+        // 找到并替换第一个满足条件的对象(文档内容+用户输入)
+        if (e.role == "user") {
+          e.content = docContent! + e.content;
+          break;
+        }
+      }
     }
 
     StreamWithCancel<ComCCResp> tempStream;

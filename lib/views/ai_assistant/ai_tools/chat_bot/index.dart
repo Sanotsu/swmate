@@ -193,7 +193,6 @@ class _ChatBatState extends State<ChatBat> {
     String text, {
     // 2024-08-07 可能text是语音转的文字，保留语音文件路径
     String? contentVoicePath,
-    CCUsage? usage,
   }) {
     setState(() {
       // 用户发送消息的逻辑，这里只是简单地将消息添加到列表中
@@ -508,7 +507,7 @@ class _ChatBatState extends State<ChatBat> {
               controller: _userInputController,
               hintText: '可以向我提任何问题哦',
               isBotThinking: isBotThinking,
-              userInput: userInput,
+              isSendClickable: userInput.isNotEmpty,
               onInpuChanged: (text) {
                 setState(() {
                   userInput = text.trim();

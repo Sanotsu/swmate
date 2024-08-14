@@ -8,6 +8,7 @@ import '../../common/components/tool_widget.dart';
 import '../../services/cus_get_storage.dart';
 import 'ai_tools/chat_bot/index.dart';
 import 'ai_tools/document_interpret/index.dart';
+import 'ai_tools/image_interpret/index.dart';
 import 'ai_tools/photo_translation/index.dart';
 import 'ai_tools/test_page.dart';
 
@@ -150,7 +151,21 @@ class _AIToolIndexState extends State<AIToolIndex> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const DocumentInterpret(),
+                        builder: (context) => const DocumentNewInterpret(),
+                      ),
+                    );
+                  },
+                ),
+
+                buildToolEntrance(
+                  "图片解读",
+                  icon: const Icon(Icons.chat_outlined),
+                  color: Colors.blue[100],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ImageInterpret(),
                       ),
                     );
                   },

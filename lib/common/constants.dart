@@ -124,9 +124,9 @@ List<String> chatQuestionSamples = [
   "巴黎奥运会金牌榜",
 ];
 
-/// 保存翻译结果的目录
-final SAVE_TRANSLATION_DIR =
-    Directory('/storage/emulated/0/swmate/translations');
+/// 保存图片解读结果的目录
+final SAVE_IMAGE_INTERPRET_DIR =
+    Directory('/storage/emulated/0/swmate/image_interpret');
 
 /// 智能群聊的对话内容保存为json(本来应该存数据库的太麻烦了，这里保存文件意思一下)
 final SAVE_MODEL_BATTLE_DIR =

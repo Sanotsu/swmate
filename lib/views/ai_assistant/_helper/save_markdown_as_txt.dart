@@ -12,14 +12,14 @@ Future<void> saveMarkdownAsTxt(String mdString) async {
   }
 
   // 翻译保存的文本，放到设备外部存储固定位置，不存在文件夹则先创建
-  if (!await SAVE_TRANSLATION_DIR.exists()) {
-    await SAVE_TRANSLATION_DIR.create(recursive: true);
+  if (!await SAVE_IMAGE_INTERPRET_DIR.exists()) {
+    await SAVE_IMAGE_INTERPRET_DIR.create(recursive: true);
   }
 
   try {
     // 将字符串直接保存为指定路径文件
     final file = File(
-      '${SAVE_TRANSLATION_DIR.path}/保存拍照翻译文档-${DateTime.now().microsecondsSinceEpoch}.txt',
+      '${SAVE_IMAGE_INTERPRET_DIR.path}/保存图片解读文档-${DateTime.now().microsecondsSinceEpoch}.txt',
     );
     await file.writeAsString(mdString.trim());
 

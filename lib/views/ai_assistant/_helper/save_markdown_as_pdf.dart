@@ -80,8 +80,11 @@ Future<void> saveMarkdownAsPdf(String mdString, File imageFile) async {
         return [
           // 上方显示图片
           pdf.Center(
-            child: pdf.Image(
-              pdf.MemoryImage(imageFile.readAsBytesSync()),
+            child: pdf.SizedBox(
+              height: 400.sp,
+              child: pdf.Image(
+                pdf.MemoryImage(imageFile.readAsBytesSync()),
+              ),
             ),
           ),
           pdf.Center(child: pdf.Text("原图片如上")),
@@ -96,7 +99,7 @@ Future<void> saveMarkdownAsPdf(String mdString, File imageFile) async {
           child: pdf.Row(
             mainAxisAlignment: pdf.MainAxisAlignment.spaceBetween,
             children: [
-              pdf.Text('本文件由<AI轻生活>自动生成'),
+              pdf.Text('本文件由<swmate>自动生成'),
               pdf.Text(DateFormat.yMMMEd().format(DateTime.now())),
             ],
           ),
@@ -142,12 +145,12 @@ Future<void> saveMarkdownAsPdf(String mdString, File imageFile) async {
     }
 
     // 翻译保存的文本，放到设备外部存储固定位置，不存在文件夹则先创建
-    if (!await SAVE_TRANSLATION_DIR.exists()) {
-      await SAVE_TRANSLATION_DIR.create(recursive: true);
+    if (!await SAVE_IMAGE_INTERPRET_DIR.exists()) {
+      await SAVE_IMAGE_INTERPRET_DIR.create(recursive: true);
     }
     // 将字符串直接保存为指定路径文件
     final file = File(
-      '${SAVE_TRANSLATION_DIR.path}/保存拍照翻译文档-${DateTime.now().microsecondsSinceEpoch}.pdf',
+      '${SAVE_IMAGE_INTERPRET_DIR.path}/保存图片解读文档-${DateTime.now().microsecondsSinceEpoch}.pdf',
     );
     await file.writeAsBytes(await pdfDoc.save());
 

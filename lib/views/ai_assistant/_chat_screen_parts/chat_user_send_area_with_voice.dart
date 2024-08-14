@@ -16,8 +16,9 @@ class ChatUserVoiceSendArea extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
   final bool isBotThinking;
-  final String userInput;
   final Function(String) onInpuChanged;
+  // 是否可以点击发送按钮
+  final bool isSendClickable;
   final VoidCallback onSendPressed;
   // 2024-08-04 添加语音输入的支持，但不一定非要传入(但只要传入了，此时上方的 onSendPressed其实也没用了)
   final Function(SendContentType, String)? onSendSounds;
@@ -29,8 +30,8 @@ class ChatUserVoiceSendArea extends StatefulWidget {
     required this.controller,
     required this.hintText,
     required this.isBotThinking,
-    required this.userInput,
     required this.onInpuChanged,
+    this.isSendClickable = false,
     required this.onSendPressed,
     this.onSendSounds,
     this.onStop,
@@ -104,7 +105,7 @@ class _ChatUserVoiceSendAreaState extends State<ChatUserVoiceSendArea> {
               // 不是API响应，如果是文本输入，则显示输入按钮；如果是语音输入，则占位符
               : (!isVoice)
                   ? IconButton(
-                      onPressed: widget.userInput.isEmpty
+                      onPressed: !widget.isSendClickable
                           ? null
                           : () {
                               FocusScope.of(context).unfocus();
