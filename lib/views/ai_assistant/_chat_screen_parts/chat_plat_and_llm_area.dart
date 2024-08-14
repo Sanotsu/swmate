@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 
 import '../../../common/components/tool_widget.dart';
-import '../../../common/llm_spec/cc_spec.dart';
+import '../../../common/llm_spec/cus_llm_spec.dart';
 
 ///
 /// 构建平台和模型的下拉选择框
@@ -16,12 +16,12 @@ class PlatAndLlmRow extends StatefulWidget {
   // 当平台改变时触发
   final Function(ApiPlatform?) onPlatformChanged;
   // 被选中的模型
-  final CCMSpec? selectedModelSpec;
+  final CusLLMSpec? selectedModelSpec;
   // 当模型改变时触发
-  final Function(CCMSpec?) onModelSpecChanged;
+  final Function(CusLLMSpec?) onModelSpecChanged;
   // 在此组件内部构造平台下拉框和模型下拉框选项麻烦了点，直接当参数传入
   final List<DropdownMenuItem<ApiPlatform?>> Function() buildPlatformList;
-  final List<DropdownMenuItem<CCMSpec?>> Function() buildModelSpecList;
+  final List<DropdownMenuItem<CusLLMSpec?>> Function() buildModelSpecList;
 
   // 流式响应的部件不一定存在的
   // 是否显示切换按钮
@@ -85,7 +85,7 @@ class _PlatAndLlmRowState extends State<PlatAndLlmRow> {
         const Text("模型:"),
         SizedBox(width: 10.sp),
         Expanded(
-          child: DropdownButton<CCMSpec?>(
+          child: DropdownButton<CusLLMSpec?>(
             value: widget.selectedModelSpec,
             isDense: true,
             underline: Container(),

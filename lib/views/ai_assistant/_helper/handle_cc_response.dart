@@ -10,7 +10,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../apis/chat_completion/common_cc_apis.dart';
-import '../../../common/llm_spec/cc_spec.dart';
+import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../models/chat_competion/com_cc_resp.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
 

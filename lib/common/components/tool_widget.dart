@@ -216,7 +216,10 @@ buildImageList(String style, List<String> urls, BuildContext context) {
                 ),
               );
             },
-          );
+          ).then((value) {
+            print("关闭图片预览---------");
+            FocusScope.of(context).unfocus();
+          });
         },
         // 长按保存到相册
         onLongPress: () async {

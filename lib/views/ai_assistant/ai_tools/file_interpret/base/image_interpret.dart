@@ -7,7 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../../common/components/tool_widget.dart';
-import '../../../../../common/llm_spec/cc_spec.dart';
+import '../../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../_helper/handle_cc_response.dart';
 import '../constants.dart';
 import 'base_interpret_state.dart';
@@ -42,7 +42,7 @@ class _ImageNewInterpretState extends BaseInterpretState<ImageNewInterpret> {
   ApiPlatform getSelectedPlatform() => ApiPlatform.lingyiwanwu;
   @override
   String getSelectedModel() =>
-      CCM_SPEC_LIST.firstWhere((e) => e.ccm == CCM.YiVision).model;
+      CusLLM_SPEC_LIST.firstWhere((e) => e.cusLlm == CusLLM.YiVision).model;
   @override
   CC_SWC_TYPE getUseType() => CC_SWC_TYPE.image;
   @override

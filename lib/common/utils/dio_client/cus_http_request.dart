@@ -109,7 +109,7 @@ class HttpRequest {
     } on DioException catch (error) {
       // 2024-03-11 这里是要取得http的错误，但默认类型时Object?，所以要转一下
       // HttpException httpException = error.error;
-      HttpException httpException = error.error as HttpException;
+      CusHttpException httpException = error.error as CusHttpException;
 
       print("这里是执行HttpRequest的request()方法在报错:");
       print(httpException);

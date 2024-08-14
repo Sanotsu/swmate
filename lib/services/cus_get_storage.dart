@@ -23,4 +23,16 @@ class MyGetStorage {
   }
 
   Map<String, String> getBaiduTokenInfo() => box.read("baidu_token_info") ?? {};
+
+// 文本生图，临时保存每次生成的图片地址
+  Future<void> setText2ImageUrl(String url) async {
+    List<String> list = List<String>.from(box.read("text_to_image_urls") ?? []);
+    list.add(url);
+    await box.write("text_to_image_urls", list);
+  }
+
+  List<String> getText2ImageUrl() {
+    List<dynamic> list = box.read("text_to_image_urls") ?? [];
+    return List<String>.from(list);
+  }
 }

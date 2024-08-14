@@ -12,7 +12,7 @@ import '../../../../apis/chat_completion/common_cc_apis.dart';
 import '../../../../apis/voice_recognition/xunfei_apis.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
-import '../../../../common/llm_spec/cc_spec.dart';
+import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/utils/db_tools/db_helper.dart';
 import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
@@ -59,8 +59,7 @@ class _ChatBatState extends State<ChatBat> {
   ApiPlatform selectedPlatform = ApiPlatform.siliconCloud;
 
   // 被选中的模型信息
-  CCMSpec selectedModelSpec = CCM_SPEC_LIST
-      .where((spec) =>
+  CusLLMSpec selectedModelSpec = CusLLM_SPEC_LIST.where((spec) =>
           spec.platform == ApiPlatform.siliconCloud && spec.isVision != true)
       .toList()
       .first;
@@ -124,10 +123,8 @@ class _ChatBatState extends State<ChatBat> {
 
     setState(() {
       // 2024-07-14 同样的，选中的平台后也随机选择一个模型
-      List<CCMSpec> models = CCM_SPEC_LIST
-          .where((spec) =>
-              spec.platform == selectedPlatform && spec.isVision != true)
-          .toList();
+      List<CusLLMSpec> models = CusLLM_SPEC_LIST.where((spec) =>
+          spec.platform == selectedPlatform && spec.isVision != true).toList();
 
       selectedModelSpec = models[Random().nextInt(models.length)];
     });
@@ -166,10 +163,9 @@ class _ChatBatState extends State<ChatBat> {
         // 如果有存是哪个模型，也默认选中该模型
         // ？？？2024-06-11 虽然同一个对话现在可以切换平台和模型了，但这里只是保留第一次对话取的值
         // 后面对话过程中切换平台和模型，只会在该次对话过程中有效
-        var tempSpecs = CCM_SPEC_LIST
+        var tempSpecs = CusLLM_SPEC_LIST
             // 数据库存的模型名就是自定义的模型名
-            .where((e) => e.name == list.first.llmName)
-            .toList();
+            .where((e) => e.name == list.first.llmName).toList();
 
         // 避免麻烦，两个都不为空才显示；否则还是预设的
         if (tempSpecs.isNotEmpty) {
@@ -351,8 +347,7 @@ class _ChatBatState extends State<ChatBat> {
       setState(() {
         // 切换平台后，修改选中的模型为该平台第一个
 
-        selectedModelSpec = CCM_SPEC_LIST
-            .where((spec) =>
+        selectedModelSpec = CusLLM_SPEC_LIST.where((spec) =>
                 spec.platform == selectedPlatform && spec.isVision != true)
             .toList()
             .first;
@@ -365,12 +360,11 @@ class _ChatBatState extends State<ChatBat> {
     }
   }
 
-  List<DropdownMenuItem<CCMSpec>> buildPlatformLLMs() {
+  List<DropdownMenuItem<CusLLMSpec>> buildPlatformLLMs() {
     // 用于下拉的模型首先需要是对话模型
-    return CCM_SPEC_LIST
-        .where((spec) =>
+    return CusLLM_SPEC_LIST.where((spec) =>
             spec.platform == selectedPlatform && spec.isVision != true)
-        .map((e) => DropdownMenuItem<CCMSpec>(
+        .map((e) => DropdownMenuItem<CusLLMSpec>(
               value: e,
               alignment: AlignmentDirectional.centerStart,
               child: Text(

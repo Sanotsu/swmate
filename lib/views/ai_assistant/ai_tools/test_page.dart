@@ -5,7 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../apis/chat_completion/common_cc_apis.dart';
-import '../../../common/llm_spec/cc_spec.dart';
+import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../models/chat_competion/com_cc_resp.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
 
@@ -28,7 +28,8 @@ class _TestPageState extends State<TestPage> {
 
   _getCCResponse() async {
     var list = [CCMessage(role: "user", content: "巴里奥运金牌榜")];
-    var model = CCM_SPEC_LIST.firstWhere((e) => e.ccm == CCM.YiLargeRag).model;
+    var model =
+        CusLLM_SPEC_LIST.firstWhere((e) => e.cusLlm == CusLLM.YiLargeRag).model;
     // var temp = await lingyiSseCCResp(list, model: model, stream: true);
     var temp =
         await lingyiwanwuCCRespWithCancel(list, model: model, stream: true);

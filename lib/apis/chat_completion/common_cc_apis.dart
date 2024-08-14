@@ -10,7 +10,7 @@ import 'package:proste_logger/proste_logger.dart';
 import '../../common/utils/tools.dart';
 import '../../models/chat_competion/com_cc_req.dart';
 import '../../models/chat_competion/com_cc_resp.dart';
-import '../../common/llm_spec/cc_spec.dart';
+import '../../common/llm_spec/cus_llm_spec.dart';
 import '../../common/utils/dio_client/cus_http_client.dart';
 import '../../common/utils/dio_client/cus_http_request.dart';
 import '../../common/utils/dio_client/interceptor_error.dart';
@@ -230,7 +230,7 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
 
         return StreamWithCancel(streamController.stream, cancel);
       } else {
-        throw HttpException(code: 500, msg: '不符合预期的数据流响应类型');
+        throw CusHttpException(code: 500, msg: '不符合预期的数据流响应类型');
       }
     } else {
       if (respData.runtimeType == String) {
@@ -241,7 +241,7 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
         () async {},
       );
     }
-  } on HttpException catch (e) {
+  } on CusHttpException catch (e) {
     // 报错时也要流式返回，并手动添加一条结束标志
     final streamController = StreamController<ComCCResp>();
     streamController.add(
@@ -255,57 +255,6 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
     rethrow;
   }
 }
-
-/// 2024-08-09 BAT 的请求参数和响应有很多不同，下面是没有处理的
-// /// 腾讯的请求方法
-// Future<StreamWithCancel<ComCCResp>> tencentCCRespWitchCancel(
-//   List<CCMessage> messages, {
-//   String? model,
-//   bool stream = false,
-// }) async {
-//   model = model ?? CCM_SPEC_MAP[CCM.tencent_Hunyuan_Lite]!.model;
-//   var body = ComCCReq(model: model, messages: messages, stream: stream);
-//   var headers = genHunyuanLiteSignatureHeaders(
-//     commonReqBodyToJson(body, caseType: "pascal"),
-//     TENCENT_SECRET_ID,
-//     TENCENT_SECRET_KEY,
-//   );
-//   return getCCResponse(
-//     platUrls[PlatUrl.tencentCCUrl]!,
-//     headers,
-//     body.toJson(caseType: "pascal"),
-//     stream: stream,
-//   );
-// }
-
-// /// 阿里的请求方法
-// Future<StreamWithCancel<ComCCResp>> aliyunCCRespWithCancel(
-//   List<CCMessage> messages, {
-//   String? model,
-//   bool stream = false,
-// }) async {
-//   model = model ?? CCM_SPEC_MAP[CCM.aliyun_Qwen_1p8B_Chat]!.model;
-//   var body = ComCCReq(
-//     model: model,
-//     input: AliyunInput(messages: messages),
-//     parameters: stream
-//         ? AliyunParameters(resultFormat: "message", incrementalOutput: true)
-//         : AliyunParameters(resultFormat: "message"),
-//   );
-//   var headers = {
-//     "Content-Type": "application/json",
-//     "Authorization": "Bearer $ALIYUN_API_KEY",
-//   };
-//   if (stream) {
-//     headers.addAll({"X-DashScope-SSE": "enable"});
-//   }
-//   return getCCResponse(
-//     platUrls[PlatUrl.aliyunCCUrl]!,
-//     headers,
-//     body.toJson(),
-//     stream: stream,
-//   );
-// }
 
 ///
 ///-----------------------------------------------------------------------------
@@ -353,7 +302,8 @@ Future<StreamWithCancel<ComCCResp>> baiduCCRespWithCancel(
   String? system,
 }) async {
   model = model ??
-      CCM_SPEC_LIST.firstWhere((e) => e.ccm == CCM.baidu_Ernie_Tiny_8K).model;
+      CusLLM_SPEC_LIST.firstWhere((e) => e.cusLlm == CusLLM.baidu_Ernie_Tiny_8K)
+          .model;
 
   // 获取token信息
   var tokenInfo = MyGetStorage().getBaiduTokenInfo();
@@ -385,9 +335,8 @@ Future<StreamWithCancel<ComCCResp>> siliconFlowCCRespWithCancel(
   bool stream = false,
 }) async {
   model = model ??
-      CCM_SPEC_LIST
-          .firstWhere((e) => e.ccm == CCM.siliconCloud_Qwen2_7B_Instruct)
-          .model;
+      CusLLM_SPEC_LIST.firstWhere(
+          (e) => e.cusLlm == CusLLM.siliconCloud_Qwen2_7B_Instruct).model;
 
   var body = ComCCReq(model: model, messages: messages, stream: stream);
 
@@ -409,7 +358,8 @@ Future<StreamWithCancel<ComCCResp>> lingyiwanwuCCRespWithCancel(
   String? model,
   bool stream = false,
 }) async {
-  model = model ?? CCM_SPEC_LIST.firstWhere((e) => e.ccm == CCM.YiSpark).model;
+  model = model ??
+      CusLLM_SPEC_LIST.firstWhere((e) => e.cusLlm == CusLLM.YiSpark).model;
 
   var body = ComCCReq(model: model, messages: messages, stream: stream);
 

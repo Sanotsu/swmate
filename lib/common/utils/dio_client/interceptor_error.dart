@@ -25,7 +25,7 @@ err 详情
     );
 
     /// 根据DioError创建HttpException
-    HttpException httpException = HttpException.create(err);
+    CusHttpException httpException = CusHttpException.create(err);
 
     /// dio默认的错误实例，如果是没有网络，只能得到一个未知错误，无法精准的得知是否是无网络的情况
     /// 这里对于断网的情况，给一个特殊的code和msg，其他可以识别处理的错误也可以订好
@@ -35,7 +35,7 @@ err 详情
       print("connectivityResult这里以前是返回一个，现在是列表里？？？$connectivityResult");
 
       if (connectivityResult.first == ConnectivityResult.none) {
-        httpException = HttpException(code: -100, msg: '【无网络】');
+        httpException = CusHttpException(code: -100, msg: '【无网络】');
       }
     }
 
@@ -62,13 +62,15 @@ err 详情
 }
 
 //
-class HttpException implements Exception {
+class CusHttpException implements Exception {
   final int code;
   final String msg;
+  final String responseString;
 
-  HttpException({
+  CusHttpException({
     this.code = -1,
     this.msg = '【未知错误】',
+    this.responseString = '【未知响应】',
   });
 
   @override
@@ -76,24 +78,24 @@ class HttpException implements Exception {
     return 'Http Error [$code]: $msg';
   }
 
-  factory HttpException.create(DioException error) {
+  factory CusHttpException.create(DioException error) {
     /// dio异常
     switch (error.type) {
       case DioExceptionType.cancel:
         {
-          return HttpException(code: -1, msg: 'request cancel');
+          return CusHttpException(code: -1, msg: 'request cancel');
         }
       case DioExceptionType.connectionTimeout:
         {
-          return HttpException(code: -1, msg: 'connect timeout');
+          return CusHttpException(code: -1, msg: 'connect timeout');
         }
       case DioExceptionType.sendTimeout:
         {
-          return HttpException(code: -1, msg: 'send timeout');
+          return CusHttpException(code: -1, msg: 'send timeout');
         }
       case DioExceptionType.receiveTimeout:
         {
-          return HttpException(code: -1, msg: 'receive timeout');
+          return CusHttpException(code: -1, msg: 'receive timeout');
         }
       case DioExceptionType.badResponse:
         {
@@ -104,89 +106,108 @@ class HttpException implements Exception {
             switch (statusCode) {
               case 400:
                 {
-                  return HttpException(
+                  return CusHttpException(
                     code: statusCode,
                     msg: '输入格式错误。Request syntax error',
+                    responseString: error.response.toString(),
                   );
                 }
               case 401:
                 {
-                  return HttpException(
+                  return CusHttpException(
                     code: statusCode,
                     msg: '权限异常。Without permission',
+                    responseString: error.response.toString(),
                   );
                 }
               case 403:
                 {
-                  return HttpException(
+                  return CusHttpException(
                     code: statusCode,
                     msg: '后台拒绝执行。Server rejects execution',
+                    responseString: error.response.toString(),
                   );
                 }
               case 404:
                 {
-                  return HttpException(
+                  return CusHttpException(
                     code: statusCode,
                     msg: '无效的 Endpoint URL 或模型名。Unable to connect to server',
+                    responseString: error.response.toString(),
                   );
                 }
               case 405:
                 {
-                  return HttpException(
+                  return CusHttpException(
                     code: statusCode,
                     msg: 'The request method is disabled',
+                    responseString: error.response.toString(),
                   );
                 }
               case 500:
                 {
-                  return HttpException(
+                  return CusHttpException(
                     code: statusCode,
                     msg: '服务端内部错误，请稍后重试。Server internal error',
+                    responseString: error.response.toString(),
                   );
                 }
               case 502:
                 {
-                  return HttpException(
+                  return CusHttpException(
                     code: statusCode,
                     msg: '无效的请求。Invalid request',
+                    responseString: error.response.toString(),
                   );
                 }
               case 503:
                 {
-                  return HttpException(
+                  return CusHttpException(
                     code: statusCode,
                     msg: 'The server is down.',
+                    responseString: error.response.toString(),
                   );
                 }
               case 505:
                 {
-                  return HttpException(
+                  return CusHttpException(
                     code: statusCode,
                     msg: 'HTTP requests are not supported',
+                    responseString: error.response.toString(),
                   );
                 }
               case 529:
                 {
-                  return HttpException(
+                  return CusHttpException(
                     code: statusCode,
                     msg: '系统繁忙，请重试，请 1 分钟后重试。System busy',
+                    responseString: error.response.toString(),
                   );
                 }
               default:
                 {
-                  return HttpException(
+                  return CusHttpException(
                     code: statusCode,
                     msg: error.response?.statusMessage ?? 'unknow error',
+                    responseString: error.response.toString(),
                   );
                 }
             }
           } on Exception catch (_) {
-            return HttpException(code: -1, msg: 'unknow error');
+            return CusHttpException(
+              code: -1,
+              msg: 'unknow error',
+              responseString: error.response.toString(),
+            );
           }
         }
       default:
         {
-          return HttpException(code: -1, msg: error.message ?? 'unknow error');
+          return CusHttpException(
+            code: -1,
+            msg: error.message ?? 'unknow error',
+            responseString: error.response.toString(),
+          );
         }
     }
   }

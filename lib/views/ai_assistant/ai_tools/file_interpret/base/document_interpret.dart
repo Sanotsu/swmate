@@ -13,7 +13,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:swmate/views/ai_assistant/_helper/handle_cc_response.dart';
 
 import '../../../../../common/components/tool_widget.dart';
-import '../../../../../common/llm_spec/cc_spec.dart';
+import '../../../../../common/llm_spec/cus_llm_spec.dart';
 
 import '../../../../../common/utils/tools.dart';
 import '../../../_helper/document_parser.dart';
@@ -53,9 +53,8 @@ class _DocumentNewInterpretState
   @override
   ApiPlatform getSelectedPlatform() => ApiPlatform.siliconCloud;
   @override
-  String getSelectedModel() => CCM_SPEC_LIST
-      .firstWhere((e) => e.ccm == CCM.siliconCloud_Qwen2_7B_Instruct)
-      .model;
+  String getSelectedModel() => CusLLM_SPEC_LIST.firstWhere(
+      (e) => e.cusLlm == CusLLM.siliconCloud_Qwen2_7B_Instruct).model;
   @override
   CC_SWC_TYPE getUseType() => CC_SWC_TYPE.doc;
   @override

@@ -11,7 +11,7 @@ import '../../../../../apis/chat_completion/common_cc_apis.dart';
 import '../../../../../apis/voice_recognition/xunfei_apis.dart';
 import '../../../../../common/components/tool_widget.dart';
 import '../../../../../common/constants.dart';
-import '../../../../../common/llm_spec/cc_spec.dart';
+import '../../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../../models/chat_competion/com_cc_state.dart';
 import '../../../_chat_screen_parts/chat_list_area.dart';
