@@ -88,8 +88,8 @@ class DefaultAgentButtonRow extends StatelessWidget {
               children: [
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 20.sp, vertical: 5.sp),
+                    minimumSize: Size(80.sp, 32.sp),
+                    padding: EdgeInsets.symmetric(horizontal: 10.sp),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15.sp),
                     ),

@@ -7,10 +7,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../common/components/tool_widget.dart';
 import '../../services/cus_get_storage.dart';
 import 'ai_tools/chat_bot/index.dart';
-import 'ai_tools/file_interpret/base/document_interpret.dart';
-import 'ai_tools/file_interpret/base/image_interpret.dart';
+import 'ai_tools/file_interpret/document_interpret.dart';
+import 'ai_tools/file_interpret/image_interpret.dart';
 import 'ai_tools/test_page.dart';
-import 'ai_tools/text_to_image/index.dart';
+import 'ai_tools/text_to_image/common_tti_screen.dart';
 
 ///
 /// 规划一系列有AI加成的使用工具，这里是主入口
@@ -145,7 +145,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const DocumentNewInterpret(),
+                        builder: (context) => const DocumentInterpret(),
                       ),
                     );
                   },
@@ -160,7 +160,22 @@ class _AIToolIndexState extends State<AIToolIndex> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ImageNewInterpret(),
+                        builder: (context) => const ImageInterpret(),
+                      ),
+                    );
+                  },
+                ),
+
+                buildToolEntrance(
+                  "文本生图",
+                  subtitle: "输入文本描述\n生成指定图片",
+                  icon: const Icon(Icons.chat_outlined),
+                  color: Colors.blue[100],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CommonTTIScreen(),
                       ),
                     );
                   },
@@ -175,20 +190,6 @@ class _AIToolIndexState extends State<AIToolIndex> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const TestPage(),
-                      ),
-                    );
-                  },
-                ),
-
-                buildToolEntrance(
-                  "[文生图]",
-                  icon: const Icon(Icons.chat_outlined),
-                  color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Text2ImageScreen(),
                       ),
                     );
                   },

@@ -6,20 +6,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../../../common/components/tool_widget.dart';
-import '../../../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../_helper/handle_cc_response.dart';
-import '../constants.dart';
+import '../../../../common/components/tool_widget.dart';
+import '../../../../common/llm_spec/cus_llm_spec.dart';
+import '../../_helper/constants.dart';
+import '../../_helper/handle_cc_response.dart';
 import 'base_interpret_state.dart';
 
-class ImageNewInterpret extends StatefulWidget {
-  const ImageNewInterpret({super.key});
+class ImageInterpret extends StatefulWidget {
+  const ImageInterpret({super.key});
 
   @override
-  State<ImageNewInterpret> createState() => _ImageNewInterpretState();
+  State<ImageInterpret> createState() => _ImageInterpretState();
 }
 
-class _ImageNewInterpretState extends BaseInterpretState<ImageNewInterpret> {
+class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
   // 选择的图片文件
   File? selectedImage;
 

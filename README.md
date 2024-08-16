@@ -69,6 +69,7 @@ dart run build_runner build --delete-conflicting-outputs
 - feat: 基本完成 SF 平台的文生图页面布局。
   - todo 后续考虑同平台同方式的，图生图、文生视频，也可以先依文生图构建抽象类。
   - todo 没有保存生成记录
+- feat: 基本完成“文本生图”通用页面布局，目前可支持 sf 平台和通义万相切换。
 
 ### todo:
 

@@ -175,10 +175,11 @@ void showSnackMessage(
 buildNetworkImageViewGrid(
   String style,
   List<String> urls,
-  BuildContext context,
-) {
+  BuildContext context, {
+  int? crossAxisCount,
+}) {
   return GridView.count(
-    crossAxisCount: 2,
+    crossAxisCount: crossAxisCount ?? 2,
     shrinkWrap: true,
     mainAxisSpacing: 5.sp,
     crossAxisSpacing: 5.sp,

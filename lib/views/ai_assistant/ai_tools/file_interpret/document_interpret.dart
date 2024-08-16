@@ -12,23 +12,23 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:swmate/views/ai_assistant/_helper/handle_cc_response.dart';
 
-import '../../../../../common/components/tool_widget.dart';
-import '../../../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../../common/components/tool_widget.dart';
+import '../../../../common/llm_spec/cus_llm_spec.dart';
 
-import '../../../../../common/utils/tools.dart';
-import '../../../_helper/document_parser.dart';
-import '../constants.dart';
+import '../../../../common/utils/tools.dart';
+import '../../_helper/constants.dart';
+import '../../_helper/document_parser.dart';
 import 'base_interpret_state.dart';
 
-class DocumentNewInterpret extends StatefulWidget {
-  const DocumentNewInterpret({super.key});
+class DocumentInterpret extends StatefulWidget {
+  const DocumentInterpret({super.key});
 
   @override
-  State createState() => _DocumentNewInterpretState();
+  State createState() => _DocumentInterpretState();
 }
 
-class _DocumentNewInterpretState
-    extends BaseInterpretState<DocumentNewInterpret> {
+class _DocumentInterpretState
+    extends BaseInterpretState<DocumentInterpret> {
   // 选中的文件
   PlatformFile? selectedDoc;
   // 文件是否在解析中

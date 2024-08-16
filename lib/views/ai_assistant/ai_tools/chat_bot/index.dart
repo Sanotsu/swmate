@@ -20,11 +20,11 @@ import '../../_chat_screen_parts/chat_appbar_area.dart';
 import '../../_chat_screen_parts/chat_default_question_area.dart';
 import '../../_chat_screen_parts/chat_history_drawer.dart';
 import '../../_chat_screen_parts/chat_list_area.dart';
-import '../../_chat_screen_parts/chat_plat_and_llm_area.dart';
 import '../../_chat_screen_parts/chat_title_area.dart';
 import '../../_chat_screen_parts/chat_user_send_area_with_voice.dart';
 import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
 import '../../_helper/handle_cc_response.dart';
+import '../../_componets/cus_platform_and_llm_row.dart';
 
 /// 2024-07-16
 /// 这个应该会复用，后续抽出chatbatindex出来
@@ -55,14 +55,18 @@ class _ChatBatState extends State<ChatBat> {
   // 用户输入的内容（当不是AI在思考、且输入框有非空文字时才可以点击发送按钮）
   String userInput = "";
 
+  // 所有支持文生图的模型列表(用于下拉的平台和该平台拥有的模型列表也从这里来)
+  var llmSpecList =
+      CusLLM_SPEC_LIST.where((spec) => spec.modelType == LLModelType.cc)
+          .toList();
+
   /// 级联选择效果：云平台-模型名
   ApiPlatform selectedPlatform = ApiPlatform.siliconCloud;
 
   // 被选中的模型信息
   CusLLMSpec selectedModelSpec = CusLLM_SPEC_LIST.where((spec) =>
-          spec.platform == ApiPlatform.siliconCloud && spec.isVision != true)
-      .toList()
-      .first;
+      spec.platform == ApiPlatform.siliconCloud &&
+      spec.modelType == LLModelType.cc).toList().first;
 
   // AI是否在思考中(如果是，则不允许再次发送)
   bool isBotThinking = false;
@@ -422,21 +426,9 @@ class _ChatBatState extends State<ChatBat> {
               color: Colors.grey[300],
               child: Padding(
                 padding: EdgeInsets.only(left: 10.sp),
-                child: PlatAndLlmRow(
-                  selectedPlatform: selectedPlatform,
-                  onPlatformChanged: onCloudPlatformChanged,
-                  selectedModelSpec: selectedModelSpec,
-                  onModelSpecChanged: (val) {
-                    setState(() {
-                      selectedModelSpec = val!;
-                      // 2024-06-15 切换模型应该新建对话，因为上下文丢失了。
-                      // 建立新对话就是把已有的对话清空就好(因为保存什么的在发送消息时就处理了)
-                      chatSession = null;
-                      messages.clear();
-                    });
-                  },
-                  buildPlatformList: buildCloudPlatforms,
-                  buildModelSpecList: buildPlatformLLMs,
+                child: CusPlatformAndLlmRow(
+                  llmSpecList: llmSpecList,
+                  targetModelType: LLModelType.cc,
                   showToggleSwitch: true,
                   isStream: isStream,
                   onToggle: (index) {
@@ -447,7 +439,45 @@ class _ChatBatState extends State<ChatBat> {
                       // messages.clear();
                     });
                   },
+                  onPlatformOrModelChanged:
+                      (ApiPlatform? cp, CusLLMSpec? llmSpec) {
+                    setState(() {
+                      selectedPlatform = cp!;
+                      selectedModelSpec = llmSpec!;
+                      // 模型可供输出的图片尺寸列表也要更新
+                      // 2024-06-15 切换模型应该新建对话，因为上下文丢失了。
+                      // 建立新对话就是把已有的对话清空就好(因为保存什么的在发送消息时就处理了)
+                      chatSession = null;
+                      messages.clear();
+                    });
+                  },
                 ),
+                // child: PlatAndLlmRow(
+                //   selectedPlatform: selectedPlatform,
+                //   onPlatformChanged: onCloudPlatformChanged,
+                //   selectedModelSpec: selectedModelSpec,
+                //   onModelSpecChanged: (val) {
+                //     setState(() {
+                //       selectedModelSpec = val!;
+                //       // 2024-06-15 切换模型应该新建对话，因为上下文丢失了。
+                //       // 建立新对话就是把已有的对话清空就好(因为保存什么的在发送消息时就处理了)
+                //       chatSession = null;
+                //       messages.clear();
+                //     });
+                //   },
+                //   buildPlatformList: buildCloudPlatforms,
+                //   buildModelSpecList: buildPlatformLLMs,
+                //   showToggleSwitch: true,
+                //   isStream: isStream,
+                //   onToggle: (index) {
+                //     setState(() {
+                //       isStream = index == 0 ? true : false;
+                //       // 切换流式/同步响应也新开对话
+                //       // chatSession = null;
+                //       // messages.clear();
+                //     });
+                //   },
+                // ),
               ),
             ),
 

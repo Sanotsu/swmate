@@ -26,6 +26,8 @@ Future<ComTtiResp> getSFTtiResp(ComTtiReq req, String model) async {
     var respData = await HttpUtils.post(
       path: genSfTtiPath(model),
       method: CusHttpMethod.post,
+      // 文生图有单独的遮罩，不用显示加载圈
+      showLoading: false,
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $SILICON_CLOUD_AK",

@@ -1,9 +1,12 @@
-// ignore_for_file: constant_identifier_names, non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, constant_identifier_names
 
 //
 // 常量尽量用全首字母大写、或者全大写加下划线，方便本人习惯的识别方式
 //
 
+///
+/// 文档解析页面用到的一些常量
+///
 enum CusAgent {
   doc_translator, // 翻译
   doc_summarizer, // 总结
@@ -98,3 +101,50 @@ const ImgHintInfo = """1. 点击图片可预览、缩放
 3. 图片最大支持 2048*1080
 4. base64编码后大小不超过4M
 5. 图片越大，处理耗时越久.""";
+
+///
+/// 文生图页面用到的一些常量
+///
+
+/// 预设的张数列表
+final ImageNumList = [1, 2, 3, 4];
+
+// siliconflow平台文生图参数
+var SF_ImageSizeList = [
+  "512x512",
+  "512x1024",
+  '768x512',
+  '768x1024',
+  '1024x576',
+  '576x1024',
+];
+
+// 阿里通义万相文生图参数
+final WANX_ImageSizeList = [
+  '1024*1024',
+  '720*1280',
+  '1280*720',
+];
+
+// 可选的图片风格
+Map<String, String> WANX_StyleMap = {
+  "默认": 'auto',
+  "3D卡通": '3d cartoon',
+  "动画": 'anime',
+  "油画": 'oil painting',
+  "水彩": 'watercolor',
+  "素描": 'sketch',
+  "中国画": 'chinese painting',
+  "扁平插画": 'flat illustration',
+};
+// 选定的风格对应的预览本地图片
+List<String> WANX_StyleImageList = [
+  'assets/aliyun_wanx_styles/默认.jpg',
+  'assets/aliyun_wanx_styles/3D卡通.jpg',
+  'assets/aliyun_wanx_styles/动画.jpg',
+  'assets/aliyun_wanx_styles/油画.jpg',
+  'assets/aliyun_wanx_styles/水彩.jpg',
+  'assets/aliyun_wanx_styles/素描.jpg',
+  'assets/aliyun_wanx_styles/中国画.jpg',
+  'assets/aliyun_wanx_styles/扁平插画.jpg',
+];

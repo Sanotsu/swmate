@@ -11,7 +11,7 @@
 enum ApiPlatform {
   baidu,
   // tencent,
-  // aliyun,
+  aliyun,
   siliconCloud,
   lingyiwanwu,
 }
@@ -31,7 +31,7 @@ enum LLModelType {
 final Map<ApiPlatform, String> CP_NAME_MAP = {
   ApiPlatform.baidu: '百度',
   // ApiPlatform.tencent: '腾讯',
-  // ApiPlatform.aliyun: '阿里',
+  ApiPlatform.aliyun: '阿里',
   ApiPlatform.siliconCloud: '硅动科技',
   ApiPlatform.lingyiwanwu: '零一万物',
 };
@@ -51,10 +51,10 @@ enum CusLLM {
   baidu_Fuyu_8B, // 图像理解
 
   tencent_Hunyuan_Lite,
-  aliyun_Qwen_1p8B_Chat,
-  aliyun_Qwen1p5_1p8B_Chat,
-  aliyun_Qwen1p5_0p5B_Chat,
-  aliyun_FaruiPlus_32K,
+
+  // 通义万相，收费文生图
+  aliyun_Wanx_v1_TTI,
+
   // 硅动科技免费的
   siliconCloud_Qwen2_7B_Instruct,
   siliconCloud_Qwen2_1p5B_Instruct,
@@ -464,6 +464,16 @@ final List<CusLLMSpec> CCM_SPEC_LIST = [
 
 /// 文生图的模型
 final List<CusLLMSpec> TTI_SPEC_LIST = [
+  CusLLMSpec.tti(
+    ApiPlatform.aliyun,
+    CusLLM.aliyun_Wanx_v1_TTI,
+    "wanx-v1",
+    '阿里-通义万相',
+    false,
+    feature: """通义万相-文本生成图像大模型，
+        支持中英文双语输入，重点风格包括但不限于水彩、油画、中国画、素描、扁平插画、二次元、3D卡通""",
+    modelType: LLModelType.tti,
+  ),
   CusLLMSpec.tti(
     ApiPlatform.siliconCloud,
     CusLLM.siliconCloud_Flux1_Schnell_TTI,

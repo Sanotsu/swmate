@@ -7,20 +7,21 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 
-import '../../../../../apis/chat_completion/common_cc_apis.dart';
-import '../../../../../apis/voice_recognition/xunfei_apis.dart';
-import '../../../../../common/components/tool_widget.dart';
-import '../../../../../common/constants.dart';
-import '../../../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../../../models/chat_competion/com_cc_resp.dart';
-import '../../../../../models/chat_competion/com_cc_state.dart';
-import '../../../_chat_screen_parts/chat_list_area.dart';
-import '../../../_chat_screen_parts/chat_user_send_area_with_voice.dart';
-import '../../../_chat_screen_parts/default_agent_button_row.dart';
-import '../../../_componets/cus_toggle_button_selector.dart';
-import '../../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
-import '../../../_helper/handle_cc_response.dart';
-import '../constants.dart';
+import '../../../../apis/chat_completion/common_cc_apis.dart';
+import '../../../../apis/voice_recognition/xunfei_apis.dart';
+import '../../../../common/components/tool_widget.dart';
+import '../../../../common/constants.dart';
+import '../../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../../models/chat_competion/com_cc_resp.dart';
+import '../../../../models/chat_competion/com_cc_state.dart';
+import '../../_chat_screen_parts/chat_list_area.dart';
+import '../../_chat_screen_parts/chat_user_send_area_with_voice.dart';
+import '../../_chat_screen_parts/default_agent_button_row.dart';
+import '../../_componets/cus_toggle_button_selector.dart';
+import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
+import '../../_helper/constants.dart';
+import '../../_helper/handle_cc_response.dart';
+ 
 
 abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
   ///
