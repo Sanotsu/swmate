@@ -6,6 +6,10 @@ import '../../../common/components/tool_widget.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 
 class CusPlatformAndLlmRow extends StatefulWidget {
+  // 初始化的平台和模型（智能对话每次进入页面都是随机的，所以这里初始化不能固定，由调用处传入）
+  final ApiPlatform initialPlatform;
+  // 被选中的模型
+  final CusLLMSpec initialModelSpec;
   // 用于构建平台下拉框和模型下拉框选项
   final List<CusLLMSpec> llmSpecList;
   // 指定可用于选择的模型类型
@@ -21,6 +25,8 @@ class CusPlatformAndLlmRow extends StatefulWidget {
 
   const CusPlatformAndLlmRow({
     super.key,
+    required this.initialPlatform,
+    required this.initialModelSpec,
     required this.llmSpecList,
     this.targetModelType = LLModelType.tti,
     this.showToggleSwitch = false,
@@ -42,12 +48,10 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
   @override
   void initState() {
     super.initState();
-    if (widget.llmSpecList.isNotEmpty) {
-      // 假定一定有sf平台(因为限时免费)
-      selectedPlatform = ApiPlatform.siliconCloud;
-      selectedModelSpec =
-          widget.llmSpecList.where((e) => e.platform == selectedPlatform).first;
-    }
+
+    // 假定一定有sf平台(因为限时免费)
+    selectedPlatform = widget.initialPlatform;
+    selectedModelSpec = widget.initialModelSpec;
   }
 
   @override

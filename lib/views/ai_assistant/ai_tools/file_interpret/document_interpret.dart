@@ -27,8 +27,7 @@ class DocumentInterpret extends StatefulWidget {
   State createState() => _DocumentInterpretState();
 }
 
-class _DocumentInterpretState
-    extends BaseInterpretState<DocumentInterpret> {
+class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
   // 选中的文件
   PlatformFile? selectedDoc;
   // 文件是否在解析中
@@ -87,7 +86,6 @@ class _DocumentInterpretState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text("文档解读"),
         actions: [
@@ -107,7 +105,7 @@ class _DocumentInterpretState
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () {
-          FocusScope.of(context).unfocus();
+          unfocusHandle();
         },
         child: buildCommonUI(context),
       ),
@@ -124,7 +122,6 @@ class _DocumentInterpretState
       ),
       child: Column(
         children: [
-          Divider(thickness: 2.sp),
           SizedBox(
             height: 100.sp,
             child: buildFileUpload(),
@@ -284,7 +281,7 @@ class _DocumentInterpretState
                       child: const Text('关闭'),
                       onPressed: () {
                         Navigator.pop(context);
-                        FocusScope.of(context).unfocus();
+                        unfocusHandle();
                       },
                     ),
                   ],

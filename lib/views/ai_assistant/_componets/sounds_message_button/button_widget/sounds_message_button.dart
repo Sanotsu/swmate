@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path/path.dart' as path;
 
 import '../../../../../apis/voice_recognition/xunfei_apis.dart';
+import '../../../../../common/components/tool_widget.dart';
 import '../utils/recording_mask_overlay_data.dart';
 import '../utils/sounds_recorder_controller.dart';
 

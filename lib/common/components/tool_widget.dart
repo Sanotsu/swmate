@@ -20,6 +20,7 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../constants.dart';
 
@@ -125,7 +126,13 @@ commonMarkdwonHintDialog(
   String title,
   String message, {
   double? msgFontSize,
-}) {
+}) async {
+  unfocusHandle();
+  // 强行停200毫秒(100还不够)，密码键盘未收起来就显示弹窗出现布局溢出的问题
+  // 上面直接的commonHintDialog没问题，这里主要是MarkdownBody的问题
+  await Future.delayed(const Duration(milliseconds: 200));
+
+  if (!context.mounted) return;
   showDialog(
     context: context,
     builder: (context) {
@@ -217,10 +224,7 @@ buildImageList(String style, List<String> urls, BuildContext context) {
                 ),
               );
             },
-          ).then((value) {
-            print("关闭图片预览---------");
-            FocusScope.of(context).unfocus();
-          });
+          );
         },
         // 长按保存到相册
         onLongPress: () async {
@@ -854,7 +858,7 @@ buildClickImageDialog(BuildContext context, String imageUrl) {
   return GestureDetector(
     onTap: () {
       // 在当前上下文中查找最近的 FocusScope 并使其失去焦点，从而收起键盘。
-      FocusScope.of(context).unfocus();
+      unfocusHandle();
       // 这个直接弹窗显示图片可以缩放
       showDialog(
         context: context,
@@ -886,4 +890,19 @@ buildClickImageDialog(BuildContext context, String imageUrl) {
       ),
     ),
   );
+}
+
+// 调用外部浏览器打开url
+Future<void> launchStringUrl(String url) async {
+  if (!await launchUrl(Uri.parse(url))) {
+    throw Exception('Could not launch $url');
+  }
+}
+
+/// 强制收起键盘
+unfocusHandle() {
+  // 这个不一定有用，比如下面原本键盘弹出来了，跳到历史记录页面，回来之后还是弹出来的
+  // FocusScope.of(context).unfocus();
+
+  FocusManager.instance.primaryFocus?.unfocus();
 }

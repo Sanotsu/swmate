@@ -92,7 +92,7 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () {
-          FocusScope.of(context).unfocus();
+          unfocusHandle();
         },
         child: buildCommonUI(context),
       ),
@@ -100,7 +100,7 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
   }
 
   /// 构建图片选择和预览行
-  Widget buildImagePickAndViewRow() {
+  Widget buildImagePickAndViewRow2() {
     return SizedBox(
       height: 100.sp,
       child: Row(
@@ -189,6 +189,78 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建图片选择和预览行
+
+  Widget buildImagePickAndViewRow() {
+    return Container(
+      height: 100.sp,
+      margin: EdgeInsets.symmetric(horizontal: 5.sp),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey, width: 1.sp),
+        borderRadius: BorderRadius.circular(10.sp),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text(
+                      "选择图片来源",
+                      style: TextStyle(fontSize: 18.sp),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _pickImage(ImageSource.camera);
+                        },
+                        child: Text(
+                          "拍照",
+                          style: TextStyle(fontSize: 16.sp),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _pickImage(ImageSource.gallery);
+                        },
+                        child: Text(
+                          "从相册选择",
+                          style: TextStyle(fontSize: 16.sp),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            icon: const Icon(Icons.file_upload),
+          ),
+          Expanded(
+            flex: 3,
+            child: buildImageView(selectedImage, context),
+          ),
+          if (selectedImage != null)
+            IconButton(
+              onPressed: selectedImage != null
+                  ? () {
+                      setState(() {
+                        selectedImage = null;
+                        renewSystemAndMessages();
+                      });
+                    }
+                  : null,
+              icon: const Icon(Icons.clear),
+            ),
         ],
       ),
     );

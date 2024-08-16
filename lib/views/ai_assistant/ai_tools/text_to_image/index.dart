@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -26,7 +27,7 @@ import '../../_tti_screen_parts/tti_button_row_area.dart';
 import '../../_helper/constants.dart';
 import '../../_componets/loading_overlay.dart';
 import '../../_tti_screen_parts/size_and_num_selector.dart';
-import '../../_tti_screen_parts/tti_history_drawer.dart';
+import 'tti_history_screen.dart';
 
 class CommonTTIScreen extends StatefulWidget {
   const CommonTTIScreen({super.key});
@@ -83,15 +84,20 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
 
   final DBHelper dbHelper = DBHelper();
   // 最近对话需要的记录历史对话的变量
-  List<LlmTtiResult> text2ImageHsitory = [];
+  List<LlmTtiResult> text2ImageHistory = [];
 
   @override
   void initState() {
     super.initState();
-    // 为了和 CusPlatAndLlmRow 中预设的保持一致，这里来初始化默认的平台和模型
+
+    // 文生图，初始化固定为sf，模型就每次进来都随机
     selectedPlatform = ApiPlatform.siliconCloud;
-    selectedModelSpec =
-        llmSpecList.where((e) => e.platform == selectedPlatform).first;
+    // 2024-07-14 同样的，选中的平台后也随机选择一个模型
+    List<CusLLMSpec> models = CusLLM_SPEC_LIST.where((spec) =>
+        spec.platform == selectedPlatform &&
+        spec.modelType == LLModelType.tti).toList();
+    selectedModelSpec = models[Random().nextInt(models.length)];
+
     // 不同模型支持的尺寸列表不一样，也要更新
     getSizeList();
     selectedSize = getInitialSize();
@@ -107,6 +113,8 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    print("当前页面状态--$state");
+
     if (state == AppLifecycleState.detached ||
         state == AppLifecycleState.inactive) {
       LoadingOverlay.hide();
@@ -227,6 +235,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
             : '默认',
         imageUrls: imageUrls,
         gmtCreate: DateTime.now(),
+        llmSpec: selectedModelSpec,
       )
     ]);
 
@@ -292,23 +301,18 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
       appBar: AppBar(
         title: const Text('文本生图'),
         actions: [
-          Builder(
-            builder: (BuildContext context) {
-              return IconButton(
-                icon: Icon(Icons.history, size: 24.sp),
-                onPressed: () async {
-                  // 获取历史记录
-                  var a = await dbHelper.queryTextToImageResultList();
-
-                  setState(() {
-                    text2ImageHsitory = a;
-                  });
-
-                  if (!context.mounted) return;
-                  Scaffold.of(context).openEndDrawer();
-                },
-              );
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TtiHistoryScreen(),
+                ),
+              ).then((value) {
+                unfocusHandle();
+              });
             },
+            icon: const Icon(Icons.history),
           ),
         ],
       ),
@@ -320,7 +324,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
         behavior: HitTestBehavior.translucent,
         onTap: () {
           // 点击空白处可以移除焦点，关闭键盘
-          FocusScope.of(context).unfocus();
+          unfocusHandle();
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -344,10 +348,6 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
           ],
         ),
       ),
-      endDrawer: TtiHistoryDrawer(
-        text2ImageHistory: text2ImageHsitory,
-        onDelete: onDelete,
-      ),
     );
   }
 
@@ -359,7 +359,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
     // 然后重新查询并更新
     var b = await dbHelper.queryTextToImageResultList();
     setState(() {
-      text2ImageHsitory = b;
+      text2ImageHistory = b;
     });
   }
 
@@ -379,7 +379,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
     return Text2ImageButtonArea(
       title: "文生图配置",
       onReset: () {
-        FocusScope.of(context).unfocus();
+        unfocusHandle();
         setState(() {
           prompt = "";
           negativePrompt = "";
@@ -390,7 +390,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
         });
       },
       onGenerate: () async {
-        FocusScope.of(context).unfocus();
+        unfocusHandle();
         await getText2ImageData();
       },
       canGenerate: prompt.isNotEmpty,
@@ -402,6 +402,8 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
     return [
       /// 平台和模型选择
       CusPlatformAndLlmRow(
+        initialPlatform: selectedPlatform,
+        initialModelSpec: selectedModelSpec,
         llmSpecList: llmSpecList,
         targetModelType: LLModelType.tti,
         showToggleSwitch: false,

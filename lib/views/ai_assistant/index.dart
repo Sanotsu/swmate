@@ -10,7 +10,7 @@ import 'ai_tools/chat_bot/index.dart';
 import 'ai_tools/file_interpret/document_interpret.dart';
 import 'ai_tools/file_interpret/image_interpret.dart';
 import 'ai_tools/test_page.dart';
-import 'ai_tools/text_to_image/common_tti_screen.dart';
+import 'ai_tools/text_to_image/index.dart';
 
 ///
 /// 规划一系列有AI加成的使用工具，这里是主入口

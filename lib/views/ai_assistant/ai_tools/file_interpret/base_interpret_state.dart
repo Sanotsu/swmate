@@ -21,7 +21,6 @@ import '../../_componets/cus_toggle_button_selector.dart';
 import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
 import '../../_helper/constants.dart';
 import '../../_helper/handle_cc_response.dart';
- 
 
 abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
   ///
@@ -241,14 +240,15 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
             ],
           ),
         ),
-        const Divider(),
 
         /// 自定义的选择组件(文档解析是上传文档框，图片解读是图片选择框)
+        SizedBox(height: 5.sp),
         buildSpecificUI(context),
-        const Divider(),
+        SizedBox(height: 10.sp),
 
         /// 根据“文档解读”、“图片解读”不同，选中的预设功能不同，显示不同的按钮
         buildDefaultAgentButtonRow(context),
+        Divider(height: 10.sp),
 
         /// 对话列表区域
         ChatListArea(

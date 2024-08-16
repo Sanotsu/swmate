@@ -296,7 +296,7 @@ class _MaskStackView extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        FocusScope.of(context).unfocus();
+        unfocusHandle();
       },
       child: Stack(
         alignment: Alignment.bottomCenter,

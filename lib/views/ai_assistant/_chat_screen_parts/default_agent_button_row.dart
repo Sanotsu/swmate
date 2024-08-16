@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 
 ///
@@ -99,7 +100,7 @@ class DefaultAgentButtonRow extends StatelessWidget {
                   onPressed: !isConfirmClickable
                       ? null
                       : () {
-                          FocusScope.of(context).unfocus();
+                          unfocusHandle();
                           onConfirmPressed();
                         },
                   child: Text(

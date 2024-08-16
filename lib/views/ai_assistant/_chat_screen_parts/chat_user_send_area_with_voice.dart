@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../common/components/tool_widget.dart';
 import '../../../common/utils/tools.dart';
 import '../_componets/sounds_message_button/button_widget/sounds_message_button.dart';
 import '../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
@@ -108,7 +109,7 @@ class _ChatUserVoiceSendAreaState extends State<ChatUserVoiceSendArea> {
                       onPressed: !widget.isSendClickable
                           ? null
                           : () {
-                              FocusScope.of(context).unfocus();
+                              unfocusHandle();
                               widget.onSendPressed();
                             },
                       icon: const Icon(Icons.send),

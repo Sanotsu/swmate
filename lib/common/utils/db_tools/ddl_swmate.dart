@@ -52,6 +52,7 @@ class SWMateDdl {
       style           TEXT    NOT NULL,
       image_urls      TEXT,
       gmt_create      TEXT    NOT NULL,
+      llm_spec        TEXT    NOT NULL,
       PRIMARY KEY("request_id")
     );
     """;

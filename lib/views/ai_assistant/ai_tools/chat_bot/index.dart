@@ -122,14 +122,22 @@ class _ChatBatState extends State<ChatBat> {
   // 进入自行配置的对话页面，看看用户配置有没有生效
   initCusConfig() {
     // 2024-07-14 每次进来都随机选一个
-    List<ApiPlatform> values = ApiPlatform.values.toList();
-    selectedPlatform = values[Random().nextInt(values.length)];
+    List<ApiPlatform> values =
+        CusLLM_SPEC_LIST.where((spec) => spec.modelType == LLModelType.cc)
+            .map((e) => e.platform)
+            .toSet()
+            .toList();
+
+    // 不能放在下面一起，因为选中的平台要先生效，才能构建该平台下的模型
+    setState(() {
+      selectedPlatform = values[Random().nextInt(values.length)];
+    });
+    // 2024-07-14 同样的，选中的平台后也随机选择一个模型
+    List<CusLLMSpec> models = CusLLM_SPEC_LIST.where((spec) =>
+        spec.platform == selectedPlatform &&
+        spec.modelType == LLModelType.cc).toList();
 
     setState(() {
-      // 2024-07-14 同样的，选中的平台后也随机选择一个模型
-      List<CusLLMSpec> models = CusLLM_SPEC_LIST.where((spec) =>
-          spec.platform == selectedPlatform && spec.isVision != true).toList();
-
       selectedModelSpec = models[Random().nextInt(models.length)];
     });
   }
@@ -327,58 +335,6 @@ class _ChatBatState extends State<ChatBat> {
     // 其他没有对话记录、没有消息列表的情况，就不做任何处理了
   }
 
-  /// 构建用于下拉的平台列表(根据上层传入的值)
-  List<DropdownMenuItem<ApiPlatform?>> buildCloudPlatforms() {
-    return ApiPlatform.values.map((e) {
-      return DropdownMenuItem<ApiPlatform?>(
-        value: e,
-        alignment: AlignmentDirectional.center,
-        child: Text(
-          CP_NAME_MAP[e]!,
-          style: const TextStyle(color: Colors.blue),
-        ),
-      );
-    }).toList();
-  }
-
-  /// 当切换了云平台时，要同步切换选中的大模型
-  onCloudPlatformChanged(ApiPlatform? value) {
-    // 如果平台被切换，则更新当前的平台为选中的平台，且重置模型为符合该平台的模型的第一个
-    if (value != selectedPlatform) {
-      // 更新被选中的平台为当前选中平台
-      selectedPlatform = value ?? ApiPlatform.siliconCloud;
-
-      setState(() {
-        // 切换平台后，修改选中的模型为该平台第一个
-
-        selectedModelSpec = CusLLM_SPEC_LIST.where((spec) =>
-                spec.platform == selectedPlatform && spec.isVision != true)
-            .toList()
-            .first;
-
-        // 2024-06-15 切换平台或者模型应该清空当前对话，因为上下文丢失了。
-        // 建立新对话就是把已有的对话清空就好(因为保存什么的在发送消息时就处理了)
-        chatSession = null;
-        messages.clear();
-      });
-    }
-  }
-
-  List<DropdownMenuItem<CusLLMSpec>> buildPlatformLLMs() {
-    // 用于下拉的模型首先需要是对话模型
-    return CusLLM_SPEC_LIST.where((spec) =>
-            spec.platform == selectedPlatform && spec.isVision != true)
-        .map((e) => DropdownMenuItem<CusLLMSpec>(
-              value: e,
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                e.name,
-                style: const TextStyle(color: Colors.blue),
-              ),
-            ))
-        .toList();
-  }
-
   /// 最后一条大模型回复如果不满意，可以重新生成(中间的不行，因为后续的问题是关联上下文的)
   /// 2024-06-20 限量的要计算token数量，所以不让重新生成(？？？但实际也没做累加的token的逻辑)
   regenerateLatestQuestion() {
@@ -402,11 +358,11 @@ class _ChatBatState extends State<ChatBat> {
         },
         onHistoryPressed: (BuildContext context) async {
           var list = await getHistoryChats();
-          if (!mounted) return;
+          if (!context.mounted) return;
           setState(() {
             chatHistory = list;
           });
-          if (!context.mounted) return;
+          unfocusHandle();
           Scaffold.of(context).openEndDrawer();
         },
       ),
@@ -415,7 +371,7 @@ class _ChatBatState extends State<ChatBat> {
         behavior: HitTestBehavior.translucent,
         onTap: () {
           // 点击空白处可以移除焦点，关闭键盘
-          FocusScope.of(context).unfocus();
+          unfocusHandle();
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -427,6 +383,8 @@ class _ChatBatState extends State<ChatBat> {
               child: Padding(
                 padding: EdgeInsets.only(left: 10.sp),
                 child: CusPlatformAndLlmRow(
+                  initialPlatform: selectedPlatform,
+                  initialModelSpec: selectedModelSpec,
                   llmSpecList: llmSpecList,
                   targetModelType: LLModelType.cc,
                   showToggleSwitch: true,
@@ -452,32 +410,6 @@ class _ChatBatState extends State<ChatBat> {
                     });
                   },
                 ),
-                // child: PlatAndLlmRow(
-                //   selectedPlatform: selectedPlatform,
-                //   onPlatformChanged: onCloudPlatformChanged,
-                //   selectedModelSpec: selectedModelSpec,
-                //   onModelSpecChanged: (val) {
-                //     setState(() {
-                //       selectedModelSpec = val!;
-                //       // 2024-06-15 切换模型应该新建对话，因为上下文丢失了。
-                //       // 建立新对话就是把已有的对话清空就好(因为保存什么的在发送消息时就处理了)
-                //       chatSession = null;
-                //       messages.clear();
-                //     });
-                //   },
-                //   buildPlatformList: buildCloudPlatforms,
-                //   buildModelSpecList: buildPlatformLLMs,
-                //   showToggleSwitch: true,
-                //   isStream: isStream,
-                //   onToggle: (index) {
-                //     setState(() {
-                //       isStream = index == 0 ? true : false;
-                //       // 切换流式/同步响应也新开对话
-                //       // chatSession = null;
-                //       // messages.clear();
-                //     });
-                //   },
-                // ),
               ),
             ),
 

@@ -1,5 +1,11 @@
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
+import 'dart:convert';
+
+import 'package:json_annotation/json_annotation.dart';
+
+part 'cus_llm_spec.g.dart';
+
 ///
 /// 这里是付费的大模型通用
 ///
@@ -89,6 +95,7 @@ enum CusLLM {
 }
 
 /// 通用模型规格
+@JsonSerializable(explicitToJson: true)
 class CusLLMSpec {
   // 模型字符串(平台API参数的那个model的值)、模型名称、上下文长度数值，
   /// 是否免费，收费输入时百万token价格价格，输出时百万token价格(免费没写价格就先写0)
@@ -142,6 +149,17 @@ class CusLLMSpec {
         outputPrice = null,
         isVision = null,
         isQuote = null;
+
+  // 从字符串转
+  factory CusLLMSpec.fromRawJson(String str) =>
+      CusLLMSpec.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory CusLLMSpec.fromJson(Map<String, dynamic> srcJson) =>
+      _$CusLLMSpecFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$CusLLMSpecToJson(this);
 }
 
 /// 具体的模型信息
