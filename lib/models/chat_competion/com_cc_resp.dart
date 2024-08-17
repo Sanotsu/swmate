@@ -85,6 +85,12 @@ class ComCCResp {
   @JsonKey(name: 'error_msg')
   String? errorMsg;
 
+  // 讯飞云的错误码等稍微不同
+  int? code;
+  String? message;
+  // 会话的唯一id，用于讯飞技术人员查询服务端会话日志使用,出现调用错误时建议留存该字段
+  String? sid;
+
   /// 2024-08-13 因为响应体目前只是用来接收API响应，所以暂时把所有平台的栏位放在一起即可
   ComCCResp({
     this.id,
@@ -103,6 +109,9 @@ class ComCCResp {
     this.banRound,
     this.errorCode,
     this.errorMsg,
+    this.code,
+    this.message,
+    this.sid,
     String? cusText,
   }) : cusText = cusText ?? _generatecusText(choices, result);
 

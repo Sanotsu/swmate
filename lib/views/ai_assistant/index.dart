@@ -117,6 +117,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
                 ///
                 buildToolEntrance(
                   "智能对话",
+                  subtitle: "不同平台\n多个模型\n知无不言",
                   icon: const Icon(Icons.chat_outlined),
                   color: Colors.blue[100],
                   onTap: () {
@@ -169,7 +170,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
                 buildToolEntrance(
                   "文本生图",
                   subtitle: "根据文本描述\n结合各种风格\n生成各种图像",
-                  icon: const Icon(Icons.chat_outlined),
+                  icon: const Icon(Icons.photo),
                   color: Colors.blue[100],
                   onTap: () {
                     Navigator.push(

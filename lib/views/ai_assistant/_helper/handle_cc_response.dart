@@ -143,6 +143,12 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
         stream: isStream,
         // system: system,
       );
+    } else if (selectedPlatform == ApiPlatform.xfyun) {
+      tempStream = await xfyunCCRespWithCancel(
+        msgs,
+        model: selectedModel,
+        stream: isStream,
+      );
     } else {
       tempStream = await siliconFlowCCRespWithCancel(
         msgs,

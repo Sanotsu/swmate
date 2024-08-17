@@ -27,6 +27,9 @@ ComCCResp _$ComCCRespFromJson(Map<String, dynamic> json) => ComCCResp(
       banRound: (json['ban_round'] as num?)?.toInt(),
       errorCode: (json['error_code'] as num?)?.toInt(),
       errorMsg: json['error_msg'] as String?,
+      code: (json['code'] as num?)?.toInt(),
+      message: json['message'] as String?,
+      sid: json['sid'] as String?,
       cusText: json['cusText'] as String?,
     );
 
@@ -48,6 +51,9 @@ Map<String, dynamic> _$ComCCRespToJson(ComCCResp instance) => <String, dynamic>{
       'ban_round': instance.banRound,
       'error_code': instance.errorCode,
       'error_msg': instance.errorMsg,
+      'code': instance.code,
+      'message': instance.message,
+      'sid': instance.sid,
     };
 
 CCQuote _$CCQuoteFromJson(Map<String, dynamic> json) => CCQuote(

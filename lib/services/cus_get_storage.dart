@@ -22,7 +22,8 @@ class MyGetStorage {
     await box.write("baidu_token_info", info);
   }
 
-  Map<String, String> getBaiduTokenInfo() => box.read("baidu_token_info") ?? {};
+  Map<String, String> getBaiduTokenInfo() =>
+      Map<String, String>.from(box.read("baidu_token_info") ?? {});
 
 // 文本生图，临时保存每次生成的图片地址
   Future<void> setText2ImageUrl(String url) async {

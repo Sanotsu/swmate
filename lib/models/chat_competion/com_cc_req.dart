@@ -131,6 +131,17 @@ class ComCCReq {
     this.userId,
   });
 
+  ComCCReq.xfyun({
+    this.model,
+    this.messages,
+    this.stream = false,
+    this.temperature,
+    this.tools,
+    this.toolChoice = "auto",
+    this.maxTokens,
+    this.topK,
+  });
+
   factory ComCCReq.fromJson(Map<String, dynamic> srcJson) =>
       _$ComCCReqFromJson(srcJson);
 

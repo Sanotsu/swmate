@@ -55,7 +55,16 @@ const _$CusLLMEnumMap = {
   CusLLM.baidu_Yi_34B_Chat_4K: 'baidu_Yi_34B_Chat_4K',
   CusLLM.baidu_Fuyu_8B: 'baidu_Fuyu_8B',
   CusLLM.tencent_Hunyuan_Lite: 'tencent_Hunyuan_Lite',
+  CusLLM.xfyun_Spark_Lite: 'xfyun_Spark_Lite',
+  CusLLM.xfyun_TTI: 'xfyun_TTI',
   CusLLM.aliyun_Wanx_v1_TTI: 'aliyun_Wanx_v1_TTI',
+  CusLLM.YiLarge: 'YiLarge',
+  CusLLM.YiMedium: 'YiMedium',
+  CusLLM.YiVision: 'YiVision',
+  CusLLM.YiMedium200k: 'YiMedium200k',
+  CusLLM.YiSpark: 'YiSpark',
+  CusLLM.YiLargeRag: 'YiLargeRag',
+  CusLLM.YiLargeTurbo: 'YiLargeTurbo',
   CusLLM.siliconCloud_Qwen2_7B_Instruct: 'siliconCloud_Qwen2_7B_Instruct',
   CusLLM.siliconCloud_Qwen2_1p5B_Instruct: 'siliconCloud_Qwen2_1p5B_Instruct',
   CusLLM.siliconCloud_Qwen1p5_7B_Chat: 'siliconCloud_Qwen1p5_7B_Chat',
@@ -69,13 +78,6 @@ const _$CusLLMEnumMap = {
   CusLLM.siliconCloud_LLAMA3p1_8B_Instruct: 'siliconCloud_LLAMA3p1_8B_Instruct',
   CusLLM.siliconCloud_Mistral_7B_Instruct_v0p2:
       'siliconCloud_Mistral_7B_Instruct_v0p2',
-  CusLLM.YiLarge: 'YiLarge',
-  CusLLM.YiMedium: 'YiMedium',
-  CusLLM.YiVision: 'YiVision',
-  CusLLM.YiMedium200k: 'YiMedium200k',
-  CusLLM.YiSpark: 'YiSpark',
-  CusLLM.YiLargeRag: 'YiLargeRag',
-  CusLLM.YiLargeTurbo: 'YiLargeTurbo',
   CusLLM.siliconCloud_Flux1_Schnell_TTI: 'siliconCloud_Flux1_Schnell_TTI',
   CusLLM.siliconCloud_StableDiffusion3_TTI: 'siliconCloud_StableDiffusion3_TTI',
   CusLLM.siliconCloud_StableDiffusionXL_TTI:
@@ -88,7 +90,6 @@ const _$CusLLMEnumMap = {
       'siliconCloud_StableDiffusionXL_Turbo_TTI',
   CusLLM.siliconCloud_StableDiffusionXL_Light_TTI:
       'siliconCloud_StableDiffusionXL_Light_TTI',
-  CusLLM.xfyun_TTI: 'xfyun_TTI',
 };
 
 const _$LLModelTypeEnumMap = {

@@ -26,6 +26,7 @@ enum PlatUrl {
   baiduCCAuthUrl,
   siliconFlowCCUrl,
   lingyiwanwuCCUrl,
+  xfyunCCUrl,
 }
 
 const Map<PlatUrl, String> platUrls = {
@@ -37,6 +38,7 @@ const Map<PlatUrl, String> platUrls = {
   PlatUrl.baiduCCAuthUrl: "https://aip.baidubce.com/oauth/2.0/token",
   PlatUrl.siliconFlowCCUrl: "https://api.siliconflow.cn/v1/chat/completions",
   PlatUrl.lingyiwanwuCCUrl: "https://api.lingyiwanwu.com/v1/chat/completions",
+  PlatUrl.xfyunCCUrl: "https://spark-api-open.xf-yun.com/v1/chat/completions",
 };
 
 ///
@@ -295,6 +297,7 @@ Future<String> getAccessToken() async {
   }
 }
 
+/// 百度云的请求方法
 Future<StreamWithCancel<ComCCResp>> baiduCCRespWithCancel(
   List<CCMessage> messages, {
   String? model,
@@ -307,6 +310,7 @@ Future<StreamWithCancel<ComCCResp>> baiduCCRespWithCancel(
 
   // 获取token信息
   var tokenInfo = MyGetStorage().getBaiduTokenInfo();
+
   String token = "";
   if (tokenInfo["accessToken"] != null &&
       tokenInfo["expiredDate"] != null &&
@@ -352,7 +356,7 @@ Future<StreamWithCancel<ComCCResp>> siliconFlowCCRespWithCancel(
   );
 }
 
-/// 流式和同步通用
+/// 零一万物的请求方法
 Future<StreamWithCancel<ComCCResp>> lingyiwanwuCCRespWithCancel(
   List<CCMessage> messages, {
   String? model,
@@ -370,6 +374,31 @@ Future<StreamWithCancel<ComCCResp>> lingyiwanwuCCRespWithCancel(
 
   return getSseCcResponse(
     platUrls[PlatUrl.lingyiwanwuCCUrl]!,
+    header,
+    body.toJson(),
+    stream: stream,
+  );
+}
+
+/// 讯飞云的请求方法
+Future<StreamWithCancel<ComCCResp>> xfyunCCRespWithCancel(
+  List<CCMessage> messages, {
+  String? model,
+  bool stream = false,
+}) async {
+  model = model ??
+      CusLLM_SPEC_LIST.firstWhere((e) => e.cusLlm == CusLLM.xfyun_Spark_Lite)
+          .model;
+
+  var body = ComCCReq.xfyun(model: model, messages: messages, stream: stream);
+
+  var header = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer $XUNFEI_ALL_APIPassword",
+  };
+
+  return getSseCcResponse(
+    platUrls[PlatUrl.xfyunCCUrl]!,
     header,
     body.toJson(),
     stream: stream,
