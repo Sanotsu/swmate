@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -218,4 +219,59 @@ bool isJsonString(String str) {
   } on FormatException {
     return false;
   }
+}
+
+// 文生图保存base64图片到本地(讯飞云返回的是base64,阿里云、、sf返回的是云盘上的地址)
+Future<File> saveTtiBase64ImageToLocal(
+  String base64Image, {
+  String? prefix, // 传前缀要全，比如带上底斜线_
+}) async {
+  final bytes = base64Decode(base64Image);
+
+  if (!await LLM_TTI_DIR.exists()) {
+    await LLM_TTI_DIR.create(recursive: true);
+  }
+  final file = File(
+    '${LLM_TTI_DIR.path}/${prefix ?? ""}${DateTime.now().microsecondsSinceEpoch}.png',
+  );
+
+  await file.writeAsBytes(bytes);
+
+  return file;
+}
+
+// 保存文生图的图片到本地
+saveTtiImageToLocal(String netImageUrl, {String? prefix}) async {
+  print("图片地址--$netImageUrl");
+
+  try {
+    // 2024-08-17 直接保存文件到指定位置
+    if (!await LLM_TTI_DIR.exists()) {
+      await LLM_TTI_DIR.create(recursive: true);
+    }
+    final file = File(
+      '${LLM_TTI_DIR.path}/${prefix ?? ""}${DateTime.now().microsecondsSinceEpoch}.png',
+    );
+
+    EasyLoading.show(status: '【图片保存中...】');
+    var response = await Dio().get(
+      netImageUrl,
+      options: Options(responseType: ResponseType.bytes),
+    );
+
+    await file.writeAsBytes(response.data);
+    EasyLoading.showToast("图片已保存${file.path}");
+  } finally {
+    EasyLoading.dismiss();
+  }
+
+  // 用这个自定义的，阿里云地址会报403错误，原因不清楚
+  // var respData = await HttpUtils.get(
+  //   path: netImageUrl,
+  //   showLoading: true,
+  //   responseType: CusRespType.bytes,
+  // );
+
+  // await file.writeAsBytes(respData);
+  // EasyLoading.showToast("图片已保存${file.path}");
 }

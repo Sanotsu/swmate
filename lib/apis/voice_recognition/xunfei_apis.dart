@@ -18,6 +18,7 @@ Future<String> sendAudioToServer(String audioPath) async {
     voiceRegUrl,
     XUNFEI_ALL_API_KEY,
     XUNFEI_ALL_API_SECRET,
+    "GET",
   );
 
   //  把音频文件转为base64
@@ -61,6 +62,9 @@ Future<String> sendAudioToServer(String audioPath) async {
 
       print("这里是 transcription--$transcription");
 
+      // 2024-08-17？？具体哪里释放还拿不准
+      EasyLoading.dismiss();
+
       completer.complete(transcription);
     },
     onDone: () {
@@ -68,8 +72,6 @@ Future<String> sendAudioToServer(String audioPath) async {
       if (!completer.isCompleted) {
         completer.complete(transcription);
       }
-
-      EasyLoading.dismiss();
     },
     onError: (error) {
       print('WebSocket error: ${error.toString()}');

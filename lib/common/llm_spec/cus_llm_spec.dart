@@ -20,6 +20,7 @@ enum ApiPlatform {
   aliyun,
   siliconCloud,
   lingyiwanwu,
+  xfyun, // 讯飞云，官网就是这样写的
 }
 
 // 大模型的分类，在不同页面可以用作模型的筛选
@@ -29,6 +30,7 @@ enum LLModelType {
   // ITI, // Image To Image
   // 用小写，大写不区分
   cc, // Chat Completions
+  vision, // 视觉大模型
   tti, // Text To Image
   iti, // Image To Image
 }
@@ -40,6 +42,7 @@ final Map<ApiPlatform, String> CP_NAME_MAP = {
   ApiPlatform.aliyun: '阿里',
   ApiPlatform.siliconCloud: '硅动科技',
   ApiPlatform.lingyiwanwu: '零一万物',
+  ApiPlatform.xfyun: '讯飞',
 };
 
 ///
@@ -92,6 +95,9 @@ enum CusLLM {
   siliconCloud_StableDiffusion_Turbo_TTI,
   siliconCloud_StableDiffusionXL_Turbo_TTI,
   siliconCloud_StableDiffusionXL_Light_TTI,
+
+  /// 讯飞云文生图就是图片生成，没什么特别名字
+  xfyun_TTI,
 }
 
 /// 通用模型规格
@@ -109,8 +115,7 @@ class CusLLMSpec {
   // 每百万token单价
   double? inputPrice;
   double? outputPrice;
-  // 是否是视觉理解大模型(即是否可以解析图片、分析图片内容，然后进行对话,使用时需要支持上传图片)
-  bool? isVision;
+
   // 是否支持索引用实时全网检索信息服务
   bool? isQuote;
   // 模型特性
@@ -118,7 +123,8 @@ class CusLLMSpec {
   // 使用场景
   String? useCase;
 
-  // 模型类型
+  // 模型类型(visons 视觉模型可以解析图片、分析图片内容，然后进行对话,使用时需要支持上传图片，
+  // 但也能持续对话，和cc分开)
   LLModelType modelType;
   // 每张图的花费
   double? costPerImage;
@@ -126,8 +132,7 @@ class CusLLMSpec {
 // 默认是对话模型的构造函数
   CusLLMSpec(this.platform, this.cusLlm, this.model, this.name,
       this.contextLength, this.isFree, this.inputPrice, this.outputPrice,
-      {this.isVision = false,
-      this.isQuote = false,
+      {this.isQuote = false,
       this.feature,
       this.useCase,
       this.modelType = LLModelType.cc})
@@ -147,7 +152,6 @@ class CusLLMSpec {
   })  : contextLength = null,
         inputPrice = null,
         outputPrice = null,
-        isVision = null,
         isQuote = null;
 
   // 从字符串转
@@ -178,8 +182,8 @@ final List<CusLLMSpec> CCM_SPEC_LIST = [
     0,
     0,
     feature: """ERNIE Speed是百度2024年最新发布的自研高性能大语言模型，通用能力优异，
-        适合作为基座模型进行精调，更好地处理特定场景问题，同时具备极佳的推理性能。
-        ERNIE-Speed-8K是模型的一个版本，上下文窗口为8K。""",
+适合作为基座模型进行精调，更好地处理特定场景问题，同时具备极佳的推理性能。
+ERNIE-Speed-8K是模型的一个版本，上下文窗口为8K。""",
   ),
   CusLLMSpec(
     ApiPlatform.baidu,
@@ -191,8 +195,8 @@ final List<CusLLMSpec> CCM_SPEC_LIST = [
     0,
     0,
     feature: """ERNIE Speed是百度2024年最新发布的自研高性能大语言模型，通用能力优异，
-    适合作为基座模型进行精调，更好地处理特定场景问题，同时具备极佳的推理性能。
-    ERNIE-Speed-128K是模型的一个版本，上下文窗口为128K。""",
+适合作为基座模型进行精调，更好地处理特定场景问题，同时具备极佳的推理性能。
+ERNIE-Speed-128K是模型的一个版本，上下文窗口为128K。""",
   ),
   CusLLMSpec(
     ApiPlatform.baidu,
@@ -215,7 +219,7 @@ final List<CusLLMSpec> CCM_SPEC_LIST = [
     0,
     0,
     feature: """ERNIE Tiny是百度自研的超高性能大语言模型，部署与精调成本在文心系列模型中最低。
-        ERNIE-Tiny-8K是模型的一个版本，上下文窗口为8K。""",
+ERNIE-Tiny-8K是模型的一个版本，上下文窗口为8K。""",
   ),
   CusLLMSpec(
     ApiPlatform.baidu,
@@ -227,7 +231,7 @@ final List<CusLLMSpec> CCM_SPEC_LIST = [
     0,
     0,
     feature: """Yi-34B是由零一万物开发并开源的双语大语言模型，使用4K序列长度进行训练，在推理期间可扩展到32K；
-    模型在多项评测中全球领跑，取得了多项 SOTA 国际最佳性能指标表现，该版本为支持对话的chat版本。""",
+模型在多项评测中全球领跑，取得了多项 SOTA 国际最佳性能指标表现，该版本为支持对话的chat版本。""",
   ),
 
   CusLLMSpec(
@@ -239,9 +243,9 @@ final List<CusLLMSpec> CCM_SPEC_LIST = [
     true,
     0,
     0,
-    isVision: true,
     feature: """Fuyu-8B是由Adept AI训练的多模态图像理解模型，可以支持多样的图像分辨率，回答图形图表有关问题。
-    模型在视觉问答和图像描述等任务上表现良好。""",
+模型在视觉问答和图像描述等任务上表现良好。""",
+    modelType: LLModelType.vision,
   ),
   // CusLLMSpec(
   //   ApiPlatform.tencent,
@@ -400,8 +404,8 @@ final List<CusLLMSpec> CCM_SPEC_LIST = [
     20,
     20,
     feature: """最新版本的yi-large模型。
-    千亿参数大尺寸模型，提供超强问答及文本生成能力，具备极强的推理能力。
-    并且对 System Prompt 做了专属强化。""",
+千亿参数大尺寸模型，提供超强问答及文本生成能力，具备极强的推理能力。
+并且对 System Prompt 做了专属强化。""",
     useCase: """适合于复杂语言理解、深度内容创作设计等复杂场景。""",
   ),
   CusLLMSpec(
@@ -425,9 +429,9 @@ final List<CusLLMSpec> CCM_SPEC_LIST = [
     false,
     6,
     6,
-    isVision: true,
     feature: """复杂视觉任务模型，提供高性能图片理解、分析能力。""",
     useCase: """适合需要分析和解释图像、图表的场景，如图片问答、图表理解、OCR、视觉推理、教育、研究报告理解或多语种文档阅读等。""",
+    modelType: LLModelType.vision,
   ),
   CusLLMSpec(
     ApiPlatform.lingyiwanwu,
@@ -489,8 +493,9 @@ final List<CusLLMSpec> TTI_SPEC_LIST = [
     '阿里-通义万相',
     false,
     feature: """通义万相-文本生成图像大模型，
-        支持中英文双语输入，重点风格包括但不限于水彩、油画、中国画、素描、扁平插画、二次元、3D卡通""",
+支持中英文双语输入，重点风格包括但不限于水彩、油画、中国画、素描、扁平插画、二次元、3D卡通。""",
     modelType: LLModelType.tti,
+    costPerImage: 0.2,
   ),
   CusLLMSpec.tti(
     ApiPlatform.siliconCloud,
@@ -498,7 +503,7 @@ final List<CusLLMSpec> TTI_SPEC_LIST = [
     "black-forest-labs/FLUX.1-schnell",
     'Flux.1-schnell',
     true,
-    feature: """SiliconCloud Flux.1-schnell""",
+    feature: """SiliconCloud Flux.1-schnell\n\n【单次输出 1 张图片, 多选无效】""",
     useCase: """SiliconCloud Flux.1-schnell""",
     modelType: LLModelType.tti,
   ),
@@ -561,5 +566,19 @@ final List<CusLLMSpec> TTI_SPEC_LIST = [
     feature: """SiliconCloud Stable Diffusion XL Lighting""",
     useCase: """SiliconCloud Stable Diffusion XL Lighting""",
     modelType: LLModelType.tti,
+  ),
+  CusLLMSpec.tti(
+    ApiPlatform.xfyun,
+    CusLLM.xfyun_TTI,
+    // 请求地址是https://spark-api.cn-huabei-1.xf-yun.com/v2.1/tti，没有模型名称，暂给给tti
+    "tti",
+    '讯飞云_图片生成',
+    false,
+    feature: """图片生成基于讯飞自研的自然语言处理大模型和深度学习技术，
+能够根据用户输入的文字内容，生成符合语义描述的不同风格的图像，结果自然、细节丰富。
+\n【单次输出 1 张图片, 多选无效】""",
+    useCase: """支持生成各种不同类型的图片，无论是设计、广告还是媒体等领域，为用户提供了无限的创意和灵感。""",
+    modelType: LLModelType.tti,
+    costPerImage: 0.2,
   ),
 ];

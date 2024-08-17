@@ -50,8 +50,13 @@ import 'package:crypto/crypto.dart';
 //@hostUrl : 比如语言识别的 wss://iat-api.xfyun.cn/v2/iat
 //@apiKey : apiKey
 //@apiSecret : apiSecret
+//@method :get 或者post请求
 String genXfyunAssembleAuthUrl(
-    String hosturl, String apiKey, String apiSecret) {
+  String hosturl,
+  String apiKey,
+  String apiSecret,
+  String method,
+) {
   var ul = Uri.parse(hosturl);
 
   // 签名时间
@@ -61,8 +66,11 @@ String genXfyunAssembleAuthUrl(
   List<String> signString = [
     "host: ${ul.host}",
     "date: $date",
-    "GET ${ul.path} HTTP/1.1",
+    // "GET ${ul.path} HTTP/1.1",
+    "$method ${ul.path} HTTP/1.1",
   ];
+
+  print("signString---$signString");
 
   // 拼接签名字符串
   String sgin = signString.join("\n");

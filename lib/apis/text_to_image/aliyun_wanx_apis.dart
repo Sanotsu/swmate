@@ -71,6 +71,8 @@ Future<AliyunWanxResp> getAliyunText2ImgJobResult(String taskId) async {
     var respData = await HttpUtils.post(
       path: "https://dashscope.aliyuncs.com/api/v1/tasks/$taskId",
       method: CusHttpMethod.get,
+      // 文生图有单独的遮罩，不用显示加载圈
+      showLoading: false,
       headers: {
         "Authorization": "Bearer $ALIYUN_API_KEY",
       },

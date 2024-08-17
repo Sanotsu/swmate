@@ -86,9 +86,9 @@ class TtiHistoryDrawer extends StatelessWidget {
                       if (e.imageUrls != null && e.imageUrls!.isNotEmpty)
                         Wrap(
                           children: buildImageList(
-                            e.style,
-                            e.imageUrls!,
                             context,
+                            e.imageUrls!,
+                            prefix: e.llmSpec?.platform.name,
                           ),
                         ),
                     ],

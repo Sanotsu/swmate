@@ -75,6 +75,10 @@ dart run build_runner build --delete-conflicting-outputs
 - feat: 基本完成“文本生图”通用页面布局，目前可支持 sf 平台和通义万相切换。
 - refactor: “文本生图”重构历史记录从抽屉到单独页面;修正一些细节。
 
+#### 2024-08-17
+
+- feat: “文本生图”添加了讯飞云的图片生成接口。
+
 ### todo:
 
 - （done）得到流式响应的数据的处理都非常相似，可以抽出来公共函数

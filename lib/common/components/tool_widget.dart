@@ -6,8 +6,6 @@ import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,13 +14,13 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:form_builder_file_picker/form_builder_file_picker.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../constants.dart';
+import '../utils/tools.dart';
 
 /// 构建AI对话云平台入口按钮
 buildToolEntrance(
@@ -180,10 +178,10 @@ void showSnackMessage(
 /// 构建文本生成的图片结果列表
 /// 点击预览，长按下载
 buildNetworkImageViewGrid(
-  String style,
-  List<String> urls,
-  BuildContext context, {
+  BuildContext context,
+  List<String> urls, {
   int? crossAxisCount,
+  String? prefix, // 如果有保存图片，这个可以是图片明前缀
 }) {
   return GridView.count(
     crossAxisCount: crossAxisCount ?? 2,
@@ -191,90 +189,76 @@ buildNetworkImageViewGrid(
     mainAxisSpacing: 5.sp,
     crossAxisSpacing: 5.sp,
     physics: const NeverScrollableScrollPhysics(),
-    children: buildImageList(style, urls, context),
+    children: buildImageList(context, urls, prefix: prefix),
+  );
+}
+
+// 在photovivew中，不同图片不同的provider
+ImageProvider _getImageProvider(String imagePath) {
+  if (imagePath.startsWith('http') || imagePath.startsWith('https')) {
+    return NetworkImage(imagePath);
+  } else {
+    return FileImage(File(imagePath));
+  }
+}
+
+_buildPhotoView(ImageProvider imageProvider, {bool? enableRotation}) {
+  return PhotoView(
+    imageProvider: imageProvider,
+    // 设置图片背景为透明
+    backgroundDecoration: const BoxDecoration(
+      color: Colors.transparent,
+    ),
+    // 可以旋转
+    enableRotation: enableRotation ?? true,
+    // 缩放的最大最小限制
+    minScale: PhotoViewComputedScale.contained * 0.8,
+    maxScale: PhotoViewComputedScale.covered * 2,
+    errorBuilder: (context, url, error) => const Icon(Icons.error),
   );
 }
 
 // 2024-06-27 在小米6中此放在上面imageViewGrid没问题，但Z60U就报错；因为无法调试，错误原因不知
 // 所以在文生图历史记录中点击某个记录时，不使用上面那个，而使用这个
-buildImageList(String style, List<String> urls, BuildContext context) {
+buildImageList(
+  BuildContext context,
+  List<String> urls, {
+  String? prefix,
+}) {
   return List.generate(urls.length, (index) {
     return GridTile(
       child: GestureDetector(
         // 单击预览
         onTap: () {
+          print("图片地址---${urls[index]}");
+
           showDialog(
             context: context,
             builder: (BuildContext context) {
               return Dialog(
                 backgroundColor: Colors.transparent, // 设置背景透明
-                child: PhotoView(
-                  imageProvider: NetworkImage(urls[index]),
-                  // 设置图片背景为透明
-                  backgroundDecoration: const BoxDecoration(
-                    color: Colors.transparent,
-                  ),
-                  // 可以旋转
-                  // enableRotation: true,
-                  // 缩放的最大最小限制
-                  minScale: PhotoViewComputedScale.contained * 0.8,
-                  maxScale: PhotoViewComputedScale.covered * 2,
-                  errorBuilder: (context, url, error) =>
-                      const Icon(Icons.error),
-                ),
+                child: _buildPhotoView(_getImageProvider(urls[index])),
               );
             },
           );
         },
         // 长按保存到相册
         onLongPress: () async {
-          if (Platform.isAndroid) {
-            final deviceInfoPlugin = DeviceInfoPlugin();
-            final deviceInfo = await deviceInfoPlugin.androidInfo;
-            final sdkInt = deviceInfo.version.sdkInt;
-
-            // Android9对应sdk是28,<=28就不显示保存按钮
-            if (sdkInt > 28) {
-              // 点击预览或者下载
-              var response = await Dio().get(urls[index],
-                  options: Options(responseType: ResponseType.bytes));
-
-              print(response.data);
-
-              // 安卓9及以下好像无法保存
-              final result = await ImageGallerySaver.saveImage(
-                Uint8List.fromList(response.data),
-                quality: 100,
-                name: "${style}_${DateTime.now().millisecondsSinceEpoch}",
-              );
-              if (result["isSuccess"] == true) {
-                EasyLoading.showToast("图片已保存到相册！");
-              } else {
-                EasyLoading.showToast("无法保存图片！");
-              }
-            } else {
-              EasyLoading.showToast("Android 9 及以下版本无法长按保存到相册！");
-            }
+          if (urls[index].startsWith("/storage/")) {
+            EasyLoading.showToast("图片已保存到${urls[index]}");
+            return;
           }
+
+          // 网络图片就保存都指定位置
+          await saveTtiImageToLocal(urls[index],
+              prefix: prefix == null
+                  ? null
+                  : (prefix.endsWith("_") ? prefix : "${prefix}_"));
         },
         // 默认缓存展示
         child: SizedBox(
           height: 0.2.sw,
-          child: CachedNetworkImage(
-            imageUrl: urls[index],
-            fit: BoxFit.cover,
-            progressIndicatorBuilder: (context, url, downloadProgress) =>
-                Center(
-              child: SizedBox(
-                height: 50.sp,
-                width: 50.sp,
-                child: CircularProgressIndicator(
-                  value: downloadProgress.progress,
-                ),
-              ),
-            ),
-            errorWidget: (context, url, error) => const Icon(Icons.error),
-          ),
+          child: buildNetworkOrFileImage(urls[index], fit: BoxFit.cover),
         ),
       ),
     );
@@ -322,19 +306,7 @@ Widget buildImageView(
           builder: (BuildContext context) {
             return Dialog(
               backgroundColor: Colors.transparent, // 设置背景透明
-              child: PhotoView(
-                imageProvider: imageProvider,
-                // 设置图片背景为透明
-                backgroundDecoration: const BoxDecoration(
-                  color: Colors.transparent,
-                ),
-                // 可以旋转
-                // enableRotation: true,
-                // 缩放的最大最小限制
-                minScale: PhotoViewComputedScale.contained * 0.8,
-                maxScale: PhotoViewComputedScale.covered * 2,
-                errorBuilder: (context, url, error) => const Icon(Icons.error),
-              ),
+              child: _buildPhotoView(imageProvider),
             );
           },
         );
@@ -690,19 +662,19 @@ Widget buildNetworkOrFileImage(String imageUrl, {BoxFit? fit}) {
       // ),
 
       /// placeholder 和 progressIndicatorBuilder 只能2选1
-      // placeholder: (context, url) => Center(
-      //   child: SizedBox(
-      //     width: 50.sp,
-      //     height: 50.sp,
-      //     child: const CircularProgressIndicator(),
-      //   ),
-      // ),
+      placeholder: (context, url) => Center(
+        child: SizedBox(
+          width: 50.sp,
+          height: 50.sp,
+          child: const CircularProgressIndicator(),
+        ),
+      ),
       errorWidget: (context, url, error) => Center(
         child: Icon(Icons.error, size: 36.sp),
       ),
     );
 
-// 2024-03-29 这样每次都会重新请求图片，网络图片都不小的，流量顶不住。用上面的
+    // 2024-03-29 这样每次都会重新请求图片，网络图片都不小的，流量顶不住。用上面的
     // return Image.network(
     //   imageUrl,
     //   errorBuilder: (context, error, stackTrace) {
@@ -759,19 +731,7 @@ _buildImageCarouselSliderType(
           builder: (BuildContext context) {
             return Dialog(
               backgroundColor: Colors.transparent, // 设置背景透明
-              child: PhotoView(
-                imageProvider: getImageProvider(imageUrl),
-                // 设置图片背景为透明
-                backgroundDecoration: const BoxDecoration(
-                  color: Colors.transparent,
-                ),
-                // 可以旋转
-                enableRotation: true,
-                // 缩放的最大最小限制
-                minScale: PhotoViewComputedScale.contained * 0.8,
-                maxScale: PhotoViewComputedScale.covered * 2,
-                errorBuilder: (context, url, error) => const Icon(Icons.error),
-              ),
+              child: _buildPhotoView(getImageProvider(imageUrl)),
             );
           },
         );
@@ -782,11 +742,7 @@ _buildImageCarouselSliderType(
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PhotoView(
-              imageProvider: getImageProvider(imageUrl),
-              enableRotation: true,
-              errorBuilder: (context, url, error) => const Icon(Icons.error),
-            ),
+            builder: (context) => _buildPhotoView(getImageProvider(imageUrl)),
           ),
         );
       });
@@ -865,19 +821,7 @@ buildClickImageDialog(BuildContext context, String imageUrl) {
         builder: (BuildContext context) {
           return Dialog(
             backgroundColor: Colors.transparent, // 设置背景透明
-            child: PhotoView(
-              imageProvider: FileImage(File(imageUrl)),
-              // 设置图片背景为透明
-              backgroundDecoration: const BoxDecoration(
-                color: Colors.transparent,
-              ),
-              // 可以旋转
-              // enableRotation: true,
-              // 缩放的最大最小限制
-              minScale: PhotoViewComputedScale.contained * 0.8,
-              maxScale: PhotoViewComputedScale.covered * 2,
-              errorBuilder: (context, url, error) => const Icon(Icons.error),
-            ),
+            child: _buildPhotoView(FileImage(File(imageUrl))),
           );
         },
       );

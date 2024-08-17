@@ -10,10 +10,12 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../apis/text_to_image/aliyun_wanx_apis.dart';
 import '../../../../apis/text_to_image/silicon_flow_tti_apis.dart';
+import '../../../../apis/text_to_image/xfyun_tti_aps.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 
 import '../../../../common/utils/db_tools/db_helper.dart';
+import '../../../../common/utils/tools.dart';
 import '../../../../models/text_to_image/aliyun_wanx_req.dart';
 import '../../../../models/text_to_image/aliyun_wanx_resp.dart';
 import '../../../../models/text_to_image/com_tti_req.dart';
@@ -43,10 +45,9 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
   /// 在init时需要重新设置
   ///
   // 所有支持文生图的模型列表(用于下拉的平台和该平台拥有的模型列表也从这里来)
-  var llmSpecList = CusLLM_SPEC_LIST.where((spec) =>
-      (spec.platform == ApiPlatform.siliconCloud ||
-          spec.platform == ApiPlatform.aliyun) &&
-      spec.modelType == LLModelType.tti).toList();
+  var llmSpecList = CusLLM_SPEC_LIST.where(
+    (spec) => spec.modelType == LLModelType.tti,
+  ).toList();
 
   // 级联选择效果：云平台-模型名
   late ApiPlatform selectedPlatform;
@@ -197,7 +198,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
           if (e.url != null) imageUrls.add(e.url!);
         }
       }
-    } else {
+    } else if (selectedPlatform == ApiPlatform.siliconCloud) {
       var a = ComTtiReq.sdLighting(
         prompt: prompt,
         negativePrompt: negativePrompt,
@@ -220,6 +221,31 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
             imageUrls.add(e.url);
             await MyGetStorage().setText2ImageUrl(e.url);
           }
+        }
+      }
+    } else {
+      var result = await getXfyunTtiResp(selectedSize, prompt);
+      print(result.toRawJson());
+
+      if (!mounted) return;
+      if (result.header?.code != null && result.header?.code != 0) {
+        EasyLoading.showError("服务器报错:\n${result.header?.message}");
+        setState(() {
+          isGenImage = false;
+          LoadingOverlay.hide();
+        });
+      } else {
+        var cont = result.payload?.choices?.text?.first.content;
+        if (cont != null) {
+          var file = await saveTtiBase64ImageToLocal(cont, prefix: "xfyun_");
+          print(file);
+          imageUrls.add(file.path);
+        } else {
+          EasyLoading.showError("图片数据为空:\n${result.header?.message}");
+          setState(() {
+            isGenImage = false;
+            LoadingOverlay.hide();
+          });
         }
       }
     }
@@ -301,6 +327,23 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
       appBar: AppBar(
         title: const Text('文本生图'),
         actions: [
+          TextButton(
+            onPressed: () async {
+              var a = await getXfyunTtiResp("512x512", "性感美女，全身照");
+
+              var cont = a.payload?.choices?.text?.first.content;
+              if (cont != null) {
+                var file = await saveTtiBase64ImageToLocal(
+                  cont,
+                  prefix: "xfyun_",
+                );
+                print(file);
+              }
+
+              print(a.toRawJson());
+            },
+            child: const Text("测试"),
+          ),
           IconButton(
             onPressed: () {
               Navigator.push(
@@ -365,11 +408,15 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
 
   List<String> getSizeList() => selectedPlatform == ApiPlatform.aliyun
       ? WANX_ImageSizeList
-      : SF_ImageSizeList;
+      : selectedPlatform == ApiPlatform.siliconCloud
+          ? SF_ImageSizeList
+          : XFYUN_ImageSizeList;
 
   String getInitialSize() => selectedPlatform == ApiPlatform.aliyun
       ? WANX_ImageSizeList.first
-      : SF_ImageSizeList.first;
+      : selectedPlatform == ApiPlatform.siliconCloud
+          ? SF_ImageSizeList.first
+          : XFYUN_ImageSizeList.first;
 
   ///
   /// 页面布局从上往下
@@ -513,9 +560,8 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 2.sp),
                 child: buildNetworkImageViewGrid(
-                  WANX_StyleMap.keys.toList()[_selectedStyleIndex],
-                  rstImageUrls,
                   context,
+                  rstImageUrls,
                   crossAxisCount: 4,
                 ),
               ),

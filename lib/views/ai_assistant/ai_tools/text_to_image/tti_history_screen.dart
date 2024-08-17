@@ -39,7 +39,7 @@ class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('文本生成图片记录'),
+        title: const Text('文本生图历史记录'),
       ),
       body: ListView.builder(
         itemCount: text2ImageHistory.length,
@@ -103,9 +103,9 @@ class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
                       (e.imageUrls != null && e.imageUrls!.isNotEmpty)
                           ? Wrap(
                               children: buildImageList(
-                                e.style,
-                                e.imageUrls!,
                                 context,
+                                e.imageUrls!,
+                                prefix: e.llmSpec?.platform.name,
                               ),
                             )
                           : const Text("暂无可预览图片"),
@@ -165,7 +165,8 @@ class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "${e.requestId.length > 10 ? e.requestId.substring(0, 10) : e.requestId} ${e.prompt.length > 10 ? e.prompt.substring(0, 10) : e.prompt}",
+                      // uuid,第9位正好是破折号
+                      "${e.requestId.length > 8 ? e.requestId.substring(0, 8) : e.requestId} ${e.prompt.length > 10 ? e.prompt.substring(0, 10) : e.prompt}",
                       style: TextStyle(fontSize: 15.sp),
                       maxLines: 2,
                       softWrap: true,

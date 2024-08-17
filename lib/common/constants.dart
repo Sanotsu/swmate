@@ -135,6 +135,10 @@ final SAVE_MODEL_BATTLE_DIR =
 /// 智能群聊的对话语音文件目录
 final CHAT_AUDIO_DIR = Directory('/storage/emulated/0/swmate/chat_audio');
 
+/// 讯飞文生图返回的是base64,先直接保存为文件，这是文件地址
+/// 所有的文生图都保存在同一个位置吧
+final LLM_TTI_DIR = Directory('/storage/emulated/0/swmate/tti');
+
 // 可供翻译的目标语言
 enum TargetLanguage {
   simplifiedChinese, // 中文(简体)

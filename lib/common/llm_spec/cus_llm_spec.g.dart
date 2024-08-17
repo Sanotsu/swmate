@@ -15,7 +15,6 @@ CusLLMSpec _$CusLLMSpecFromJson(Map<String, dynamic> json) => CusLLMSpec(
       json['isFree'] as bool,
       (json['inputPrice'] as num?)?.toDouble(),
       (json['outputPrice'] as num?)?.toDouble(),
-      isVision: json['isVision'] as bool? ?? false,
       isQuote: json['isQuote'] as bool? ?? false,
       feature: json['feature'] as String?,
       useCase: json['useCase'] as String?,
@@ -33,7 +32,6 @@ Map<String, dynamic> _$CusLLMSpecToJson(CusLLMSpec instance) =>
       'isFree': instance.isFree,
       'inputPrice': instance.inputPrice,
       'outputPrice': instance.outputPrice,
-      'isVision': instance.isVision,
       'isQuote': instance.isQuote,
       'feature': instance.feature,
       'useCase': instance.useCase,
@@ -46,6 +44,7 @@ const _$ApiPlatformEnumMap = {
   ApiPlatform.aliyun: 'aliyun',
   ApiPlatform.siliconCloud: 'siliconCloud',
   ApiPlatform.lingyiwanwu: 'lingyiwanwu',
+  ApiPlatform.xfyun: 'xfyun',
 };
 
 const _$CusLLMEnumMap = {
@@ -89,10 +88,12 @@ const _$CusLLMEnumMap = {
       'siliconCloud_StableDiffusionXL_Turbo_TTI',
   CusLLM.siliconCloud_StableDiffusionXL_Light_TTI:
       'siliconCloud_StableDiffusionXL_Light_TTI',
+  CusLLM.xfyun_TTI: 'xfyun_TTI',
 };
 
 const _$LLModelTypeEnumMap = {
   LLModelType.cc: 'cc',
+  LLModelType.vision: 'vision',
   LLModelType.tti: 'tti',
   LLModelType.iti: 'iti',
 };

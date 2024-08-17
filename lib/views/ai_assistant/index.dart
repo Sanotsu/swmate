@@ -168,7 +168,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
 
                 buildToolEntrance(
                   "文本生图",
-                  subtitle: "输入文本描述\n生成指定图片",
+                  subtitle: "根据文本描述\n结合各种风格\n生成各种图像",
                   icon: const Icon(Icons.chat_outlined),
                   color: Colors.blue[100],
                   onTap: () {
