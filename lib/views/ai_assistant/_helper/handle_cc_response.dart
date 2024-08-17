@@ -149,6 +149,12 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
         model: selectedModel,
         stream: isStream,
       );
+    } else if (selectedPlatform == ApiPlatform.tencent) {
+      tempStream = await tencentCCRespWithCancel(
+        msgs,
+        model: selectedModel,
+        stream: isStream,
+      );
     } else {
       tempStream = await siliconFlowCCRespWithCancel(
         msgs,

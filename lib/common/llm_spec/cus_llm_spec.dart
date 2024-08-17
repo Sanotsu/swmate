@@ -16,7 +16,7 @@ part 'cus_llm_spec.g.dart';
 ///
 enum ApiPlatform {
   baidu,
-  // tencent,
+  tencent,
   aliyun,
   siliconCloud,
   lingyiwanwu,
@@ -38,7 +38,7 @@ enum LLModelType {
 // 模型对应的中文名
 final Map<ApiPlatform, String> CP_NAME_MAP = {
   ApiPlatform.baidu: '百度',
-  // ApiPlatform.tencent: '腾讯',
+  ApiPlatform.tencent: '腾讯',
   ApiPlatform.aliyun: '阿里',
   ApiPlatform.siliconCloud: '硅动科技',
   ApiPlatform.lingyiwanwu: '零一万物',
@@ -235,7 +235,6 @@ ERNIE-Tiny-8K是模型的一个版本，上下文窗口为8K。""",
     feature: """Yi-34B是由零一万物开发并开源的双语大语言模型，使用4K序列长度进行训练，在推理期间可扩展到32K；
 模型在多项评测中全球领跑，取得了多项 SOTA 国际最佳性能指标表现，该版本为支持对话的chat版本。""",
   ),
-
   CusLLMSpec(
     ApiPlatform.baidu,
     CusLLM.baidu_Fuyu_8B,
@@ -249,20 +248,19 @@ ERNIE-Tiny-8K是模型的一个版本，上下文窗口为8K。""",
 模型在视觉问答和图像描述等任务上表现良好。""",
     modelType: LLModelType.vision,
   ),
-  // CusLLMSpec(
-  //   ApiPlatform.tencent,
-  //   CusLLM.tencent_Hunyuan_Lite,
-  //   "hunyuan-lite",
-  //   '混元Lite',
-  //   8 * 1000,
-  //   true,
-  //   0,
-  //   0,
-  //   feature: """腾讯混元大模型(Tencent Hunyuan)是由腾讯研发的大语言模型，
-  //       具备强大的中文创作能力，复杂语境下的逻辑推理能力，以及可靠的任务执行能力。
-  //       混元-Lite 升级为MOE结构，上下文窗口为256k，在NLP，代码，数学，行业等多项评测集上领先众多开源模型。""",
-  // ),
-
+  CusLLMSpec(
+    ApiPlatform.tencent,
+    CusLLM.tencent_Hunyuan_Lite,
+    "hunyuan-lite",
+    '混元Lite',
+    8 * 1000,
+    true,
+    0,
+    0,
+    feature: """腾讯混元大模型(Tencent Hunyuan)是由腾讯研发的大语言模型，
+具备强大的中文创作能力，复杂语境下的逻辑推理能力，以及可靠的任务执行能力。
+混元-Lite 升级为MOE结构，上下文窗口为256k，在NLP，代码，数学，行业等多项评测集上领先众多开源模型。""",
+  ),
   CusLLMSpec(
     ApiPlatform.siliconCloud,
     CusLLM.siliconCloud_Qwen2_7B_Instruct,

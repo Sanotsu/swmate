@@ -4,6 +4,11 @@ import 'com_cc_resp.dart';
 
 part 'com_cc_req.g.dart';
 
+/// 2024-08-17
+/// 针对腾讯混元做一点修改.因为只用到了hunyuan-lite一个,所以,只处理几个必填参数就好
+/// 混元也支持的其他功能,就暂时不管了
+/// 【其实请求req可以不动的，主要是resp，主要改一改toJson方法支持腾讯的借口即可，这里做留存示例】
+
 ///
 /// 【以零一万物的出参为基准的响应类】
 ///   siliconflow 完全适配
@@ -140,6 +145,13 @@ class ComCCReq {
     this.toolChoice = "auto",
     this.maxTokens,
     this.topK,
+  });
+
+  // 2024-08-17 只用到小小lite，就最简单了
+  ComCCReq.hunyuan({
+    this.model,
+    this.messages,
+    this.stream = false,
   });
 
   factory ComCCReq.fromJson(Map<String, dynamic> srcJson) =>

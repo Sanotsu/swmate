@@ -41,6 +41,7 @@ Map<String, dynamic> _$CusLLMSpecToJson(CusLLMSpec instance) =>
 
 const _$ApiPlatformEnumMap = {
   ApiPlatform.baidu: 'baidu',
+  ApiPlatform.tencent: 'tencent',
   ApiPlatform.aliyun: 'aliyun',
   ApiPlatform.siliconCloud: 'siliconCloud',
   ApiPlatform.lingyiwanwu: 'lingyiwanwu',

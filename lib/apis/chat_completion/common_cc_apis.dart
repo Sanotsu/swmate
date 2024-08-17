@@ -16,6 +16,7 @@ import '../../common/utils/dio_client/cus_http_request.dart';
 import '../../common/utils/dio_client/interceptor_error.dart';
 import '../../services/cus_get_storage.dart';
 import '../_self_keys.dart';
+import '../gen_access_token/tencent_signature_v3.dart';
 
 final l = ProsteLogger();
 
@@ -238,6 +239,12 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
       if (respData.runtimeType == String) {
         respData = json.decode(respData);
       }
+
+      // 2024-08-17 腾讯的响应，在最外面还多一个Response栏位,得取出来才和其他结构类似
+      if (respData["Response"] != null) {
+        respData = respData["Response"];
+      }
+
       return StreamWithCancel(
         Stream.value(ComCCResp.fromJson(respData)),
         () async {},
@@ -401,6 +408,41 @@ Future<StreamWithCancel<ComCCResp>> xfyunCCRespWithCancel(
     platUrls[PlatUrl.xfyunCCUrl]!,
     header,
     body.toJson(),
+    stream: stream,
+  );
+}
+
+/// 腾讯云的请求方法
+Future<StreamWithCancel<ComCCResp>> tencentCCRespWithCancel(
+  List<CCMessage> messages, {
+  String? model,
+  bool stream = false,
+}) async {
+  model = model ??
+      CusLLM_SPEC_LIST.firstWhere(
+          (e) => e.cusLlm == CusLLM.tencent_Hunyuan_Lite).model;
+
+  Map<String, dynamic> tempBody = {
+    "Model": model,
+    "Stream": stream,
+    "Messages": messages
+        .map((e) => {
+              "Role": e.role,
+              "Content": e.content.toString(),
+            })
+        .toList(),
+  };
+
+  var header = genHunyuanLiteSignatureHeaders(
+    jsonEncode(tempBody),
+    TENCENT_SECRET_ID,
+    TENCENT_SECRET_KEY,
+  );
+
+  return getSseCcResponse(
+    platUrls[PlatUrl.tencentCCUrl]!,
+    header,
+    tempBody,
     stream: stream,
   );
 }

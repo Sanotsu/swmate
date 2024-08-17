@@ -7,29 +7,35 @@ part of 'com_cc_resp.dart';
 // **************************************************************************
 
 ComCCResp _$ComCCRespFromJson(Map<String, dynamic> json) => ComCCResp(
-      id: json['id'] as String?,
-      object: json['object'] as String?,
-      created: (json['created'] as num?)?.toInt(),
-      model: json['model'] as String?,
-      choices: (json['choices'] as List<dynamic>?)
+      id: readJsonValue(json, 'id') as String?,
+      object: readJsonValue(json, 'object') as String?,
+      created: (readJsonValue(json, 'created') as num?)?.toInt(),
+      model: readJsonValue(json, 'model') as String?,
+      choices: (readJsonValue(json, 'choices') as List<dynamic>?)
           ?.map((e) => CCChoice.fromJson(e as Map<String, dynamic>))
           .toList(),
-      usage: json['usage'] == null
+      usage: readJsonValue(json, 'usage') == null
           ? null
-          : CCUsage.fromJson(json['usage'] as Map<String, dynamic>),
-      content: json['content'] as String?,
-      lastOne: json['lastOne'] as bool?,
-      sentenceId: (json['sentence_id'] as num?)?.toInt(),
-      isEnd: json['is_end'] as bool?,
-      isTruncated: json['is_truncated'] as bool?,
-      result: json['result'] as String?,
-      needClearHistory: json['need_clear_history'] as bool?,
-      banRound: (json['ban_round'] as num?)?.toInt(),
-      errorCode: (json['error_code'] as num?)?.toInt(),
-      errorMsg: json['error_msg'] as String?,
+          : CCUsage.fromJson(
+              readJsonValue(json, 'usage') as Map<String, dynamic>),
+      content: readJsonValue(json, 'content') as String?,
+      lastOne: readJsonValue(json, 'lastOne') as bool?,
+      sentenceId: (readJsonValue(json, 'sentenceId') as num?)?.toInt(),
+      isEnd: readJsonValue(json, 'isEnd') as bool?,
+      isTruncated: readJsonValue(json, 'isTruncated') as bool?,
+      result: readJsonValue(json, 'result') as String?,
+      needClearHistory: readJsonValue(json, 'needClearHistory') as bool?,
+      banRound: (readJsonValue(json, 'banRound') as num?)?.toInt(),
+      errorCode: (readJsonValue(json, 'errorCode') as num?)?.toInt(),
+      errorMsg: readJsonValue(json, 'errorMsg') as String?,
       code: (json['code'] as num?)?.toInt(),
       message: json['message'] as String?,
       sid: json['sid'] as String?,
+      tencentErrorMsg: json['ErrorMsg'] == null
+          ? null
+          : TencentError.fromJson(json['ErrorMsg'] as Map<String, dynamic>),
+      note: json['Note'] as String?,
+      requestId: json['RequestId'] as String?,
       cusText: json['cusText'] as String?,
     );
 
@@ -43,17 +49,20 @@ Map<String, dynamic> _$ComCCRespToJson(ComCCResp instance) => <String, dynamic>{
       'content': instance.content,
       'lastOne': instance.lastOne,
       'cusText': instance.cusText,
-      'sentence_id': instance.sentenceId,
-      'is_end': instance.isEnd,
-      'is_truncated': instance.isTruncated,
+      'sentenceId': instance.sentenceId,
+      'isEnd': instance.isEnd,
+      'isTruncated': instance.isTruncated,
       'result': instance.result,
-      'need_clear_history': instance.needClearHistory,
-      'ban_round': instance.banRound,
-      'error_code': instance.errorCode,
-      'error_msg': instance.errorMsg,
+      'needClearHistory': instance.needClearHistory,
+      'banRound': instance.banRound,
+      'errorCode': instance.errorCode,
+      'errorMsg': instance.errorMsg,
       'code': instance.code,
       'message': instance.message,
       'sid': instance.sid,
+      'ErrorMsg': instance.tencentErrorMsg?.toJson(),
+      'Note': instance.note,
+      'RequestId': instance.requestId,
     };
 
 CCQuote _$CCQuoteFromJson(Map<String, dynamic> json) => CCQuote(
@@ -69,38 +78,40 @@ Map<String, dynamic> _$CCQuoteToJson(CCQuote instance) => <String, dynamic>{
     };
 
 CCUsage _$CCUsageFromJson(Map<String, dynamic> json) => CCUsage(
-      (json['completion_tokens'] as num).toInt(),
-      (json['prompt_tokens'] as num).toInt(),
-      (json['total_tokens'] as num).toInt(),
+      (readJsonValue(json, 'completionTokens') as num).toInt(),
+      (readJsonValue(json, 'promptTokens') as num).toInt(),
+      (readJsonValue(json, 'totalTokens') as num).toInt(),
     );
 
 Map<String, dynamic> _$CCUsageToJson(CCUsage instance) => <String, dynamic>{
-      'completion_tokens': instance.completionTokens,
-      'prompt_tokens': instance.promptTokens,
-      'total_tokens': instance.totalTokens,
+      'completionTokens': instance.completionTokens,
+      'promptTokens': instance.promptTokens,
+      'totalTokens': instance.totalTokens,
     };
 
 CCChoice _$CCChoiceFromJson(Map<String, dynamic> json) => CCChoice(
-      (json['index'] as num).toInt(),
-      json['message'] == null
+      (json['index'] as num?)?.toInt(),
+      readJsonValue(json, 'message') == null
           ? null
-          : CCMessage.fromJson(json['message'] as Map<String, dynamic>),
-      json['delta'] == null
+          : CCMessage.fromJson(
+              readJsonValue(json, 'message') as Map<String, dynamic>),
+      readJsonValue(json, 'delta') == null
           ? null
-          : CCDelta.fromJson(json['delta'] as Map<String, dynamic>),
-      json['finish_reason'] as String?,
+          : CCDelta.fromJson(
+              readJsonValue(json, 'delta') as Map<String, dynamic>),
+      readJsonValue(json, 'finishReason') as String?,
     );
 
 Map<String, dynamic> _$CCChoiceToJson(CCChoice instance) => <String, dynamic>{
       'index': instance.index,
       'message': instance.message?.toJson(),
       'delta': instance.delta?.toJson(),
-      'finish_reason': instance.finishReason,
+      'finishReason': instance.finishReason,
     };
 
 CCMessage _$CCMessageFromJson(Map<String, dynamic> json) => CCMessage(
-      role: json['role'] as String,
-      content: json['content'],
+      role: readJsonValue(json, 'role') as String,
+      content: readJsonValue(json, 'content'),
     );
 
 Map<String, dynamic> _$CCMessageToJson(CCMessage instance) => <String, dynamic>{
@@ -109,8 +120,8 @@ Map<String, dynamic> _$CCMessageToJson(CCMessage instance) => <String, dynamic>{
     };
 
 CCDelta _$CCDeltaFromJson(Map<String, dynamic> json) => CCDelta(
-      json['role'] as String?,
-      json['content'] as String?,
+      readJsonValue(json, 'role') as String?,
+      readJsonValue(json, 'content') as String?,
       (json['quote'] as List<dynamic>?)
           ?.map((e) => CCQuote.fromJson(e as Map<String, dynamic>))
           .toList(),

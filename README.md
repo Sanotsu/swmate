@@ -79,6 +79,7 @@ dart run build_runner build --delete-conflicting-outputs
 
 - feat: “文本生图”添加了讯飞云的图片生成接口。
 - feat: “智能对话”添加了讯飞云的 Spark Lite 模型接口。
+- feat: “智能对话”添加了腾讯的混元 Lite 模型接口。
 
 ### todo:
 

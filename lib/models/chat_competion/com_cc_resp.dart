@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
 
+import '../mapper_utils.dart';
+
 part 'com_cc_resp.g.dart';
 
 ///
@@ -33,17 +35,32 @@ part 'com_cc_resp.g.dart';
 @JsonSerializable(explicitToJson: true)
 class ComCCResp {
   // 这几个栏位虽然正常响应时都有，但流式响应时最后一条[DONE]就没有
+  @JsonKey(readValue: readJsonValue)
   String? id;
+
   // 回包类型 chat.completion：多轮对话返回
+  @JsonKey(readValue: readJsonValue)
   String? object;
+
   // 时间戳
+  @JsonKey(readValue: readJsonValue)
   int? created;
+
+  @JsonKey(readValue: readJsonValue)
   String? model;
+
+  @JsonKey(readValue: readJsonValue)
   List<CCChoice>? choices;
+
+  @JsonKey(readValue: readJsonValue)
   CCUsage? usage;
   // 流式有，同步没有(chioces中是每次输出的内容，content是叠加后的内容)
+
+  @JsonKey(readValue: readJsonValue)
   String? content;
-  @JsonKey(name: 'lastOne')
+
+  // @JsonKey(name: 'lastOne')
+  @JsonKey(readValue: readJsonValue)
   bool? lastOne;
 
   /// 自定义的返回文本
@@ -51,45 +68,65 @@ class ComCCResp {
 
   /// 【百度】的有一些自己的格式
   // 表示当前子句的序号。只有在流式接口模式下会返回该字段
-  @JsonKey(name: 'sentence_id')
+  // @JsonKey(name: 'sentence_id')
+  @JsonKey(readValue: readJsonValue)
   int? sentenceId;
 
   // 表示当前子句是否是最后一句。只有在流式接口模式下会返回该字段
-  @JsonKey(name: 'is_end')
+  // @JsonKey(name: 'is_end')
+  @JsonKey(readValue: readJsonValue)
   bool? isEnd;
 
   // 当前生成的结果是否被截断
-  @JsonKey(name: 'is_truncated')
+  // @JsonKey(name: 'is_truncated')
+  @JsonKey(readValue: readJsonValue)
   bool? isTruncated;
 
   // 对话返回结果
-  @JsonKey(name: 'result')
+  // @JsonKey(name: 'result')
+  @JsonKey(readValue: readJsonValue)
   String? result;
 
   // 表示用户输入是否存在安全风险，是否关闭当前会话，清理历史会话信息。
   // true：是，表示用户输入存在安全风险，建议关闭当前会话，清理历史会话信息。
   // false：否，表示用户输入无安全风险
-  @JsonKey(name: 'need_clear_history')
+  // @JsonKey(name: 'need_clear_history')
+  @JsonKey(readValue: readJsonValue)
   bool? needClearHistory;
 
   // 当need_clear_history为true时，此字段会告知第几轮对话有敏感信息，
   // 如果是当前问题，ban_round=-1
-  @JsonKey(name: 'ban_round')
+  // @JsonKey(name: 'ban_round')
+  @JsonKey(readValue: readJsonValue)
   int? banRound;
 
   // 错误码
-  @JsonKey(name: 'error_code')
+  // @JsonKey(name: 'error_code')
+  @JsonKey(readValue: readJsonValue)
   int? errorCode;
 
   // 错误描述信息，帮助理解和解决发生的错误
-  @JsonKey(name: 'error_msg')
+  // @JsonKey(name: 'error_msg')
+  @JsonKey(readValue: readJsonValue)
   String? errorMsg;
 
-  // 讯飞云的错误码等稍微不同
+  /// 讯飞云的错误码等稍微不同
   int? code;
   String? message;
   // 会话的唯一id，用于讯飞技术人员查询服务端会话日志使用,出现调用错误时建议留存该字段
   String? sid;
+
+  /// 腾讯的错误还封装了一层(ModerationLevel、SearchInfo就匹配了)
+  @JsonKey(name: 'ErrorMsg')
+  TencentError? tencentErrorMsg;
+
+  // 免责声明。
+  @JsonKey(name: 'Note')
+  String? note;
+
+  // 唯一请求 ID，由服务端生成，每次请求都会返回
+  @JsonKey(name: 'RequestId')
+  String? requestId;
 
   /// 2024-08-13 因为响应体目前只是用来接收API响应，所以暂时把所有平台的栏位放在一起即可
   ComCCResp({
@@ -112,6 +149,9 @@ class ComCCResp {
     this.code,
     this.message,
     this.sid,
+    this.tencentErrorMsg,
+    this.note,
+    this.requestId,
     String? cusText,
   }) : cusText = cusText ?? _generatecusText(choices, result);
 
@@ -218,13 +258,16 @@ class CCQuote {
 @JsonSerializable(explicitToJson: true)
 class CCUsage {
   // 内容生成的 tokens 数量。
-  @JsonKey(name: 'completion_tokens')
+  // @JsonKey(name: 'completion_tokens')
+  @JsonKey(readValue: readJsonValue)
   int completionTokens;
   // prompt 使用的 tokens 数量。
-  @JsonKey(name: 'prompt_tokens')
+  // @JsonKey(name: 'prompt_tokens')
+  @JsonKey(readValue: readJsonValue)
   int promptTokens;
   // 总 tokens 用量。
-  @JsonKey(name: 'total_tokens')
+  // @JsonKey(name: 'total_tokens')
+  @JsonKey(readValue: readJsonValue)
   int totalTokens;
 
   CCUsage(
@@ -252,14 +295,16 @@ class CCUsage {
 class CCChoice {
   // 模型生成结果的序号。0 表示第一个结果。
   @JsonKey(name: 'index')
-  int index;
+  int? index;
 
   // 同步时从这里取
-  @JsonKey(name: 'message')
+  // @JsonKey(name: 'message')
+  @JsonKey(readValue: readJsonValue)
   CCMessage? message;
 
   // 流式时从这里取
-  @JsonKey(name: 'delta')
+  // @JsonKey(name: 'delta')
+  @JsonKey(readValue: readJsonValue)
   CCDelta? delta;
 
   // 结束原因
@@ -268,7 +313,8 @@ class CCChoice {
   //  以 content_filter 开头的表示安全过滤的结果。
   // 流式的时候结束原因在delta里面
   //  此时可能未传，也可能为null
-  @JsonKey(name: 'finish_reason')
+  // @JsonKey(name: 'finish_reason')
+  @JsonKey(readValue: readJsonValue)
   String? finishReason;
 
   CCChoice(
@@ -297,7 +343,8 @@ class CCChoice {
 class CCMessage {
   // 消息的发出者
   // 零一万物有: system, user, assistant, tool
-  @JsonKey(name: 'role')
+  // @JsonKey(name: 'role')
+  @JsonKey(readValue: readJsonValue)
   String role;
 
   // 根据不同情况，content类型不一样[String,Array],Array中的结构体也不一样
@@ -315,7 +362,8 @@ class CCMessage {
   //       }
   //     ]
   // 【所以不能固定为String，vsion时就会报错】
-  @JsonKey(name: 'content')
+  // @JsonKey(name: 'content')
+  @JsonKey(readValue: readJsonValue)
   dynamic content;
 
   // 零一万物中“工具消息”时，还需要工具调用id
@@ -346,10 +394,12 @@ class CCMessage {
 ///
 @JsonSerializable(explicitToJson: true)
 class CCDelta {
-  @JsonKey(name: 'role')
+  // @JsonKey(name: 'role')
+  @JsonKey(readValue: readJsonValue)
   String? role;
 
-  @JsonKey(name: 'content')
+  // @JsonKey(name: 'content')
+  @JsonKey(readValue: readJsonValue)
   String? content;
 
   // 如果使用RAG(检索增强生成)模型，会有引用的返回
@@ -371,4 +421,16 @@ class CCDelta {
       _$CCDeltaFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$CCDeltaToJson(this);
+}
+
+class TencentError {
+  String code;
+  String message;
+
+  TencentError({required this.code, required this.message});
+
+  factory TencentError.fromJson(Map<String, dynamic> json) =>
+      TencentError(code: json["Code"], message: json["Message"]);
+
+  Map<String, dynamic> toJson() => {"Code": code, "Message": message};
 }
