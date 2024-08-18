@@ -15,11 +15,6 @@ import '../../../models/text_to_image/com_tti_state.dart';
 import '../../constants.dart';
 import 'ddl_swmate.dart';
 
-// 导出表文件临时存放的文件夹
-const DB_EXPORT_DIR = "db_export";
-// 导出的表前缀
-const DB_EXPORT_TABLE_PREFIX = "sm_";
-
 class DBHelper {
   ///
   /// 数据库初始化相关
@@ -137,7 +132,7 @@ class DBHelper {
     for (Map<String, dynamic> table in tables) {
       String tableName = table['name'];
       // 不是自建的表，不导出
-      if (!tableName.startsWith(DB_EXPORT_TABLE_PREFIX)) {
+      if (!tableName.startsWith(DB_TABLE_PREFIX)) {
         continue;
       }
 

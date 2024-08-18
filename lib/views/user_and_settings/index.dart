@@ -10,6 +10,7 @@ import 'package:photo_view/photo_view.dart';
 import '../../common/constants.dart';
 import '../../services/cus_get_storage.dart';
 import '../home.dart';
+import 'backup_and_restore/index.dart';
 
 class UserAndSettings extends StatefulWidget {
   const UserAndSettings({super.key});
@@ -98,7 +99,8 @@ class _UserAndSettingsState extends State<UserAndSettings> {
           SizedBox(height: 50.sp),
           // 备份还原和更多设置
           SizedBox(
-            height: (screenBodyHeight - 250 - 20),
+            // height: (screenBodyHeight - 250 - 20),
+            height: 160.sp,
             child: Center(child: _buildBakAndRestoreAndMoreSettingRow()),
           ),
         ],
@@ -173,17 +175,25 @@ class _UserAndSettingsState extends State<UserAndSettings> {
       children: [
         Expanded(
           child: SizedBox(
-            height: 100.sp,
+            height: 80.sp,
             child: NewCusSettingCard(
               leadingIcon: Icons.backup_outlined,
               title: "备份恢复",
-              onTap: () {},
+              onTap: () {
+                // 处理相应的点击事件
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BackupAndRestore(),
+                  ),
+                );
+              },
             ),
           ),
         ),
         Expanded(
           child: SizedBox(
-            height: 100.sp,
+            height: 80.sp,
             child: NewCusSettingCard(
               leadingIcon: Icons.question_mark,
               title: '常见问题(TBD)',

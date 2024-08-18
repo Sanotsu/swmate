@@ -34,6 +34,15 @@ class ChatAppBarArea extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: title != null ? Text(title!) : null,
       actions: [
+        // TODO 预设的纯对话智能体(就是一堆预设的system prompt)
+        TextButton(
+          onPressed: () {
+            if (onZoomOutPressed != null) {
+              onZoomOutPressed!();
+            }
+          },
+          child: const Text("智能体"),
+        ),
         if (showZoomOutButton)
           IconButton(
             onPressed: () {

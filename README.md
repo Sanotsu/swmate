@@ -81,6 +81,10 @@ dart run build_runner build --delete-conflicting-outputs
 - feat: “智能对话”添加了讯飞云的 Spark Lite 模型接口。
 - feat: “智能对话”添加了腾讯的混元 Lite 模型接口。
 
+#### 2024-08-18
+
+- feat: 补上“极简记账”、“随机菜品”模块，“用户设置”补上“备份恢复”页面(以上都未重构和优化)。
+
 ### todo:
 
 - （done）得到流式响应的数据的处理都非常相似，可以抽出来公共函数

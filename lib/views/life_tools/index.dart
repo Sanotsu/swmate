@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../common/components/tool_widget.dart';
+import 'accounting/index.dart';
+import 'random_dish/dish_wheel_index.dart';
 
 ///
 /// 常用的生活类工具
@@ -55,15 +57,29 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
               children: <Widget>[
                 buildToolEntrance(
                   "极简记账",
-                  icon: const Icon(Icons.chat_outlined),
+                  icon: const Icon(Icons.receipt),
                   color: Colors.blue[100],
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const BillItemIndex(),
+                      ),
+                    );
+                  },
                 ),
                 buildToolEntrance(
                   "随机菜品",
-                  icon: const Icon(Icons.chat_outlined),
+                  icon: const Icon(Icons.restaurant_menu),
                   color: Colors.blue[100],
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DishWheelIndex(),
+                      ),
+                    );
+                  },
                 ),
 
                 // buildAIToolEntrance(
