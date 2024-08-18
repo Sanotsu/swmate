@@ -80,7 +80,12 @@ class _ChatUserVoiceSendAreaState extends State<ChatUserVoiceSendArea> {
                 height: 56.sp,
                 child: SoundsMessageButton(
                   onChanged: (status) {},
-                  onSendSounds: widget.onSendSounds,
+                  // 2024-08-18 还在响应中就算重新输入也不执行
+                  onSendSounds: widget.isBotThinking
+                      ? (type, msg) {
+                          EasyLoading.showInfo("等待响应完成或终止后再输入");
+                        }
+                      : widget.onSendSounds,
                 ),
               ),
             ),

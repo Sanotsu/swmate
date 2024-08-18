@@ -18,11 +18,15 @@ class MessageItem extends StatelessWidget {
   // 2024-08-12 流式响应时，数据是逐步增加的，如果还在响应中加个符号
   final bool? isBotThinking;
 
+  // 2024-08-18 是否显示模型名称
+  final bool isShowModelLable;
+
   const MessageItem({
     super.key,
     required this.message,
     this.isAvatarTop = false,
     this.isBotThinking = false,
+    this.isShowModelLable = false,
   });
 
   @override
@@ -70,6 +74,10 @@ class MessageItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: crossAlignment,
                   children: [
+                    /// 模型名
+                    if (isShowModelLable && message.role != 'user')
+                      _buildModelLabel(context),
+
                     /// 时间戳
                     _buildTimestamp(context, textColor),
 
@@ -95,13 +103,29 @@ class MessageItem extends StatelessWidget {
         // 来自用户，头像在右边；不是来自用户头像在左边。对齐方向同理
         mainAxisAlignment:
             isFromUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+
         children: [
           if (!isFromUser) _buildAvatar(isFromUser),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 3.sp),
-            child: Text(
-              DateFormat(constDatetimeFormat).format(message.dateTime),
-              style: TextStyle(fontSize: 12.sp, color: textColor),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isShowModelLable && message.role != 'user')
+                  Text(
+                    message.modelLabel ?? "<无模型名称>",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                    textAlign: TextAlign.start,
+                  ),
+                Text(
+                  DateFormat(constDatetimeFormat).format(message.dateTime),
+                  style: TextStyle(fontSize: 12.sp, color: textColor),
+                ),
+              ],
             ),
           ),
           if (isFromUser) _buildAvatar(isFromUser),
@@ -115,6 +139,20 @@ class MessageItem extends StatelessWidget {
       radius: 18.sp,
       backgroundColor: isFromUser ? Colors.lightBlue : Colors.grey,
       child: Icon(isFromUser ? Icons.person : Icons.code),
+    );
+  }
+
+  Widget _buildModelLabel(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 3.sp),
+      child: Text(
+        message.modelLabel ?? "<无模型名称>",
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.green,
+        ),
+        textAlign: TextAlign.start,
+      ),
     );
   }
 

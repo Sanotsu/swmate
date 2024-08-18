@@ -242,13 +242,15 @@ void commonOnDataHandler({
 
 ///
 /// 流式响应时，都会先要一个空的占位对话消息实例
+/// @modelLabel 2024-08-18 群聊的时候，需要保存每个对话的模型名称
 ///
-buildEmptyAssistantChatMessage() {
+ChatMessage buildEmptyAssistantChatMessage({String? modelLabel}) {
   return ChatMessage(
     messageId: const Uuid().v4(),
     role: "assistant",
     content: "",
     contentVoicePath: "",
     dateTime: DateTime.now(),
+    modelLabel: modelLabel,
   );
 }

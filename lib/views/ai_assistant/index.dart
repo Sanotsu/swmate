@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../common/components/tool_widget.dart';
 import '../../services/cus_get_storage.dart';
 import 'ai_tools/chat_bot/index.dart';
+import 'ai_tools/chat_bot_group/index.dart';
 import 'ai_tools/file_interpret/document_interpret.dart';
 import 'ai_tools/file_interpret/image_interpret.dart';
 import 'ai_tools/test_page.dart';
@@ -131,10 +132,18 @@ class _AIToolIndexState extends State<AIToolIndex> {
                 ),
 
                 buildToolEntrance(
-                  "[AI群聊]",
-                  icon: const Icon(Icons.chat_outlined),
+                  "智能群聊",
+                  subtitle: "一个问题\n多个模型\n同时回答",
+                  icon: const Icon(Icons.balance),
                   color: Colors.blue[100],
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ChatBatGroup(),
+                      ),
+                    );
+                  },
                 ),
 
                 buildToolEntrance(

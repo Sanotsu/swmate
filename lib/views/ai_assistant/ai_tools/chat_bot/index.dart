@@ -487,18 +487,17 @@ class _ChatBatState extends State<ChatBat> {
 
                   /// 同一份语言有两个部分，一个是原始录制的m4a的格式，一个是转码厚的pcm格式
                   /// 前者用于语音识别，后者用于播放
-                  String fullPathWithoutExtension = path.join(
+                  String tempPath = path.join(
                     path.dirname(content),
                     path.basenameWithoutExtension(content),
                   );
 
-                  var transcription =
-                      await sendAudioToServer("$fullPathWithoutExtension.pcm");
+                  var transcription = await sendAudioToServer("$tempPath.pcm");
                   // 注意：语言转换文本必须pcm格式，但是需要点击播放的语音则需要原本的m4a格式
                   // 都在同一个目录下同一路径不同扩展名
                   _userSendMessage(
                     transcription,
-                    contentVoicePath: "$fullPathWithoutExtension.m4a",
+                    contentVoicePath: "$tempPath.m4a",
                   );
                 }
               },

@@ -84,6 +84,7 @@ dart run build_runner build --delete-conflicting-outputs
 #### 2024-08-18
 
 - feat: 补上“极简记账”、“随机菜品”模块，“用户设置”补上“备份恢复”页面(以上都未重构和优化)。
+- feat: 补上了‘智能助手’的‘智能群聊’模块。
 
 ### todo:
 

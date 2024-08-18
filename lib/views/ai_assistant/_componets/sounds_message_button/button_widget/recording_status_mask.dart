@@ -112,13 +112,13 @@ class RecordingStatusMaskView extends StatelessWidget {
 
                         /// 同一份语言有两个部分，一个是原始录制的m4a的格式，一个是转码厚的pcm格式
                         /// 前者用于语音识别，后者用于播放
-                        String fullPathWithoutExtension = path.join(
+                        String tempPath = path.join(
                           path.dirname(pathUrl),
                           path.basenameWithoutExtension(pathUrl),
                         );
 
-                        var transcription = await sendAudioToServer(
-                            "$fullPathWithoutExtension.pcm");
+                        var transcription =
+                            await sendAudioToServer("$tempPath.pcm");
 
                         print("识别---的结果====--$transcription");
 
