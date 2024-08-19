@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:json_annotation/json_annotation.dart';
 
 part 'com_tti_req.g.dart';
@@ -104,6 +106,12 @@ class ComTtiReq {
     this.numInferenceSteps = 4,
     this.guidanceScale = 1,
   });
+
+  // 从字符串转
+  factory ComTtiReq.fromRawJson(String str) =>
+      ComTtiReq.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
 
   factory ComTtiReq.fromJson(Map<String, dynamic> srcJson) =>
       _$ComTtiReqFromJson(srcJson);

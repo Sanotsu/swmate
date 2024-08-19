@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:json_annotation/json_annotation.dart';
 
 import 'com_cc_resp.dart';
@@ -154,6 +156,12 @@ class ComCCReq {
     this.stream = false,
   });
 
+  // 从字符串转
+  factory ComCCReq.fromRawJson(String str) =>
+      ComCCReq.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
   factory ComCCReq.fromJson(Map<String, dynamic> srcJson) =>
       _$ComCCReqFromJson(srcJson);
 
@@ -204,6 +212,11 @@ class CCTool {
     this.function,
   );
 
+  // 从字符串转
+  factory CCTool.fromRawJson(String str) => CCTool.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
   factory CCTool.fromJson(Map<String, dynamic> srcJson) =>
       _$CCToolFromJson(srcJson);
 
@@ -242,6 +255,12 @@ class CCFunction {
     this.description,
     this.parameters,
   });
+
+  // 从字符串转
+  factory CCFunction.fromRawJson(String str) =>
+      CCFunction.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
 
   factory CCFunction.fromJson(Map<String, dynamic> srcJson) =>
       _$CCFunctionFromJson(srcJson);

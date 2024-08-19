@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:json_annotation/json_annotation.dart';
 
 part 'xunfei_voice_dictation.g.dart';
@@ -24,6 +26,12 @@ class XunfeiVoiceDictation {
     this.data,
   );
 
+  // 从字符串转
+  factory XunfeiVoiceDictation.fromRawJson(String str) =>
+      XunfeiVoiceDictation.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
   factory XunfeiVoiceDictation.fromJson(Map<String, dynamic> srcJson) =>
       _$XunfeiVoiceDictationFromJson(srcJson);
 
@@ -42,6 +50,11 @@ class XVDData {
     this.status,
     this.result,
   );
+
+  // 从字符串转
+  factory XVDData.fromRawJson(String str) => XVDData.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
 
   factory XVDData.fromJson(Map<String, dynamic> srcJson) =>
       _$XVDDataFromJson(srcJson);
@@ -70,6 +83,12 @@ class XVDDataResult {
     this.sn,
   );
 
+  // 从字符串转
+  factory XVDDataResult.fromRawJson(String str) =>
+      XVDDataResult.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
   factory XVDDataResult.fromJson(Map<String, dynamic> srcJson) =>
       _$XVDDataResultFromJson(srcJson);
 
@@ -90,6 +109,12 @@ class XVDDataResultWs {
     this.cw,
   );
 
+  // 从字符串转
+  factory XVDDataResultWs.fromRawJson(String str) =>
+      XVDDataResultWs.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
   factory XVDDataResultWs.fromJson(Map<String, dynamic> srcJson) =>
       _$XVDDataResultWsFromJson(srcJson);
 
@@ -107,6 +132,12 @@ class XVDDataResultWsCw extends Object {
     this.sc,
     this.w,
   );
+
+  // 从字符串转
+  factory XVDDataResultWsCw.fromRawJson(String str) =>
+      XVDDataResultWsCw.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
 
   factory XVDDataResultWsCw.fromJson(Map<String, dynamic> srcJson) =>
       _$XVDDataResultWsCwFromJson(srcJson);

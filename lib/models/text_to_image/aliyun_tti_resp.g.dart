@@ -1,23 +1,23 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'aliyun_wanx_resp.dart';
+part of 'aliyun_tti_resp.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-AliyunWanxResp _$AliyunWanxRespFromJson(Map<String, dynamic> json) =>
-    AliyunWanxResp(
+AliyunTtiResp _$AliyunTtiRespFromJson(Map<String, dynamic> json) =>
+    AliyunTtiResp(
       requestId: json['request_id'] as String,
-      output: WanxOutput.fromJson(json['output'] as Map<String, dynamic>),
+      output: AliyunTtiOutput.fromJson(json['output'] as Map<String, dynamic>),
       usage: json['usage'] == null
           ? null
-          : WanxUsage.fromJson(json['usage'] as Map<String, dynamic>),
+          : AliyunTtiUsage.fromJson(json['usage'] as Map<String, dynamic>),
       code: json['code'] as String?,
       message: json['message'] as String?,
     );
 
-Map<String, dynamic> _$AliyunWanxRespToJson(AliyunWanxResp instance) =>
+Map<String, dynamic> _$AliyunTtiRespToJson(AliyunTtiResp instance) =>
     <String, dynamic>{
       'request_id': instance.requestId,
       'output': instance.output.toJson(),
@@ -26,19 +26,21 @@ Map<String, dynamic> _$AliyunWanxRespToJson(AliyunWanxResp instance) =>
       'message': instance.message,
     };
 
-WanxOutput _$WanxOutputFromJson(Map<String, dynamic> json) => WanxOutput(
+AliyunTtiOutput _$AliyunTtiOutputFromJson(Map<String, dynamic> json) =>
+    AliyunTtiOutput(
       json['task_id'] as String,
       json['task_status'] as String,
       (json['results'] as List<dynamic>?)
-          ?.map((e) => WanxOutputResult.fromJson(e as Map<String, dynamic>))
+          ?.map(
+              (e) => AliyunTtiOutputResult.fromJson(e as Map<String, dynamic>))
           .toList(),
       json['task_metrics'] == null
           ? null
-          : WanxTaskMetric.fromJson(
+          : AliyunTtiTaskMetric.fromJson(
               json['task_metrics'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$WanxOutputToJson(WanxOutput instance) =>
+Map<String, dynamic> _$AliyunTtiOutputToJson(AliyunTtiOutput instance) =>
     <String, dynamic>{
       'task_id': instance.taskId,
       'task_status': instance.taskStatus,
@@ -46,34 +48,39 @@ Map<String, dynamic> _$WanxOutputToJson(WanxOutput instance) =>
       'task_metrics': instance.taskMetrics?.toJson(),
     };
 
-WanxOutputResult _$WanxOutputResultFromJson(Map<String, dynamic> json) =>
-    WanxOutputResult(
+AliyunTtiOutputResult _$AliyunTtiOutputResultFromJson(
+        Map<String, dynamic> json) =>
+    AliyunTtiOutputResult(
       json['url'] as String?,
     );
 
-Map<String, dynamic> _$WanxOutputResultToJson(WanxOutputResult instance) =>
+Map<String, dynamic> _$AliyunTtiOutputResultToJson(
+        AliyunTtiOutputResult instance) =>
     <String, dynamic>{
       'url': instance.url,
     };
 
-WanxTaskMetric _$WanxTaskMetricFromJson(Map<String, dynamic> json) =>
-    WanxTaskMetric(
+AliyunTtiTaskMetric _$AliyunTtiTaskMetricFromJson(Map<String, dynamic> json) =>
+    AliyunTtiTaskMetric(
       (json['TOTAL'] as num).toInt(),
       (json['SUCCEEDED'] as num).toInt(),
       (json['FAILED'] as num).toInt(),
     );
 
-Map<String, dynamic> _$WanxTaskMetricToJson(WanxTaskMetric instance) =>
+Map<String, dynamic> _$AliyunTtiTaskMetricToJson(
+        AliyunTtiTaskMetric instance) =>
     <String, dynamic>{
       'TOTAL': instance.total,
       'SUCCEEDED': instance.succeeded,
       'FAILED': instance.failed,
     };
 
-WanxUsage _$WanxUsageFromJson(Map<String, dynamic> json) => WanxUsage(
+AliyunTtiUsage _$AliyunTtiUsageFromJson(Map<String, dynamic> json) =>
+    AliyunTtiUsage(
       (json['image_count'] as num).toInt(),
     );
 
-Map<String, dynamic> _$WanxUsageToJson(WanxUsage instance) => <String, dynamic>{
+Map<String, dynamic> _$AliyunTtiUsageToJson(AliyunTtiUsage instance) =>
+    <String, dynamic>{
       'image_count': instance.imageCount,
     };

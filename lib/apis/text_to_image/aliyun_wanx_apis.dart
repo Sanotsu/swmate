@@ -4,8 +4,8 @@ import 'dart:convert';
 
 import '../../common/utils/dio_client/cus_http_client.dart';
 import '../../common/utils/dio_client/cus_http_request.dart';
-import '../../models/text_to_image/aliyun_wanx_req.dart';
-import '../../models/text_to_image/aliyun_wanx_resp.dart';
+import '../../models/text_to_image/aliyun_tti_req.dart';
+import '../../models/text_to_image/aliyun_tti_resp.dart';
 import '../_self_keys.dart';
 
 ///
@@ -14,11 +14,11 @@ import '../_self_keys.dart';
 var aliyunText2imageUrl =
     "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis";
 
-Future<AliyunWanxResp> commitAliyunText2ImgJob(
-  WanxInput input,
-  WanxParameter parameters,
+Future<AliyunTtiResp> commitAliyunText2ImgJob(
+  AliyunTtiInput input,
+  AliyunTtiParameter parameters,
 ) async {
-  var body = AliyunWanxReq(
+  var body = AliyunTtiReq(
     model: "wanx-v1",
     input: input,
     parameters: parameters,
@@ -53,7 +53,7 @@ Future<AliyunWanxResp> commitAliyunText2ImgJob(
     }
 
     // 响应是json格式
-    return AliyunWanxResp.fromJson(respData ?? {});
+    return AliyunTtiResp.fromJson(respData ?? {});
   } catch (e) {
     print("bbbbbbbbbbbbbbbb ${e.runtimeType}---$e");
     rethrow;
@@ -64,7 +64,7 @@ Future<AliyunWanxResp> commitAliyunText2ImgJob(
 /// 作业任务状态查询和结果获取接口
 /// GET https://dashscope.aliyuncs.com/api/v1/tasks/{task_id}
 ///
-Future<AliyunWanxResp> getAliyunText2ImgJobResult(String taskId) async {
+Future<AliyunTtiResp> getAliyunText2ImgJobResult(String taskId) async {
   try {
     var start = DateTime.now().millisecondsSinceEpoch;
 
@@ -90,7 +90,7 @@ Future<AliyunWanxResp> getAliyunText2ImgJobResult(String taskId) async {
     }
 
     // 响应是json格式
-    return AliyunWanxResp.fromJson(respData ?? {});
+    return AliyunTtiResp.fromJson(respData ?? {});
   } catch (e) {
     print("aaaaaas ${e.runtimeType}---$e");
     // API请求报错，显示报错信息

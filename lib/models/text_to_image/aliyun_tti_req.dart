@@ -1,6 +1,8 @@
+import 'dart:convert';
+
 import 'package:json_annotation/json_annotation.dart';
 
-part 'aliyun_wanx_req.g.dart';
+part 'aliyun_tti_req.g.dart';
 
 ///
 /// 阿里云的 "通义万相" 的请求参数
@@ -12,32 +14,39 @@ part 'aliyun_wanx_req.g.dart';
 ///     作业任务状态查询 是个GET 请求，只需要传入job提交后返回的 task_id 即可
 ///     注意每次请求都有一个request_id(不管是提交job还是查询job状态)，但提交成功之后返回的参数里面，才有task_id
 /// 所以，两个接口请求，只需要这个一个请求体
+/// 2024-08-19 部署在阿里云的flux也是同样结构的参数，少量不一样
 @JsonSerializable(explicitToJson: true)
-class AliyunWanxReq {
+class AliyunTtiReq {
   // 指明需要调用的模型，固定值wanx-v1
   @JsonKey(name: 'model')
   String model;
 
   @JsonKey(name: 'input')
-  WanxInput input;
+  AliyunTtiInput input;
 
   @JsonKey(name: 'parameters')
-  WanxParameter? parameters;
+  AliyunTtiParameter? parameters;
 
-  AliyunWanxReq({
+  AliyunTtiReq({
     required this.model,
     required this.input,
     this.parameters,
   });
 
-  factory AliyunWanxReq.fromJson(Map<String, dynamic> srcJson) =>
-      _$AliyunWanxReqFromJson(srcJson);
+  // 从字符串转
+  factory AliyunTtiReq.fromRawJson(String str) =>
+      AliyunTtiReq.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
 
-  Map<String, dynamic> toJson() => _$AliyunWanxReqToJson(this);
+  factory AliyunTtiReq.fromJson(Map<String, dynamic> srcJson) =>
+      _$AliyunTtiReqFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$AliyunTtiReqToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
-class WanxInput {
+class AliyunTtiInput {
   // 描述画面的提示词信息。支持中英文，长度不超过500个字符，超过部分会自动截断
   @JsonKey(name: 'prompt')
   String prompt;
@@ -50,20 +59,29 @@ class WanxInput {
   @JsonKey(name: 'ref_img')
   String? refImg;
 
-  WanxInput({
+  AliyunTtiInput({
     required this.prompt,
     this.negativePrompt,
     this.refImg,
   });
 
-  factory WanxInput.fromJson(Map<String, dynamic> srcJson) =>
-      _$WanxInputFromJson(srcJson);
+  // flux的输入只需要promt
+  AliyunTtiInput.flux({required this.prompt});
 
-  Map<String, dynamic> toJson() => _$WanxInputToJson(this);
+  // 从字符串转
+  factory AliyunTtiInput.fromRawJson(String str) =>
+      AliyunTtiInput.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory AliyunTtiInput.fromJson(Map<String, dynamic> srcJson) =>
+      _$AliyunTtiInputFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$AliyunTtiInputToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
-class WanxParameter {
+class AliyunTtiParameter {
   // 输出图像的风格，目前支持以下风格取值(注意要有尖括号)：
   //   "<auto>"：默认; "<3d cartoon>"：3D卡通; "<anime>"：动画; "<oil painting>"：油画
   //   "<watercolor>"：水彩; "<sketch>" ：素描;"<chinese painting>"：中国画; "<flat illustration>"：扁平插画
@@ -71,6 +89,7 @@ class WanxParameter {
   String? style;
 
   // 生成图像的分辨率，目前仅支持'1024*1024'，'720*1280'，'1280*720'三种分辨率，默认为1024*1024像素。
+  // 2024-08-19 阿里云平台的flux.1 支持的尺寸有"512*1024, 768*512, 768*1024, 1024*576, 576*1024, 1024*1024"(默认)
   @JsonKey(name: 'size')
   String? size;
 
@@ -91,17 +110,34 @@ class WanxParameter {
   @JsonKey(name: 'ref_mode')
   String? refMode;
 
-  WanxParameter({
+  // 图片生成的推理步数，如果不提供，则默认为30，如果给定了，则根据 steps 数量生成图片。
+  // flux-schnell 模型官方默认 steps 为4，flux-dev 模型官方默认 steps 为50。
+  @JsonKey(name: 'steps')
+  String? steps;
+
+  AliyunTtiParameter({
     this.style,
     this.size,
     this.n,
     this.seed,
     this.strength,
     this.refMode,
+    this.steps,
   });
 
-  factory WanxParameter.fromJson(Map<String, dynamic> srcJson) =>
-      _$WanxParameterFromJson(srcJson);
+  AliyunTtiParameter.wanx(
+      {this.style, this.size, this.n, this.seed, this.strength, this.refMode});
 
-  Map<String, dynamic> toJson() => _$WanxParameterToJson(this);
+  AliyunTtiParameter.flux({this.size, this.seed, this.steps});
+
+  // 从字符串转
+  factory AliyunTtiParameter.fromRawJson(String str) =>
+      AliyunTtiParameter.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory AliyunTtiParameter.fromJson(Map<String, dynamic> srcJson) =>
+      _$AliyunTtiParameterFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$AliyunTtiParameterToJson(this);
 }

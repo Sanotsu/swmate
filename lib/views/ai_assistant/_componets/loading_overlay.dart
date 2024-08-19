@@ -26,6 +26,10 @@ class LoadingOverlay {
                   style: TextStyle(fontSize: 16.sp, color: Colors.white),
                 ),
                 Text(
+                  "请耐心等待几秒钟",
+                  style: TextStyle(fontSize: 16.sp, color: Colors.white),
+                ),
+                Text(
                   "请勿退出当前页面",
                   style: TextStyle(fontSize: 16.sp, color: Colors.white),
                 ),

@@ -16,8 +16,8 @@ import '../../../../common/llm_spec/cus_llm_spec.dart';
 
 import '../../../../common/utils/db_tools/db_helper.dart';
 import '../../../../common/utils/tools.dart';
-import '../../../../models/text_to_image/aliyun_wanx_req.dart';
-import '../../../../models/text_to_image/aliyun_wanx_resp.dart';
+import '../../../../models/text_to_image/aliyun_tti_req.dart';
+import '../../../../models/text_to_image/aliyun_tti_resp.dart';
 import '../../../../models/text_to_image/com_tti_req.dart';
 import '../../../../models/text_to_image/com_tti_resp.dart';
 import '../../../../models/text_to_image/com_tti_state.dart';
@@ -135,7 +135,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
     });
 
     print("选择的平台 $selectedPlatform");
-    print("选择的模型 $selectedModelSpec");
+    print("选择的模型 ${selectedModelSpec.toRawJson()}");
     print("尺寸 $selectedSize");
     print("张数 $selectedNum");
     print("正向词 $prompt");
@@ -146,12 +146,12 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
     List<String> imageUrls = [];
     // 如果是阿里云平台
     if (selectedPlatform == ApiPlatform.aliyun) {
-      var input = WanxInput(
+      var input = AliyunTtiInput(
         prompt: prompt,
         negativePrompt: negativePrompt,
       );
 
-      var parameters = WanxParameter(
+      var parameters = AliyunTtiParameter(
         style: "<${WANX_StyleMap.values.toList()[_selectedStyleIndex]}>",
         size: selectedSize,
         n: selectedNum,
@@ -175,7 +175,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
 
       // 查询文生图任务状态
       var taskId = jobResp.output.taskId;
-      AliyunWanxResp? result = await timedText2ImageJobStatus(taskId);
+      AliyunTtiResp? result = await timedText2ImageJobStatus(taskId);
 
       if (!mounted) return;
       if (result?.code != null) {
@@ -274,7 +274,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
   }
 
   // 查询阿里云文生图任务的状态
-  Future<AliyunWanxResp?> timedText2ImageJobStatus(String taskId) async {
+  Future<AliyunTtiResp?> timedText2ImageJobStatus(String taskId) async {
     bool isMaxWaitTimeExceeded = false;
 
     const maxWaitDuration = Duration(minutes: 10);
@@ -327,23 +327,23 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
       appBar: AppBar(
         title: const Text('文本生图'),
         actions: [
-          TextButton(
-            onPressed: () async {
-              var a = await getXfyunTtiResp("512x512", "性感美女，全身照");
+          // TextButton(
+          //   onPressed: () async {
+          //     var a = await getXfyunTtiResp("512x512", "性感美女，全身照");
 
-              var cont = a.payload?.choices?.text?.first.content;
-              if (cont != null) {
-                var file = await saveTtiBase64ImageToLocal(
-                  cont,
-                  prefix: "xfyun_",
-                );
-                print(file);
-              }
+          //     var cont = a.payload?.choices?.text?.first.content;
+          //     if (cont != null) {
+          //       var file = await saveTtiBase64ImageToLocal(
+          //         cont,
+          //         prefix: "xfyun_",
+          //       );
+          //       print(file);
+          //     }
 
-              print(a.toRawJson());
-            },
-            child: const Text("测试"),
-          ),
+          //     print(a.toRawJson());
+          //   },
+          //   child: const Text("测试"),
+          // ),
           IconButton(
             onPressed: () {
               Navigator.push(
@@ -406,17 +406,39 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
     });
   }
 
-  List<String> getSizeList() => selectedPlatform == ApiPlatform.aliyun
-      ? WANX_ImageSizeList
-      : selectedPlatform == ApiPlatform.siliconCloud
-          ? SF_ImageSizeList
-          : XFYUN_ImageSizeList;
+  List<String> getSizeList() {
+    if (selectedPlatform == ApiPlatform.siliconCloud) {
+      return SF_ImageSizeList;
+    }
 
-  String getInitialSize() => selectedPlatform == ApiPlatform.aliyun
-      ? WANX_ImageSizeList.first
-      : selectedPlatform == ApiPlatform.siliconCloud
-          ? SF_ImageSizeList.first
-          : XFYUN_ImageSizeList.first;
+    if (selectedPlatform == ApiPlatform.xfyun) {
+      return XFYUN_ImageSizeList;
+    }
+
+    if (selectedPlatform == ApiPlatform.aliyun) {
+      return ALIYUN_ImageSizeList;
+    }
+
+    // 没有匹配上的，都返回siliconCloud的配置
+    return SF_ImageSizeList;
+  }
+
+  String getInitialSize() {
+    if (selectedPlatform == ApiPlatform.siliconCloud) {
+      return SF_ImageSizeList.first;
+    }
+
+    if (selectedPlatform == ApiPlatform.xfyun) {
+      return XFYUN_ImageSizeList.first;
+    }
+
+    if (selectedPlatform == ApiPlatform.aliyun) {
+      return ALIYUN_ImageSizeList.first;
+    }
+
+    // 没有匹配上的，都返回siliconCloud的配置
+    return SF_ImageSizeList.first;
+  }
 
   ///
   /// 页面布局从上往下
@@ -484,7 +506,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
       ),
 
       /// 画风、尺寸、张数选择
-      if (selectedPlatform == ApiPlatform.aliyun)
+      if (selectedModelSpec.cusLlm == CusLLM.aliyun_Wanx_v1_TTI)
         Center(
           child: SizedBox(
             width: 0.8.sw,
@@ -563,6 +585,8 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
                   context,
                   rstImageUrls,
                   crossAxisCount: 4,
+                  // 模型名有空格或斜线，等后续更新spec，用name来
+                  prefix: selectedPlatform.name,
                 ),
               ),
             ],

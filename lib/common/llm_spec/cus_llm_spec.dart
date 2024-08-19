@@ -68,6 +68,9 @@ enum CusLLM {
 
   // 通义万相，收费文生图
   aliyun_Wanx_v1_TTI,
+  // 部署在阿里云的flux.1，限时免费
+  aliyun_Flux_Schnell_TTI,
+  aliyun_Flux_Dev_TTI,
 
   /// Yi前缀，零一万物中，全都收费的
   YiLarge,
@@ -506,6 +509,32 @@ final List<CusLLMSpec> TTI_SPEC_LIST = [
     false,
     feature: """通义万相-文本生成图像大模型，
 支持中英文双语输入，重点风格包括但不限于水彩、油画、中国画、素描、扁平插画、二次元、3D卡通。""",
+    modelType: LLModelType.tti,
+    costPerImage: 0.2,
+  ),
+  CusLLMSpec.tti(
+    ApiPlatform.aliyun,
+    CusLLM.aliyun_Flux_Schnell_TTI,
+    "flux-schnell",
+    'Flux.1-Schnell【限免】',
+    false,
+    feature: """FLUX.1 [schnell] 作为目前开源最先进的少步模型，不仅超越了同类竞争者，
+甚至还优于诸如Midjourney v6.0和DALL·E 3 (HD)等强大的非精馏模型。
+该模型经过专门微调，以保留预训练阶段的全部输出多样性，
+相较于当前市场上的最先进模型，FLUX.1 [schnell] 显著提升了在视觉质量、指令遵从、尺寸/比例变化、字体处理及输出多样性等方面的可能，
+为用户带来更为丰富多样的创意图像生成体验。""",
+    modelType: LLModelType.tti,
+    costPerImage: 0.2,
+  ),
+  CusLLMSpec.tti(
+    ApiPlatform.aliyun,
+    CusLLM.aliyun_Flux_Dev_TTI,
+    "flux-dev",
+    'Flux.1-Dev【限免】',
+    false,
+    feature: """FLUX.1 [dev] 是一款面向非商业应用的开源权重、精炼模型。
+FLUX.1 [dev] 在保持了与FLUX专业版相近的图像质量和指令遵循能力的同时，具备更高的运行效率。
+相较于同尺寸的标准模型，它在资源利用上更为高效。""",
     modelType: LLModelType.tti,
     costPerImage: 0.2,
   ),

@@ -59,6 +59,8 @@ const _$CusLLMEnumMap = {
   CusLLM.xfyun_Spark_Lite: 'xfyun_Spark_Lite',
   CusLLM.xfyun_TTI: 'xfyun_TTI',
   CusLLM.aliyun_Wanx_v1_TTI: 'aliyun_Wanx_v1_TTI',
+  CusLLM.aliyun_Flux_Schnell_TTI: 'aliyun_Flux_Schnell_TTI',
+  CusLLM.aliyun_Flux_Dev_TTI: 'aliyun_Flux_Dev_TTI',
   CusLLM.YiLarge: 'YiLarge',
   CusLLM.YiMedium: 'YiMedium',
   CusLLM.YiVision: 'YiVision',

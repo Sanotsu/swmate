@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:json_annotation/json_annotation.dart';
 
 part 'com_tti_resp.g.dart';
@@ -50,6 +52,12 @@ class ComTtiResp {
     this.error,
   });
 
+  // 从字符串转
+  factory ComTtiResp.fromRawJson(String str) =>
+      ComTtiResp.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
   factory ComTtiResp.fromJson(Map<String, dynamic> srcJson) =>
       _$ComTtiRespFromJson(srcJson);
 
@@ -62,6 +70,12 @@ class TtiImage {
   String url;
 
   TtiImage(this.url);
+
+  // 从字符串转
+  factory TtiImage.fromRawJson(String str) =>
+      TtiImage.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
 
   factory TtiImage.fromJson(Map<String, dynamic> srcJson) =>
       _$TtiImageFromJson(srcJson);
@@ -77,6 +91,11 @@ class Timings {
   Timings(
     this.inference,
   );
+
+  // 从字符串转
+  factory Timings.fromRawJson(String str) => Timings.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
 
   factory Timings.fromJson(Map<String, dynamic> srcJson) =>
       _$TimingsFromJson(srcJson);
