@@ -14,31 +14,76 @@ import '../_self_keys.dart';
 var aliyunText2imageUrl =
     "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis";
 
+/// 文生图任务提交
 Future<AliyunTtiResp> commitAliyunText2ImgJob(
+  String model,
   AliyunTtiInput input,
   AliyunTtiParameter parameters,
 ) async {
+  return commitAliyunJob(
+    aliyunText2imageUrl,
+    model,
+    input,
+    parameters,
+  );
+}
+
+/// 锦书的路径不一样
+
+var wordartUrl = "https://dashscope.aliyuncs.com/api/v1/services/aigc/wordart/";
+
+/// 文字纹理 https://dashscope.aliyuncs.com/api/v1/services/aigc/wordart/texture
+/// 文字变形 https://dashscope.aliyuncs.com/api/v1/services/aigc/wordart/semantic
+/// 百家姓字 https://dashscope.aliyuncs.com/api/v1/services/aigc/wordart/surnames
+Future<AliyunTtiResp> commitAliyunWordartJob(
+  String model,
+  AliyunTtiInput input,
+  AliyunTtiParameter parameters, {
+  String type = "texture",
+}) async {
+  if (!['texture', "semantic", "surnames"].contains(type.toLowerCase())) {
+    type = "texture";
+  }
+
+  return commitAliyunJob(
+    "$wordartUrl$type",
+    model,
+    input,
+    parameters,
+  );
+}
+
+///
+/// 文生图任务提交
+///
+Future<AliyunTtiResp> commitAliyunJob(
+  String url,
+  String model,
+  AliyunTtiInput input,
+  AliyunTtiParameter parameters, {
+  String type = "texture",
+}) async {
   var body = AliyunTtiReq(
-    model: "wanx-v1",
+    model: model,
     input: input,
     parameters: parameters,
   );
+
+  print("阿里云生图参数${body.toRawJson()}");
 
   try {
     var start = DateTime.now().millisecondsSinceEpoch;
 
     var respData = await HttpUtils.post(
-      path: aliyunText2imageUrl,
+      path: url,
       method: CusHttpMethod.post,
-      // 文生图有单独的遮罩，不用显示加载圈
       showLoading: false,
       headers: {
-        "X-DashScope-Async": "enable", // 固定的，异步方式提交作业。
+        "X-DashScope-Async": "enable",
         "Content-Type": "application/json",
         "Authorization": "Bearer $ALIYUN_API_KEY",
       },
-      // 可能是因为头的content type设定，这里直接传类实例即可，传toJson也可
-      data: body,
+      data: body.toJson(),
     );
 
     print("阿里云文生图---------------------$respData");
@@ -47,12 +92,10 @@ Future<AliyunTtiResp> commitAliyunText2ImgJob(
 
     print("2222222222xxxxxxxxxxxxxxxxx${(end - start) / 1000} 秒");
 
-    ///？？？ 2024-06-11 阿里云请求报错，会进入dio的错误拦截器，这里ret就是个null了
     if (respData.runtimeType == String) {
       respData = json.decode(respData);
     }
 
-    // 响应是json格式
     return AliyunTtiResp.fromJson(respData ?? {});
   } catch (e) {
     print("bbbbbbbbbbbbbbbb ${e.runtimeType}---$e");

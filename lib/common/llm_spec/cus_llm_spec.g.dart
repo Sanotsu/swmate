@@ -61,6 +61,9 @@ const _$CusLLMEnumMap = {
   CusLLM.aliyun_Wanx_v1_TTI: 'aliyun_Wanx_v1_TTI',
   CusLLM.aliyun_Flux_Schnell_TTI: 'aliyun_Flux_Schnell_TTI',
   CusLLM.aliyun_Flux_Dev_TTI: 'aliyun_Flux_Dev_TTI',
+  CusLLM.aliyun_Wordart_Texture_TTI_WORD: 'aliyun_Wordart_Texture_TTI_WORD',
+  CusLLM.aliyun_Wordart_Semantic_TTI_WORD: 'aliyun_Wordart_Semantic_TTI_WORD',
+  CusLLM.aliyun_Wordart_Surnames_TTI_WORD: 'aliyun_Wordart_Surnames_TTI_WORD',
   CusLLM.YiLarge: 'YiLarge',
   CusLLM.YiMedium: 'YiMedium',
   CusLLM.YiVision: 'YiVision',
@@ -99,5 +102,6 @@ const _$LLModelTypeEnumMap = {
   LLModelType.cc: 'cc',
   LLModelType.vision: 'vision',
   LLModelType.tti: 'tti',
+  LLModelType.tti_word: 'tti_word',
   LLModelType.iti: 'iti',
 };

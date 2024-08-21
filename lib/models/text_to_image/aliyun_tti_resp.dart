@@ -101,8 +101,13 @@ class AliyunTtiOutput {
 class AliyunTtiOutputResult {
   @JsonKey(name: 'url')
   String? url;
+  // 锦书创意文字的文字变形是这两个单独的
+  @JsonKey(name: 'svg_url')
+  String? svgUrl;
+  @JsonKey(name: 'png_url')
+  String? pngUrl;
 
-  AliyunTtiOutputResult(this.url);
+  AliyunTtiOutputResult({this.url, this.svgUrl, this.pngUrl});
 
   // 从字符串转
   factory AliyunTtiOutputResult.fromRawJson(String str) =>

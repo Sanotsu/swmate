@@ -51,13 +51,17 @@ Map<String, dynamic> _$AliyunTtiOutputToJson(AliyunTtiOutput instance) =>
 AliyunTtiOutputResult _$AliyunTtiOutputResultFromJson(
         Map<String, dynamic> json) =>
     AliyunTtiOutputResult(
-      json['url'] as String?,
+      url: json['url'] as String?,
+      svgUrl: json['svg_url'] as String?,
+      pngUrl: json['png_url'] as String?,
     );
 
 Map<String, dynamic> _$AliyunTtiOutputResultToJson(
         AliyunTtiOutputResult instance) =>
     <String, dynamic>{
       'url': instance.url,
+      'svg_url': instance.svgUrl,
+      'png_url': instance.pngUrl,
     };
 
 AliyunTtiTaskMetric _$AliyunTtiTaskMetricFromJson(Map<String, dynamic> json) =>

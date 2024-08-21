@@ -90,6 +90,10 @@ dart run build_runner build --delete-conflicting-outputs
 
 - feat: “文本生图”添加了阿里云上部署的 flux 服务的接口。
 
+#### 2024-08-21
+
+- feat: “智能助手”新增“创意文字”模块，使用了阿里云上部署的“wordart 锦书”服务的接口;fix:修改了应用图标。
+
 ### todo:
 
 - （done）得到流式响应的数据的处理都非常相似，可以抽出来公共函数

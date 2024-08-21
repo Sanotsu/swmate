@@ -49,7 +49,7 @@ class AliyunTtiReq {
 class AliyunTtiInput {
   // 描述画面的提示词信息。支持中英文，长度不超过500个字符，超过部分会自动截断
   @JsonKey(name: 'prompt')
-  String prompt;
+  String? prompt;
 
   // 画面中不想出现的内容描述词信息。支持中英文，长度不超过500个字符，超过部分会自动截断。
   @JsonKey(name: 'negative_prompt')
@@ -58,6 +58,29 @@ class AliyunTtiInput {
   // 输入参考图像的URL；图片格式可为 jpg，png，tiff，webp等常见位图格式。默认为空。
   @JsonKey(name: 'ref_img')
   String? refImg;
+
+  /// 2024-08-20 阿里云的 wordArt 锦书创意文字，栏位多很多(prompt依旧是必传参数)
+  // 图片、文字2选一
+  AliyunTtiImage? image;
+  // 可能是AliyunTtiText(纹理和百家姓)，也可能是String(文字变形)
+  dynamic text;
+
+  // 纹理风格的类型，包括“自定义”和“预设风格”两大类，两类风格具体取值和说明见文档
+  @JsonKey(name: 'texture_style')
+  String? textureStyle;
+
+  /// 百家姓的还有其他的
+  // 百家姓(最多2个字符)
+  @JsonKey(name: 'surname')
+  String? surname;
+
+  // 百家姓风格类型，包括“自定义”和“预设风格”两大类
+  @JsonKey(name: 'style')
+  String? style;
+
+  // 风格参考图的地址
+  @JsonKey(name: 'ref_image_url')
+  String? refImageUrl;
 
   AliyunTtiInput({
     required this.prompt,
@@ -68,6 +91,30 @@ class AliyunTtiInput {
   // flux的输入只需要promt
   AliyunTtiInput.flux({required this.prompt});
 
+  // 阿里云的 wordArt 锦书创意文字
+  AliyunTtiInput.wordArtTexture({
+    this.image,
+    this.text,
+    required this.prompt,
+    this.textureStyle,
+  });
+
+  // 文字变形只需要text和prompt，但文字是String类型，其他两个是AliyunTtiText！！！！！
+  // 单独的类 WordArtSemantic
+  AliyunTtiInput.wordArtSemantic({
+    required this.prompt,
+    this.text,
+  });
+
+  // 阿里云的 wordArt 百家姓生成
+  AliyunTtiInput.wordArtSurnames({
+    this.text,
+    required this.surname,
+    this.prompt,
+    this.style,
+    this.refImageUrl,
+  });
+
   // 从字符串转
   factory AliyunTtiInput.fromRawJson(String str) =>
       AliyunTtiInput.fromJson(json.decode(str));
@@ -77,7 +124,24 @@ class AliyunTtiInput {
   factory AliyunTtiInput.fromJson(Map<String, dynamic> srcJson) =>
       _$AliyunTtiInputFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$AliyunTtiInputToJson(this);
+  Map<String, dynamic> toFullJson() => _$AliyunTtiInputToJson(this);
+
+  // 自定义tojson方法，参数为null的就不加到json中
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> json = {};
+
+    if (prompt != null) json['prompt'] = prompt;
+    if (negativePrompt != null) json['negative_prompt'] = negativePrompt;
+    if (refImg != null) json['ref_img'] = refImg;
+    if (image != null) json['image'] = image;
+    if (text != null) json['text'] = text;
+    if (textureStyle != null) json['texture_style'] = textureStyle;
+    if (surname != null) json['surname'] = surname;
+    if (style != null) json['style'] = style;
+    if (refImageUrl != null) json['ref_image_url'] = refImageUrl;
+
+    return json;
+  }
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -113,7 +177,27 @@ class AliyunTtiParameter {
   // 图片生成的推理步数，如果不提供，则默认为30，如果给定了，则根据 steps 数量生成图片。
   // flux-schnell 模型官方默认 steps 为4，flux-dev 模型官方默认 steps 为50。
   @JsonKey(name: 'steps')
-  String? steps;
+  int? steps;
+
+  /// 2024-08-20 阿里云的 wordArt 锦书创意文字，额外的参数栏位(n是需要的)
+  /// 文字纹理、文字变形、百家姓生成各自参数还不一样
+  // 生成的图片短边的长度，默认为704，取值范围为[512, 1024]，
+  @JsonKey(name: 'image_short_size')
+  int? imageShortSize;
+
+  // 是否返回带alpha通道的图片；默认为 false；
+  @JsonKey(name: 'alpha_channel')
+  bool? alphaChannel;
+
+  // 文字纹理在intput，文字变形又放在参数
+  @JsonKey(name: 'font_name')
+  String? fontName;
+
+  @JsonKey(name: 'ttf_url')
+  String? ttfUrl;
+
+  @JsonKey(name: 'output_image_ratio')
+  String? outputImageRatio;
 
   AliyunTtiParameter({
     this.style,
@@ -130,6 +214,27 @@ class AliyunTtiParameter {
 
   AliyunTtiParameter.flux({this.size, this.seed, this.steps});
 
+  // 文字纹理就这3个
+  AliyunTtiParameter.wordArtTexture({
+    required this.n,
+    this.imageShortSize = 1024,
+    this.alphaChannel = true,
+  });
+
+  // 文字变形
+  AliyunTtiParameter.wordArtSemantic({
+    required this.n,
+    this.steps = 60,
+    this.fontName = "dongfangdakai",
+    this.ttfUrl,
+    this.outputImageRatio = "1280x720",
+  });
+
+  // 百家姓就一个n
+  AliyunTtiParameter.wordArtSurnames({
+    required this.n,
+  });
+
   // 从字符串转
   factory AliyunTtiParameter.fromRawJson(String str) =>
       AliyunTtiParameter.fromJson(json.decode(str));
@@ -140,4 +245,92 @@ class AliyunTtiParameter {
       _$AliyunTtiParameterFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$AliyunTtiParameterToJson(this);
+}
+
+/// 阿里云锦书艺术文字可传参考图片
+@JsonSerializable(explicitToJson: true)
+class AliyunTtiImage {
+  @JsonKey(name: 'image_url')
+  String imageUrl;
+
+  AliyunTtiImage(this.imageUrl);
+
+  // 从字符串转
+  factory AliyunTtiImage.fromRawJson(String str) =>
+      AliyunTtiImage.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory AliyunTtiImage.fromJson(Map<String, dynamic> srcJson) =>
+      _$AliyunTtiImageFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$AliyunTtiImageToJson(this);
+}
+
+/// 阿里云锦书艺术文字可传文字内容
+@JsonSerializable()
+class AliyunTtiText {
+  // 用户输入的文字内容，小于6个字；若选择了input.text，此字段为必须字段，且不能为空字符串""；
+  @JsonKey(name: 'text_content')
+  String? textContent;
+
+  // 用户传入的ttf文件；标准的ttf文件，文件大小小于30M；
+  @JsonKey(name: 'ttf_url')
+  String? ttfUrl;
+
+// 使用预置字体的名称；当使用input.text时，input.text.ttf_url和input.text.font_name 需要二选一；
+// 默认为"dongfangdakai"
+  @JsonKey(name: 'font_name')
+  String? fontName;
+
+  // 文字输入的图片的宽高比；默认为"1:1"，可选的比例有："1:1", "16:9", "9:16"；
+  @JsonKey(name: 'output_image_ratio')
+  String? outputImageRatio;
+
+  /// 百家姓生成需要的几个
+  // 生成图片中文字字形的强度，取值范围为[0, 1]，越接近1表示字形强度越大，即生成的字越明显，默认为0.5；
+  // 仅在input.style取"diy"时生效；
+  @JsonKey(name: 'text_strength')
+  String? textStrength;
+
+  @JsonKey(name: 'text_inverse')
+  String? textInverse;
+
+  AliyunTtiText({
+    this.textContent,
+    this.ttfUrl,
+    this.fontName,
+    this.outputImageRatio,
+  });
+
+  // 生成纹理
+  AliyunTtiText.wordArtTexture({
+    this.textContent,
+    this.ttfUrl,
+    this.fontName,
+    this.outputImageRatio,
+  });
+
+  // 文字变形只需要文本内容，且不需要这个外部内，但为了保持一致，这里用上了
+  // 传参数的时候可以需要处理一下
+  AliyunTtiText.wordArtSemantic({this.textContent});
+
+  // 百家姓
+  AliyunTtiText.wordArtSurnames({
+    this.ttfUrl,
+    this.fontName,
+    this.textStrength,
+    this.textInverse,
+  });
+
+  // 从字符串转
+  factory AliyunTtiText.fromRawJson(String str) =>
+      AliyunTtiText.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory AliyunTtiText.fromJson(Map<String, dynamic> srcJson) =>
+      _$AliyunTtiTextFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$AliyunTtiTextToJson(this);
 }

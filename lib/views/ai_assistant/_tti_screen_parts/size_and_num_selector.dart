@@ -63,6 +63,8 @@ class SizeAndNumSelector extends StatelessWidget {
   final Function(dynamic) onChanged;
   final String Function(dynamic) itemToString;
 
+  final double? labelSize;
+
   const SizeAndNumSelector({
     super.key,
     required this.label,
@@ -70,6 +72,7 @@ class SizeAndNumSelector extends StatelessWidget {
     required this.items,
     required this.onChanged,
     required this.itemToString,
+    this.labelSize,
   });
 
   @override
@@ -114,7 +117,10 @@ class SizeAndNumSelector extends StatelessWidget {
                           constraints: BoxConstraints(minWidth: 0.5.sw - 80.sp),
                           child: Text(
                             itemToString(e),
-                            style: const TextStyle(color: Colors.blue),
+                            style: TextStyle(
+                              fontSize: labelSize ?? 15.sp,
+                              color: Colors.blue,
+                            ),
                           ),
                         ),
                       ))

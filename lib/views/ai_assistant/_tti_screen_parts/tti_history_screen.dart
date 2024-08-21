@@ -2,14 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../common/components/tool_widget.dart';
-import '../../../../common/constants.dart';
-import '../../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../../common/utils/db_tools/db_helper.dart';
-import '../../../../models/text_to_image/com_tti_state.dart';
+import '../../../common/components/tool_widget.dart';
+import '../../../common/constants.dart';
+import '../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../models/text_to_image/com_tti_state.dart';
 
+///
+/// 文生图、阿里云的艺术文字都可以通用这个tti历史记录
+/// 但是需要传入指定页面文字和模型类型，方便查询数据时筛选
+///
 class TtiHistoryScreen extends StatefulWidget {
-  const TtiHistoryScreen({super.key});
+  final String lable;
+  final LLModelType modelType;
+
+  const TtiHistoryScreen({
+    super.key,
+    required this.lable,
+    required this.modelType,
+  });
 
   @override
   State<TtiHistoryScreen> createState() => _TtiHistoryScreenState();
@@ -31,7 +42,8 @@ class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
     var a = await dbHelper.queryTextToImageResultList();
 
     setState(() {
-      text2ImageHistory = a;
+      text2ImageHistory =
+          a.where((e) => e.llmSpec?.modelType == widget.modelType).toList();
     });
   }
 
@@ -39,7 +51,7 @@ class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('文本生图历史记录'),
+        title: Text('${widget.lable}历史记录'),
       ),
       body: ListView.builder(
         itemCount: text2ImageHistory.length,
@@ -59,7 +71,8 @@ class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
           context: context,
           builder: (context) {
             return AlertDialog(
-              title: Text("文本生成图片信息", style: TextStyle(fontSize: 18.sp)),
+              title: Text("${widget.lable}图片信息",
+                  style: TextStyle(fontSize: 18.sp)),
               content: SizedBox(
                 height: 250.sp,
                 child: SingleChildScrollView(
@@ -229,7 +242,9 @@ class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
             // 然后重新查询并更新
             var b = await dbHelper.queryTextToImageResultList();
             setState(() {
-              text2ImageHistory = b;
+              text2ImageHistory = b
+                  .where((e) => e.llmSpec?.modelType == LLModelType.tti)
+                  .toList();
             });
           }
         });

@@ -8,7 +8,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../apis/text_to_image/aliyun_wanx_apis.dart';
+import '../../../../apis/text_to_image/aliyun_tti_apis.dart';
 import '../../../../apis/text_to_image/silicon_flow_tti_apis.dart';
 import '../../../../apis/text_to_image/xfyun_tti_aps.dart';
 import '../../../../common/components/tool_widget.dart';
@@ -29,7 +29,7 @@ import '../../_tti_screen_parts/tti_button_row_area.dart';
 import '../../_helper/constants.dart';
 import '../../_componets/loading_overlay.dart';
 import '../../_tti_screen_parts/size_and_num_selector.dart';
-import 'tti_history_screen.dart';
+import '../../_tti_screen_parts/tti_history_screen.dart';
 
 class CommonTTIScreen extends StatefulWidget {
   const CommonTTIScreen({super.key});
@@ -158,7 +158,11 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
       );
 
       // 提交文生图任务
-      var jobResp = await commitAliyunText2ImgJob(input, parameters);
+      var jobResp = await commitAliyunText2ImgJob(
+        selectedModelSpec.model,
+        input,
+        parameters,
+      );
 
       if (!mounted) return;
       if (jobResp.code != null) {
@@ -349,7 +353,10 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const TtiHistoryScreen(),
+                  builder: (context) => const TtiHistoryScreen(
+                    lable: '文本生图',
+                    modelType: LLModelType.tti,
+                  ),
                 ),
               ).then((value) {
                 unfocusHandle();
@@ -392,18 +399,6 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
         ),
       ),
     );
-  }
-
-  // 点击删除历史记录的按钮时执行
-  void onDelete(LlmTtiResult e) async {
-    // 先删除
-    await dbHelper.deleteTextToImageResultById(e.requestId);
-
-    // 然后重新查询并更新
-    var b = await dbHelper.queryTextToImageResultList();
-    setState(() {
-      text2ImageHistory = b;
-    });
   }
 
   List<String> getSizeList() {

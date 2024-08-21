@@ -32,6 +32,7 @@ enum LLModelType {
   cc, // Chat Completions
   vision, // 视觉大模型
   tti, // Text To Image
+  tti_word, // 生成艺术字图片
   iti, // Image To Image
 }
 
@@ -71,6 +72,14 @@ enum CusLLM {
   // 部署在阿里云的flux.1，限时免费
   aliyun_Flux_Schnell_TTI,
   aliyun_Flux_Dev_TTI,
+
+  /// 阿里云 锦书 创意文字
+  // 文字纹理
+  aliyun_Wordart_Texture_TTI_WORD,
+  // 文字变形
+  aliyun_Wordart_Semantic_TTI_WORD,
+  // 百家姓生成
+  aliyun_Wordart_Surnames_TTI_WORD,
 
   /// Yi前缀，零一万物中，全都收费的
   YiLarge,
@@ -536,6 +545,40 @@ final List<CusLLMSpec> TTI_SPEC_LIST = [
 FLUX.1 [dev] 在保持了与FLUX专业版相近的图像质量和指令遵循能力的同时，具备更高的运行效率。
 相较于同尺寸的标准模型，它在资源利用上更为高效。""",
     modelType: LLModelType.tti,
+    costPerImage: 0.2,
+  ),
+  CusLLMSpec.tti(
+    ApiPlatform.aliyun,
+    CusLLM.aliyun_Wordart_Texture_TTI_WORD,
+    "wordart-texture",
+    'WordArt锦书-文字纹理生成',
+    false,
+    feature: """WordArt锦书-文字纹理生成可以对输入的文字内容或文字图片进行创意设计，
+根据提示词内容对文字添加材质和纹理，实现立体材质、场景融合、光影特效等效果，生成效果精美、风格多样的艺术字，
+结合背景可以直接作为文字海报使用。""",
+    modelType: LLModelType.tti_word,
+    costPerImage: 0.2,
+  ),
+  CusLLMSpec.tti(
+    ApiPlatform.aliyun,
+    CusLLM.aliyun_Wordart_Semantic_TTI_WORD,
+    "wordart-semantic",
+    'WordArt锦书-文字变形',
+    false,
+    feature: """WordArt锦书-文字变形可以对输入的文字边缘轮廓进行创意变形，
+根据提示词内容进行边缘变化，实现一种字体的更多种创意用法，返回带有文字内容的黑底白色蒙版图。""",
+    modelType: LLModelType.tti_word,
+    costPerImage: 0.2,
+  ),
+  CusLLMSpec.tti(
+    ApiPlatform.aliyun,
+    CusLLM.aliyun_Wordart_Surnames_TTI_WORD,
+    "wordart-surnames",
+    'WordArt锦书-百家姓生成',
+    false,
+    feature: """WordArt锦书-百家姓生成可以输入姓氏文字进行创意设计，支持根据提示词和风格引导图进行自定义设计，
+同时提供多种精美的预设风格模板，生成图片可以应用于个性社交场景，如作为个人头像、屏幕壁纸、字体表情包等。""",
+    modelType: LLModelType.tti_word,
     costPerImage: 0.2,
   ),
   CusLLMSpec.tti(
