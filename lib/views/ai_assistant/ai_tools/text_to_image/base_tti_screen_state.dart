@@ -9,45 +9,26 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../apis/text_to_image/aliyun_tti_apis.dart';
-import '../../../../apis/text_to_image/silicon_flow_tti_apis.dart';
-import '../../../../apis/text_to_image/xfyun_tti_aps.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
-
 import '../../../../common/utils/db_tools/db_helper.dart';
-import '../../../../common/utils/tools.dart';
-import '../../../../models/text_to_image/aliyun_tti_req.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
-import '../../../../models/text_to_image/com_tti_req.dart';
-import '../../../../models/text_to_image/com_tti_resp.dart';
 import '../../../../models/text_to_image/com_tti_state.dart';
-import '../../../../services/cus_get_storage.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
-import '../../_componets/prompt_input.dart';
-import '../../_tti_screen_parts/style_grid_selector.dart';
 import '../../_tti_screen_parts/tti_button_row_area.dart';
 import '../../_helper/constants.dart';
 import '../../_componets/loading_overlay.dart';
 import '../../_tti_screen_parts/size_and_num_selector.dart';
 import '../../_tti_screen_parts/tti_history_screen.dart';
 
-class CommonTTIScreen extends StatefulWidget {
-  const CommonTTIScreen({super.key});
-
-  @override
-  State<CommonTTIScreen> createState() => _CommonTTIScreenState();
-}
-
-class _CommonTTIScreenState extends State<CommonTTIScreen>
+abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
     with WidgetsBindingObserver {
   ///
   /// 统一显示的平台、模型、生成数量、生成尺寸的变量
   /// 在init时需要重新设置
   ///
   // 所有支持文生图的模型列表(用于下拉的平台和该平台拥有的模型列表也从这里来)
-  var llmSpecList = CusLLM_SPEC_LIST.where(
-    (spec) => spec.modelType == LLModelType.tti,
-  ).toList();
+  late List<CusLLMSpec> llmSpecList;
 
   // 级联选择效果：云平台-模型名
   late ApiPlatform selectedPlatform;
@@ -56,18 +37,15 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
   late CusLLMSpec selectedModelSpec;
 
   // 被选中的生成尺寸
-  String selectedSize = SF_ImageSizeList.first;
+  String selectedSize = '';
   // 被选中的生成数量
   int selectedNum = ImageNumList.first;
-
-// 阿里云有选择的样式编号
-  int _selectedStyleIndex = 0;
 
   ///
   /// 用户输入的提示词
   ///
-  final _promptController = TextEditingController();
-  final _negativePromptController = TextEditingController();
+  final promptController = TextEditingController();
+  final negativePromptController = TextEditingController();
 
   // 描述画面的提示词信息。支持中英文，长度不超过500个字符，超过部分会自动截断。
   String prompt = "";
@@ -86,21 +64,17 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
   final DBHelper dbHelper = DBHelper();
   // 最近对话需要的记录历史对话的变量
   List<LlmTtiResult> text2ImageHistory = [];
+  // 阿里云有选择的样式编号
+  int selectedStyleIndex = 0;
 
   @override
   void initState() {
     super.initState();
-
-    // 文生图，初始化固定为sf，模型就每次进来都随机
-    selectedPlatform = ApiPlatform.siliconCloud;
-    // 2024-07-14 同样的，选中的平台后也随机选择一个模型
-    List<CusLLMSpec> models = CusLLM_SPEC_LIST.where((spec) =>
-        spec.platform == selectedPlatform &&
-        spec.modelType == LLModelType.tti).toList();
-    selectedModelSpec = models[Random().nextInt(models.length)];
-
-    // 不同模型支持的尺寸列表不一样，也要更新
-    getSizeList();
+    llmSpecList =
+        CusLLM_SPEC_LIST.where((spec) => spec.modelType == getModelType())
+            .toList();
+    selectedPlatform = getInitialPlatform();
+    selectedModelSpec = getRandomModel();
     selectedSize = getInitialSize();
 
     WidgetsBinding.instance.addObserver(this);
@@ -122,6 +96,49 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
     }
   }
 
+  // 文生图时，默认选中一个模型
+  CusLLMSpec getRandomModel() {
+    List<CusLLMSpec> models = llmSpecList
+        .where((spec) =>
+            spec.platform == selectedPlatform &&
+            spec.modelType == getModelType())
+        .toList();
+    return models[Random().nextInt(models.length)];
+  }
+
+  /// 文生图支持的尺寸列表
+  List<String> getSizeList();
+
+  // 各个平台的默认尺寸
+  String getInitialSize();
+
+  // 文生图默认选中的平台
+  ApiPlatform getInitialPlatform();
+
+  /// 文生图支持的模型类型
+  LLModelType getModelType();
+
+  // 平台和模型选择切换后的回调
+  // tti和wordard要执行的不一样
+  cpModelChangedCB(ApiPlatform? cp, CusLLMSpec? llmSpec);
+
+  // 文生图页面的标题
+  String getAppBarTitle();
+
+  // 文生图历史记录页面的标签关键字
+  String getHistoryLabel();
+
+  ///
+  /// 获取文生图数据，阿里云的是提交job、查询job状态
+  /// 而sf和讯飞云是直接得到响应结果.
+  /// 如果获取tti job返回的是空，表示是直接得到结果的方式，那么会执行 getDirectTTIResult 函数
+  /// 如果获取tti job返回的不是空，那就定时查询job进度，而 getDirectTTIResult 传一个空函数即可
+  Future<AliyunTtiResp?> commitText2ImgJob();
+
+  // 直接得到结果的tti方式，处理完之后返回tti结果，方便存入db;
+  // 阿里云那种提交jb的，直接返回null就好了
+  Future<List<String>?>? getDirectTTIResult();
+
   /// 获取文生图的数据
   Future<void> getText2ImageData() async {
     if (isGenImage) {
@@ -140,30 +157,15 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
     print("张数 $selectedNum");
     print("正向词 $prompt");
     print("消极词 $negativePrompt");
-    print("样式(不一样有) <${WANX_StyleMap.values.toList()[_selectedStyleIndex]}>");
 
     // 请求得到的图片结果
     List<String> imageUrls = [];
-    // 如果是阿里云平台
-    if (selectedPlatform == ApiPlatform.aliyun) {
-      var input = AliyunTtiInput(
-        prompt: prompt,
-        negativePrompt: negativePrompt,
-      );
 
-      var parameters = AliyunTtiParameter(
-        style: "<${WANX_StyleMap.values.toList()[_selectedStyleIndex]}>",
-        size: selectedSize,
-        n: selectedNum,
-      );
+    // 提交文生图任务,如果不是null，则说明是阿里云先有job，再查询job状态的方式
+    // 如果是null，说明是sf、讯飞这种直接返回tti结果的方式
+    var jobResp = await commitText2ImgJob();
 
-      // 提交文生图任务
-      var jobResp = await commitAliyunText2ImgJob(
-        selectedModelSpec.model,
-        input,
-        parameters,
-      );
-
+    if (jobResp != null) {
       if (!mounted) return;
       if (jobResp.code != null) {
         setState(() {
@@ -200,58 +202,13 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
       if (a != null && a.isNotEmpty) {
         for (var e in a) {
           if (e.url != null) imageUrls.add(e.url!);
-        }
-      }
-    } else if (selectedPlatform == ApiPlatform.siliconCloud) {
-      var a = ComTtiReq.sdLighting(
-        prompt: prompt,
-        negativePrompt: negativePrompt,
-        imageSize: selectedSize,
-        batchSize: selectedNum,
-      );
-
-      ComTtiResp result = await getSFTtiResp(a, selectedModelSpec.model);
-
-      if (!mounted) return;
-      if (result.error != null) {
-        EasyLoading.showError("服务器报错:\n${result.error!}");
-        setState(() {
-          isGenImage = false;
-          LoadingOverlay.hide();
-        });
-      } else {
-        if (result.images != null) {
-          for (var e in result.images!) {
-            imageUrls.add(e.url);
-            await MyGetStorage().setText2ImageUrl(e.url);
-          }
+          if (e.pngUrl != null) imageUrls.add(e.pngUrl!);
+          // 2024-08-21 svg的预览报错？？？变形会有svg和png两个，没有直接url
+          // if (e.svgUrl != null) imageUrls.add(e.svgUrl!);
         }
       }
     } else {
-      var result = await getXfyunTtiResp(selectedSize, prompt);
-      print(result.toRawJson());
-
-      if (!mounted) return;
-      if (result.header?.code != null && result.header?.code != 0) {
-        EasyLoading.showError("服务器报错:\n${result.header?.message}");
-        setState(() {
-          isGenImage = false;
-          LoadingOverlay.hide();
-        });
-      } else {
-        var cont = result.payload?.choices?.text?.first.content;
-        if (cont != null) {
-          var file = await saveTtiBase64ImageToLocal(cont, prefix: "xfyun_");
-          print(file);
-          imageUrls.add(file.path);
-        } else {
-          EasyLoading.showError("图片数据为空:\n${result.header?.message}");
-          setState(() {
-            isGenImage = false;
-            LoadingOverlay.hide();
-          });
-        }
-      }
+      imageUrls = (await getDirectTTIResult()) ?? [];
     }
 
     // 正确获得文生图结果之后，将生成记录保存
@@ -261,7 +218,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
         prompt: prompt,
         negativePrompt: negativePrompt,
         style: selectedPlatform == ApiPlatform.aliyun
-            ? "<${WANX_StyleMap.values.toList()[_selectedStyleIndex]}>"
+            ? "<${WANX_StyleMap.values.toList()[selectedStyleIndex]}>"
             : '默认',
         imageUrls: imageUrls,
         gmtCreate: DateTime.now(),
@@ -329,33 +286,16 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('文本生图'),
+        title: Text(getAppBarTitle()),
         actions: [
-          // TextButton(
-          //   onPressed: () async {
-          //     var a = await getXfyunTtiResp("512x512", "性感美女，全身照");
-
-          //     var cont = a.payload?.choices?.text?.first.content;
-          //     if (cont != null) {
-          //       var file = await saveTtiBase64ImageToLocal(
-          //         cont,
-          //         prefix: "xfyun_",
-          //       );
-          //       print(file);
-          //     }
-
-          //     print(a.toRawJson());
-          //   },
-          //   child: const Text("测试"),
-          // ),
           IconButton(
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const TtiHistoryScreen(
-                    lable: '文本生图',
-                    modelType: LLModelType.tti,
+                  builder: (context) => TtiHistoryScreen(
+                    lable: getHistoryLabel(),
+                    modelType: getModelType(),
                   ),
                 ),
               ).then((value) {
@@ -366,9 +306,6 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
           ),
         ],
       ),
-      // 设为false，会被遮住一部分，反向词输入框没了
-      // 但如果为true，键盘挤压，加上下方固定的图片行，输入框的位置就很小了(16:9的手机屏的话)
-      // resizeToAvoidBottomInset: false,
       body: GestureDetector(
         // 允许子控件（如TextField）接收点击事件
         behavior: HitTestBehavior.translucent,
@@ -401,40 +338,6 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
     );
   }
 
-  List<String> getSizeList() {
-    if (selectedPlatform == ApiPlatform.siliconCloud) {
-      return SF_ImageSizeList;
-    }
-
-    if (selectedPlatform == ApiPlatform.xfyun) {
-      return XFYUN_ImageSizeList;
-    }
-
-    if (selectedPlatform == ApiPlatform.aliyun) {
-      return ALIYUN_ImageSizeList;
-    }
-
-    // 没有匹配上的，都返回siliconCloud的配置
-    return SF_ImageSizeList;
-  }
-
-  String getInitialSize() {
-    if (selectedPlatform == ApiPlatform.siliconCloud) {
-      return SF_ImageSizeList.first;
-    }
-
-    if (selectedPlatform == ApiPlatform.xfyun) {
-      return XFYUN_ImageSizeList.first;
-    }
-
-    if (selectedPlatform == ApiPlatform.aliyun) {
-      return ALIYUN_ImageSizeList.first;
-    }
-
-    // 没有匹配上的，都返回siliconCloud的配置
-    return SF_ImageSizeList.first;
-  }
-
   ///
   /// 页面布局从上往下
   ///
@@ -447,8 +350,8 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
         setState(() {
           prompt = "";
           negativePrompt = "";
-          _promptController.text = "";
-          _negativePromptController.text = "";
+          promptController.text = "";
+          negativePromptController.text = "";
           selectedSize = getInitialSize();
           selectedNum = ImageNumList.first;
         });
@@ -462,6 +365,7 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
   }
 
   /// 构建文生图的配置区域
+  /// 这两个是都用的，其他不同的子类去重载
   List<Widget> buildConfigArea() {
     return [
       /// 平台和模型选择
@@ -469,17 +373,9 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
         initialPlatform: selectedPlatform,
         initialModelSpec: selectedModelSpec,
         llmSpecList: llmSpecList,
-        targetModelType: LLModelType.tti,
+        targetModelType: getModelType(),
         showToggleSwitch: false,
-        onPlatformOrModelChanged: (ApiPlatform? cp, CusLLMSpec? llmSpec) {
-          setState(() {
-            selectedPlatform = cp!;
-            selectedModelSpec = llmSpec!;
-            // 模型可供输出的图片尺寸列表也要更新
-            getSizeList();
-            selectedSize = getInitialSize();
-          });
-        },
+        onPlatformOrModelChanged: cpModelChangedCB,
       ),
 
       /// 尺寸、张数选择
@@ -499,57 +395,6 @@ class _CommonTTIScreenState extends State<CommonTTIScreen>
           });
         },
       ),
-
-      /// 画风、尺寸、张数选择
-      if (selectedModelSpec.cusLlm == CusLLM.aliyun_Wanx_v1_TTI)
-        Center(
-          child: SizedBox(
-            width: 0.8.sw,
-            child: StyleGrid(
-              imageUrls: WANX_StyleImageList,
-              labels: WANX_StyleMap.keys.toList(),
-              subLabels: WANX_StyleMap.values.toList(),
-              selectedIndex: _selectedStyleIndex,
-              onTap: (index) {
-                setState(() {
-                  _selectedStyleIndex =
-                      _selectedStyleIndex == index ? -1 : index;
-                });
-              },
-            ),
-          ),
-        ),
-
-      /// 正向、反向提示词
-      Padding(
-        padding: EdgeInsets.all(5.sp),
-        child: Column(
-          children: [
-            PromptInput(
-              label: "正向提示词",
-              hintText: '描述画面的提示词信息。支持中英文，不超过500个字符。\n比如：“一只展翅翱翔的狸花猫”',
-              controller: _promptController,
-              onChanged: (text) {
-                setState(() {
-                  prompt = text.trim();
-                });
-              },
-              isRequired: true,
-            ),
-            PromptInput(
-              label: "反向提示词",
-              hintText:
-                  '画面中不想出现的内容描述词信息。通过指定用户不想看到的内容来优化模型输出，使模型产生更有针对性和理想的结果。',
-              controller: _negativePromptController,
-              onChanged: (text) {
-                setState(() {
-                  negativePrompt = text.trim();
-                });
-              },
-            ),
-          ],
-        ),
-      )
     ];
   }
 

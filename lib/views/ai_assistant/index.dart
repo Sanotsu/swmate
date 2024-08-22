@@ -11,8 +11,8 @@ import 'ai_tools/chat_bot_group/index.dart';
 import 'ai_tools/file_interpret/document_interpret.dart';
 import 'ai_tools/file_interpret/image_interpret.dart';
 import 'ai_tools/test_page.dart';
-import 'ai_tools/text_to_image/index.dart';
-import 'ai_tools/word_art/index.dart';
+import 'ai_tools/text_to_image/tti_index.dart';
+import 'ai_tools/text_to_image/word_art_index.dart';
 
 ///
 /// 规划一系列有AI加成的使用工具，这里是主入口
