@@ -23,6 +23,8 @@ enum CusSysRole {
 class CusSysRoleSpec {
   // 系统角色的标签
   final String label;
+  // 一句话简介
+  String? subtitle;
   // 系统角色的枚举名称
   CusSysRole? name;
   // 系统角色的提示信息
@@ -44,6 +46,7 @@ class CusSysRoleSpec {
 
   CusSysRoleSpec.chat({
     required this.label,
+    this.subtitle,
     required this.systemPrompt,
     this.imageUrl,
     this.sysRoleType = LLModelType.cc,
@@ -116,17 +119,6 @@ const ImgHintInfo = """1. 点击图片可预览、缩放
 3. 图片最大支持 2048*1080
 4. base64编码后大小不超过4M
 5. 图片越大，处理耗时越久.""";
-
-///
-/// 文本对话中，默认的角色列表
-///
-var defaultCCSysRoleList = [
-  CusSysRoleSpec.chat(
-    label: "总结",
-    systemPrompt: """你是一个文档分析专家，你需要根据提供的文档内容，生成一份简洁、结构化的文档摘要。
-      如果原文本不是中文，总结要使用中文。""",
-  ),
-];
 
 ///
 /// 文生图页面用到的一些常量

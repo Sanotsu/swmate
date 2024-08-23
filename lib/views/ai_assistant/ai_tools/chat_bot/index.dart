@@ -26,6 +26,7 @@ import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.
 import '../../_helper/constants.dart';
 import '../../_helper/handle_cc_response.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
+import '../../_helper/system_prompt_list.dart';
 
 /// 2024-07-16
 /// 这个应该会复用，后续抽出chatbatindex出来
@@ -92,6 +93,9 @@ class _ChatBatState extends State<ChatBat> {
   // 当前正在响应的api返回流(放在全局为了可以手动取消)
   StreamWithCancel<ComCCResp> respStream = StreamWithCancel.empty();
 
+  // 2024-08-23 用户如果选择了预设角色，就得显示出来
+  CusSysRoleSpec? selectedRole;
+
   @override
   void initState() {
     super.initState();
@@ -153,7 +157,7 @@ class _ChatBatState extends State<ChatBat> {
     // 默认查询到所有的历史对话(这里有uuid了，应该就只有1条存在才对)
     var list = await _dbHelper.queryChatList(uuid: chatId, cateType: "aigc");
 
-    if (list.isNotEmpty && list.isNotEmpty) {
+    if (list.isNotEmpty) {
       // 2024-07-23 注意！！！这里要处理该条历史记录中的消息列表，具体看_sendMessage中的说明
       List<ChatMessage> resultList =
           filterAlternatingRoles(list.first.messages);
@@ -307,8 +311,13 @@ class _ChatBatState extends State<ChatBat> {
   /// 保存对话到数据库
   _saveToDb() async {
     // 如果插入时只有一条，那就是用户首次输入，截取部分内容和生成对话记录的uuid
-
-    if (messages.isNotEmpty && messages.length == 1) {
+    // 2024-08-23 如果对话中只有1个user或者1个user和1个system(即两条信息)，则表明是新建对话
+    if (messages.isNotEmpty &&
+            (messages.length == 1 &&
+                messages.where((e) => e.role == "user").length == 1) ||
+        (messages.length == 2 &&
+            messages.where((e) => e.role == "user").length == 1 &&
+            messages.where((e) => e.role == "system").length == 1)) {
       // 如果没有对话记录(即上层没有传入，且当前时用户第一次输入文字还没有创建对话记录)，则新建对话记录
       chatSession ??= ChatSession(
         uuid: const Uuid().v4(),
@@ -346,69 +355,22 @@ class _ChatBatState extends State<ChatBat> {
     });
   }
 
+// 重新开启对话要清空一些内容
+  restartChat() {
+    setState(() {
+      chatSession = null;
+      messages.clear();
+      selectedRole = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: ChatAppBarArea(
         title: '智能对话',
-        onCusSysRolePressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (BuildContext context) {
-              return Container(
-                height: MediaQuery.of(context).size.height / 3 * 2,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16.sp),
-                    topRight: Radius.circular(16.sp),
-                  ),
-                ),
-                child: ListView.builder(
-                  itemCount: defaultCCSysRoleList.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    var a = defaultCCSysRoleList[index];
-
-                    return ListTile(
-                      title: Text('Item ${a.label}'),
-                      onTap: () {
-                        Navigator.pop(context, a);
-                      },
-                    );
-                  },
-                ),
-              );
-            },
-          ).then((value) {
-            // 如果选择了新角色，则清除当前对话,添加system prompt
-            if (value != null && value is CusSysRoleSpec) {
-              setState(() {
-                chatSession = null;
-                messages.clear();
-                messages.add(
-                  ChatMessage(
-                    messageId: const Uuid().v4(),
-                    role: "system",
-                    content: value.systemPrompt,
-                    contentVoicePath: "",
-                    dateTime: DateTime.now(),
-                  ),
-                );
-              });
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Selected: ${value.label}')),
-              );
-            }
-          });
-        },
-        onNewChatPressed: () {
-          setState(() {
-            chatSession = null;
-            messages.clear();
-          });
-        },
+        onCusSysRolePressed: showCusSysRoleList,
+        onNewChatPressed: () => restartChat(),
         onHistoryPressed: (BuildContext context) async {
           var list = await getHistoryChats();
           if (!context.mounted) return;
@@ -458,8 +420,8 @@ class _ChatBatState extends State<ChatBat> {
                       // 模型可供输出的图片尺寸列表也要更新
                       // 2024-06-15 切换模型应该新建对话，因为上下文丢失了。
                       // 建立新对话就是把已有的对话清空就好(因为保存什么的在发送消息时就处理了)
-                      chatSession = null;
-                      messages.clear();
+                      // 2024-08-23 切换了模型也要清空预设角色
+                      restartChat();
                     });
                   },
                 ),
@@ -478,6 +440,20 @@ class _ChatBatState extends State<ChatBat> {
               ChatDefaultQuestionArea(
                 defaultQuestions: defaultQuestions,
                 onQuestionTap: _userSendMessage,
+              ),
+
+            /// 如果有选择了预设角色，则显示改角色
+            if (selectedRole != null)
+              Container(
+                height: 32.sp,
+                color: Colors.grey[100],
+                child: Center(
+                  child: Text(
+                    "选择的预设角色: ${selectedRole!.label}",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
 
             /// 对话的标题区域
@@ -503,6 +479,8 @@ class _ChatBatState extends State<ChatBat> {
             /// 显示对话消息主体
             ChatListArea(
               messages: messages,
+              // 如果不想显示system信息，这里可以移除掉(但不能修改原消息列表)
+              // messages: messages.where((e) => e.role != "system").toList(),
               scrollController: _scrollController,
               isBotThinking: isBotThinking,
               regenerateLatestQuestion: regenerateLatestQuestion,
@@ -603,13 +581,106 @@ class _ChatBatState extends State<ChatBat> {
           });
           // 如果删除的历史对话是当前对话，跳到新开对话页面
           if (chatSession?.uuid == e.uuid) {
-            setState(() {
-              chatSession = null;
-              messages.clear();
-            });
+            restartChat();
           }
         },
       ),
     );
+  }
+
+  showCusSysRoleList() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return Container(
+          height: MediaQuery.of(context).size.height / 4 * 3,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(15.sp),
+              topRight: Radius.circular(15.sp),
+            ),
+          ),
+          child: Column(
+            children: [
+              Container(
+                height: 100.sp,
+                margin: EdgeInsets.fromLTRB(20, 0, 10.sp, 0.sp),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "预设系统角色说明",
+                            style: TextStyle(fontSize: 18.sp),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("关闭"),
+                        )
+                      ],
+                    ),
+                    Text(
+                      """不是所有模型都支持，不是所有预设角色都能按预期执行。\n先选择好平台和模型，再选择预设角色，角色才会生效。
+                            """,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12.sp),
+                    ),
+                    Divider(height: 10.sp, thickness: 1.sp),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: defaultCCSysRoleList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    var a = defaultCCSysRoleList[index];
+
+                    return Card(
+                      child: ListTile(
+                        title: Text(a.label),
+                        subtitle: a.subtitle != null ? Text(a.subtitle!) : null,
+                        dense: true,
+                        onTap: () {
+                          Navigator.pop(context, a);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ).then((value) {
+      // 如果选择了新角色，则清除当前对话,添加system prompt
+      if (value != null && value is CusSysRoleSpec) {
+        setState(() {
+          restartChat();
+
+          selectedRole = value;
+          messages.add(
+            ChatMessage(
+              messageId: const Uuid().v4(),
+              role: "system",
+              content: value.systemPrompt,
+              contentVoicePath: "",
+              dateTime: DateTime.now(),
+            ),
+          );
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Selected: ${value.label}')),
+        );
+      }
+    });
   }
 }

@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../common/components/tool_widget.dart';
+import '../ai_assistant/_componets/custom_entrance_card.dart';
 import 'accounting/index.dart';
 import 'random_dish/dish_wheel_index.dart';
 
@@ -50,51 +50,24 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
             child: GridView.count(
               primary: false,
               padding: EdgeInsets.symmetric(horizontal: 5.sp),
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
+              crossAxisSpacing: 5,
+              mainAxisSpacing: 5,
               crossAxisCount: 2,
               childAspectRatio: 2 / 1,
-              children: <Widget>[
-                buildToolEntrance(
-                  "极简记账",
-                  icon: const Icon(Icons.receipt),
-                  color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const BillItemIndex(),
-                      ),
-                    );
-                  },
-                ),
-                buildToolEntrance(
-                  "随机菜品",
-                  icon: const Icon(Icons.restaurant_menu),
-                  color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DishWheelIndex(),
-                      ),
-                    );
-                  },
+              children: const <Widget>[
+                CustomEntranceCard(
+                  title: '极简记账',
+                  subtitle: "手动记账图表统计",
+                  icon: Icons.receipt,
+                  targetPage: BillItemIndex(),
                 ),
 
-                // buildAIToolEntrance(
-                //   "语音输入",
-                //   icon: const Icon(Icons.newspaper),
-                //   color: Colors.blue[100],
-                //   onTap: () {
-                //     Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //         builder: (context) => const AudioSendScreen(),
-                //       ),
-                //     );
-                //   },
-                // ),
+                CustomEntranceCard(
+                  title: '随机菜品',
+                  subtitle: "随机生成一道菜品",
+                  icon: Icons.restaurant_menu,
+                  targetPage: DishWheelIndex(),
+                ),
 
                 // buildAIToolEntrance(
                 //   "功能\n占位(TODO)",

@@ -32,7 +32,7 @@ class MessageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 根据是否是用户输入跳转文本内容布局
-    bool isFromUser = message.role == "user";
+    bool isFromUser = message.role == "user" || message.role == "system";
 
     // 如果是用户输入，头像显示在右边
     CrossAxisAlignment crossAlignment =

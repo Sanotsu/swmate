@@ -6,14 +6,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../common/components/tool_widget.dart';
 import '../../services/cus_get_storage.dart';
+import '_componets/custom_entrance_card.dart';
 import 'ai_tools/chat_bot/index.dart';
 import 'ai_tools/chat_bot_group/index.dart';
 import 'ai_tools/file_interpret/document_interpret.dart';
 import 'ai_tools/file_interpret/image_interpret.dart';
-import 'ai_tools/test_page.dart';
 import 'ai_tools/image_generation/iti_index.dart';
 import 'ai_tools/image_generation/tti_index.dart';
 import 'ai_tools/image_generation/word_art_index.dart';
+import 'ai_tools/test_page.dart';
 
 ///
 /// 规划一系列有AI加成的使用工具，这里是主入口
@@ -110,117 +111,76 @@ class _AIToolIndexState extends State<AIToolIndex> {
             child: GridView.count(
               primary: false,
               padding: EdgeInsets.symmetric(horizontal: 5.sp),
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
+              crossAxisSpacing: 5,
+              mainAxisSpacing: 5,
               crossAxisCount: 2,
-              childAspectRatio: 3 / 2,
+              childAspectRatio: 2 / 1,
               children: <Widget>[
                 ///
                 /// 使用的对话模型，可以连续问答对话
                 ///
-                buildToolEntrance(
-                  "智能对话",
-                  subtitle: "不同平台\n多个模型\n知无不言",
-                  icon: const Icon(Icons.chat_outlined),
-                  color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ChatBat(),
-                      ),
-                    );
-                  },
+                // buildToolEntrance(
+                //   "智能对话",
+                //   subtitle: "不同平台\n多个模型\n知无不言",
+                //   icon: const Icon(Icons.chat_outlined),
+                //   color: Colors.blue[100],
+                //   onTap: () {
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (context) => const ChatBat(),
+                //       ),
+                //     );
+                //   },
+                // ),
+
+                const CustomEntranceCard(
+                  title: '智能对话',
+                  subtitle: "多个平台多种模型",
+                  icon: Icons.chat_outlined,
+                  targetPage: ChatBat(),
                 ),
 
-                buildToolEntrance(
-                  "智能群聊",
-                  subtitle: "一个问题\n多个模型\n同时回答",
-                  icon: const Icon(Icons.balance),
-                  color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ChatBatGroup(),
-                      ),
-                    );
-                  },
+                const CustomEntranceCard(
+                  title: '智能群聊',
+                  subtitle: "一个问题多个回答",
+                  icon: Icons.balance_outlined,
+                  targetPage: ChatBatGroup(),
                 ),
 
-                buildToolEntrance(
-                  "文档解读",
-                  subtitle: "文档翻译\n文档总结\n文档提问",
-                  icon: const Icon(Icons.newspaper_outlined),
-                  color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DocumentInterpret(),
-                      ),
-                    );
-                  },
+                const CustomEntranceCard(
+                  title: '文档解读',
+                  subtitle: "文档翻译总结提问",
+                  icon: Icons.newspaper_outlined,
+                  targetPage: DocumentInterpret(),
                 ),
 
-                buildToolEntrance(
-                  "图片解读",
-                  subtitle: "拍照翻译\n图片总结\n图片问答",
-                  icon: const Icon(Icons.image_outlined),
-                  color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ImageInterpret(),
-                      ),
-                    );
-                  },
+                const CustomEntranceCard(
+                  title: '图片解读',
+                  subtitle: "图片翻译总结问答",
+                  icon: Icons.image_outlined,
+                  targetPage: ImageInterpret(),
                 ),
 
-                buildToolEntrance(
-                  "文本生图",
-                  subtitle: "根据文本描述\n结合各种风格\n生成各种图像",
-                  icon: const Icon(Icons.photo),
-                  color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CommonTTIScreen(),
-                      ),
-                    );
-                  },
+                const CustomEntranceCard(
+                  title: '文本生图',
+                  subtitle: "根据文字描述绘图",
+                  icon: Icons.photo_album_outlined,
+                  targetPage: CommonTTIScreen(),
                 ),
 
-                buildToolEntrance(
-                  "创意文字",
-                  subtitle: "文字纹理生成\n文字变形处理\n百家姓氏创作",
-                  icon: const Icon(Icons.text_fields),
-                  color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AliyunWordArtScreen(),
-                      ),
-                    );
-                  },
+                const CustomEntranceCard(
+                  title: '创意文字',
+                  subtitle: "纹理变形姓氏创作",
+                  icon: Icons.text_fields_outlined,
+                  targetPage: AliyunWordArtScreen(),
                 ),
 
-                buildToolEntrance(
-                  "图片生图",
-                  subtitle: "根据参考图片\n结合文本描述\n生成各自图像",
-                  icon: const Icon(Icons.image),
-                  color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CommonITIScreen(),
-                      ),
-                    );
-                  },
+                const CustomEntranceCard(
+                  title: '图片生图',
+                  subtitle: "结合参考图片绘图",
+                  icon: Icons.photo_library_outlined,
+                  targetPage: CommonITIScreen(),
                 ),
 
                 buildToolEntrance(

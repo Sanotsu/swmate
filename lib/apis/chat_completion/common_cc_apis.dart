@@ -327,7 +327,7 @@ Future<StreamWithCancel<ComCCResp>> baiduCCRespWithCancel(
     token = await getAccessToken();
   }
 
-  var body = ComCCReq.baidu(messages: messages, stream: stream);
+  var body = ComCCReq.baidu(messages: messages, stream: stream, system: system);
 
   var headers = {"Content-Type": "application/json"};
 
