@@ -18,7 +18,7 @@ import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/utils/tools.dart';
 import '../../_helper/constants.dart';
 import '../../_helper/document_parser.dart';
-import 'base_interpret_state.dart';
+import 'base_interpret_screen_state.dart';
 
 class DocumentInterpret extends StatefulWidget {
   const DocumentInterpret({super.key});
@@ -79,7 +79,7 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
   bool getIsSendClickable() => !(fileContent.isEmpty || isBotThinking);
 
   @override
-  Widget buildSpecificUI(BuildContext context) {
+  Widget buildSelectionArea(BuildContext context) {
     return buildFileAndInputArea();
   }
 

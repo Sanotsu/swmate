@@ -1,14 +1,15 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'com_tti_resp.dart';
+part of 'silicon_flow_ig_resp.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-ComTtiResp _$ComTtiRespFromJson(Map<String, dynamic> json) => ComTtiResp(
+SiliconFlowIGResp _$SiliconFlowIGRespFromJson(Map<String, dynamic> json) =>
+    SiliconFlowIGResp(
       images: (json['images'] as List<dynamic>?)
-          ?.map((e) => TtiImage.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => SFIGImage.fromJson(e as Map<String, dynamic>))
           .toList(),
       timings: json['timings'] == null
           ? null
@@ -20,7 +21,7 @@ ComTtiResp _$ComTtiRespFromJson(Map<String, dynamic> json) => ComTtiResp(
       error: json['error'] as String?,
     );
 
-Map<String, dynamic> _$ComTtiRespToJson(ComTtiResp instance) =>
+Map<String, dynamic> _$SiliconFlowIGRespToJson(SiliconFlowIGResp instance) =>
     <String, dynamic>{
       'images': instance.images?.map((e) => e.toJson()).toList(),
       'timings': instance.timings?.toJson(),
@@ -31,11 +32,11 @@ Map<String, dynamic> _$ComTtiRespToJson(ComTtiResp instance) =>
       'error': instance.error,
     };
 
-TtiImage _$TtiImageFromJson(Map<String, dynamic> json) => TtiImage(
+SFIGImage _$SFIGImageFromJson(Map<String, dynamic> json) => SFIGImage(
       json['url'] as String,
     );
 
-Map<String, dynamic> _$TtiImageToJson(TtiImage instance) => <String, dynamic>{
+Map<String, dynamic> _$SFIGImageToJson(SFIGImage instance) => <String, dynamic>{
       'url': instance.url,
     };
 

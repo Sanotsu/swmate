@@ -211,7 +211,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
   bool getIsSendClickable();
 
   // 构建选择文档或者图片的文件选择区域
-  Widget buildSpecificUI(BuildContext context);
+  Widget buildSelectionArea(BuildContext context);
 
   // 构建页面主体的UI
   Widget buildCommonUI(BuildContext context) {
@@ -243,7 +243,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
 
         /// 自定义的选择组件(文档解析是上传文档框，图片解读是图片选择框)
         SizedBox(height: 5.sp),
-        buildSpecificUI(context),
+        buildSelectionArea(context),
         SizedBox(height: 10.sp),
 
         /// 根据“文档解读”、“图片解读”不同，选中的预设功能不同，显示不同的按钮

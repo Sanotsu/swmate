@@ -11,7 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../models/base_model/brief_accounting_state.dart';
 import '../../../models/base_model/dish_state.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
-import '../../../models/text_to_image/com_tti_state.dart';
+import '../../../models/text_to_image/com_ig_state.dart';
 import '../../constants.dart';
 import 'ddl_swmate.dart';
 
@@ -577,7 +577,7 @@ class DBHelper {
   ///
 
 // 查询所有记录
-  Future<List<LlmTtiResult>> queryTextToImageResultList({
+  Future<List<LlmIGResult>> queryTextToImageResultList({
     String? requestId,
     String? prompt,
   }) async {
@@ -607,7 +607,7 @@ class DBHelper {
       orderBy: "gmt_create DESC",
     );
 
-    return rows.map((row) => LlmTtiResult.fromMap(row)).toList();
+    return rows.map((row) => LlmIGResult.fromMap(row)).toList();
   }
 
   // 删除单条
@@ -620,7 +620,7 @@ class DBHelper {
 
   // 新增(只有单个的时候就一个值的数组，理论上不会批量插入)
   Future<List<Object?>> insertTextToImageResultList(
-      List<LlmTtiResult> rsts) async {
+      List<LlmIGResult> rsts) async {
     var batch = (await database).batch();
     for (var item in rsts) {
       batch.insert(

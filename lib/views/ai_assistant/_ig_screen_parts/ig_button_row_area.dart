@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 ///
-/// 文生图页面上方的按钮行
+/// 文生图\图生图页面上方的按钮行
 ///
-class Text2ImageButtonArea extends StatelessWidget {
+class ImageGenerationButtonArea extends StatelessWidget {
   final String title;
   final VoidCallback onReset;
   final VoidCallback onGenerate;
   final bool canGenerate;
 
-  const Text2ImageButtonArea({
+  const ImageGenerationButtonArea({
     super.key,
     required this.title,
     required this.onReset,

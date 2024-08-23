@@ -20,7 +20,7 @@ CusLLMSpec _$CusLLMSpecFromJson(Map<String, dynamic> json) => CusLLMSpec(
       useCase: json['useCase'] as String?,
       modelType: $enumDecodeNullable(_$LLModelTypeEnumMap, json['modelType']) ??
           LLModelType.cc,
-    )..costPerImage = (json['costPerImage'] as num?)?.toDouble();
+    )..costPer = (json['costPer'] as num?)?.toDouble();
 
 Map<String, dynamic> _$CusLLMSpecToJson(CusLLMSpec instance) =>
     <String, dynamic>{
@@ -36,7 +36,7 @@ Map<String, dynamic> _$CusLLMSpecToJson(CusLLMSpec instance) =>
       'feature': instance.feature,
       'useCase': instance.useCase,
       'modelType': _$LLModelTypeEnumMap[instance.modelType]!,
-      'costPerImage': instance.costPerImage,
+      'costPer': instance.costPer,
     };
 
 const _$ApiPlatformEnumMap = {
@@ -94,8 +94,16 @@ const _$CusLLMEnumMap = {
       'siliconCloud_StableDiffusion_Turbo_TTI',
   CusLLM.siliconCloud_StableDiffusionXL_Turbo_TTI:
       'siliconCloud_StableDiffusionXL_Turbo_TTI',
-  CusLLM.siliconCloud_StableDiffusionXL_Light_TTI:
-      'siliconCloud_StableDiffusionXL_Light_TTI',
+  CusLLM.siliconCloud_StableDiffusionXL_Lighting_TTI:
+      'siliconCloud_StableDiffusionXL_Lighting_TTI',
+  CusLLM.siliconCloud_PhotoMaker_ITI: 'siliconCloud_PhotoMaker_ITI',
+  CusLLM.siliconCloud_InstantID_ITI: 'siliconCloud_InstantID_ITI',
+  CusLLM.siliconCloud_StableDiffusionXL_ITI:
+      'siliconCloud_StableDiffusionXL_ITI',
+  CusLLM.siliconCloud_StableDiffusion2p1_ITI:
+      'siliconCloud_StableDiffusion2p1_ITI',
+  CusLLM.siliconCloud_StableDiffusionXL_Lighting_ITI:
+      'siliconCloud_StableDiffusionXL_Lighting_ITI',
 };
 
 const _$LLModelTypeEnumMap = {

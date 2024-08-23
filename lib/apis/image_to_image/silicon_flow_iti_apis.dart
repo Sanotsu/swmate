@@ -5,28 +5,29 @@ import 'dart:convert';
 import '../../common/utils/dio_client/cus_http_client.dart';
 import '../../common/utils/dio_client/cus_http_request.dart';
 import '../../common/utils/dio_client/interceptor_error.dart';
-import '../../models/text_to_image/silicon_flow_tti_req.dart';
+import '../../models/image_to_image/silicon_flow_iti_req.dart';
 import '../../models/text_to_image/silicon_flow_ig_resp.dart';
 import '../_self_keys.dart';
 
 ///
-/// 获取siliconFlow的文生图响应结果
+/// 获取siliconFlow的图生图响应结果
+/// 图生图和文生图的结果结构是一样的
 ///
 
-// 获取文生图路径
-String genSfTtiPath(String model) =>
-    "https://api.siliconflow.cn/v1/$model/text-to-image";
+// 获取图生图路径
+String genSfItiPath(String model) =>
+    "https://api.siliconflow.cn/v1/$model/image-to-image";
 
 ///
-/// 获取sf的文生图结果
+/// 获取sf的图生图结果
 ///
-Future<SiliconFlowIGResp> getSFTtiResp(SiliconFlowTtiReq req, String model) async {
+Future<SiliconFlowIGResp> getSFImageToImageResp(SiliconflowItiReq req, String model) async {
   try {
     var start = DateTime.now().millisecondsSinceEpoch;
     var respData = await HttpUtils.post(
-      path: genSfTtiPath(model),
+      path: genSfItiPath(model),
       method: CusHttpMethod.post,
-      // 文生图有单独的遮罩，不用显示加载圈
+      // 图生图有单独的遮罩，不用显示加载圈
       showLoading: false,
       headers: {
         "Content-Type": "application/json",

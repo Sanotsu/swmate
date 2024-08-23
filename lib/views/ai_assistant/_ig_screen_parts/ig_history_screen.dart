@@ -6,30 +6,32 @@ import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/db_tools/db_helper.dart';
-import '../../../models/text_to_image/com_tti_state.dart';
+import '../../../models/text_to_image/com_ig_state.dart';
 
 ///
-/// 文生图、阿里云的艺术文字都可以通用这个tti历史记录
+/// 文生图、图生图、阿里云的艺术文字都可以通用这个图像生成历史记录
 /// 但是需要传入指定页面文字和模型类型，方便查询数据时筛选
 ///
-class TtiHistoryScreen extends StatefulWidget {
+class ImageGenerationHistoryScreen extends StatefulWidget {
   final String lable;
   final LLModelType modelType;
 
-  const TtiHistoryScreen({
+  const ImageGenerationHistoryScreen({
     super.key,
     required this.lable,
     required this.modelType,
   });
 
   @override
-  State<TtiHistoryScreen> createState() => _TtiHistoryScreenState();
+  State<ImageGenerationHistoryScreen> createState() =>
+      _ImageGenerationHistoryScreenState();
 }
 
-class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
+class _ImageGenerationHistoryScreenState
+    extends State<ImageGenerationHistoryScreen> {
   final DBHelper dbHelper = DBHelper();
   // 最近对话需要的记录历史对话的变量
-  List<LlmTtiResult> text2ImageHistory = [];
+  List<LlmIGResult> imageGenerationHistory = [];
 
   @override
   void initState() {
@@ -42,7 +44,7 @@ class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
     var a = await dbHelper.queryTextToImageResultList();
 
     setState(() {
-      text2ImageHistory =
+      imageGenerationHistory =
           a.where((e) => e.llmSpec?.modelType == widget.modelType).toList();
     });
   }
@@ -54,16 +56,16 @@ class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
         title: Text('${widget.lable}历史记录'),
       ),
       body: ListView.builder(
-        itemCount: text2ImageHistory.length,
+        itemCount: imageGenerationHistory.length,
         itemBuilder: (context, index) {
-          return buildGestureItems(text2ImageHistory[index], context);
+          return buildGestureItems(imageGenerationHistory[index], context);
         },
       ),
     );
   }
 
   /// 构建在对话历史中的对话标题列表
-  Widget buildGestureItems(LlmTtiResult e, BuildContext context) {
+  Widget buildGestureItems(LlmIGResult e, BuildContext context) {
     return GestureDetector(
       onTap: () {
         // 点击了指定文生图记录，弹窗显示缩略图
@@ -209,7 +211,7 @@ class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
     );
   }
 
-  Widget _buildDeleteButton(LlmTtiResult e, BuildContext context) {
+  Widget _buildDeleteButton(LlmIGResult e, BuildContext context) {
     return IconButton(
       onPressed: () {
         showDialog(
@@ -242,7 +244,7 @@ class _TtiHistoryScreenState extends State<TtiHistoryScreen> {
             // 然后重新查询并更新
             var b = await dbHelper.queryTextToImageResultList();
             setState(() {
-              text2ImageHistory = b
+              imageGenerationHistory = b
                   .where((e) => e.llmSpec?.modelType == LLModelType.tti)
                   .toList();
             });

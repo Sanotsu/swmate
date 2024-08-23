@@ -272,13 +272,14 @@ Widget buildImageView(
   BuildContext context, {
   // 是否是本地文件地址(暂时没使用到网络地址)
   bool? isFileUrl = false,
+  String imagePlaceholder = "请选择图片",
 }) {
   // 如果没有图片数据，直接返回文提示
   if (image == null) {
-    return const Center(
+    return Center(
       child: Text(
-        '请选择图片',
-        style: TextStyle(color: Colors.grey),
+        imagePlaceholder,
+        style: const TextStyle(color: Colors.grey),
       ),
     );
   }

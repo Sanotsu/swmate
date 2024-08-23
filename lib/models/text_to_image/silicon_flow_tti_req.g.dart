@@ -1,12 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'com_tti_req.dart';
+part of 'silicon_flow_tti_req.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-ComTtiReq _$ComTtiReqFromJson(Map<String, dynamic> json) => ComTtiReq(
+SiliconFlowTtiReq _$SiliconFlowTtiReqFromJson(Map<String, dynamic> json) =>
+    SiliconFlowTtiReq(
       prompt: json['prompt'] as String,
       imageSize: json['image_size'] as String,
       numInferenceSteps: (json['num_inference_steps'] as num).toInt(),
@@ -16,7 +17,8 @@ ComTtiReq _$ComTtiReqFromJson(Map<String, dynamic> json) => ComTtiReq(
       ..negativePrompt = json['negative_prompt'] as String?
       ..guidanceScale = (json['guidance_scale'] as num?)?.toDouble();
 
-Map<String, dynamic> _$ComTtiReqToJson(ComTtiReq instance) => <String, dynamic>{
+Map<String, dynamic> _$SiliconFlowTtiReqToJson(SiliconFlowTtiReq instance) =>
+    <String, dynamic>{
       'prompt': instance.prompt,
       'image_size': instance.imageSize,
       'num_inference_steps': instance.numInferenceSteps,

@@ -2,12 +2,13 @@ import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
 
-part 'com_tti_resp.g.dart';
+part 'silicon_flow_ig_resp.g.dart';
 
 ///
 /// 【以 siliconflow 的出参为基准的响应类】
+/// sf平台的文生图和图生图响应是一样的结构
 ///
-/// ComTtiResp => common text to image response
+/// SiliconFlowIG => SiliconFlow image generation response
 ///
 /*
 {
@@ -23,10 +24,10 @@ part 'com_tti_resp.g.dart';
 }
 */
 @JsonSerializable(explicitToJson: true)
-class ComTtiResp {
+class SiliconFlowIGResp {
   // 正确返回时的内容
   @JsonKey(name: 'images')
-  List<TtiImage>? images;
+  List<SFIGImage>? images;
   @JsonKey(name: 'timings')
   Timings? timings;
   @JsonKey(name: 'shared_id')
@@ -42,7 +43,7 @@ class ComTtiResp {
   @JsonKey(name: 'error')
   String? error;
 
-  ComTtiResp({
+  SiliconFlowIGResp({
     this.images,
     this.timings,
     this.sharedId,
@@ -53,34 +54,34 @@ class ComTtiResp {
   });
 
   // 从字符串转
-  factory ComTtiResp.fromRawJson(String str) =>
-      ComTtiResp.fromJson(json.decode(str));
+  factory SiliconFlowIGResp.fromRawJson(String str) =>
+      SiliconFlowIGResp.fromJson(json.decode(str));
   // 转为字符串
   String toRawJson() => json.encode(toJson());
 
-  factory ComTtiResp.fromJson(Map<String, dynamic> srcJson) =>
-      _$ComTtiRespFromJson(srcJson);
+  factory SiliconFlowIGResp.fromJson(Map<String, dynamic> srcJson) =>
+      _$SiliconFlowIGRespFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$ComTtiRespToJson(this);
+  Map<String, dynamic> toJson() => _$SiliconFlowIGRespToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
-class TtiImage {
+class SFIGImage {
   @JsonKey(name: 'url')
   String url;
 
-  TtiImage(this.url);
+  SFIGImage(this.url);
 
   // 从字符串转
-  factory TtiImage.fromRawJson(String str) =>
-      TtiImage.fromJson(json.decode(str));
+  factory SFIGImage.fromRawJson(String str) =>
+      SFIGImage.fromJson(json.decode(str));
   // 转为字符串
   String toRawJson() => json.encode(toJson());
 
-  factory TtiImage.fromJson(Map<String, dynamic> srcJson) =>
-      _$TtiImageFromJson(srcJson);
+  factory SFIGImage.fromJson(Map<String, dynamic> srcJson) =>
+      _$SFIGImageFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$TtiImageToJson(this);
+  Map<String, dynamic> toJson() => _$SFIGImageToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)

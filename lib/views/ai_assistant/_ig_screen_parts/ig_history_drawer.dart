@@ -3,18 +3,18 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../common/components/tool_widget.dart';
-import '../../../models/text_to_image/com_tti_state.dart';
+import '../../../models/text_to_image/com_ig_state.dart';
 
 ///
-/// tti 历史记录抽屉组件
+/// 图片生成历史记录抽屉组件
 ///
-class TtiHistoryDrawer extends StatelessWidget {
-  final List<LlmTtiResult> text2ImageHistory;
-  final Function(LlmTtiResult) onDelete;
+class ImageGenerationHistoryDrawer extends StatelessWidget {
+  final List<LlmIGResult> imageGenerationHistory;
+  final Function(LlmIGResult) onDelete;
 
-  const TtiHistoryDrawer({
+  const ImageGenerationHistoryDrawer({
     super.key,
-    required this.text2ImageHistory,
+    required this.imageGenerationHistory,
     required this.onDelete,
   });
 
@@ -31,7 +31,7 @@ class TtiHistoryDrawer extends StatelessWidget {
               child: const Center(child: Text('文本生成图片记录')),
             ),
           ),
-          ...(text2ImageHistory
+          ...(imageGenerationHistory
               .map((e) => buildGestureItems(e, context))
               .toList()),
         ],
@@ -40,7 +40,7 @@ class TtiHistoryDrawer extends StatelessWidget {
   }
 
   /// 构建在对话历史中的对话标题列表
-  Widget buildGestureItems(LlmTtiResult e, BuildContext context) {
+  Widget buildGestureItems(LlmIGResult e, BuildContext context) {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pop();
@@ -139,7 +139,7 @@ class TtiHistoryDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDeleteButton(LlmTtiResult e, BuildContext context) {
+  Widget _buildDeleteButton(LlmIGResult e, BuildContext context) {
     return SizedBox(
       width: 40.sp,
       child: IconButton(

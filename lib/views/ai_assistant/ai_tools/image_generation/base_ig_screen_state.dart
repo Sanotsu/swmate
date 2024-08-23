@@ -13,15 +13,18 @@ import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/utils/db_tools/db_helper.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
-import '../../../../models/text_to_image/com_tti_state.dart';
+import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
-import '../../_tti_screen_parts/tti_button_row_area.dart';
+import '../../_ig_screen_parts/ig_button_row_area.dart';
 import '../../_helper/constants.dart';
 import '../../_componets/loading_overlay.dart';
-import '../../_tti_screen_parts/size_and_num_selector.dart';
-import '../../_tti_screen_parts/tti_history_screen.dart';
+import '../../_ig_screen_parts/size_and_num_selector.dart';
+import '../../_ig_screen_parts/ig_history_screen.dart';
 
-abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
+///
+/// 文生图、图生图大体结构是一样的，不再单独出来，统一为IG(Image Generation)
+///
+abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
     with WidgetsBindingObserver {
   ///
   /// 统一显示的平台、模型、生成数量、生成尺寸的变量
@@ -63,7 +66,7 @@ abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
 
   final DBHelper dbHelper = DBHelper();
   // 最近对话需要的记录历史对话的变量
-  List<LlmTtiResult> text2ImageHistory = [];
+  List<LlmIGResult> text2ImageHistory = [];
   // 阿里云有选择的样式编号
   int selectedStyleIndex = 0;
 
@@ -128,19 +131,24 @@ abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
   // 文生图历史记录页面的标签关键字
   String getHistoryLabel();
 
+  // 是否可以点击生成按钮
+  bool isCanGenerate() {
+    return prompt.isNotEmpty;
+  }
+
   ///
   /// 获取文生图数据，阿里云的是提交job、查询job状态
   /// 而sf和讯飞云是直接得到响应结果.
   /// 如果获取tti job返回的是空，表示是直接得到结果的方式，那么会执行 getDirectTTIResult 函数
   /// 如果获取tti job返回的不是空，那就定时查询job进度，而 getDirectTTIResult 传一个空函数即可
-  Future<AliyunTtiResp?> commitText2ImgJob();
+  Future<AliyunTtiResp?> commitImageGenerationJob();
 
   // 直接得到结果的tti方式，处理完之后返回tti结果，方便存入db;
   // 阿里云那种提交jb的，直接返回null就好了
-  Future<List<String>?>? getDirectTTIResult();
+  Future<List<String>?>? getDirectImageGenerationResult();
 
   /// 获取文生图的数据
-  Future<void> getText2ImageData() async {
+  Future<void> getImageGenerationData() async {
     if (isGenImage) {
       return;
     }
@@ -163,7 +171,7 @@ abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
 
     // 提交文生图任务,如果不是null，则说明是阿里云先有job，再查询job状态的方式
     // 如果是null，说明是sf、讯飞这种直接返回tti结果的方式
-    var jobResp = await commitText2ImgJob();
+    var jobResp = await commitImageGenerationJob();
 
     if (jobResp != null) {
       if (!mounted) return;
@@ -181,7 +189,7 @@ abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
 
       // 查询文生图任务状态
       var taskId = jobResp.output.taskId;
-      AliyunTtiResp? result = await timedText2ImageJobStatus(taskId);
+      AliyunTtiResp? result = await timedImageGenerationJobStatus(taskId);
 
       if (!mounted) return;
       if (result?.code != null) {
@@ -208,12 +216,12 @@ abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
         }
       }
     } else {
-      imageUrls = (await getDirectTTIResult()) ?? [];
+      imageUrls = (await getDirectImageGenerationResult()) ?? [];
     }
 
     // 正确获得文生图结果之后，将生成记录保存
     await dbHelper.insertTextToImageResultList([
-      LlmTtiResult(
+      LlmIGResult(
         requestId: const Uuid().v4(),
         prompt: prompt,
         negativePrompt: negativePrompt,
@@ -235,7 +243,7 @@ abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
   }
 
   // 查询阿里云文生图任务的状态
-  Future<AliyunTtiResp?> timedText2ImageJobStatus(String taskId) async {
+  Future<AliyunTtiResp?> timedImageGenerationJobStatus(String taskId) async {
     bool isMaxWaitTimeExceeded = false;
 
     const maxWaitDuration = Duration(minutes: 10);
@@ -293,7 +301,7 @@ abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => TtiHistoryScreen(
+                  builder: (context) => ImageGenerationHistoryScreen(
                     lable: getHistoryLabel(),
                     modelType: getModelType(),
                   ),
@@ -317,8 +325,26 @@ abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            /// 执行按钮(固定在上方，配置和生成结果可以滚动)
-            buildTtiButtonArea(),
+            /// 构建文生图配置和执行按钮区域(固定在上方，配置和生成结果可以滚动)
+            ImageGenerationButtonArea(
+              title: "文生图配置",
+              onReset: () {
+                unfocusHandle();
+                setState(() {
+                  prompt = "";
+                  negativePrompt = "";
+                  promptController.text = "";
+                  negativePromptController.text = "";
+                  selectedSize = getInitialSize();
+                  selectedNum = ImageNumList.first;
+                });
+              },
+              onGenerate: () async {
+                unfocusHandle();
+                await getImageGenerationData();
+              },
+              canGenerate: isCanGenerate(),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -341,28 +367,6 @@ abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
   ///
   /// 页面布局从上往下
   ///
-  /// 构建文生图配置和执行按钮区域
-  Widget buildTtiButtonArea() {
-    return Text2ImageButtonArea(
-      title: "文生图配置",
-      onReset: () {
-        unfocusHandle();
-        setState(() {
-          prompt = "";
-          negativePrompt = "";
-          promptController.text = "";
-          negativePromptController.text = "";
-          selectedSize = getInitialSize();
-          selectedNum = ImageNumList.first;
-        });
-      },
-      onGenerate: () async {
-        unfocusHandle();
-        await getText2ImageData();
-      },
-      canGenerate: prompt.isNotEmpty,
-    );
-  }
 
   /// 构建文生图的配置区域
   /// 这两个是都用的，其他不同的子类去重载
@@ -384,16 +388,8 @@ abstract class BaseTTIScreenState<T extends StatefulWidget> extends State<T>
         selectedNum: selectedNum,
         sizeList: getSizeList(),
         numList: ImageNumList,
-        onSizeChanged: (val) {
-          setState(() {
-            selectedSize = val;
-          });
-        },
-        onNumChanged: (val) {
-          setState(() {
-            selectedNum = val;
-          });
-        },
+        onSizeChanged: (val) => setState(() => selectedSize = val),
+        onNumChanged: (val) => setState(() => selectedNum = val),
       ),
     ];
   }

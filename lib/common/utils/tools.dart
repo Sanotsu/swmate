@@ -275,3 +275,10 @@ saveTtiImageToLocal(String netImageUrl, {String? prefix}) async {
   // await file.writeAsBytes(respData);
   // EasyLoading.showToast("图片已保存${file.path}");
 }
+
+/// 获取图片的base64编码
+Future<String?> getImageBase64String(File? image) async {
+  if (image == null) return null;
+  var tempStr = base64Encode(await image.readAsBytes());
+  return "data:image/png;base64,$tempStr";
+}

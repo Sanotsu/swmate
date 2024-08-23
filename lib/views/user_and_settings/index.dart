@@ -120,7 +120,7 @@ class _UserAndSettingsState extends State<UserAndSettings> {
             CircleAvatar(
               maxRadius: 60.sp,
               backgroundColor: Colors.transparent,
-              backgroundImage: const AssetImage(placeholderImageUrl),
+              backgroundImage: const AssetImage(brandImageUrl),
               // y圆形头像的边框线
               child: Container(
                 decoration: BoxDecoration(

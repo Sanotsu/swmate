@@ -98,6 +98,10 @@ dart run build_runner build --delete-conflicting-outputs
 
 - refactor: 使用抽象类重构“文本生图”页面和“创意文字”页面。
 
+#### 2024-08-23
+
+- feat: “智能助手”添加了 sf 平台的“图生图”模块;refactor:重构页面“文生生图”和“图片生图”统一为“图片生成”。
+
 ### todo:
 
 - （done）得到流式响应的数据的处理都非常相似，可以抽出来公共函数

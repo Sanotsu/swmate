@@ -10,7 +10,8 @@ import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../_helper/constants.dart';
 import '../../_helper/handle_cc_response.dart';
-import 'base_interpret_state.dart';
+import '../../_ig_screen_parts/image_pick_and_view_area.dart';
+import 'base_interpret_screen_state.dart';
 
 class ImageInterpret extends StatefulWidget {
   const ImageInterpret({super.key});
@@ -65,9 +66,15 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
 
   @override
   CusAgent getSelectedAgentName() => selectAgent.name;
+
+  /// 构建图片选择和预览行
   @override
-  Widget buildSpecificUI(BuildContext context) {
-    return buildImagePickAndViewRow();
+  Widget buildSelectionArea(BuildContext context) {
+    return ImagePickAndViewArea(
+      imageSelectedHandle: _pickImage,
+      imageClearHandle: () => setState(() => selectedImage = null),
+      selectedImage: selectedImage,
+    );
   }
 
   @override
@@ -95,173 +102,6 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
           unfocusHandle();
         },
         child: buildCommonUI(context),
-      ),
-    );
-  }
-
-  /// 构建图片选择和预览行
-  Widget buildImagePickAndViewRow2() {
-    return SizedBox(
-      height: 100.sp,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(width: 5.sp),
-          Expanded(
-            flex: 3,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey, width: 1.0),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: buildImageView(selectedImage, context),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(80, 36.sp),
-                    padding: EdgeInsets.symmetric(horizontal: 0.sp),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5.sp),
-                    ),
-                  ),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text(
-                            "选择图片来源",
-                            style: TextStyle(fontSize: 18.sp),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                _pickImage(ImageSource.camera);
-                              },
-                              child: Text(
-                                "拍照",
-                                style: TextStyle(fontSize: 16.sp),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                _pickImage(ImageSource.gallery);
-                              },
-                              child: Text(
-                                "从相册选择",
-                                style: TextStyle(fontSize: 16.sp),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  child: const Text("选择图片"),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(80, 36.sp),
-                    padding: EdgeInsets.all(0.sp),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5.sp),
-                    ),
-                  ),
-                  onPressed: selectedImage != null
-                      ? () {
-                          setState(() {
-                            selectedImage = null;
-                            renewSystemAndMessages();
-                          });
-                        }
-                      : null,
-                  child: const Text("清除图片"),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 构建图片选择和预览行
-
-  Widget buildImagePickAndViewRow() {
-    return Container(
-      height: 100.sp,
-      margin: EdgeInsets.symmetric(horizontal: 5.sp),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey, width: 1.sp),
-        borderRadius: BorderRadius.circular(10.sp),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text(
-                      "选择图片来源",
-                      style: TextStyle(fontSize: 18.sp),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          _pickImage(ImageSource.camera);
-                        },
-                        child: Text(
-                          "拍照",
-                          style: TextStyle(fontSize: 16.sp),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          _pickImage(ImageSource.gallery);
-                        },
-                        child: Text(
-                          "从相册选择",
-                          style: TextStyle(fontSize: 16.sp),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-            icon: const Icon(Icons.file_upload),
-          ),
-          Expanded(
-            flex: 3,
-            child: buildImageView(selectedImage, context),
-          ),
-          if (selectedImage != null)
-            IconButton(
-              onPressed: selectedImage != null
-                  ? () {
-                      setState(() {
-                        selectedImage = null;
-                        renewSystemAndMessages();
-                      });
-                    }
-                  : null,
-              icon: const Icon(Icons.clear),
-            ),
-        ],
       ),
     );
   }

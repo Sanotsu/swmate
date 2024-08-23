@@ -9,8 +9,8 @@ import '../../../../models/text_to_image/aliyun_tti_req.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
 import '../../_componets/prompt_input.dart';
 import '../../_helper/constants.dart';
-import '../../_tti_screen_parts/size_and_num_selector.dart';
-import 'base_tti_screen_state.dart';
+import '../../_ig_screen_parts/size_and_num_selector.dart';
+import 'base_ig_screen_state.dart';
 
 class AliyunWordArtScreen extends StatefulWidget {
   const AliyunWordArtScreen({super.key});
@@ -19,8 +19,7 @@ class AliyunWordArtScreen extends StatefulWidget {
   State<AliyunWordArtScreen> createState() => _AliyunWordArtScreenState();
 }
 
-class _AliyunWordArtScreenState
-    extends BaseTTIScreenState<AliyunWordArtScreen> {
+class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
   // 艺术字体选中的字体名称和样式索引
   String selectedStyle = "";
   String selectedFontName = "";
@@ -122,6 +121,7 @@ class _AliyunWordArtScreenState
 
   /// 是否可以点击生成按钮
   /// 文字纹理、文字变形、百家姓可以点击生成按钮的条件各不相同
+  @override
   bool isCanGenerate() {
     // 创意文字为空，则肯定不能点击生成按钮
     if (textContent.isEmpty) {
@@ -180,7 +180,7 @@ class _AliyunWordArtScreenState
 
   // 锦书都是提交job查询job状态，所以这个重载返回null，供基类条件判断
   @override
-  Future<List<String>?>? getDirectTTIResult() => null;
+  Future<List<String>?>? getDirectImageGenerationResult() => null;
 
   // 锦书创意文字页面的标题
   @override
@@ -196,7 +196,7 @@ class _AliyunWordArtScreenState
 
   /// (阿里云锦书)提交文生图任务
   @override
-  Future<AliyunTtiResp> commitText2ImgJob() async {
+  Future<AliyunTtiResp> commitImageGenerationJob() async {
     AliyunTtiInput input;
     AliyunTtiParameter parameters;
     // 文字纹理

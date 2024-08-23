@@ -6,14 +6,15 @@ import 'package:intl/intl.dart';
 import '../../common/constants.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
 
-part 'com_tti_state.g.dart';
+part 'com_ig_state.g.dart';
 
 ///
-/// 大模型文生图，保存历史记录时，可能用到
+/// 大模型文生图\图生图，保存历史记录时，可能用到
 /// 这里不是各个大模型的返回，就是本地逻辑处理用到的，主要是文生图历史记录用到
+/// 2024-08-23 tti和iti 历史记录合并为ig
 ///
 @JsonSerializable(explicitToJson: true)
-class LlmTtiResult {
+class LlmIGResult {
   final String requestId; // 每个消息有个ID方便整个对话列表的保存？？？
   final String prompt; // 正向提示词
   String? negativePrompt; // 消极提示词
@@ -22,7 +23,7 @@ class LlmTtiResult {
   DateTime gmtCreate; // 创建时间
   CusLLMSpec? llmSpec; // 用来文生图的模型信息
 
-  LlmTtiResult({
+  LlmIGResult({
     required this.requestId,
     required this.prompt,
     this.negativePrompt,
@@ -33,18 +34,18 @@ class LlmTtiResult {
   });
 
   // 从字符串转
-  factory LlmTtiResult.fromRawJson(String str) =>
-      LlmTtiResult.fromJson(json.decode(str));
+  factory LlmIGResult.fromRawJson(String str) =>
+      LlmIGResult.fromJson(json.decode(str));
   // 转为字符串
   String toRawJson() => json.encode(toJson());
 
-  factory LlmTtiResult.fromJson(Map<String, dynamic> srcJson) =>
-      _$LlmTtiResultFromJson(srcJson);
+  factory LlmIGResult.fromJson(Map<String, dynamic> srcJson) =>
+      _$LlmIGResultFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$LlmTtiResultToJson(this);
+  Map<String, dynamic> toJson() => _$LlmIGResultToJson(this);
 
-  factory LlmTtiResult.fromMap(Map<String, dynamic> map) {
-    return LlmTtiResult(
+  factory LlmIGResult.fromMap(Map<String, dynamic> map) {
+    return LlmIGResult(
       requestId: map['request_id'] as String,
       prompt: map['prompt'] as String,
       negativePrompt: map['negative_prompt'] as String?,

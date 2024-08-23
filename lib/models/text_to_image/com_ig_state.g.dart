@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'com_tti_state.dart';
+part of 'com_ig_state.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-LlmTtiResult _$LlmTtiResultFromJson(Map<String, dynamic> json) => LlmTtiResult(
+LlmIGResult _$LlmIGResultFromJson(Map<String, dynamic> json) => LlmIGResult(
       requestId: json['requestId'] as String,
       prompt: json['prompt'] as String,
       negativePrompt: json['negativePrompt'] as String?,
@@ -20,7 +20,7 @@ LlmTtiResult _$LlmTtiResultFromJson(Map<String, dynamic> json) => LlmTtiResult(
           : CusLLMSpec.fromJson(json['llmSpec'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$LlmTtiResultToJson(LlmTtiResult instance) =>
+Map<String, dynamic> _$LlmIGResultToJson(LlmIGResult instance) =>
     <String, dynamic>{
       'requestId': instance.requestId,
       'prompt': instance.prompt,

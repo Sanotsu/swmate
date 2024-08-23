@@ -313,3 +313,43 @@ var WordArt_outputImageRatioList = [
   "720x1280",
   "1024x1024",
 ];
+
+///
+/// 图生图中，部分模型有预设的风格
+///
+
+Map<String, String> PhotoMaker_StyleMap = {
+  "逼真摄像": "Photographic (Default)",
+  "电影质感": "Cinematic",
+  "连环画册": "Comic book",
+  "迪斯尼经典": "Disney Character",
+  "数码艺术": "Digital Art",
+  "奇幻艺术": "Fantasy Art",
+  "复古朋克": "Neopunk",
+  "画质增强": "Enhance",
+  "降低质量": "Lowpoly",
+  "线条艺术": "Line art",
+  "无样式": "(No style)",
+};
+
+Map<String, String> InstantID_StyleMap = {
+  "水彩": "Watercolor",
+  "荧光": "Neon",
+  "丛林": "Jungle",
+  "火星": "Mars",
+  "鲜艳": "Vibrant Color",
+  "白雪": "Snow",
+  "黑白": "Film Noir",
+  "线条": "Line art",
+  "无样式": "(No style)",
+};
+
+// siliconflow平台图生图参数
+var SF_ITISizeList = [
+  "1024X1024",
+  "1024X2048",
+  '1536x1024',
+  '1536x2048',
+  '2048x1152',
+  '1152x2048',
+];

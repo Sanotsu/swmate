@@ -18,7 +18,7 @@ import '../../../common/utils/tools.dart';
 import '../../../models/base_model/brief_accounting_state.dart';
 import '../../../models/base_model/dish_state.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
-import '../../../models/text_to_image/com_tti_state.dart';
+import '../../../models/text_to_image/com_ig_state.dart';
 
 ///
 /// 2023-12-26 备份恢复还可以优化，就暂时不做
@@ -385,7 +385,7 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
         );
       } else if (filename == "${DB_TABLE_PREFIX}text2image_history.json") {
         await _dbHelper.insertTextToImageResultList(
-          jsonMapList.map((e) => LlmTtiResult.fromMap(e)).toList(),
+          jsonMapList.map((e) => LlmIGResult.fromMap(e)).toList(),
         );
       } else if (filename == "${DB_TABLE_PREFIX}dish.json") {
         await _dbHelper.insertDishList(

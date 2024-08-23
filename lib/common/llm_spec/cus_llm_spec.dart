@@ -111,7 +111,13 @@ enum CusLLM {
   siliconCloud_StableDiffusion2p1_TTI,
   siliconCloud_StableDiffusion_Turbo_TTI,
   siliconCloud_StableDiffusionXL_Turbo_TTI,
-  siliconCloud_StableDiffusionXL_Light_TTI,
+  siliconCloud_StableDiffusionXL_Lighting_TTI,
+  // 图生图模型
+  siliconCloud_PhotoMaker_ITI,
+  siliconCloud_InstantID_ITI,
+  siliconCloud_StableDiffusionXL_ITI,
+  siliconCloud_StableDiffusion2p1_ITI,
+  siliconCloud_StableDiffusionXL_Lighting_ITI,
 }
 
 /// 通用模型规格
@@ -140,8 +146,8 @@ class CusLLMSpec {
   // 模型类型(visons 视觉模型可以解析图片、分析图片内容，然后进行对话,使用时需要支持上传图片，
   // 但也能持续对话，和cc分开)
   LLModelType modelType;
-  // 每张图的花费
-  double? costPerImage;
+  // 每张图、每个视频等单个的花费
+  double? costPer;
 
 // 默认是对话模型的构造函数
   CusLLMSpec(this.platform, this.cusLlm, this.model, this.name,
@@ -150,7 +156,7 @@ class CusLLMSpec {
       this.feature,
       this.useCase,
       this.modelType = LLModelType.cc})
-      : costPerImage = null;
+      : costPer = null;
 
 // 文生图的栏位稍微不一样
   CusLLMSpec.tti(
@@ -162,11 +168,23 @@ class CusLLMSpec {
     this.feature,
     this.useCase,
     this.modelType = LLModelType.cc,
-    this.costPerImage = 0.5,
+    this.costPer = 0.5,
   })  : contextLength = null,
         inputPrice = null,
         outputPrice = null,
         isQuote = null;
+
+  CusLLMSpec.iti(
+    this.platform,
+    this.cusLlm,
+    this.model,
+    this.name,
+    this.isFree, {
+    this.feature,
+    this.useCase,
+    this.modelType = LLModelType.iti,
+    this.costPer = 0.5,
+  });
 
   // 从字符串转
   factory CusLLMSpec.fromRawJson(String str) =>
@@ -181,7 +199,8 @@ class CusLLMSpec {
 }
 
 /// 具体的模型信息
-final List<CusLLMSpec> CusLLM_SPEC_LIST = CCM_SPEC_LIST + TTI_SPEC_LIST;
+final List<CusLLMSpec> CusLLM_SPEC_LIST =
+    CCM_SPEC_LIST + TTI_SPEC_LIST + ITI_SPEC_LIST;
 
 /// 文本对话模型
 final List<CusLLMSpec> CCM_SPEC_LIST = [
@@ -519,7 +538,7 @@ final List<CusLLMSpec> TTI_SPEC_LIST = [
     feature: """通义万相-文本生成图像大模型，
 支持中英文双语输入，重点风格包括但不限于水彩、油画、中国画、素描、扁平插画、二次元、3D卡通。""",
     modelType: LLModelType.tti,
-    costPerImage: 0.2,
+    costPer: 0.2,
   ),
   CusLLMSpec.tti(
     ApiPlatform.aliyun,
@@ -533,7 +552,7 @@ final List<CusLLMSpec> TTI_SPEC_LIST = [
 相较于当前市场上的最先进模型，FLUX.1 [schnell] 显著提升了在视觉质量、指令遵从、尺寸/比例变化、字体处理及输出多样性等方面的可能，
 为用户带来更为丰富多样的创意图像生成体验。""",
     modelType: LLModelType.tti,
-    costPerImage: 0.2,
+    costPer: 0.2,
   ),
   CusLLMSpec.tti(
     ApiPlatform.aliyun,
@@ -545,7 +564,7 @@ final List<CusLLMSpec> TTI_SPEC_LIST = [
 FLUX.1 [dev] 在保持了与FLUX专业版相近的图像质量和指令遵循能力的同时，具备更高的运行效率。
 相较于同尺寸的标准模型，它在资源利用上更为高效。""",
     modelType: LLModelType.tti,
-    costPerImage: 0.2,
+    costPer: 0.2,
   ),
   CusLLMSpec.tti(
     ApiPlatform.aliyun,
@@ -557,7 +576,7 @@ FLUX.1 [dev] 在保持了与FLUX专业版相近的图像质量和指令遵循能
 根据提示词内容对文字添加材质和纹理，实现立体材质、场景融合、光影特效等效果，生成效果精美、风格多样的艺术字，
 结合背景可以直接作为文字海报使用。""",
     modelType: LLModelType.tti_word,
-    costPerImage: 0.2,
+    costPer: 0.2,
   ),
   CusLLMSpec.tti(
     ApiPlatform.aliyun,
@@ -568,7 +587,7 @@ FLUX.1 [dev] 在保持了与FLUX专业版相近的图像质量和指令遵循能
     feature: """WordArt锦书-文字变形可以对输入的文字边缘轮廓进行创意变形，
 根据提示词内容进行边缘变化，实现一种字体的更多种创意用法，返回带有文字内容的黑底白色蒙版图。""",
     modelType: LLModelType.tti_word,
-    costPerImage: 0.2,
+    costPer: 0.2,
   ),
   CusLLMSpec.tti(
     ApiPlatform.aliyun,
@@ -579,7 +598,7 @@ FLUX.1 [dev] 在保持了与FLUX专业版相近的图像质量和指令遵循能
     feature: """WordArt锦书-百家姓生成可以输入姓氏文字进行创意设计，支持根据提示词和风格引导图进行自定义设计，
 同时提供多种精美的预设风格模板，生成图片可以应用于个性社交场景，如作为个人头像、屏幕壁纸、字体表情包等。""",
     modelType: LLModelType.tti_word,
-    costPerImage: 0.2,
+    costPer: 0.2,
   ),
   CusLLMSpec.tti(
     ApiPlatform.siliconCloud,
@@ -643,7 +662,7 @@ FLUX.1 [dev] 在保持了与FLUX专业版相近的图像质量和指令遵循能
   ),
   CusLLMSpec.tti(
     ApiPlatform.siliconCloud,
-    CusLLM.siliconCloud_StableDiffusionXL_Light_TTI,
+    CusLLM.siliconCloud_StableDiffusionXL_Lighting_TTI,
     "ByteDance/SDXL-Lightning",
     'SD XL Lighting【限免】',
     true,
@@ -663,6 +682,59 @@ FLUX.1 [dev] 在保持了与FLUX专业版相近的图像质量和指令遵循能
 \n【单次输出 1 张图片, 多选无效】""",
     useCase: """支持生成各种不同类型的图片，无论是设计、广告还是媒体等领域，为用户提供了无限的创意和灵感。""",
     modelType: LLModelType.tti,
-    costPerImage: 0.2,
+    costPer: 0.2,
+  ),
+];
+
+final List<CusLLMSpec> ITI_SPEC_LIST = [
+  CusLLMSpec.iti(
+    ApiPlatform.siliconCloud,
+    CusLLM.siliconCloud_PhotoMaker_ITI,
+    "TencentARC/PhotoMaker",
+    '腾讯ARC PhotoMaker【限免】',
+    true,
+    feature: """SiliconCloud TencentARC PhotoMaker""",
+    useCase: """SiliconCloud TencentARC PhotoMaker""",
+    modelType: LLModelType.iti,
+  ),
+  CusLLMSpec.iti(
+    ApiPlatform.siliconCloud,
+    CusLLM.siliconCloud_InstantID_ITI,
+    "InstantX/InstantID",
+    'InstantX InstantID【限免】',
+    true,
+    feature: """SiliconCloud InstantX InstantID""",
+    useCase: """SiliconCloud InstantX InstantID""",
+    modelType: LLModelType.iti,
+  ),
+  CusLLMSpec.iti(
+    ApiPlatform.siliconCloud,
+    CusLLM.siliconCloud_StableDiffusionXL_ITI,
+    "stabilityai/stable-diffusion-xl-base-1.0",
+    'SD XL【限免】',
+    true,
+    feature: """SiliconCloud Stable Diffusion XL""",
+    useCase: """SiliconCloud Stable Diffusion XL""",
+    modelType: LLModelType.iti,
+  ),
+  CusLLMSpec.iti(
+    ApiPlatform.siliconCloud,
+    CusLLM.siliconCloud_StableDiffusion2p1_ITI,
+    "stabilityai/stable-diffusion-2-1",
+    'SD 2.1【限免】',
+    true,
+    feature: """SiliconCloud Stable Diffusion 2.1""",
+    useCase: """SiliconCloud Stable Diffusion 2.1""",
+    modelType: LLModelType.iti,
+  ),
+  CusLLMSpec.iti(
+    ApiPlatform.siliconCloud,
+    CusLLM.siliconCloud_StableDiffusionXL_Lighting_ITI,
+    "ByteDance/SDXL-Lightning",
+    'SD XL Lighting【限免】',
+    true,
+    feature: """SiliconCloud Stable Diffusion XL Lighting""",
+    useCase: """SiliconCloud Stable Diffusion XL Lighting""",
+    modelType: LLModelType.iti,
   ),
 ];

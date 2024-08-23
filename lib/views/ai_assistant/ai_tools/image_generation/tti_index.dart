@@ -11,14 +11,14 @@ import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/utils/tools.dart';
 import '../../../../models/text_to_image/aliyun_tti_req.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
-import '../../../../models/text_to_image/com_tti_req.dart';
-import '../../../../models/text_to_image/com_tti_resp.dart';
+import '../../../../models/text_to_image/silicon_flow_tti_req.dart';
+import '../../../../models/text_to_image/silicon_flow_ig_resp.dart';
 import '../../../../services/cus_get_storage.dart';
 import '../../_componets/loading_overlay.dart';
 import '../../_componets/prompt_input.dart';
 import '../../_helper/constants.dart';
-import '../../_tti_screen_parts/style_grid_selector.dart';
-import 'base_tti_screen_state.dart';
+import '../../_ig_screen_parts/style_grid_selector.dart';
+import 'base_ig_screen_state.dart';
 
 class CommonTTIScreen extends StatefulWidget {
   const CommonTTIScreen({super.key});
@@ -27,7 +27,7 @@ class CommonTTIScreen extends StatefulWidget {
   State<CommonTTIScreen> createState() => _CommonTTIScreenState();
 }
 
-class _CommonTTIScreenState extends BaseTTIScreenState<CommonTTIScreen> {
+class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
   /// 文生图各个平台支持的尺寸
   @override
   List<String> getSizeList() {
@@ -93,7 +93,7 @@ class _CommonTTIScreenState extends BaseTTIScreenState<CommonTTIScreen> {
   // 文生图页面的标题
   @override
   String getAppBarTitle() {
-    return '文本444生图';
+    return '文本生图';
   }
 
   // 文生图历史记录页面的标签关键字
@@ -104,7 +104,7 @@ class _CommonTTIScreenState extends BaseTTIScreenState<CommonTTIScreen> {
 
   /// (阿里云平台)提交文生图任务
   @override
-  Future<AliyunTtiResp?> commitText2ImgJob() async {
+  Future<AliyunTtiResp?> commitImageGenerationJob() async {
     if (selectedPlatform == ApiPlatform.aliyun) {
       var input = AliyunTtiInput(
         prompt: prompt,
@@ -130,19 +130,19 @@ class _CommonTTIScreenState extends BaseTTIScreenState<CommonTTIScreen> {
 
   /// (讯飞、sf平台)获取文生图直接是返回的结果
   @override
-  Future<List<String>?>? getDirectTTIResult() async {
+  Future<List<String>?>? getDirectImageGenerationResult() async {
     // 请求得到的图片结果
     List<String> imageUrls = [];
 
     if (selectedPlatform == ApiPlatform.siliconCloud) {
-      var a = ComTtiReq.sdLighting(
+      var a = SiliconFlowTtiReq.sdLighting(
         prompt: prompt,
         negativePrompt: negativePrompt,
         imageSize: selectedSize,
         batchSize: selectedNum,
       );
 
-      ComTtiResp result = await getSFTtiResp(a, selectedModelSpec.model);
+      SiliconFlowIGResp result = await getSFTtiResp(a, selectedModelSpec.model);
 
       if (!mounted) return null;
       if (result.error != null) {

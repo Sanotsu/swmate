@@ -2,15 +2,15 @@ import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
 
-part 'com_tti_req.g.dart';
+part 'silicon_flow_tti_req.g.dart';
 
 ///
 /// 【以 siliconflow 的入参为基准的响应类】
 ///
-/// ComTtiResp => common text to image request
+/// siliconflowTtiResp => siliconflow text to image request
 ///
 @JsonSerializable(explicitToJson: true)
-class ComTtiReq {
+class SiliconFlowTtiReq {
   // Flux.1-schnell 只有这4个
   @JsonKey(name: 'prompt')
   String prompt;
@@ -36,7 +36,7 @@ class ComTtiReq {
   @JsonKey(name: 'guidance_scale')
   double? guidanceScale;
 
-  ComTtiReq({
+  SiliconFlowTtiReq({
     required this.prompt,
     required this.imageSize,
     required this.numInferenceSteps,
@@ -45,7 +45,7 @@ class ComTtiReq {
   });
 
   //  Flux.1-schnell 必须的栏位
-  ComTtiReq.flux1schnell({
+  SiliconFlowTtiReq.flux1schnell({
     required this.prompt,
     required this.imageSize,
     this.seed,
@@ -63,7 +63,7 @@ class ComTtiReq {
   // Stable Diffusion XL Lighting    [1,4](4)    [0,2](1)
   // 必须的栏位（区分不同默认值，因为范围不同）
   // 正统的sd，就带X
-  ComTtiReq.sdX({
+  SiliconFlowTtiReq.sdX({
     required this.prompt,
     this.negativePrompt,
     // Defaults to 512x512 (512x1024、768x512、768x1024、1024x576、576x1024)
@@ -78,7 +78,7 @@ class ComTtiReq {
   });
 
   // 轻量的sd，就带Turbo
-  ComTtiReq.sdTurbo({
+  SiliconFlowTtiReq.sdTurbo({
     required this.prompt,
     this.negativePrompt,
     // Defaults to 512x512 (512x1024、768x512、768x1024、1024x576、576x1024)
@@ -93,7 +93,7 @@ class ComTtiReq {
   });
 
   // 更轻量的sd，就带Lighting
-  ComTtiReq.sdLighting({
+  SiliconFlowTtiReq.sdLighting({
     required this.prompt,
     this.negativePrompt,
     // Defaults to 512x512 (512x1024、768x512、7768x1024、1024x576、576x1024)
@@ -108,15 +108,15 @@ class ComTtiReq {
   });
 
   // 从字符串转
-  factory ComTtiReq.fromRawJson(String str) =>
-      ComTtiReq.fromJson(json.decode(str));
+  factory SiliconFlowTtiReq.fromRawJson(String str) =>
+      SiliconFlowTtiReq.fromJson(json.decode(str));
   // 转为字符串
   String toRawJson() => json.encode(toJson());
 
-  factory ComTtiReq.fromJson(Map<String, dynamic> srcJson) =>
-      _$ComTtiReqFromJson(srcJson);
+  factory SiliconFlowTtiReq.fromJson(Map<String, dynamic> srcJson) =>
+      _$SiliconFlowTtiReqFromJson(srcJson);
 
-  Map<String, dynamic> toFullJson() => _$ComTtiReqToJson(this);
+  Map<String, dynamic> toFullJson() => _$SiliconFlowTtiReqToJson(this);
 
   // 自定义tojson方法，参数为null的就不加到json中
   Map<String, dynamic> toJson() {
