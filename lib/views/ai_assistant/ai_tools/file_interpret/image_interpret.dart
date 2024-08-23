@@ -24,19 +24,19 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
   // 选择的图片文件
   File? selectedImage;
 
-  // 当前选中的智能体
-  late CusAgentSpec selectAgent;
+  // 当前选中的系统角色
+  late CusSysRoleSpec selectSysRole;
 
   @override
   void initState() {
     super.initState();
-    selectAgent = ImgAgentItems.first;
+    selectSysRole = ImgSysRoleItems.first;
     renewSystemAndMessages();
   }
 
   /// 这一个是基类的 renewSystemAndMessages 需要
   @override
-  String getSystemPrompt() => selectAgent.systemPrompt;
+  String getSystemPrompt() => selectSysRole.systemPrompt;
 
   /// 这几个是基类的 getProcessedResult 需要
   @override
@@ -55,17 +55,18 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
   /// 构建页面需要的几个函数
   ///
   @override
-  List<CusAgentSpec> getItems() => ImgAgentItems;
+  List<CusSysRoleSpec> getSysRoleItems() => ImgSysRoleItems;
   @override
-  void setSelectedAgent(CusAgentSpec item) {
-    selectAgent = item;
+  void setSelectedASysRole(CusSysRoleSpec item) {
+    selectSysRole = item;
   }
 
   @override
   bool getIsSendClickable() => userInput.isNotEmpty && selectedImage != null;
 
   @override
-  CusAgent getSelectedAgentName() => selectAgent.name;
+  CusSysRole getSelectedSysRoleName() =>
+      selectSysRole.name ?? CusSysRole.img_translator;
 
   /// 构建图片选择和预览行
   @override
@@ -88,7 +89,7 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
               commonMarkdwonHintDialog(
                 context,
                 '温馨提示',
-                selectAgent.hintInfo,
+                selectSysRole.hintInfo ?? "",
                 msgFontSize: 15.sp,
               );
             },

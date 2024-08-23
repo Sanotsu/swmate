@@ -101,6 +101,7 @@ dart run build_runner build --delete-conflicting-outputs
 #### 2024-08-23
 
 - feat: “智能助手”添加了 sf 平台的“图生图”模块;refactor:重构页面“文生生图”和“图片生图”统一为“图片生成”。
+- feat: “智能助手”的“智能对话”添加了“预设角色”功能(可以选择一些自定义的 system prompt，但列表数据还未列示。)
 
 ### todo:
 

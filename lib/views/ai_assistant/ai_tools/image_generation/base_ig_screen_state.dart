@@ -65,8 +65,7 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
   List<String> rstImageUrls = [];
 
   final DBHelper dbHelper = DBHelper();
-  // 最近对话需要的记录历史对话的变量
-  List<LlmIGResult> text2ImageHistory = [];
+
   // 阿里云有选择的样式编号
   int selectedStyleIndex = 0;
 
@@ -130,6 +129,20 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
 
   // 文生图历史记录页面的标签关键字
   String getHistoryLabel();
+
+  // 点击了还原配置按钮
+  // 图生图时，还需要额外清除图片的操作
+  void resetConfig() {
+    unfocusHandle();
+    setState(() {
+      prompt = "";
+      negativePrompt = "";
+      promptController.text = "";
+      negativePromptController.text = "";
+      selectedSize = getInitialSize();
+      selectedNum = ImageNumList.first;
+    });
+  }
 
   // 是否可以点击生成按钮
   bool isCanGenerate() {
@@ -327,18 +340,8 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
           children: [
             /// 构建文生图配置和执行按钮区域(固定在上方，配置和生成结果可以滚动)
             ImageGenerationButtonArea(
-              title: "文生图配置",
-              onReset: () {
-                unfocusHandle();
-                setState(() {
-                  prompt = "";
-                  negativePrompt = "";
-                  promptController.text = "";
-                  negativePromptController.text = "";
-                  selectedSize = getInitialSize();
-                  selectedNum = ImageNumList.first;
-                });
-              },
+              title: "图片生成配置",
+              onReset: resetConfig,
               onGenerate: () async {
                 unfocusHandle();
                 await getImageGenerationData();

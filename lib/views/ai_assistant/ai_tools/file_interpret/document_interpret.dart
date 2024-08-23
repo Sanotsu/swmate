@@ -34,19 +34,19 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
   bool isLoadingDocument = false;
   // 解析后的文件内容
   String fileContent = '';
-  // 当前选中的智能体
-  late CusAgentSpec selectAgent;
+  // 当前选中的系统角色
+  late CusSysRoleSpec selectSysRole;
 
   @override
   void initState() {
     super.initState();
-    selectAgent = DocAgentItems.first;
+    selectSysRole = DocSysRoleItems.first;
     renewSystemAndMessages();
   }
 
   /// 这一个是基类的 renewSystemAndMessages 需要
   @override
-  String getSystemPrompt() => selectAgent.systemPrompt;
+  String getSystemPrompt() => selectSysRole.systemPrompt;
 
   /// 这几个是基类的 getProcessedResult 需要
   @override
@@ -65,15 +65,16 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
   /// 构建页面需要的几个函数
   ///
   @override
-  List<CusAgentSpec> getItems() => DocAgentItems;
+  List<CusSysRoleSpec> getSysRoleItems() => DocSysRoleItems;
 
   @override
-  void setSelectedAgent(CusAgentSpec item) {
-    selectAgent = item;
+  void setSelectedASysRole(CusSysRoleSpec item) {
+    selectSysRole = item;
   }
 
   @override
-  CusAgent getSelectedAgentName() => selectAgent.name;
+  CusSysRole getSelectedSysRoleName() =>
+      selectSysRole.name ?? CusSysRole.doc_translator;
 
   @override
   bool getIsSendClickable() => !(fileContent.isEmpty || isBotThinking);
@@ -94,7 +95,7 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
               commonMarkdwonHintDialog(
                 context,
                 '温馨提示',
-                selectAgent.hintInfo,
+                selectSysRole.hintInfo ?? "",
                 msgFontSize: 15.sp,
               );
             },

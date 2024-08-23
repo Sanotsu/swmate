@@ -7,7 +7,7 @@ import '../../../common/constants.dart';
 ///
 /// 翻译和总结做为预设功能，不需要多轮对话，只需要点击功能按钮即可
 ///
-class DefaultAgentButtonRow extends StatelessWidget {
+class DefaultSysRoleButtonRow extends StatelessWidget {
   // 是否显示语言切换部件
   final bool isShowLanguageSwitch;
   // 如果是翻译模式，则需要选择目标语言
@@ -25,7 +25,7 @@ class DefaultAgentButtonRow extends StatelessWidget {
   // 点击了功能确认按钮
   final Function() onConfirmPressed;
 
-  const DefaultAgentButtonRow({
+  const DefaultSysRoleButtonRow({
     super.key,
     this.isShowLanguageSwitch = true,
     this.targetLang,

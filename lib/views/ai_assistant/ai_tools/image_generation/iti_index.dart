@@ -129,6 +129,16 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
     return '图片生图';
   }
 
+  @override
+  resetConfig() {
+    super.resetConfig();
+    setState(() {
+      selectedImage = null;
+      selectedFaceImage = null;
+      selectedPoseImage = null;
+    });
+  }
+
   /// 是否可以点击生成按钮
   /// 总得来说图片和提示词不可为空，样式、尺寸等有默认值时不会为空的
   @override
@@ -323,7 +333,7 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
           children: [
             PromptInput(
               label: "正向提示词",
-              hintText: '描述画面的提示词信息。支持中英文，不超过500个字符。\n比如：“一只展翅翱翔的狸花猫”',
+              hintText: '描述画面的提示词信息。不超过500个字符\n(部分模型只支持英文)。\n比如：“一只展翅翱翔的狸花猫”',
               controller: promptController,
               onChanged: (text) {
                 setState(() {

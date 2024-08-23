@@ -29,8 +29,6 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
   required List<ChatMessage> messages,
   required ApiPlatform selectedPlatform,
   required String selectedModel,
-  // 百度的system是单独参数，不在消息列表中
-  // String? system,
   bool isStream = true,
   // 如果是图像理解，还需要图片文件、和图片解析出错的回调
   /// 目前文本对话、文档解读、图片解读都会调用这个函数
@@ -137,12 +135,23 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
         stream: isStream,
       );
     } else if (selectedPlatform == ApiPlatform.baidu) {
-      tempStream = await baiduCCRespWithCancel(
-        msgs,
-        model: selectedModel,
-        stream: isStream,
-        // system: system,
-      );
+      // 如果是百度的，system是不能放在对话中，需要单独配置，所以对消息列表还要处理
+      // 理论上应该只有一个的
+      var systemMsg = msgs.where((e) => e.role == "system").toList();
+      if (systemMsg.isNotEmpty) {
+        tempStream = await baiduCCRespWithCancel(
+          msgs.where((e) => e.role != "system").toList(),
+          model: selectedModel,
+          stream: isStream,
+          system: systemMsg.first.content,
+        );
+      } else {
+        tempStream = await baiduCCRespWithCancel(
+          msgs,
+          model: selectedModel,
+          stream: isStream,
+        );
+      }
     } else if (selectedPlatform == ApiPlatform.xfyun) {
       tempStream = await xfyunCCRespWithCancel(
         msgs,

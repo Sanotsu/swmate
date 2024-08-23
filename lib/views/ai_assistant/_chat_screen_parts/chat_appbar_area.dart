@@ -14,6 +14,9 @@ class ChatAppBarArea extends StatelessWidget implements PreferredSizeWidget {
   final bool showScaleButton;
   final Function? onScalePressed;
 
+  // 点击了系统角色，弹窗显示列表
+  final Function? onCusSysRolePressed;
+
   const ChatAppBarArea({
     super.key,
     this.title,
@@ -27,6 +30,7 @@ class ChatAppBarArea extends StatelessWidget implements PreferredSizeWidget {
     this.onZoomOutPressed,
     this.showScaleButton = false,
     this.onScalePressed,
+    this.onCusSysRolePressed,
   });
 
   @override
@@ -34,10 +38,14 @@ class ChatAppBarArea extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: title != null ? Text(title!) : null,
       actions: [
-        // TODO 预设的纯对话智能体(就是一堆预设的system prompt)
-        const TextButton(
-          onPressed: null,
-          child: Text("智能体"),
+        // 预设的纯对话角色(就是一堆预设的system prompt)
+        TextButton(
+          onPressed: () {
+            if (onCusSysRolePressed != null) {
+              onCusSysRolePressed!();
+            }
+          },
+          child: const Text("预设角色"),
         ),
         if (showZoomOutButton)
           IconButton(

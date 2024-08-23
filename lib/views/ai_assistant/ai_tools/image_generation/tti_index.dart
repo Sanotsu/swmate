@@ -221,7 +221,7 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
           children: [
             PromptInput(
               label: "正向提示词",
-              hintText: '描述画面的提示词信息。支持中英文，不超过500个字符。\n比如：“一只展翅翱翔的狸花猫”',
+              hintText: '描述画面的提示词信息。不超过500个字符\n(部分模型只支持英文)。\n比如：“一只展翅翱翔的狸花猫”',
               controller: promptController,
               onChanged: (text) {
                 setState(() {

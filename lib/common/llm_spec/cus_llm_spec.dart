@@ -70,6 +70,7 @@ enum CusLLM {
   // 通义万相，收费文生图
   aliyun_Wanx_v1_TTI,
   // 部署在阿里云的flux.1，限时免费
+  aliyun_Flux_Merged_TTI,
   aliyun_Flux_Schnell_TTI,
   aliyun_Flux_Dev_TTI,
 
@@ -531,12 +532,12 @@ ERNIE-Tiny-8K是模型的一个版本，上下文窗口为8K。""",
 final List<CusLLMSpec> TTI_SPEC_LIST = [
   CusLLMSpec.tti(
     ApiPlatform.aliyun,
-    CusLLM.aliyun_Wanx_v1_TTI,
-    "wanx-v1",
-    '通义万相【收费】',
+    CusLLM.aliyun_Flux_Merged_TTI,
+    "flux-merged",
+    'Flux.1-merged【限免】',
     false,
-    feature: """通义万相-文本生成图像大模型，
-支持中英文双语输入，重点风格包括但不限于水彩、油画、中国画、素描、扁平插画、二次元、3D卡通。""",
+    feature: """FLUX.1-merged模型结合了"DEV"在开发阶段探索的深度特性和"Schnell"所代表的高速执行优势。
+通过这一举措，FLUX.1-merged不仅提升了模型的性能界限，还拓宽了其应用范围""",
     modelType: LLModelType.tti,
     costPer: 0.2,
   ),
@@ -563,6 +564,17 @@ final List<CusLLMSpec> TTI_SPEC_LIST = [
     feature: """FLUX.1 [dev] 是一款面向非商业应用的开源权重、精炼模型。
 FLUX.1 [dev] 在保持了与FLUX专业版相近的图像质量和指令遵循能力的同时，具备更高的运行效率。
 相较于同尺寸的标准模型，它在资源利用上更为高效。""",
+    modelType: LLModelType.tti,
+    costPer: 0.2,
+  ),
+  CusLLMSpec.tti(
+    ApiPlatform.aliyun,
+    CusLLM.aliyun_Wanx_v1_TTI,
+    "wanx-v1",
+    '通义万相【收费】',
+    false,
+    feature: """通义万相-文本生成图像大模型，
+支持中英文双语输入，重点风格包括但不限于水彩、油画、中国画、素描、扁平插画、二次元、3D卡通。""",
     modelType: LLModelType.tti,
     costPer: 0.2,
   ),

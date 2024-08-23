@@ -23,6 +23,7 @@ import '../../_chat_screen_parts/chat_list_area.dart';
 import '../../_chat_screen_parts/chat_title_area.dart';
 import '../../_chat_screen_parts/chat_user_send_area_with_voice.dart';
 import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
+import '../../_helper/constants.dart';
 import '../../_helper/handle_cc_response.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
 
@@ -350,6 +351,58 @@ class _ChatBatState extends State<ChatBat> {
     return Scaffold(
       appBar: ChatAppBarArea(
         title: '智能对话',
+        onCusSysRolePressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (BuildContext context) {
+              return Container(
+                height: MediaQuery.of(context).size.height / 3 * 2,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16.sp),
+                    topRight: Radius.circular(16.sp),
+                  ),
+                ),
+                child: ListView.builder(
+                  itemCount: defaultCCSysRoleList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    var a = defaultCCSysRoleList[index];
+
+                    return ListTile(
+                      title: Text('Item ${a.label}'),
+                      onTap: () {
+                        Navigator.pop(context, a);
+                      },
+                    );
+                  },
+                ),
+              );
+            },
+          ).then((value) {
+            // 如果选择了新角色，则清除当前对话,添加system prompt
+            if (value != null && value is CusSysRoleSpec) {
+              setState(() {
+                chatSession = null;
+                messages.clear();
+                messages.add(
+                  ChatMessage(
+                    messageId: const Uuid().v4(),
+                    role: "system",
+                    content: value.systemPrompt,
+                    contentVoicePath: "",
+                    dateTime: DateTime.now(),
+                  ),
+                );
+              });
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Selected: ${value.label}')),
+              );
+            }
+          });
+        },
         onNewChatPressed: () {
           setState(() {
             chatSession = null;

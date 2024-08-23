@@ -16,7 +16,7 @@ import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
 import '../../_chat_screen_parts/chat_list_area.dart';
 import '../../_chat_screen_parts/chat_user_send_area_with_voice.dart';
-import '../../_chat_screen_parts/default_agent_button_row.dart';
+import '../../_chat_screen_parts/default_system_role_button_row.dart';
 import '../../_componets/cus_toggle_button_selector.dart';
 import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
 import '../../_helper/constants.dart';
@@ -200,12 +200,12 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
   ///
   /// 构建页面公共的UI部分
   ///
-  // 用于构建预设功能的智能体信息列表
-  List<CusAgentSpec> getItems();
-  // 预设功能列表切换时要更新当前选中的智能体信息
-  void setSelectedAgent(CusAgentSpec item);
-  // 当前选中的智能体名称
-  CusAgent getSelectedAgentName();
+  // 用于构建预设功能的系统角色信息列表
+  List<CusSysRoleSpec> getSysRoleItems();
+  // 预设功能列表切换时要更新当前选中的角色信息
+  void setSelectedASysRole(CusSysRoleSpec item);
+  // 当前选中的提示词角色名称
+  CusSysRole getSelectedSysRoleName();
 
   // 是否可以点击发送按钮
   bool getIsSendClickable();
@@ -225,12 +225,12 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              CusToggleButtonSelector<CusAgentSpec>(
-                items: getItems(),
+              CusToggleButtonSelector<CusSysRoleSpec>(
+                items: getSysRoleItems(),
                 onItemSelected: (item) {
                   print('Selected item: ${item.label}');
                   setState(() {
-                    setSelectedAgent(item);
+                    setSelectedASysRole(item);
                   });
                   renewSystemAndMessages();
                 },
@@ -247,7 +247,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
         SizedBox(height: 10.sp),
 
         /// 根据“文档解读”、“图片解读”不同，选中的预设功能不同，显示不同的按钮
-        buildDefaultAgentButtonRow(context),
+        buildDefaultSysRoleButtonRow(context),
         Divider(height: 10.sp),
 
         /// 对话列表区域
@@ -263,8 +263,8 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
         ),
 
         /// 如果指定的是“文档分析”或图片分析，还可以(文字或语音输入)多轮提问
-        if (getSelectedAgentName() == CusAgent.doc_analyzer ||
-            getSelectedAgentName() == CusAgent.img_analyzer)
+        if (getSelectedSysRoleName() == CusSysRole.doc_analyzer ||
+            getSelectedSysRoleName() == CusSysRole.img_analyzer)
           ChatUserVoiceSendArea(
             controller: userInputController,
             hintText: '询问关于选中文件的任何问题',
@@ -313,9 +313,9 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
     );
   }
 
-  Widget buildDefaultAgentButtonRow(BuildContext context) {
-    if (getSelectedAgentName() == CusAgent.img_translator) {
-      return DefaultAgentButtonRow(
+  Widget buildDefaultSysRoleButtonRow(BuildContext context) {
+    if (getSelectedSysRoleName() == CusSysRole.img_translator) {
+      return DefaultSysRoleButtonRow(
         isShowLanguageSwitch: true,
         targetLang: targetLang,
         langLabel: LangLabelMap,
@@ -334,8 +334,8 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
         },
         labelKeyword: isBotThinking ? "AI翻译中…" : "AI翻译",
       );
-    } else if (getSelectedAgentName() == CusAgent.img_summarizer) {
-      return DefaultAgentButtonRow(
+    } else if (getSelectedSysRoleName() == CusSysRole.img_summarizer) {
+      return DefaultSysRoleButtonRow(
         isShowLanguageSwitch: true,
         targetLang: targetLang,
         langLabel: LangLabelMap,
@@ -354,8 +354,8 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
         },
         labelKeyword: isBotThinking ? "AI总结中…" : "AI总结",
       );
-    } else if (getSelectedAgentName() == CusAgent.doc_translator) {
-      return DefaultAgentButtonRow(
+    } else if (getSelectedSysRoleName() == CusSysRole.doc_translator) {
+      return DefaultSysRoleButtonRow(
         isShowLanguageSwitch: true,
         targetLang: targetLang,
         langLabel: LangLabelMap,
@@ -374,8 +374,8 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
         },
         labelKeyword: isBotThinking ? "AI翻译中…" : "AI翻译",
       );
-    } else if (getSelectedAgentName() == CusAgent.doc_summarizer) {
-      return DefaultAgentButtonRow(
+    } else if (getSelectedSysRoleName() == CusSysRole.doc_summarizer) {
+      return DefaultSysRoleButtonRow(
         isShowLanguageSwitch: true,
         targetLang: targetLang,
         langLabel: LangLabelMap,
