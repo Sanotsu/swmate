@@ -244,6 +244,11 @@ Future<File> saveTtiBase64ImageToLocal(
 saveTtiImageToLocal(String netImageUrl, {String? prefix}) async {
   print("图片地址--$netImageUrl");
 
+// 首先获取设备外部存储管理权限
+  if (!(await requestStoragePermission())) {
+    return EasyLoading.showError("未授权访问设备外部存储，无法保存图片");
+  }
+
   try {
     // 2024-08-17 直接保存文件到指定位置
     if (!await LLM_TTI_DIR.exists()) {

@@ -265,99 +265,94 @@ class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
   List<Widget> buildConfigArea() {
     return [
       ...super.buildConfigArea(),
-      SizedBox(
+      Container(
         height: 32.sp,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 5.sp),
-          child: Row(
-            children: [
-              // 文字变形不支持样式
-              if (selectedModelSpec.cusLlm !=
-                  CusLLM.aliyun_Wordart_Semantic_TTI_WORD)
-                Expanded(
-                  child: SizeAndNumSelector(
-                    label: "样式",
-                    selectedValue: selectedStyle,
-                    items: getStyleList(),
-                    onChanged: (val) {
-                      setState(() {
-                        selectedStyle = val;
-                        isDiyStyle();
-                      });
-                    },
-                    itemToString: (item) => item.toString(),
-                  ),
+        margin: EdgeInsets.fromLTRB(5.sp, 5.sp, 5.sp, 0),
+        child: Row(
+          children: [
+            // 文字变形不支持样式
+            if (selectedModelSpec.cusLlm !=
+                CusLLM.aliyun_Wordart_Semantic_TTI_WORD)
+              Expanded(
+                child: SizeAndNumSelector(
+                  label: "样式",
+                  selectedValue: selectedStyle,
+                  items: getStyleList(),
+                  onChanged: (val) {
+                    setState(() {
+                      selectedStyle = val;
+                      isDiyStyle();
+                    });
+                  },
+                  itemToString: (item) => item.toString(),
                 ),
-              if (isDiyStyle() &&
-                  selectedModelSpec.cusLlm !=
-                      CusLLM.aliyun_Wordart_Semantic_TTI_WORD)
-                SizedBox(width: 5.sp),
-              if (isDiyStyle())
-                Expanded(
-                  child: SizeAndNumSelector(
-                    label: "字体",
-                    // 只有时文字纹理时，自定义时，字体太大显示不佳需要缩小，其他其他不需要
-                    labelSize: (selectedModelSpec.cusLlm ==
-                            CusLLM.aliyun_Wordart_Texture_TTI_WORD)
-                        ? 12.sp
-                        : 15.sp,
-                    selectedValue: selectedFontName,
-                    items: getFontNameList(),
-                    onChanged: (val) {
-                      setState(() {
-                        selectedFontName = val;
-                      });
-                    },
-                    itemToString: (item) => item.toString(),
-                  ),
+              ),
+            if (isDiyStyle() &&
+                selectedModelSpec.cusLlm !=
+                    CusLLM.aliyun_Wordart_Semantic_TTI_WORD)
+              SizedBox(width: 5.sp),
+            if (isDiyStyle())
+              Expanded(
+                child: SizeAndNumSelector(
+                  label: "字体",
+                  // 只有时文字纹理时，自定义时，字体太大显示不佳需要缩小，其他其他不需要
+                  labelSize: (selectedModelSpec.cusLlm ==
+                          CusLLM.aliyun_Wordart_Texture_TTI_WORD)
+                      ? 12.sp
+                      : 15.sp,
+                  selectedValue: selectedFontName,
+                  items: getFontNameList(),
+                  onChanged: (val) {
+                    setState(() {
+                      selectedFontName = val;
+                    });
+                  },
+                  itemToString: (item) => item.toString(),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
 
       /// 正向、反向提示词
-      Padding(
-        padding: EdgeInsets.all(5.sp),
-        child: Column(
-          children: [
+      Column(
+        children: [
+          PromptInput(
+            label: "创意文字",
+            hintText: selectedModelSpec.cusLlm ==
+                    CusLLM.aliyun_Wordart_Texture_TTI_WORD
+                ? '需要创作的艺术字，支持1-6个字符'
+                : selectedModelSpec.cusLlm ==
+                        CusLLM.aliyun_Wordart_Surnames_TTI_WORD
+                    ? '需要创作的姓氏，支持1-2个字符。例如‘杨’、‘诸葛’'
+                    : "需要创作的艺术字",
+            controller: _textContentController,
+            isRequired: true,
+            onChanged: (text) {
+              setState(() {
+                textContent = text.trim();
+              });
+            },
+          ),
+          if (isDiyStyle())
             PromptInput(
-              label: "创意文字",
+              label: "正向提示词",
               hintText: selectedModelSpec.cusLlm ==
-                      CusLLM.aliyun_Wordart_Texture_TTI_WORD
-                  ? '需要创作的艺术字，支持1-6个字符'
+                      CusLLM.aliyun_Wordart_Surnames_TTI_WORD
+                  ? '期望图片创意样式的描述提示词，长度小于1000。\n比如：“古风，山水画”'
                   : selectedModelSpec.cusLlm ==
-                          CusLLM.aliyun_Wordart_Surnames_TTI_WORD
-                      ? '需要创作的姓氏，支持1-2个字符。例如‘杨’、‘诸葛’'
-                      : "需要创作的艺术字",
-              controller: _textContentController,
+                          CusLLM.aliyun_Wordart_Texture_TTI_WORD
+                      ? "期望文字纹理创意样式的描述提示词，长度小于200。\n比如“水果，蔬菜”"
+                      : "期望文字变形创意样式的描述提示词，长度小于200。\n比如“春暖花开、山峦叠嶂、漓江蜿蜒、岩石奇秀”",
+              controller: promptController,
               isRequired: true,
               onChanged: (text) {
                 setState(() {
-                  textContent = text.trim();
+                  prompt = text.trim();
                 });
               },
             ),
-            if (isDiyStyle())
-              PromptInput(
-                label: "正向提示词",
-                hintText: selectedModelSpec.cusLlm ==
-                        CusLLM.aliyun_Wordart_Surnames_TTI_WORD
-                    ? '期望图片创意样式的描述提示词，长度小于1000。\n比如：“古风，山水画”'
-                    : selectedModelSpec.cusLlm ==
-                            CusLLM.aliyun_Wordart_Texture_TTI_WORD
-                        ? "期望文字纹理创意样式的描述提示词，长度小于200。\n比如“水果，蔬菜”"
-                        : "期望文字变形创意样式的描述提示词，长度小于200。\n比如“春暖花开、山峦叠嶂、漓江蜿蜒、岩石奇秀”",
-                controller: promptController,
-                isRequired: true,
-                onChanged: (text) {
-                  setState(() {
-                    prompt = text.trim();
-                  });
-                },
-              ),
-          ],
-        ),
+        ],
       )
     ];
   }

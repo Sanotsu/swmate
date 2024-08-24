@@ -215,35 +215,31 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
         ),
 
       /// 正向、反向提示词
-      Padding(
-        padding: EdgeInsets.all(5.sp),
-        child: Column(
-          children: [
-            PromptInput(
-              label: "正向提示词",
-              hintText: '描述画面的提示词信息。不超过500个字符\n(部分模型只支持英文)。\n比如：“一只展翅翱翔的狸花猫”',
-              controller: promptController,
-              onChanged: (text) {
-                setState(() {
-                  prompt = text.trim();
-                });
-              },
-              isRequired: true,
-            ),
-            PromptInput(
-              label: "反向提示词",
-              hintText:
-                  '画面中不想出现的内容描述词信息。通过指定用户不想看到的内容来优化模型输出，使模型产生更有针对性和理想的结果。',
-              controller: negativePromptController,
-              onChanged: (text) {
-                setState(() {
-                  negativePrompt = text.trim();
-                });
-              },
-            ),
-          ],
-        ),
-      )
+      Column(
+        children: [
+          PromptInput(
+            label: "正向提示词",
+            hintText: '描述画面的提示词信息。不超过500个字符\n(部分模型只支持英文)。\n比如：“一只展翅翱翔的狸花猫”',
+            controller: promptController,
+            onChanged: (text) {
+              setState(() {
+                prompt = text.trim();
+              });
+            },
+            isRequired: true,
+          ),
+          PromptInput(
+            label: "反向提示词",
+            hintText: '画面中不想出现的内容描述词信息。通过指定用户不想看到的内容来优化模型输出，使模型产生更有针对性和理想的结果。',
+            controller: negativePromptController,
+            onChanged: (text) {
+              setState(() {
+                negativePrompt = text.trim();
+              });
+            },
+          ),
+        ],
+      ),
     ];
   }
 }

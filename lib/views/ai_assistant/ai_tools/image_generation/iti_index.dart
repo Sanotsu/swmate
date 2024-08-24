@@ -8,7 +8,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../apis/image_to_image/silicon_flow_iti_apis.dart';
-import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/utils/tools.dart';
 import '../../../../models/image_to_image/silicon_flow_iti_req.dart';
@@ -292,10 +291,13 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
       // ？？？2024-08-23 实测腾讯的photoMaker会报500错误，无法解决
       // 正常的图生图，只需要一个参考图
       if (selectedModelSpec.cusLlm != CusLLM.siliconCloud_InstantID_ITI)
-        ImagePickAndViewArea(
-          imageSelectedHandle: _pickImage,
-          imageClearHandle: () => setState(() => selectedImage = null),
-          selectedImage: selectedImage,
+        SizedBox(
+          height: 100.sp,
+          child: ImagePickAndViewArea(
+            imageSelectedHandle: _pickImage,
+            imageClearHandle: () => setState(() => selectedImage = null),
+            selectedImage: selectedImage,
+          ),
         ),
 
       // InstantID 需要传两个图片，和其他的不一样
@@ -327,35 +329,31 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
         ),
 
       /// 正向、反向提示词
-      Padding(
-        padding: EdgeInsets.all(5.sp),
-        child: Column(
-          children: [
-            PromptInput(
-              label: "正向提示词",
-              hintText: '描述画面的提示词信息。不超过500个字符\n(部分模型只支持英文)。\n比如：“一只展翅翱翔的狸花猫”',
-              controller: promptController,
-              onChanged: (text) {
-                setState(() {
-                  prompt = text.trim();
-                });
-              },
-              isRequired: true,
-            ),
-            PromptInput(
-              label: "反向提示词",
-              hintText:
-                  '画面中不想出现的内容描述词信息。通过指定用户不想看到的内容来优化模型输出，使模型产生更有针对性和理想的结果。',
-              controller: negativePromptController,
-              onChanged: (text) {
-                setState(() {
-                  negativePrompt = text.trim();
-                });
-              },
-            ),
-          ],
-        ),
-      )
+      Column(
+        children: [
+          PromptInput(
+            label: "正向提示词",
+            hintText: '描述画面的提示词信息。不超过500个字符\n(部分模型只支持英文)。\n比如：“一只展翅翱翔的狸花猫”',
+            controller: promptController,
+            onChanged: (text) {
+              setState(() {
+                prompt = text.trim();
+              });
+            },
+            isRequired: true,
+          ),
+          PromptInput(
+            label: "反向提示词",
+            hintText: '画面中不想出现的内容描述词信息。通过指定用户不想看到的内容来优化模型输出，使模型产生更有针对性和理想的结果。',
+            controller: negativePromptController,
+            onChanged: (text) {
+              setState(() {
+                negativePrompt = text.trim();
+              });
+            },
+          ),
+        ],
+      ),
     ];
   }
 
@@ -394,80 +392,4 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
       setState(() => selectedPoseImage = File(pickedFile.path));
     }
   }
-}
-
-Widget buildImagePickAndViewArea(
-  BuildContext context,
-  Function(ImageSource) imageSelectedHandle,
-  Function() imageClearHandle,
-  File? selectedImage, {
-  String imagePlaceholder = "请选择参考图",
-}) {
-  return Container(
-    height: 100.sp,
-    margin: EdgeInsets.fromLTRB(5.sp, 5.sp, 5.sp, 0),
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.grey, width: 1.sp),
-      borderRadius: BorderRadius.circular(5.sp),
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: Text(
-                    "选择图片来源",
-                    style: TextStyle(fontSize: 18.sp),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-
-                        imageSelectedHandle(ImageSource.camera);
-                      },
-                      child: Text(
-                        "拍照",
-                        style: TextStyle(fontSize: 16.sp),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        imageSelectedHandle(ImageSource.gallery);
-                      },
-                      child: Text(
-                        "相册",
-                        style: TextStyle(fontSize: 16.sp),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-          icon: const Icon(Icons.file_upload),
-        ),
-        Expanded(
-          flex: 3,
-          child: buildImageView(
-            selectedImage,
-            context,
-            imagePlaceholder: imagePlaceholder,
-          ),
-        ),
-        if (selectedImage != null)
-          IconButton(
-            onPressed: () {
-              imageClearHandle();
-            },
-            icon: const Icon(Icons.clear),
-          ),
-      ],
-    ),
-  );
 }

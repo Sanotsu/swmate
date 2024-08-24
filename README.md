@@ -104,6 +104,10 @@ dart run build_runner build --delete-conflicting-outputs
 - feat: “智能助手”的“智能对话”添加了“预设角色”功能(可以选择一些自定义的 system prompt，但列表数据还未列示。)
 - refactor:重构了功能模块入口卡片; feat: 完善了“智能助手”的“智能对话”的“预设角色”功能，添加了一部分 GPT 格式的系统提示词示例。
 
+#### 2024-08-24
+
+- fix: 调整图片生成页面的一些布局细节。
+
 ### todo:
 
 - （done）得到流式响应的数据的处理都非常相似，可以抽出来公共函数

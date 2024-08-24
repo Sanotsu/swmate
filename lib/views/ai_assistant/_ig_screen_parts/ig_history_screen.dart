@@ -120,7 +120,8 @@ class _ImageGenerationHistoryScreenState
                               children: buildImageList(
                                 context,
                                 e.imageUrls!,
-                                prefix: e.llmSpec?.platform.name,
+                                prefix:
+                                    "${e.llmSpec?.platform.name}_${e.llmSpec?.cusLlm.name}",
                               ),
                             )
                           : const Text("暂无可预览图片"),

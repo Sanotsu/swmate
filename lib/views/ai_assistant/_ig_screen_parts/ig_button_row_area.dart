@@ -50,9 +50,9 @@ class ImageGenerationButtonArea extends StatelessWidget {
                   backgroundColor: Colors.blue,
                 ),
                 onPressed: canGenerate ? onGenerate : null,
-                child: const Text(
-                  "生成图片",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                child: Text(
+                  canGenerate ? "生成图片" : "生成中",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ],

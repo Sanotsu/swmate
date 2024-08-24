@@ -146,7 +146,7 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
 
   // 是否可以点击生成按钮
   bool isCanGenerate() {
-    return prompt.isNotEmpty;
+    return prompt.isNotEmpty && isGenImage == false;
   }
 
   ///
@@ -425,7 +425,7 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
                   rstImageUrls,
                   crossAxisCount: 4,
                   // 模型名有空格或斜线，等后续更新spec，用name来
-                  prefix: selectedPlatform.name,
+                  prefix: "${selectedPlatform.name}_${selectedModelSpec.name}",
                 ),
               ),
             ],
