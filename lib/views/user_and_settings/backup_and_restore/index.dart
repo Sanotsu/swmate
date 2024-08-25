@@ -383,8 +383,8 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
         await _dbHelper.insertChatList(
           jsonMapList.map((e) => ChatSession.fromMap(e)).toList(),
         );
-      } else if (filename == "${DB_TABLE_PREFIX}text2image_history.json") {
-        await _dbHelper.insertTextToImageResultList(
+      } else if (filename == "${DB_TABLE_PREFIX}image_eneration_history.json") {
+        await _dbHelper.insertImageGenerationResultList(
           jsonMapList.map((e) => LlmIGResult.fromMap(e)).toList(),
         );
       } else if (filename == "${DB_TABLE_PREFIX}dish.json") {

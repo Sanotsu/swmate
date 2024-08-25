@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../apis/chat_completion/common_cc_apis.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../common/utils/db_tools/db_helper.dart';
 import '../../../models/chat_competion/com_cc_resp.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
 
@@ -17,6 +18,8 @@ class TestPage extends StatefulWidget {
 }
 
 class _TestPageState extends State<TestPage> {
+  final DBHelper _dbHelper = DBHelper();
+
   // 当前正在响应的api返回流(放在全局为了可以手动取消)
   StreamWithCancel<ComCCResp>? respStream;
 
@@ -27,9 +30,10 @@ class _TestPageState extends State<TestPage> {
   var aaa = "";
 
   _getCCResponse() async {
+    var specs = await _dbHelper.queryCusLLMSpecList();
+
     var list = [CCMessage(role: "user", content: "巴里奥运金牌榜")];
-    var model =
-        CusLLM_SPEC_LIST.firstWhere((e) => e.cusLlm == CusLLM.YiLargeRag).model;
+    var model = specs.firstWhere((e) => e.cusLlm == CusLLM.YiLargeRag).model;
     // var temp = await lingyiSseCCResp(list, model: model, stream: true);
     var temp =
         await lingyiwanwuCCRespWithCancel(list, model: model, stream: true);

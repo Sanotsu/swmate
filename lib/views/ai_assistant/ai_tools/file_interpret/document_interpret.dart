@@ -51,9 +51,15 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
   /// 这几个是基类的 getProcessedResult 需要
   @override
   ApiPlatform getSelectedPlatform() => ApiPlatform.siliconCloud;
+
   @override
-  String getSelectedModel() => CusLLM_SPEC_LIST.firstWhere(
-      (e) => e.cusLlm == CusLLM.siliconCloud_Qwen2_7B_Instruct).model;
+  Future<String> getSelectedModel() async {
+    var specs = await dbHelper.queryCusLLMSpecList();
+    return specs
+        .firstWhere((e) => e.cusLlm == CusLLM.siliconCloud_Qwen2_7B_Instruct)
+        .model;
+  }
+
   @override
   CC_SWC_TYPE getUseType() => CC_SWC_TYPE.doc;
   @override

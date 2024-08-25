@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/utils/tools.dart';
 import '../../../../models/image_to_image/silicon_flow_iti_req.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
+import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../../../models/text_to_image/silicon_flow_ig_resp.dart';
 import '../../../../services/cus_get_storage.dart';
 import '../../_componets/loading_overlay.dart';
@@ -42,11 +44,37 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
   // 被选中的风格
   String selectedStyle = "";
 
+  // 基类初始话成功了，还要子类也初始化成功，才能渲染页面
+  bool isItiInited = false;
+  Timer? _timer;
+  int _elapsedSeconds = 0;
+
   @override
   void initState() {
     super.initState();
-    selectedSize = getInitialSize();
-    selectedStyle = getInitialStyle();
+    itiInit();
+  }
+
+  // 等待父类初始化，父类初始化完了，才初始化子类，直到超时取消
+  itiInit() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _elapsedSeconds++;
+      });
+
+      if (isInited) {
+        selectedSize = getInitialSize();
+        selectedStyle = getInitialStyle();
+        setState(() {
+          isItiInited = true;
+        });
+        _timer?.cancel();
+      }
+
+      if (_elapsedSeconds >= 60) {
+        _timer?.cancel();
+      }
+    });
   }
 
   /// 图生图各个平台支持的尺寸
@@ -249,7 +277,7 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
       if (result.images != null) {
         for (var e in result.images!) {
           imageUrls.add(e.url);
-          await MyGetStorage().setText2ImageUrl(e.url);
+          await MyGetStorage().setImageGenerationUrl(e.url);
         }
       }
     }
@@ -264,8 +292,10 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
       // 平台模型选中和尺寸张数选择结构大体一样的，放在基类
       ...super.buildConfigArea(),
 
-      if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_PhotoMaker_ITI ||
-          selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI)
+      if (isInited &&
+          isItiInited &&
+          (selectedModelSpec.cusLlm == CusLLM.siliconCloud_PhotoMaker_ITI ||
+              selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI))
         Container(
           margin: EdgeInsets.fromLTRB(5.sp, 5.sp, 5.sp, 0),
           height: 32.sp,
@@ -290,7 +320,9 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
 
       // ？？？2024-08-23 实测腾讯的photoMaker会报500错误，无法解决
       // 正常的图生图，只需要一个参考图
-      if (selectedModelSpec.cusLlm != CusLLM.siliconCloud_InstantID_ITI)
+      if (isInited &&
+          isItiInited &&
+          selectedModelSpec.cusLlm != CusLLM.siliconCloud_InstantID_ITI)
         SizedBox(
           height: 100.sp,
           child: ImagePickAndViewArea(
@@ -301,7 +333,9 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
         ),
 
       // InstantID 需要传两个图片，和其他的不一样
-      if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI)
+      if (isInited &&
+          isItiInited &&
+          selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI)
         SizedBox(
           height: 100.sp,
           child: Row(

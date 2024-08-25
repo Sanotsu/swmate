@@ -1,10 +1,19 @@
 // ignore_for_file: avoid_print
 
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../apis/_self_model_specs.dart';
 import '../../common/components/tool_widget.dart';
+import '../../common/constants.dart';
+import '../../common/llm_spec/cus_llm_spec.dart';
+import '../../common/utils/db_tools/db_helper.dart';
+import '../../models/text_to_image/com_ig_state.dart';
 import '../../services/cus_get_storage.dart';
 import '_componets/custom_entrance_card.dart';
 import 'ai_tools/chat_bot/index.dart';
@@ -14,7 +23,6 @@ import 'ai_tools/file_interpret/image_interpret.dart';
 import 'ai_tools/image_generation/iti_index.dart';
 import 'ai_tools/image_generation/tti_index.dart';
 import 'ai_tools/image_generation/word_art_index.dart';
-import 'ai_tools/test_page.dart';
 
 ///
 /// 规划一系列有AI加成的使用工具，这里是主入口
@@ -28,6 +36,8 @@ class AIToolIndex extends StatefulWidget {
 }
 
 class _AIToolIndexState extends State<AIToolIndex> {
+  final DBHelper dbHelper = DBHelper();
+
   // 部分花费大的工具，默认先不开启了
   bool isEnableMyCose = false;
 
@@ -183,17 +193,57 @@ class _AIToolIndexState extends State<AIToolIndex> {
                   targetPage: CommonITIScreen(),
                 ),
 
+                // buildToolEntrance(
+                //   "[测试页]",
+                //   icon: const Icon(Icons.chat_outlined),
+                //   color: Colors.blue[100],
+                //   onTap: () {
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (context) => const TestPage(),
+                //       ),
+                //     );
+                //   },
+                // ),
+
                 buildToolEntrance(
-                  "[测试页]",
+                  "[测试功能]",
                   icon: const Icon(Icons.chat_outlined),
                   color: Colors.blue[100],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TestPage(),
-                      ),
-                    );
+                  onTap: () async {
+                    // 定义文件路径
+                    const String filePath = 'iti_spec_list.json';
+
+                    if (!await LLM_TTI_DIR.exists()) {
+                      await LLM_TTI_DIR.create(recursive: true);
+                    }
+                    final file = File('${LLM_TTI_DIR.path}/$filePath');
+
+                    // 将列表转换为 JSON 并写入文件
+                    writeListToJsonFile(CusLLM_SPEC_LIST, file.path);
+
+                    print(file.path);
+
+                    var list = await readListFromJsonFile(file.path);
+
+                    list = list.map((e) {
+                      e.cusLlmSpecId = const Uuid().v4();
+                      e.gmtCreate = DateTime.now();
+                      return e;
+                    }).toList();
+
+                    print(list);
+
+                    dbHelper.showTableNameList();
+
+                    dbHelper.clearCusLLMSpecs();
+
+                    await dbHelper.insertCusLLMSpecList(list);
+
+                    var ll = await dbHelper.queryCusLLMSpecList(
+                        platform: ApiPlatform.aliyun);
+                    print(ll);
                   },
                 ),
 
@@ -208,4 +258,16 @@ class _AIToolIndexState extends State<AIToolIndex> {
       ),
     );
   }
+}
+
+void writeListToJsonFile(List<CusLLMSpec> list, String filePath) {
+  final jsonList = list.map((spec) => spec.toMap()).toList();
+  final jsonString = jsonEncode(jsonList);
+  File(filePath).writeAsStringSync(jsonString);
+}
+
+Future<List<CusLLMSpec>> readListFromJsonFile(String filePath) async {
+  final jsonString = await File(filePath).readAsString();
+  final jsonList = jsonDecode(jsonString) as List;
+  return jsonList.map((map) => CusLLMSpec.fromMap(map)).toList();
 }

@@ -1,5 +1,7 @@
 // ignore_for_file: avoid_print
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -7,6 +9,7 @@ import '../../../../apis/text_to_image/aliyun_tti_apis.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../models/text_to_image/aliyun_tti_req.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
+import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../_componets/prompt_input.dart';
 import '../../_helper/constants.dart';
 import '../../_ig_screen_parts/size_and_num_selector.dart';
@@ -32,12 +35,38 @@ class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
   // 用于创作的文字(暂时不使用参考图了)
   String textContent = "";
 
+  // 基类初始话成功了，还要子类也初始化成功，才能渲染页面
+  bool isWordArtInited = false;
+  Timer? _timer;
+  int _elapsedSeconds = 0;
+
   @override
   void initState() {
     super.initState();
-    selectedSize = WordArt_outputImageRatioList.first;
-    selectedStyle = getInitialStyle();
-    selectedFontName = getInitialFontName();
+    wordArtInit();
+  }
+
+  // 等待父类初始化，父类初始化完了，才初始化子类，直到超时取消
+  wordArtInit() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _elapsedSeconds++;
+      });
+
+      if (isInited) {
+        selectedSize = WordArt_outputImageRatioList.first;
+        selectedStyle = getInitialStyle();
+        selectedFontName = getInitialFontName();
+        setState(() {
+          isWordArtInited = true;
+        });
+        _timer?.cancel();
+      }
+
+      if (_elapsedSeconds >= 60) {
+        _timer?.cancel();
+      }
+    });
   }
 
   /// 锦书创意文字支持的尺寸
@@ -265,95 +294,97 @@ class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
   List<Widget> buildConfigArea() {
     return [
       ...super.buildConfigArea(),
-      Container(
-        height: 32.sp,
-        margin: EdgeInsets.fromLTRB(5.sp, 5.sp, 5.sp, 0),
-        child: Row(
-          children: [
-            // 文字变形不支持样式
-            if (selectedModelSpec.cusLlm !=
-                CusLLM.aliyun_Wordart_Semantic_TTI_WORD)
-              Expanded(
-                child: SizeAndNumSelector(
-                  label: "样式",
-                  selectedValue: selectedStyle,
-                  items: getStyleList(),
-                  onChanged: (val) {
-                    setState(() {
-                      selectedStyle = val;
-                      isDiyStyle();
-                    });
-                  },
-                  itemToString: (item) => item.toString(),
+      if (isInited && isWordArtInited)
+        Container(
+          height: 32.sp,
+          margin: EdgeInsets.fromLTRB(5.sp, 5.sp, 5.sp, 0),
+          child: Row(
+            children: [
+              // 文字变形不支持样式
+              if (selectedModelSpec.cusLlm !=
+                  CusLLM.aliyun_Wordart_Semantic_TTI_WORD)
+                Expanded(
+                  child: SizeAndNumSelector(
+                    label: "样式",
+                    selectedValue: selectedStyle,
+                    items: getStyleList(),
+                    onChanged: (val) {
+                      setState(() {
+                        selectedStyle = val;
+                        isDiyStyle();
+                      });
+                    },
+                    itemToString: (item) => item.toString(),
+                  ),
                 ),
-              ),
-            if (isDiyStyle() &&
-                selectedModelSpec.cusLlm !=
-                    CusLLM.aliyun_Wordart_Semantic_TTI_WORD)
-              SizedBox(width: 5.sp),
-            if (isDiyStyle())
-              Expanded(
-                child: SizeAndNumSelector(
-                  label: "字体",
-                  // 只有时文字纹理时，自定义时，字体太大显示不佳需要缩小，其他其他不需要
-                  labelSize: (selectedModelSpec.cusLlm ==
-                          CusLLM.aliyun_Wordart_Texture_TTI_WORD)
-                      ? 12.sp
-                      : 15.sp,
-                  selectedValue: selectedFontName,
-                  items: getFontNameList(),
-                  onChanged: (val) {
-                    setState(() {
-                      selectedFontName = val;
-                    });
-                  },
-                  itemToString: (item) => item.toString(),
+              if (isDiyStyle() &&
+                  selectedModelSpec.cusLlm !=
+                      CusLLM.aliyun_Wordart_Semantic_TTI_WORD)
+                SizedBox(width: 5.sp),
+              if (isDiyStyle())
+                Expanded(
+                  child: SizeAndNumSelector(
+                    label: "字体",
+                    // 只有时文字纹理时，自定义时，字体太大显示不佳需要缩小，其他其他不需要
+                    labelSize: (selectedModelSpec.cusLlm ==
+                            CusLLM.aliyun_Wordart_Texture_TTI_WORD)
+                        ? 12.sp
+                        : 15.sp,
+                    selectedValue: selectedFontName,
+                    items: getFontNameList(),
+                    onChanged: (val) {
+                      setState(() {
+                        selectedFontName = val;
+                      });
+                    },
+                    itemToString: (item) => item.toString(),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
-      ),
 
       /// 正向、反向提示词
-      Column(
-        children: [
-          PromptInput(
-            label: "创意文字",
-            hintText: selectedModelSpec.cusLlm ==
-                    CusLLM.aliyun_Wordart_Texture_TTI_WORD
-                ? '需要创作的艺术字，支持1-6个字符'
-                : selectedModelSpec.cusLlm ==
-                        CusLLM.aliyun_Wordart_Surnames_TTI_WORD
-                    ? '需要创作的姓氏，支持1-2个字符。例如‘杨’、‘诸葛’'
-                    : "需要创作的艺术字",
-            controller: _textContentController,
-            isRequired: true,
-            onChanged: (text) {
-              setState(() {
-                textContent = text.trim();
-              });
-            },
-          ),
-          if (isDiyStyle())
+      if (isInited && isWordArtInited)
+        Column(
+          children: [
             PromptInput(
-              label: "正向提示词",
+              label: "创意文字",
               hintText: selectedModelSpec.cusLlm ==
-                      CusLLM.aliyun_Wordart_Surnames_TTI_WORD
-                  ? '期望图片创意样式的描述提示词，长度小于1000。\n比如：“古风，山水画”'
+                      CusLLM.aliyun_Wordart_Texture_TTI_WORD
+                  ? '需要创作的艺术字，支持1-6个字符'
                   : selectedModelSpec.cusLlm ==
-                          CusLLM.aliyun_Wordart_Texture_TTI_WORD
-                      ? "期望文字纹理创意样式的描述提示词，长度小于200。\n比如“水果，蔬菜”"
-                      : "期望文字变形创意样式的描述提示词，长度小于200。\n比如“春暖花开、山峦叠嶂、漓江蜿蜒、岩石奇秀”",
-              controller: promptController,
+                          CusLLM.aliyun_Wordart_Surnames_TTI_WORD
+                      ? '需要创作的姓氏，支持1-2个字符。例如‘杨’、‘诸葛’'
+                      : "需要创作的艺术字",
+              controller: _textContentController,
               isRequired: true,
               onChanged: (text) {
                 setState(() {
-                  prompt = text.trim();
+                  textContent = text.trim();
                 });
               },
             ),
-        ],
-      )
+            if (isDiyStyle())
+              PromptInput(
+                label: "正向提示词",
+                hintText: selectedModelSpec.cusLlm ==
+                        CusLLM.aliyun_Wordart_Surnames_TTI_WORD
+                    ? '期望图片创意样式的描述提示词，长度小于1000。\n比如：“古风，山水画”'
+                    : selectedModelSpec.cusLlm ==
+                            CusLLM.aliyun_Wordart_Texture_TTI_WORD
+                        ? "期望文字纹理创意样式的描述提示词，长度小于200。\n比如“水果，蔬菜”"
+                        : "期望文字变形创意样式的描述提示词，长度小于200。\n比如“春暖花开、山峦叠嶂、漓江蜿蜒、岩石奇秀”",
+                controller: promptController,
+                isRequired: true,
+                onChanged: (text) {
+                  setState(() {
+                    prompt = text.trim();
+                  });
+                },
+              ),
+          ],
+        )
     ];
   }
 }

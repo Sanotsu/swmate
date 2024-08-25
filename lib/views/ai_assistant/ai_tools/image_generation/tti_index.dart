@@ -11,6 +11,7 @@ import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/utils/tools.dart';
 import '../../../../models/text_to_image/aliyun_tti_req.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
+import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../../../models/text_to_image/silicon_flow_tti_req.dart';
 import '../../../../models/text_to_image/silicon_flow_ig_resp.dart';
 import '../../../../services/cus_get_storage.dart';
@@ -155,7 +156,7 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
         if (result.images != null) {
           for (var e in result.images!) {
             imageUrls.add(e.url);
-            await MyGetStorage().setText2ImageUrl(e.url);
+            await MyGetStorage().setImageGenerationUrl(e.url);
           }
         }
       }

@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class LoadingOverlay {
   static OverlayEntry? _overlayEntry;
 
-  static void show(BuildContext context) {
+  static void show(BuildContext context, {VoidCallback? onCancel}) {
     if (_overlayEntry != null) return;
 
     OverlayState overlayState = Overlay.of(context);
@@ -37,6 +37,7 @@ class LoadingOverlay {
                 ElevatedButton(
                   onPressed: () {
                     hide();
+                    onCancel?.call();
                   },
                   child: const Text("取消"),
                 ),

@@ -6,7 +6,10 @@ import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../models/text_to_image/aliyun_tti_resp.dart';
 import '../../../models/text_to_image/com_ig_state.dart';
+import '../_componets/loading_overlay.dart';
+import '../ai_tools/image_generation/base_ig_screen_state.dart';
 
 ///
 /// 文生图、图生图、阿里云的艺术文字都可以通用这个图像生成历史记录
@@ -41,7 +44,7 @@ class _ImageGenerationHistoryScreenState
 
   getHistory() async {
     // 获取历史记录
-    var a = await dbHelper.queryTextToImageResultList();
+    var a = await dbHelper.queryImageGenerationResultList();
 
     setState(() {
       imageGenerationHistory =
@@ -67,8 +70,79 @@ class _ImageGenerationHistoryScreenState
   /// 构建在对话历史中的对话标题列表
   Widget buildGestureItems(LlmIGResult e, BuildContext context) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
+        // 如果任务有提交，但没有完成，先查询结果
+        if (e.isFinish == false && e.taskId != null) {
+          LoadingOverlay.show(context);
+          AliyunTtiResp? result = await timedImageGenerationJobStatus(
+            e.taskId!,
+            () => setState(() {
+              LoadingOverlay.hide();
+            }),
+          );
+
+          if (!mounted) return;
+          if (!context.mounted) return;
+          if (result?.code != null) {
+            setState(() {
+              LoadingOverlay.hide();
+            });
+
+            await dbHelper.deleteImageGenerationResultById(e.requestId);
+
+            if (!context.mounted) return;
+            return commonExceptionDialog(
+              context,
+              "发生异常",
+              "该任务出现异常，无法查询进度：${result?.message ?? ''}",
+            );
+          }
+
+          // 得到图片结构，存入变量
+          // 请求得到的图片结果
+          List<String> imageUrls = [];
+          var a = result?.output.results;
+          if (a != null && a.isNotEmpty) {
+            for (var e in a) {
+              if (e.url != null) imageUrls.add(e.url!);
+              if (e.pngUrl != null) imageUrls.add(e.pngUrl!);
+              // 2024-08-21 svg的预览报错？？？变形会有svg和png两个，没有直接url
+              // if (e.svgUrl != null) imageUrls.add(e.svgUrl!);
+            }
+          }
+
+          await dbHelper.updateImageGenerationResultById(
+            LlmIGResult(
+              requestId: e.requestId,
+              prompt: e.prompt,
+              negativePrompt: e.negativePrompt,
+              taskId: e.taskId,
+              isFinish: true,
+              style: e.style,
+              imageUrls: imageUrls,
+              gmtCreate: DateTime.now(),
+              llmSpec: e.llmSpec,
+            ),
+          );
+
+          setState(() {
+            LoadingOverlay.hide();
+            e = LlmIGResult(
+              requestId: e.requestId,
+              prompt: e.prompt,
+              negativePrompt: e.negativePrompt,
+              taskId: e.taskId,
+              isFinish: true,
+              style: e.style,
+              imageUrls: imageUrls,
+              gmtCreate: DateTime.now(),
+              llmSpec: e.llmSpec,
+            );
+          });
+        }
+
         // 点击了指定文生图记录，弹窗显示缩略图
+        if (!context.mounted) return;
         showDialog(
           context: context,
           builder: (context) {
@@ -86,6 +160,8 @@ class _ImageGenerationHistoryScreenState
 
                       if (e.llmSpec?.cusLlm.name != null)
                         Text("模型: ${e.llmSpec?.name}"),
+
+                      Text("是否完成: ${e.isFinish}"),
 
                       SizedBox(height: 10.sp),
                       const Text(
@@ -193,6 +269,7 @@ class _ImageGenerationHistoryScreenState
                       Text("平台:${CP_NAME_MAP[e.llmSpec?.platform]}"),
                     if (e.llmSpec?.cusLlm.name != null)
                       Text("模型:${e.llmSpec?.name}"),
+                    Text("是否完成: ${e.isFinish}"),
                     Text(
                       "创建时间:${DateFormat(constDatetimeFormat).format(e.gmtCreate)}",
                       style: TextStyle(fontSize: 13.sp),
@@ -240,10 +317,10 @@ class _ImageGenerationHistoryScreenState
         ).then((value) async {
           if (value == true) {
             // 先删除
-            await dbHelper.deleteTextToImageResultById(e.requestId);
+            await dbHelper.deleteImageGenerationResultById(e.requestId);
 
             // 然后重新查询并更新
-            var b = await dbHelper.queryTextToImageResultList();
+            var b = await dbHelper.queryImageGenerationResultList();
             setState(() {
               imageGenerationHistory = b
                   .where((e) => e.llmSpec?.modelType == LLModelType.tti)

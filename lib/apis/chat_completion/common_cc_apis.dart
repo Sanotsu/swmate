@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:proste_logger/proste_logger.dart';
 
+import '../../common/utils/db_tools/db_helper.dart';
 import '../../common/utils/tools.dart';
 import '../../models/chat_competion/com_cc_req.dart';
 import '../../models/chat_competion/com_cc_resp.dart';
@@ -19,6 +20,7 @@ import '../_self_keys.dart';
 import '../gen_access_token/tencent_signature_v3.dart';
 
 final l = ProsteLogger();
+final DBHelper _dbHelper = DBHelper();
 
 enum PlatUrl {
   tencentCCUrl,
@@ -311,9 +313,10 @@ Future<StreamWithCancel<ComCCResp>> baiduCCRespWithCancel(
   bool stream = false,
   String? system,
 }) async {
+  var specs = await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.aliyun);
+
   model = model ??
-      CusLLM_SPEC_LIST.firstWhere((e) => e.cusLlm == CusLLM.baidu_Ernie_Tiny_8K)
-          .model;
+      specs.firstWhere((e) => e.cusLlm == CusLLM.baidu_Ernie_Tiny_8K).model;
 
   // 获取token信息
   var tokenInfo = MyGetStorage().getBaiduTokenInfo();
@@ -345,9 +348,13 @@ Future<StreamWithCancel<ComCCResp>> siliconFlowCCRespWithCancel(
   String? model,
   bool stream = false,
 }) async {
+  var specs =
+      await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.siliconCloud);
+
   model = model ??
-      CusLLM_SPEC_LIST.firstWhere(
-          (e) => e.cusLlm == CusLLM.siliconCloud_Qwen2_7B_Instruct).model;
+      specs
+          .firstWhere((e) => e.cusLlm == CusLLM.siliconCloud_Qwen2_7B_Instruct)
+          .model;
 
   var body = ComCCReq(model: model, messages: messages, stream: stream);
 
@@ -369,8 +376,10 @@ Future<StreamWithCancel<ComCCResp>> lingyiwanwuCCRespWithCancel(
   String? model,
   bool stream = false,
 }) async {
-  model = model ??
-      CusLLM_SPEC_LIST.firstWhere((e) => e.cusLlm == CusLLM.YiSpark).model;
+  var specs =
+      await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.lingyiwanwu);
+
+  model = model ?? specs.firstWhere((e) => e.cusLlm == CusLLM.YiSpark).model;
 
   var body = ComCCReq(model: model, messages: messages, stream: stream);
 
@@ -393,9 +402,10 @@ Future<StreamWithCancel<ComCCResp>> xfyunCCRespWithCancel(
   String? model,
   bool stream = false,
 }) async {
+  var specs = await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.xfyun);
+
   model = model ??
-      CusLLM_SPEC_LIST.firstWhere((e) => e.cusLlm == CusLLM.xfyun_Spark_Lite)
-          .model;
+      specs.firstWhere((e) => e.cusLlm == CusLLM.xfyun_Spark_Lite).model;
 
   var body = ComCCReq.xfyun(model: model, messages: messages, stream: stream);
 
@@ -418,9 +428,11 @@ Future<StreamWithCancel<ComCCResp>> tencentCCRespWithCancel(
   String? model,
   bool stream = false,
 }) async {
+  var specs =
+      await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.tencent);
+
   model = model ??
-      CusLLM_SPEC_LIST.firstWhere(
-          (e) => e.cusLlm == CusLLM.tencent_Hunyuan_Lite).model;
+      specs.firstWhere((e) => e.cusLlm == CusLLM.tencent_Hunyuan_Lite).model;
 
   Map<String, dynamic> tempBody = {
     "Model": model,

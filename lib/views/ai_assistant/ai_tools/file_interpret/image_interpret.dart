@@ -41,9 +41,13 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
   /// 这几个是基类的 getProcessedResult 需要
   @override
   ApiPlatform getSelectedPlatform() => ApiPlatform.lingyiwanwu;
+
   @override
-  String getSelectedModel() =>
-      CusLLM_SPEC_LIST.firstWhere((e) => e.cusLlm == CusLLM.YiVision).model;
+  Future<String> getSelectedModel() async {
+    var specs = await dbHelper.queryCusLLMSpecList();
+    return specs.firstWhere((e) => e.cusLlm == CusLLM.YiVision).model;
+  }
+
   @override
   CC_SWC_TYPE getUseType() => CC_SWC_TYPE.image;
   @override

@@ -12,6 +12,7 @@ import '../../../../apis/voice_recognition/xunfei_apis.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../../common/utils/db_tools/db_helper.dart';
 import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
 import '../../_chat_screen_parts/chat_list_area.dart';
@@ -23,6 +24,8 @@ import '../../_helper/constants.dart';
 import '../../_helper/handle_cc_response.dart';
 
 abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
+  final DBHelper dbHelper = DBHelper();
+
   ///
   /// 手动输入文本 相关变量
   ///
@@ -113,7 +116,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
   /// 获取AI响应略有不同，需要子类传入平台和模型、是图片还是文件
   ///
   ApiPlatform getSelectedPlatform();
-  String getSelectedModel();
+  Future<String> getSelectedModel();
   CC_SWC_TYPE getUseType();
   String getDocContent();
   File? getSelectedImage();
@@ -127,7 +130,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
     StreamWithCancel<ComCCResp> tempStream = await getCCResponseSWC(
       messages: messages,
       selectedPlatform: getSelectedPlatform(),
-      selectedModel: getSelectedModel(),
+      selectedModel: await getSelectedModel(),
       isStream: isStream,
       useType: getUseType(),
       selectedImage: getSelectedImage(),

@@ -13,6 +13,7 @@ import '../../../models/base_model/dish_state.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
 import '../../../models/text_to_image/com_ig_state.dart';
 import '../../constants.dart';
+import '../../llm_spec/cus_llm_spec.dart';
 import 'ddl_swmate.dart';
 
 class DBHelper {
@@ -62,7 +63,8 @@ class DBHelper {
       // txn.execute(BriefAccountingDdl.ddlForIncome);
       txn.execute(SWMateDdl.ddlForBillItem);
       txn.execute(SWMateDdl.ddlForChatHistory);
-      txn.execute(SWMateDdl.ddlForText2ImageHistory);
+      txn.execute(SWMateDdl.ddlForImageGenerationHistory);
+      txn.execute(SWMateDdl.ddlForCusLlmSpec);
       txn.execute(SWMateDdl.ddlForDish);
     });
   }
@@ -577,7 +579,7 @@ class DBHelper {
   ///
 
 // 查询所有记录
-  Future<List<LlmIGResult>> queryTextToImageResultList({
+  Future<List<LlmIGResult>> queryImageGenerationResultList({
     String? requestId,
     String? prompt,
   }) async {
@@ -601,7 +603,7 @@ class DBHelper {
     }
 
     final rows = await db.query(
-      SWMateDdl.tableNameOfText2ImageHistory,
+      SWMateDdl.tableNameOfImageGenerationHistory,
       where: where.isNotEmpty ? where.join(' AND ') : null,
       whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
       orderBy: "gmt_create DESC",
@@ -611,20 +613,122 @@ class DBHelper {
   }
 
   // 删除单条
-  Future<int> deleteTextToImageResultById(String requestId) async =>
+  Future<int> deleteImageGenerationResultById(String requestId) async =>
       (await database).delete(
-        SWMateDdl.tableNameOfText2ImageHistory,
+        SWMateDdl.tableNameOfImageGenerationHistory,
         where: "request_id=?",
         whereArgs: [requestId],
       );
 
   // 新增(只有单个的时候就一个值的数组，理论上不会批量插入)
-  Future<List<Object?>> insertTextToImageResultList(
+  Future<List<Object?>> insertImageGenerationResultList(
       List<LlmIGResult> rsts) async {
     var batch = (await database).batch();
     for (var item in rsts) {
       batch.insert(
-        SWMateDdl.tableNameOfText2ImageHistory,
+        SWMateDdl.tableNameOfImageGenerationHistory,
+        item.toMap(),
+      );
+    }
+    return await batch.commit();
+  }
+
+  // 如果先生成任务，后查询任务结果的文生图，就会在提交任务后新增记录，生成结果后修改数据
+  Future<int> updateImageGenerationResultById(LlmIGResult igRst) async =>
+      (await database).update(
+        SWMateDdl.tableNameOfImageGenerationHistory,
+        igRst.toMap(),
+        where: "task_id=?",
+        whereArgs: [igRst.taskId],
+      );
+
+  ///***********************************************/
+  /// 自定义的LLM信息管理
+  ///
+
+  // 查询所有模型信息
+  Future<List<CusLLMSpec>> queryCusLLMSpecList({
+    String? cusLlmSpecId, // 模型规格编号
+    ApiPlatform? platform, // 平台
+    CusLLM? cusLlm, // 模型枚举
+    String? name, // 模型名称
+    LLModelType? modelType, // 模型分类枚举
+    bool? isFree, // 是否收费(0要收费，1不收费)
+  }) async {
+    Database db = await database;
+
+    print("模型规格查询参数：");
+    print("uuid $cusLlmSpecId");
+    print("平台 $platform");
+    print("cusLlm $cusLlm");
+    print("name $name");
+    print("modelType $modelType");
+    print("isFree $isFree");
+
+    final where = <String>[];
+    final whereArgs = <dynamic>[];
+
+    if (cusLlmSpecId != null) {
+      where.add('cusLlmSpecId = ?');
+      whereArgs.add(cusLlmSpecId);
+    }
+
+    if (platform != null) {
+      where.add('platform = ?');
+      whereArgs.add(platform.toString());
+    }
+    if (cusLlm != null) {
+      where.add('cusLlm = ?');
+      whereArgs.add(cusLlm.toString());
+    }
+    if (name != null) {
+      where.add('name = ?');
+      whereArgs.add(name);
+    }
+    if (modelType != null) {
+      where.add('modelType = ?');
+      whereArgs.add(modelType.toString());
+    }
+
+    if (cusLlmSpecId != null) {
+      where.add('isFree = ?');
+      whereArgs.add(isFree == true ? 1 : 0);
+    }
+
+    print("where $where");
+    print("whereArgs $whereArgs");
+
+    final rows = await db.query(
+      SWMateDdl.tableNameOfCusLlmSpec,
+      where: where.isNotEmpty ? where.join(' AND ') : null,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
+      orderBy: "gmtCreate DESC",
+    );
+
+    return rows.map((row) => CusLLMSpec.fromMap(row)).toList();
+  }
+
+  // 删除单条
+  Future<int> deleteCusLLMSpecById(String cusLlmSpecId) async =>
+      (await database).delete(
+        SWMateDdl.tableNameOfCusLlmSpec,
+        where: "cusLlmSpecId = ?",
+        whereArgs: [cusLlmSpecId],
+      );
+
+  // 清空所有模型信息
+  Future<int> clearCusLLMSpecs() async => (await database).delete(
+        SWMateDdl.tableNameOfCusLlmSpec,
+        where: "cusLlmSpecId != ?",
+        whereArgs: ["cusLlmSpecId"],
+      );
+
+  // 新增(只有单个的时候就一个值的数组，理论上不会批量插入)
+  Future<List<Object?>> insertCusLLMSpecList(List<CusLLMSpec> rsts) async {
+    var batch = (await database).batch();
+    for (var item in rsts) {
+      batch.insert(
+        SWMateDdl.tableNameOfCusLlmSpec,
         item.toMap(),
       );
     }

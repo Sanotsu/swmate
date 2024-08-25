@@ -12,9 +12,11 @@ import '../../../../apis/voice_recognition/xunfei_apis.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../../common/utils/db_tools/db_helper.dart';
 import '../../../../common/utils/tools.dart';
 import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
+import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../_chat_screen_parts/chat_default_question_area.dart';
 import '../../_chat_screen_parts/chat_list_area.dart';
 import '../../_chat_screen_parts/chat_user_send_area_with_voice.dart';
@@ -37,6 +39,7 @@ class ChatBatGroup extends StatefulWidget {
 }
 
 class _ChatBatGroupState extends State<ChatBatGroup> {
+  final DBHelper _dbHelper = DBHelper();
   // 人机对话消息滚动列表
   final ScrollController _scrollController = ScrollController();
 
@@ -61,13 +64,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
 
   ///==============
   // 2024-07-23 这里纯粹是为了方便，把enLable存平台的名称，用于区分需要调用的接口函数
-  final List<CusLabel> _allItems =
-      CusLLM_SPEC_LIST.where((spec) => spec.modelType == LLModelType.cc)
-          .map((e) => CusLabel(
-                cnLabel: e.name,
-                value: e,
-              ))
-          .toList();
+  late List<CusLabel> _allItems;
 
   List<CusLabel> _selectedItems = [];
 
@@ -83,14 +80,29 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
 
   @override
   void initState() {
-    super.initState();
+    initCusLabelList();
 
-    _selectedItems = [
-      _allItems[1],
-      _allItems[5],
-      _allItems[6],
-      _allItems[11],
-    ];
+    super.initState();
+  }
+
+  initCusLabelList() async {
+    var specs = await _dbHelper.queryCusLLMSpecList();
+    setState(() {
+      _allItems = specs
+          .where((spec) => spec.modelType == LLModelType.cc)
+          .map((e) => CusLabel(
+                cnLabel: e.name,
+                value: e,
+              ))
+          .toList();
+
+      _selectedItems = [
+        _allItems[1],
+        _allItems[5],
+        _allItems[6],
+        _allItems[11],
+      ];
+    });
   }
 
   @override

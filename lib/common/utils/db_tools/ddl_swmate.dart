@@ -45,22 +45,23 @@ class SWMateDdl {
       messages            TEXT    NOT NULL,
       llm_name            TEXT    NOT NULL,
       yun_platform_name   TEXT,
-      i2t_image_path    TEXT,
+      i2t_image_path      TEXT,
       chat_type           TEXT    NOT NULL,
       PRIMARY KEY("uuid")
     );
     """;
 
   /// 2024-06-13 新增文生图简单内容流程
-  // 账单条目表
-  static const tableNameOfText2ImageHistory =
-      '${DB_TABLE_PREFIX}text2image_history';
+  static const tableNameOfImageGenerationHistory =
+      '${DB_TABLE_PREFIX}image_generation_history';
 
-  static const String ddlForText2ImageHistory = """
-    CREATE TABLE $tableNameOfText2ImageHistory (
+  static const String ddlForImageGenerationHistory = """
+    CREATE TABLE $tableNameOfImageGenerationHistory (
       request_id      TEXT    NOT NULL,
       prompt          TEXT    NOT NULL,
       negative_prompt TEXT,
+      task_id         TEXT,
+      is_finish       INTEGER,
       style           TEXT    NOT NULL,
       image_urls      TEXT,
       gmt_create      TEXT    NOT NULL,
@@ -69,7 +70,35 @@ class SWMateDdl {
     );
     """;
 
-  // 菜品基础表
+  // 2024-08-25
+  // 保存模型信息(以前cus_llm_spec里面大模型的规格数组，存入json，初始化到数据库,后续使用从数据库查询)
+  // 省事，用驼峰命名栏位
+  static const tableNameOfCusLlmSpec = '${DB_TABLE_PREFIX}cus_llm_spec';
+
+  static const String ddlForCusLlmSpec = """
+    CREATE TABLE $tableNameOfCusLlmSpec (
+      cusLlmSpecId   TEXT    NOT NULL,
+      platform       TEXT    NOT NULL,
+      model          TEXT    NOT NULL,
+      cusLlm         TEXT    NOT NULL,
+      name           TEXT    NOT NULL,
+      contextLength  INTEGER,
+      isFree         INTEGER NOT NULL,
+      inputPrice     REAL,
+      outputPrice    REAL,
+      isQuote        INTEGER,
+      feature        TEXT,
+      useCase        TEXT,
+      modelType      TEXT    NOT NULL,
+      costPer        REAL,
+      gmtCreate      TEXT    NOT NULL,
+      PRIMARY KEY("cusLlmSpecId")
+    );
+    """;
+
+  ///
+  /// 菜品基础表
+  ///
   static const tableNameOfDish = '${DB_TABLE_PREFIX}dish';
 
   // 2023-03-10 避免导入时重复导入，还是加一个unique
