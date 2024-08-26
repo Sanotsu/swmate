@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../apis/text_to_image/aliyun_tti_apis.dart';
+import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../models/text_to_image/aliyun_tti_req.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
-import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../_componets/prompt_input.dart';
 import '../../_helper/constants.dart';
 import '../../_ig_screen_parts/size_and_num_selector.dart';
@@ -49,6 +49,7 @@ class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
   // 等待父类初始化，父类初始化完了，才初始化子类，直到超时取消
   wordArtInit() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
       setState(() {
         _elapsedSeconds++;
       });
@@ -57,9 +58,12 @@ class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
         selectedSize = WordArt_outputImageRatioList.first;
         selectedStyle = getInitialStyle();
         selectedFontName = getInitialFontName();
+
+        if (!mounted) return;
         setState(() {
           isWordArtInited = true;
         });
+
         _timer?.cancel();
       }
 

@@ -112,6 +112,10 @@ dart run build_runner build --delete-conflicting-outputs
 
 - refactor: 将自定义的模型信息存入 sqlite 数据库;两步生成图片的接口将任务编号存入数据库方便后续查询。
 
+#### 2024-08-26
+
+- refactor: 将预设的系统角色信息存入 sqlite 数据库;feat: 添加了系统角色管理页面(列表、新增、导入、删除等);文生图也可选中预设提示词。
+
 ### todo:
 
 - （done）得到流式响应的数据的处理都非常相似，可以抽出来公共函数

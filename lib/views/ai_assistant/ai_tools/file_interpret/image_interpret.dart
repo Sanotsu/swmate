@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../_helper/constants.dart';
 import '../../_helper/handle_cc_response.dart';
 import '../../_ig_screen_parts/image_pick_and_view_area.dart';
@@ -24,14 +25,11 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
   // 选择的图片文件
   File? selectedImage;
 
-  // 当前选中的系统角色
-  late CusSysRoleSpec selectSysRole;
-
   @override
   void initState() {
     super.initState();
-    selectSysRole = ImgSysRoleItems.first;
-    renewSystemAndMessages();
+
+    super.initSysRoleInfo("img");
   }
 
   /// 这一个是基类的 renewSystemAndMessages 需要
@@ -58,8 +56,7 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
   ///
   /// 构建页面需要的几个函数
   ///
-  @override
-  List<CusSysRoleSpec> getSysRoleItems() => ImgSysRoleItems;
+
   @override
   void setSelectedASysRole(CusSysRoleSpec item) {
     selectSysRole = item;

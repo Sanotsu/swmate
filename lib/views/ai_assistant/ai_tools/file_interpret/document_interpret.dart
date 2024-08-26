@@ -15,6 +15,7 @@ import 'package:swmate/views/ai_assistant/_helper/handle_cc_response.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 
+import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/utils/tools.dart';
 import '../../_helper/constants.dart';
 import '../../_helper/document_parser.dart';
@@ -34,14 +35,12 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
   bool isLoadingDocument = false;
   // 解析后的文件内容
   String fileContent = '';
-  // 当前选中的系统角色
-  late CusSysRoleSpec selectSysRole;
 
   @override
   void initState() {
     super.initState();
-    selectSysRole = DocSysRoleItems.first;
-    renewSystemAndMessages();
+
+    super.initSysRoleInfo("doc");
   }
 
   /// 这一个是基类的 renewSystemAndMessages 需要
@@ -70,8 +69,6 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
   ///
   /// 构建页面需要的几个函数
   ///
-  @override
-  List<CusSysRoleSpec> getSysRoleItems() => DocSysRoleItems;
 
   @override
   void setSelectedASysRole(CusSysRoleSpec item) {

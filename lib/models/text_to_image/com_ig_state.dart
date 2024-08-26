@@ -4,7 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:intl/intl.dart';
 
 import '../../common/constants.dart';
-import '../../common/llm_spec/cus_llm_spec.dart';
+import '../../common/llm_spec/cus_llm_model.dart';
 
 part 'com_ig_state.g.dart';
 
@@ -79,133 +79,6 @@ class LlmIGResult {
       'image_urls': imageUrls?.join(";"), // 存入数据库用分号分割，取的时候也一样
       'gmt_create': DateFormat(constDatetimeFormat).format(gmtCreate),
       'llm_spec': llmSpec?.toRawJson(),
-    };
-  }
-}
-
-///
-/// 通用自定义模型规格
-///
-@JsonSerializable(explicitToJson: true)
-class CusLLMSpec {
-  // 唯一编号
-  String? cusLlmSpecId;
-  // 模型字符串(平台API参数的那个model的值)、模型名称、上下文长度数值，
-  /// 是否免费，收费输入时百万token价格价格，输出时百万token价格(免费没写价格就先写0)
-  ApiPlatform platform;
-  String model;
-  // 随便带上模型枚举名称，方便过滤筛选
-  CusLLM cusLlm;
-  String name;
-  int? contextLength;
-  bool isFree;
-  // 每百万token单价
-  double? inputPrice;
-  double? outputPrice;
-
-  // 是否支持索引用实时全网检索信息服务
-  bool? isQuote;
-  // 模型特性
-  String? feature;
-  // 使用场景
-  String? useCase;
-
-  // 模型类型(visons 视觉模型可以解析图片、分析图片内容，然后进行对话,使用时需要支持上传图片，
-  // 但也能持续对话，和cc分开)
-  LLModelType modelType;
-  // 每张图、每个视频等单个的花费
-  double? costPer;
-
-  // 数据创建的时候(一般排序用)
-  DateTime? gmtCreate;
-
-// 默认是对话模型的构造函数
-  CusLLMSpec(this.platform, this.cusLlm, this.model, this.name,
-      this.contextLength, this.isFree, this.inputPrice, this.outputPrice,
-      {this.cusLlmSpecId,
-      this.isQuote = false,
-      this.feature,
-      this.useCase,
-      this.modelType = LLModelType.cc,
-      this.gmtCreate,
-      this.costPer});
-
-// 文生图的栏位稍微不一样
-  CusLLMSpec.tti(this.platform, this.cusLlm, this.model, this.name, this.isFree,
-      {this.cusLlmSpecId,
-      this.feature,
-      this.useCase,
-      this.modelType = LLModelType.cc,
-      this.costPer = 0.5,
-      this.gmtCreate});
-
-  CusLLMSpec.iti(this.platform, this.cusLlm, this.model, this.name, this.isFree,
-      {this.cusLlmSpecId,
-      this.feature,
-      this.useCase,
-      this.modelType = LLModelType.iti,
-      this.costPer = 0.5,
-      this.gmtCreate});
-
-  CusLLMSpec.init(
-    this.platform,
-    this.cusLlm, {
-    this.model = "",
-    this.name = "",
-    this.isFree = false,
-    this.modelType = LLModelType.iti,
-  });
-
-  // 从字符串转
-  factory CusLLMSpec.fromRawJson(String str) =>
-      CusLLMSpec.fromJson(json.decode(str));
-  // 转为字符串
-  String toRawJson() => json.encode(toJson());
-
-  factory CusLLMSpec.fromJson(Map<String, dynamic> srcJson) =>
-      _$CusLLMSpecFromJson(srcJson);
-
-  Map<String, dynamic> toJson() => _$CusLLMSpecToJson(this);
-
-  factory CusLLMSpec.fromMap(Map<String, dynamic> map) {
-    return CusLLMSpec(
-      ApiPlatform.values.firstWhere((e) => e.toString() == map['platform']),
-      CusLLM.values.firstWhere((e) => e.toString() == map['cusLlm']),
-      map['model'],
-      map['name'],
-      map['contextLength'],
-      map['isFree'] == 1 ? true : false,
-      map['inputPrice'],
-      map['outputPrice'],
-      cusLlmSpecId: map['cusLlmSpecId'],
-      isQuote: map['isQuote'] == 1 ? true : false,
-      feature: map['feature'],
-      useCase: map['useCase'],
-      modelType: LLModelType.values
-          .firstWhere((e) => e.toString() == map['modelType']),
-      gmtCreate:
-          map['gmtCreate'] != null ? DateTime.parse(map['gmtCreate']) : null,
-      costPer: map['costPer'],
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'cusLlmSpecId': cusLlmSpecId,
-      'platform': platform.toString(),
-      'model': model,
-      'cusLlm': cusLlm.toString(),
-      'name': name,
-      'contextLength': contextLength,
-      'isFree': isFree ? 1 : 0,
-      'inputPrice': inputPrice,
-      'outputPrice': outputPrice,
-      'isQuote': (isQuote != null && isQuote == true) ? 1 : 0,
-      'feature': feature,
-      'useCase': useCase,
-      'modelType': modelType.toString(),
-      'costPer': costPer,
-      'gmtCreate': gmtCreate?.toIso8601String(),
     };
   }
 }

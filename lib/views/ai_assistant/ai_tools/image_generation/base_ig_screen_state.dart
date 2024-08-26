@@ -10,11 +10,13 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../apis/text_to_image/aliyun_tti_apis.dart';
 import '../../../../common/components/tool_widget.dart';
+import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/utils/db_tools/db_helper.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
 import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
+import '../../_componets/cus_system_prompt_modal.dart';
 import '../../_ig_screen_parts/ig_button_row_area.dart';
 import '../../_helper/constants.dart';
 import '../../_componets/loading_overlay.dart';
@@ -32,6 +34,9 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
   ///
   // 所有支持文生图的模型列表(用于下拉的平台和该平台拥有的模型列表也从这里来)
   late List<CusLLMSpec> llmSpecList;
+
+  // 所有支持文生图的系统角色(用于获取预设的system prompt的值)
+  late List<CusSysRoleSpec> sysRoleList;
 
   // 级联选择效果：云平台-模型名
   late ApiPlatform selectedPlatform;
@@ -83,12 +88,21 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
   initModelInfo() async {
     var specs = await dbHelper.queryCusLLMSpecList();
 
+    var sysRoles = await dbHelper.queryCusSysRoleSpecList();
+
     setState(() {
       llmSpecList =
           specs.where((spec) => spec.modelType == getModelType()).toList();
       selectedPlatform = getInitialPlatform();
       selectedModelSpec = getRandomModel();
       selectedSize = getInitialSize();
+
+      // 暂时父组件就把图片相关的都带出来，当然其实子组件各带各的最好，这省事
+      sysRoleList = sysRoles
+          .where((role) =>
+              role.sysRoleType == LLModelType.tti ||
+              role.sysRoleType == LLModelType.iti)
+          .toList();
 
       isInited = true;
     });
@@ -318,12 +332,35 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
     });
   }
 
+  // 选中预设的提示词，就代替当前输入框的值
+  void onRoleSelected(CusSysRoleSpec role) {
+    setState(() {
+      promptController.text = role.systemPrompt;
+      prompt = role.systemPrompt;
+    });
+
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   SnackBar(content: Text('Selected: ${role.systemPrompt}')),
+    // );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(getAppBarTitle()),
         actions: [
+          TextButton(
+            onPressed: () {
+              showCusSysRoleList(
+                context,
+                sysRoleList,
+                isInited,
+                onRoleSelected,
+              );
+            },
+            child: const Text("预设提示词"),
+          ),
           IconButton(
             onPressed: () {
               Navigator.push(

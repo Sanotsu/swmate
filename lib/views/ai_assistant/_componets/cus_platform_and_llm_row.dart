@@ -3,8 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 
 import '../../../common/components/tool_widget.dart';
+import '../../../common/llm_spec/cus_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../models/text_to_image/com_ig_state.dart';
 
 class CusPlatformAndLlmRow extends StatefulWidget {
   // 初始化的平台和模型（智能对话每次进入页面都是随机的，所以这里初始化不能固定，由调用处传入）

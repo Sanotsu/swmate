@@ -12,6 +12,7 @@ import '../../../../apis/voice_recognition/xunfei_apis.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/utils/db_tools/db_helper.dart';
 import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
@@ -50,11 +51,42 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
     "总结上面文档内容，给出摘要。输出的摘要的目标语言是",
   ];
 
+  // 当前选中的系统角色
+  late CusSysRoleSpec selectSysRole;
+
+  // 可供选择的系统角色列表
+  late List<CusSysRoleSpec> sysRoleItems;
+
+  // 是否初始化完成(选择的预设系统角色，没从数据库获取到就不要加载页面)
+  bool isInited = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   void dispose() {
     scrollController.dispose();
     userInputController.dispose();
     super.dispose();
+  }
+
+  initSysRoleInfo(String roleName) async {
+    var specs = await dbHelper.queryCusSysRoleSpecList();
+
+    setState(() {
+      sysRoleItems = specs
+          .where((spec) =>
+              spec.name?.name.toLowerCase().startsWith(roleName) ?? false)
+          .toList();
+
+      selectSysRole = sysRoleItems.first;
+
+      renewSystemAndMessages();
+
+      isInited = true;
+    });
   }
 
   ///
@@ -203,8 +235,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
   ///
   /// 构建页面公共的UI部分
   ///
-  // 用于构建预设功能的系统角色信息列表
-  List<CusSysRoleSpec> getSysRoleItems();
+
   // 预设功能列表切换时要更新当前选中的角色信息
   void setSelectedASysRole(CusSysRoleSpec item);
   // 当前选中的提示词角色名称
@@ -218,102 +249,106 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
 
   // 构建页面主体的UI
   Widget buildCommonUI(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        /// 可切换的预设功能
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              CusToggleButtonSelector<CusSysRoleSpec>(
-                items: getSysRoleItems(),
-                onItemSelected: (item) {
-                  print('Selected item: ${item.label}');
-                  setState(() {
-                    setSelectedASysRole(item);
-                  });
-                  renewSystemAndMessages();
-                },
-                labelBuilder: (item) => item.label,
-              ),
-              SizedBox(width: 5.sp),
-            ],
+    if (isInited) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          /// 可切换的预设功能
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                CusToggleButtonSelector<CusSysRoleSpec>(
+                  items: sysRoleItems,
+                  onItemSelected: (item) {
+                    print('Selected item: ${item.label}');
+                    setState(() {
+                      setSelectedASysRole(item);
+                    });
+                    renewSystemAndMessages();
+                  },
+                  labelBuilder: (item) => item.label,
+                ),
+                SizedBox(width: 5.sp),
+              ],
+            ),
           ),
-        ),
 
-        /// 自定义的选择组件(文档解析是上传文档框，图片解读是图片选择框)
-        SizedBox(height: 5.sp),
-        buildSelectionArea(context),
-        SizedBox(height: 10.sp),
+          /// 自定义的选择组件(文档解析是上传文档框，图片解读是图片选择框)
+          SizedBox(height: 5.sp),
+          buildSelectionArea(context),
+          SizedBox(height: 10.sp),
 
-        /// 根据“文档解读”、“图片解读”不同，选中的预设功能不同，显示不同的按钮
-        buildDefaultSysRoleButtonRow(context),
-        Divider(height: 10.sp),
+          /// 根据“文档解读”、“图片解读”不同，选中的预设功能不同，显示不同的按钮
+          buildDefaultSysRoleButtonRow(context),
+          Divider(height: 10.sp),
 
-        /// 对话列表区域
-        ChatListArea(
-          /// 如果不想显示system信息，这里可以移除掉(但不能修改原消息列表)
-          // messages: messages,
-          messages: messages.where((e) => e.role != "system").toList(),
-          scrollController: scrollController,
-          isBotThinking: isBotThinking,
-          isAvatarTop: true,
-          regenerateLatestQuestion: regenerateLatestQuestion,
-          selectedImage: getSelectedImage(),
-        ),
-
-        /// 如果指定的是“文档分析”或图片分析，还可以(文字或语音输入)多轮提问
-        if (getSelectedSysRoleName() == CusSysRole.doc_analyzer ||
-            getSelectedSysRoleName() == CusSysRole.img_analyzer)
-          ChatUserVoiceSendArea(
-            controller: userInputController,
-            hintText: '询问关于选中文件的任何问题',
+          /// 对话列表区域
+          ChatListArea(
+            /// 如果不想显示system信息，这里可以移除掉(但不能修改原消息列表)
+            // messages: messages,
+            messages: messages.where((e) => e.role != "system").toList(),
+            scrollController: scrollController,
             isBotThinking: isBotThinking,
-            isSendClickable: getIsSendClickable() && userInput.isNotEmpty,
-            onInpuChanged: (text) {
-              setState(() {
-                userInput = text.trim();
-              });
-            },
-            onSendPressed: () {
-              userSendMessage(userInput);
-              setState(() {
-                userInput = "";
-              });
-            },
-            onSendSounds: (type, content) async {
-              if (type == SendContentType.text) {
-                // 如果输入的是语音转换后的文字，直接发送文字
-                userSendMessage(content);
-              } else if (type == SendContentType.voice) {
-                // 如果直接输入的语音，要显示转换后的文本，也要保留语音文件
-                String tempPath = path.join(
-                  path.dirname(content),
-                  path.basenameWithoutExtension(content),
-                );
-
-                var transcription = await sendAudioToServer("$tempPath.pcm");
-                userSendMessage(
-                  transcription,
-                  contentVoicePath: "$tempPath.m4a",
-                );
-              }
-            },
-            onStop: () async {
-              await respStream.cancel();
-              if (!mounted) return;
-              setState(() {
-                userInputController.clear();
-                chatListScrollToBottom();
-                isBotThinking = false;
-              });
-            },
+            isAvatarTop: true,
+            regenerateLatestQuestion: regenerateLatestQuestion,
+            selectedImage: getSelectedImage(),
           ),
-      ],
-    );
+
+          /// 如果指定的是“文档分析”或图片分析，还可以(文字或语音输入)多轮提问
+          if (getSelectedSysRoleName() == CusSysRole.doc_analyzer ||
+              getSelectedSysRoleName() == CusSysRole.img_analyzer)
+            ChatUserVoiceSendArea(
+              controller: userInputController,
+              hintText: '询问关于选中文件的任何问题',
+              isBotThinking: isBotThinking,
+              isSendClickable: getIsSendClickable() && userInput.isNotEmpty,
+              onInpuChanged: (text) {
+                setState(() {
+                  userInput = text.trim();
+                });
+              },
+              onSendPressed: () {
+                userSendMessage(userInput);
+                setState(() {
+                  userInput = "";
+                });
+              },
+              onSendSounds: (type, content) async {
+                if (type == SendContentType.text) {
+                  // 如果输入的是语音转换后的文字，直接发送文字
+                  userSendMessage(content);
+                } else if (type == SendContentType.voice) {
+                  // 如果直接输入的语音，要显示转换后的文本，也要保留语音文件
+                  String tempPath = path.join(
+                    path.dirname(content),
+                    path.basenameWithoutExtension(content),
+                  );
+
+                  var transcription = await sendAudioToServer("$tempPath.pcm");
+                  userSendMessage(
+                    transcription,
+                    contentVoicePath: "$tempPath.m4a",
+                  );
+                }
+              },
+              onStop: () async {
+                await respStream.cancel();
+                if (!mounted) return;
+                setState(() {
+                  userInputController.clear();
+                  chatListScrollToBottom();
+                  isBotThinking = false;
+                });
+              },
+            ),
+        ],
+      );
+    } else {
+      return const Center(child: CircularProgressIndicator());
+    }
   }
 
   Widget buildDefaultSysRoleButtonRow(BuildContext context) {

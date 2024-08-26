@@ -9,11 +9,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../apis/_self_model_specs.dart';
+import '../../apis/_self_system_role_list.dart';
 import '../../common/components/tool_widget.dart';
-import '../../common/constants.dart';
+import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
 import '../../common/utils/db_tools/db_helper.dart';
-import '../../models/text_to_image/com_ig_state.dart';
 import '../../services/cus_get_storage.dart';
 import '_componets/custom_entrance_card.dart';
 import 'ai_tools/chat_bot/index.dart';
@@ -46,6 +46,65 @@ class _AIToolIndexState extends State<AIToolIndex> {
   // 暂时就在“你问我答”页面测试，且只缩放问答列表(因为其他布局放大可能会有溢出问题)
   // ？？？后续可能作为配置，直接全局缓存，所有使用ChatListArea的地方都改了(现在不是所有地方都用的这个部件)
   double _textScaleFactor = 1.0;
+
+  // db中是否存在模型列表
+
+  List cusModelList = [];
+
+  @override
+  void initState() {
+    initModelAndSysRole();
+
+    super.initState();
+  }
+
+  // 初始化模型和系统角色信息到数据库
+  // 后续文件还是别的东西看情况放
+  initModelAndSysRole() async {
+    // 如果数据库中已经有模型信息了，就不用再导入了
+    var ll = await dbHelper.queryCusLLMSpecList();
+    if (ll.isNotEmpty) {
+      setState(() {
+        cusModelList = ll;
+      });
+      return;
+    }
+
+    ///
+    /// 初始化模型信息(后续默认可能是从asset中导入一次json文件，但可以在配置中导入支持的平台支持的模型)
+    /// 要考虑万一用户导入收费模型使用，顶不顶得住
+    ///
+    var list = CusLLM_SPEC_LIST.map((e) {
+      e.cusLlmSpecId = const Uuid().v4();
+      e.gmtCreate = DateTime.now();
+      return e;
+    }).toList();
+
+    print(list);
+
+    dbHelper.clearCusLLMSpecs();
+
+    await dbHelper.insertCusLLMSpecList(list);
+
+    var afterList = await dbHelper.queryCusLLMSpecList();
+    print(afterList);
+
+    setState(() {
+      cusModelList = afterList;
+    });
+
+    ///
+    /// 初始化系统角色
+    ///
+    var sysroleList = DEFAULT_SysRole_LIST.map((e) {
+      e.cusSysRoleSpecId = const Uuid().v4();
+      e.gmtCreate = DateTime.now();
+      return e;
+    }).toList();
+
+    dbHelper.clearCusSysRoleSpecs();
+    await dbHelper.insertCusSysRoleSpecList(sysroleList);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +166,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
         ],
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
@@ -116,147 +175,181 @@ class _AIToolIndexState extends State<AIToolIndex> {
           ),
           SizedBox(height: 10.sp),
           // 入口按钮
-          SizedBox(
-            height: screenBodyHeight - 50.sp,
-            child: GridView.count(
-              primary: false,
-              padding: EdgeInsets.symmetric(horizontal: 5.sp),
-              crossAxisSpacing: 5,
-              mainAxisSpacing: 5,
-              crossAxisCount: 2,
-              childAspectRatio: 2 / 1,
-              children: <Widget>[
-                ///
-                /// 使用的对话模型，可以连续问答对话
-                ///
-                // buildToolEntrance(
-                //   "智能对话",
-                //   subtitle: "不同平台\n多个模型\n知无不言",
-                //   icon: const Icon(Icons.chat_outlined),
-                //   color: Colors.blue[100],
-                //   onTap: () {
-                //     Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //         builder: (context) => const ChatBat(),
-                //       ),
-                //     );
-                //   },
-                // ),
 
-                const CustomEntranceCard(
-                  title: '智能对话',
-                  subtitle: "多个平台多种模型",
-                  icon: Icons.chat_outlined,
-                  targetPage: ChatBat(),
-                ),
+          if (cusModelList.isNotEmpty)
+            SizedBox(
+              height: screenBodyHeight - 50.sp,
+              child: GridView.count(
+                primary: false,
+                padding: EdgeInsets.symmetric(horizontal: 5.sp),
+                crossAxisSpacing: 5,
+                mainAxisSpacing: 5,
+                crossAxisCount: 2,
+                childAspectRatio: 2 / 1,
+                children: <Widget>[
+                  const CustomEntranceCard(
+                    title: '智能对话',
+                    subtitle: "多个平台多种模型",
+                    icon: Icons.chat_outlined,
+                    targetPage: ChatBat(),
+                  ),
 
-                const CustomEntranceCard(
-                  title: '智能群聊',
-                  subtitle: "一个问题多个回答",
-                  icon: Icons.balance_outlined,
-                  targetPage: ChatBatGroup(),
-                ),
+                  const CustomEntranceCard(
+                    title: '智能群聊',
+                    subtitle: "一个问题多个回答",
+                    icon: Icons.balance_outlined,
+                    targetPage: ChatBatGroup(),
+                  ),
 
-                const CustomEntranceCard(
-                  title: '文档解读',
-                  subtitle: "文档翻译总结提问",
-                  icon: Icons.newspaper_outlined,
-                  targetPage: DocumentInterpret(),
-                ),
+                  const CustomEntranceCard(
+                    title: '文档解读',
+                    subtitle: "文档翻译总结提问",
+                    icon: Icons.newspaper_outlined,
+                    targetPage: DocumentInterpret(),
+                  ),
 
-                const CustomEntranceCard(
-                  title: '图片解读',
-                  subtitle: "图片翻译总结问答",
-                  icon: Icons.image_outlined,
-                  targetPage: ImageInterpret(),
-                ),
+                  const CustomEntranceCard(
+                    title: '图片解读',
+                    subtitle: "图片翻译总结问答",
+                    icon: Icons.image_outlined,
+                    targetPage: ImageInterpret(),
+                  ),
 
-                const CustomEntranceCard(
-                  title: '文本生图',
-                  subtitle: "根据文字描述绘图",
-                  icon: Icons.photo_album_outlined,
-                  targetPage: CommonTTIScreen(),
-                ),
+                  const CustomEntranceCard(
+                    title: '文本生图',
+                    subtitle: "根据文字描述绘图",
+                    icon: Icons.photo_album_outlined,
+                    targetPage: CommonTTIScreen(),
+                  ),
 
-                const CustomEntranceCard(
-                  title: '创意文字',
-                  subtitle: "纹理变形姓氏创作",
-                  icon: Icons.text_fields_outlined,
-                  targetPage: AliyunWordArtScreen(),
-                ),
+                  const CustomEntranceCard(
+                    title: '创意文字',
+                    subtitle: "纹理变形姓氏创作",
+                    icon: Icons.text_fields_outlined,
+                    targetPage: AliyunWordArtScreen(),
+                  ),
 
-                const CustomEntranceCard(
-                  title: '图片生图',
-                  subtitle: "结合参考图片绘图",
-                  icon: Icons.photo_library_outlined,
-                  targetPage: CommonITIScreen(),
-                ),
+                  const CustomEntranceCard(
+                    title: '图片生图',
+                    subtitle: "结合参考图片绘图",
+                    icon: Icons.photo_library_outlined,
+                    targetPage: CommonITIScreen(),
+                  ),
 
-                // buildToolEntrance(
-                //   "[测试页]",
-                //   icon: const Icon(Icons.chat_outlined),
-                //   color: Colors.blue[100],
-                //   onTap: () {
-                //     Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //         builder: (context) => const TestPage(),
-                //       ),
-                //     );
-                //   },
-                // ),
+                  // buildToolEntrance(
+                  //   "[测试页]",
+                  //   icon: const Icon(Icons.chat_outlined),
+                  //   color: Colors.blue[100],
+                  //   onTap: () {
+                  //     Navigator.push(
+                  //       context,
+                  //       MaterialPageRoute(
+                  //         builder: (context) => const TestPage(),
+                  //       ),
+                  //     );
+                  //   },
+                  // ),
 
-                buildToolEntrance(
-                  "[测试功能]",
-                  icon: const Icon(Icons.chat_outlined),
-                  color: Colors.blue[100],
-                  onTap: () async {
-                    // 定义文件路径
-                    const String filePath = 'iti_spec_list.json';
+                  buildToolEntrance(
+                    "[测试功能]",
+                    icon: const Icon(Icons.chat_outlined),
+                    color: Colors.blue[100],
+                    onTap: () async {
+                      await testInitModelAndSysRole();
+                    },
+                  ),
 
-                    if (!await LLM_TTI_DIR.exists()) {
-                      await LLM_TTI_DIR.create(recursive: true);
-                    }
-                    final file = File('${LLM_TTI_DIR.path}/$filePath');
-
-                    // 将列表转换为 JSON 并写入文件
-                    writeListToJsonFile(CusLLM_SPEC_LIST, file.path);
-
-                    print(file.path);
-
-                    var list = await readListFromJsonFile(file.path);
-
-                    list = list.map((e) {
-                      e.cusLlmSpecId = const Uuid().v4();
-                      e.gmtCreate = DateTime.now();
-                      return e;
-                    }).toList();
-
-                    print(list);
-
-                    dbHelper.showTableNameList();
-
-                    dbHelper.clearCusLLMSpecs();
-
-                    await dbHelper.insertCusLLMSpecList(list);
-
-                    var ll = await dbHelper.queryCusLLMSpecList(
-                        platform: ApiPlatform.aliyun);
-                    print(ll);
-                  },
-                ),
-
-                // buildAIToolEntrance(
-                //   "功能\n占位(TODO)",
-                //   icon: const Icon(Icons.search),
-                // ),
-              ],
+                  // buildAIToolEntrance(
+                  //   "功能\n占位(TODO)",
+                  //   icon: const Icon(Icons.search),
+                  // ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
+  }
+
+  testInitModelAndSysRole() async {
+    final tempDir = Directory('/storage/emulated/0/swmate/jsons');
+
+    ///
+    /// 初始化模型信息
+    ///
+
+    // 定义文件路径
+    const String filePath = 'iti_spec_list.json';
+
+    if (!await tempDir.exists()) {
+      await tempDir.create(recursive: true);
+    }
+    final file = File('${tempDir.path}/$filePath');
+
+    // 将列表转换为 JSON 并写入文件
+    writeListToJsonFile(CusLLM_SPEC_LIST, file.path);
+
+    print(file.path);
+
+    var list = await readListFromJsonFile(file.path);
+
+    list = list.map((e) {
+      e.cusLlmSpecId = const Uuid().v4();
+      e.gmtCreate = DateTime.now();
+      return e;
+    }).toList();
+
+    print(list);
+
+    dbHelper.showTableNameList();
+
+    dbHelper.clearCusLLMSpecs();
+
+    await dbHelper.insertCusLLMSpecList(list);
+
+    var ll = await dbHelper.queryCusLLMSpecList();
+    print(ll);
+
+    setState(() {
+      cusModelList = ll;
+    });
+
+    ///
+    /// 初始化系统角色
+    ///
+
+    // 定义文件路径
+    const String sysroleFilePath = 'sysrole_spec_list.json';
+
+    if (!await tempDir.exists()) {
+      await tempDir.create(recursive: true);
+    }
+    final sysroleFile = File('${tempDir.path}/$sysroleFilePath');
+
+    // 将列表转换为 JSON 并写入文件
+    writeSysRoleListToJsonFile(DEFAULT_SysRole_LIST, sysroleFile.path);
+
+    print(sysroleFile.path);
+
+    var sysroleList = await readSysRoleListFromJsonFile(sysroleFile.path);
+
+    sysroleList = sysroleList.map((e) {
+      e.cusSysRoleSpecId = const Uuid().v4();
+      e.gmtCreate = DateTime.now();
+      return e;
+    }).toList();
+
+    print(sysroleList);
+
+    dbHelper.showTableNameList();
+
+    dbHelper.clearCusSysRoleSpecs();
+
+    await dbHelper.insertCusSysRoleSpecList(sysroleList);
+
+    var sysroleLl =
+        await dbHelper.queryCusSysRoleSpecList(sysRoleType: LLModelType.cc);
+    print(sysroleLl);
   }
 }
 
@@ -270,4 +363,17 @@ Future<List<CusLLMSpec>> readListFromJsonFile(String filePath) async {
   final jsonString = await File(filePath).readAsString();
   final jsonList = jsonDecode(jsonString) as List;
   return jsonList.map((map) => CusLLMSpec.fromMap(map)).toList();
+}
+
+void writeSysRoleListToJsonFile(List<CusSysRoleSpec> list, String filePath) {
+  final jsonList = list.map((spec) => spec.toMap()).toList();
+  final jsonString = jsonEncode(jsonList);
+  File(filePath).writeAsStringSync(jsonString);
+}
+
+Future<List<CusSysRoleSpec>> readSysRoleListFromJsonFile(
+    String filePath) async {
+  final jsonString = await File(filePath).readAsString();
+  final jsonList = jsonDecode(jsonString) as List;
+  return jsonList.map((map) => CusSysRoleSpec.fromMap(map)).toList();
 }

@@ -9,11 +9,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../apis/image_to_image/silicon_flow_iti_apis.dart';
+import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/utils/tools.dart';
 import '../../../../models/image_to_image/silicon_flow_iti_req.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
-import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../../../models/text_to_image/silicon_flow_ig_resp.dart';
 import '../../../../services/cus_get_storage.dart';
 import '../../_componets/loading_overlay.dart';
@@ -58,6 +58,7 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
   // 等待父类初始化，父类初始化完了，才初始化子类，直到超时取消
   itiInit() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
       setState(() {
         _elapsedSeconds++;
       });
@@ -65,6 +66,8 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
       if (isInited) {
         selectedSize = getInitialSize();
         selectedStyle = getInitialStyle();
+
+        if (!mounted) return;
         setState(() {
           isItiInited = true;
         });

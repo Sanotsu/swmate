@@ -26,7 +26,7 @@ class SWMateDdl {
       item          TEXT      NOT NULL,
       value         REAL      NOT NULL,
       gmt_modified  TEXT      NOT NULL,
-      PRIMARY KEY("bill_item_id")
+      PRIMARY KEY(bill_item_id)
     );
     """;
 
@@ -47,7 +47,7 @@ class SWMateDdl {
       yun_platform_name   TEXT,
       i2t_image_path      TEXT,
       chat_type           TEXT    NOT NULL,
-      PRIMARY KEY("uuid")
+      PRIMARY KEY(uuid)
     );
     """;
 
@@ -66,7 +66,7 @@ class SWMateDdl {
       image_urls      TEXT,
       gmt_create      TEXT    NOT NULL,
       llm_spec        TEXT    NOT NULL,
-      PRIMARY KEY("request_id")
+      PRIMARY KEY(request_id)
     );
     """;
 
@@ -92,7 +92,30 @@ class SWMateDdl {
       modelType      TEXT    NOT NULL,
       costPer        REAL,
       gmtCreate      TEXT    NOT NULL,
-      PRIMARY KEY("cusLlmSpecId")
+      PRIMARY KEY(cusLlmSpecId),
+      UNIQUE(platform,model,modelType)
+    );
+    """;
+
+  // 2024-08-26
+  // 保存自定义系统角色型信息(以前 system_prompt_list.dart预设的系统提示词数组，存入json，初始化到数据库,后续使用从数据库查询)
+  // 省事，用驼峰命名栏位
+  static const tableNameOfCusSysRoleSpec =
+      '${DB_TABLE_PREFIX}cus_system_role_spec';
+
+  static const String ddlForCusSySroleSpec = """
+    CREATE TABLE $tableNameOfCusSysRoleSpec (
+      cusSysRoleSpecId    TEXT    NOT NULL,
+      label               TEXT    NOT NULL,
+      subtitle            TEXT,
+      name                TEXT,
+      hintInfo            TEXT,
+      systemPrompt        TEXT    NOT NULL,
+      imageUrl            TEXT,
+      sysRoleType         TEXT,
+      gmtCreate           TEXT    NOT NULL,
+      PRIMARY KEY(cusSysRoleSpecId),
+      UNIQUE(label,sysRoleType,name)
     );
     """;
 

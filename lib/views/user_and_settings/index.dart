@@ -11,6 +11,7 @@ import '../../common/constants.dart';
 import '../../services/cus_get_storage.dart';
 import '../home.dart';
 import 'backup_and_restore/index.dart';
+import 'system_prompt_config/index.dart';
 
 class UserAndSettings extends StatefulWidget {
   const UserAndSettings({super.key});
@@ -100,7 +101,7 @@ class _UserAndSettingsState extends State<UserAndSettings> {
           // 备份还原和更多设置
           SizedBox(
             // height: (screenBodyHeight - 250 - 20),
-            height: 160.sp,
+            height: 240.sp,
             child: Center(child: _buildBakAndRestoreAndMoreSettingRow()),
           ),
         ],
@@ -195,15 +196,34 @@ class _UserAndSettingsState extends State<UserAndSettings> {
           child: SizedBox(
             height: 80.sp,
             child: NewCusSettingCard(
+              leadingIcon: Icons.build_circle_outlined,
+              title: "系统角色配置",
+              onTap: () {
+                // 处理相应的点击事件
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SystemPromptIndex(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        Expanded(
+          child: SizedBox(
+            height: 80.sp,
+            child: NewCusSettingCard(
               leadingIcon: Icons.question_mark,
               title: '常见问题(TBD)',
               onTap: () {
                 showAboutDialog(
                   context: context,
-                  applicationName: 'swmate',
+                  applicationName: 'SWMate',
                   children: [
                     const Text("author: SanotSu"),
-                    const Text("phone: 13113155009"),
+                    const Text("wechat: SanotSu"),
+                    const Text("github: https://github.com/Sanotsu/swmate"),
                   ],
                 );
               },

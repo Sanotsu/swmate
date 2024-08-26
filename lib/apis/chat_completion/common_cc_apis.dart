@@ -365,7 +365,7 @@ Future<StreamWithCancel<ComCCResp>> siliconFlowCCRespWithCancel(
   return getSseCcResponse(
     platUrls[PlatUrl.siliconFlowCCUrl]!,
     headers,
-    body.toFullJson(),
+    body.toJson(),
     stream: stream,
   );
 }

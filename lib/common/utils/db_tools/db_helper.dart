@@ -12,8 +12,10 @@ import '../../../models/base_model/brief_accounting_state.dart';
 import '../../../models/base_model/dish_state.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
 import '../../../models/text_to_image/com_ig_state.dart';
+import '../../../views/ai_assistant/_helper/constants.dart';
 import '../../constants.dart';
 import '../../llm_spec/cus_llm_spec.dart';
+import '../../llm_spec/cus_llm_model.dart';
 import 'ddl_swmate.dart';
 
 class DBHelper {
@@ -59,12 +61,11 @@ class DBHelper {
     print("开始创建表 _createDb……");
 
     await db.transaction((txn) async {
-      // txn.execute(BriefAccountingDdl.ddlForExpend);
-      // txn.execute(BriefAccountingDdl.ddlForIncome);
-      txn.execute(SWMateDdl.ddlForBillItem);
       txn.execute(SWMateDdl.ddlForChatHistory);
       txn.execute(SWMateDdl.ddlForImageGenerationHistory);
       txn.execute(SWMateDdl.ddlForCusLlmSpec);
+      txn.execute(SWMateDdl.ddlForCusSySroleSpec);
+      txn.execute(SWMateDdl.ddlForBillItem);
       txn.execute(SWMateDdl.ddlForDish);
     });
   }
@@ -702,7 +703,7 @@ class DBHelper {
       SWMateDdl.tableNameOfCusLlmSpec,
       where: where.isNotEmpty ? where.join(' AND ') : null,
       whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
-      orderBy: "gmtCreate DESC",
+      orderBy: "gmtCreate ASC",
     );
 
     return rows.map((row) => CusLLMSpec.fromMap(row)).toList();
@@ -729,6 +730,102 @@ class DBHelper {
     for (var item in rsts) {
       batch.insert(
         SWMateDdl.tableNameOfCusLlmSpec,
+        item.toMap(),
+      );
+    }
+    return await batch.commit();
+  }
+
+  ///***********************************************/
+  /// 自定义的系统角色信息管理
+  ///
+
+  // 查询所有系统角色信息
+  Future<List<CusSysRoleSpec>> queryCusSysRoleSpecList({
+    String? cusSysRoleSpecId, // 编号
+    String? labelKeyword, // 名称关键字
+    String? systemPromptKeyword, // 系统提示词关键字
+    CusSysRole? name, // 系统角色的枚举名称(目前仅仅文档处理有两个)
+    LLModelType? sysRoleType, // 模型角色适用类型枚举
+  }) async {
+    Database db = await database;
+
+    print("自定义的系统角色查询参数：");
+    print("cusSysRoleSpecId $cusSysRoleSpecId");
+    print("labelKeyword $labelKeyword");
+    print("systemPromptKeyword $systemPromptKeyword");
+    print("name $name");
+    print("sysRoleType $sysRoleType");
+
+    final where = <String>[];
+    final whereArgs = <dynamic>[];
+
+    if (cusSysRoleSpecId != null) {
+      where.add('cusSysRoleSpecId = ?');
+      whereArgs.add(cusSysRoleSpecId);
+    }
+
+    if (labelKeyword != null) {
+      where.add('labelKeyword LIKE ?');
+      whereArgs.add("%$labelKeyword%");
+    }
+    if (systemPromptKeyword != null) {
+      where.add('prompt systemPromptKeyword ?');
+      whereArgs.add("%$systemPromptKeyword%");
+    }
+    if (name != null) {
+      where.add('name = ?');
+      whereArgs.add(name.toString());
+    }
+    if (sysRoleType != null) {
+      where.add('sysRoleType = ?');
+      whereArgs.add(sysRoleType.name);
+    }
+
+    print("where $where");
+    print("whereArgs $whereArgs");
+
+    final rows = await db.query(
+      SWMateDdl.tableNameOfCusSysRoleSpec,
+      where: where.isNotEmpty ? where.join(' AND ') : null,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
+      orderBy: "gmtCreate ASC",
+    );
+
+    return rows.map((row) => CusSysRoleSpec.fromMap(row)).toList();
+  }
+
+  // 删除单条
+  Future<int> deleteCusSysRoleSpecById(String cusSysRoleSpecId) async =>
+      (await database).delete(
+        SWMateDdl.tableNameOfCusSysRoleSpec,
+        where: "cusSysRoleSpecId = ?",
+        whereArgs: [cusSysRoleSpecId],
+      );
+
+  // 清空所有模型信息
+  Future<int> clearCusSysRoleSpecs() async => (await database).delete(
+        SWMateDdl.tableNameOfCusSysRoleSpec,
+        where: "cusSysRoleSpecId != ?",
+        whereArgs: ["cusSysRoleSpecId"],
+      );
+
+  // 修改单条
+  Future<int> updateCusSysRoleSpec(CusSysRoleSpec sysRole) async =>
+      (await database).update(
+        SWMateDdl.tableNameOfCusSysRoleSpec,
+        sysRole.toMap(),
+        where: 'cusSysRoleSpecId = ?',
+        whereArgs: [sysRole.cusSysRoleSpecId],
+      );
+
+  // 新增(只有单个的时候就一个值的数组，理论上不会批量插入)
+  Future<List<Object?>> insertCusSysRoleSpecList(
+      List<CusSysRoleSpec> rsts) async {
+    var batch = (await database).batch();
+    for (var item in rsts) {
+      batch.insert(
+        SWMateDdl.tableNameOfCusSysRoleSpec,
         item.toMap(),
       );
     }
