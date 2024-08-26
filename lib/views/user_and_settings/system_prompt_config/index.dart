@@ -93,16 +93,13 @@ class _SystemPromptIndexState extends State<SystemPromptIndex> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Text(
-                          "预设系统角色说明",
-                          style: TextStyle(fontSize: 18.sp),
-                        ),
+                        child: Text("说明：", style: TextStyle(fontSize: 15.sp)),
                       ),
                     ],
                   ),
                   Text(
-                    """内部预设一些系统角色，用户可以自行创建、导入、删除。\n系统角色需要指定不同使用场景(目前仅cc:智能对话)。""",
-                    maxLines: 2,
+                    """内部预设一些系统角色，用户可以自行创建、导入、删除。\n系统角色需要指定不同使用场景\n(cc: 智能对话; tti: 文本生图; iti: 图片生图)。""",
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 12.sp),
                   ),

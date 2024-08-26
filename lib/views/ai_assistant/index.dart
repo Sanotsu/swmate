@@ -10,7 +10,6 @@ import 'package:uuid/uuid.dart';
 
 import '../../apis/_self_model_specs.dart';
 import '../../apis/_self_system_role_list.dart';
-import '../../common/components/tool_widget.dart';
 import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
 import '../../common/utils/db_tools/db_helper.dart';
@@ -186,50 +185,50 @@ class _AIToolIndexState extends State<AIToolIndex> {
                 mainAxisSpacing: 5,
                 crossAxisCount: 2,
                 childAspectRatio: 2 / 1,
-                children: <Widget>[
-                  const CustomEntranceCard(
+                children: const <Widget>[
+                  CustomEntranceCard(
                     title: '智能对话',
                     subtitle: "多个平台多种模型",
                     icon: Icons.chat_outlined,
                     targetPage: ChatBat(),
                   ),
 
-                  const CustomEntranceCard(
+                  CustomEntranceCard(
                     title: '智能群聊',
                     subtitle: "一个问题多个回答",
                     icon: Icons.balance_outlined,
                     targetPage: ChatBatGroup(),
                   ),
 
-                  const CustomEntranceCard(
+                  CustomEntranceCard(
                     title: '文档解读',
                     subtitle: "文档翻译总结提问",
                     icon: Icons.newspaper_outlined,
                     targetPage: DocumentInterpret(),
                   ),
 
-                  const CustomEntranceCard(
+                  CustomEntranceCard(
                     title: '图片解读',
                     subtitle: "图片翻译总结问答",
                     icon: Icons.image_outlined,
                     targetPage: ImageInterpret(),
                   ),
 
-                  const CustomEntranceCard(
+                  CustomEntranceCard(
                     title: '文本生图',
                     subtitle: "根据文字描述绘图",
                     icon: Icons.photo_album_outlined,
                     targetPage: CommonTTIScreen(),
                   ),
 
-                  const CustomEntranceCard(
+                  CustomEntranceCard(
                     title: '创意文字',
                     subtitle: "纹理变形姓氏创作",
                     icon: Icons.text_fields_outlined,
                     targetPage: AliyunWordArtScreen(),
                   ),
 
-                  const CustomEntranceCard(
+                  CustomEntranceCard(
                     title: '图片生图',
                     subtitle: "结合参考图片绘图",
                     icon: Icons.photo_library_outlined,
@@ -250,14 +249,14 @@ class _AIToolIndexState extends State<AIToolIndex> {
                   //   },
                   // ),
 
-                  buildToolEntrance(
-                    "[测试功能]",
-                    icon: const Icon(Icons.chat_outlined),
-                    color: Colors.blue[100],
-                    onTap: () async {
-                      await testInitModelAndSysRole();
-                    },
-                  ),
+                  // buildToolEntrance(
+                  //   "[测试功能]",
+                  //   icon: const Icon(Icons.chat_outlined),
+                  //   color: Colors.blue[100],
+                  //   onTap: () async {
+                  //     await testInitModelAndSysRole();
+                  //   },
+                  // ),
 
                   // buildAIToolEntrance(
                   //   "功能\n占位(TODO)",

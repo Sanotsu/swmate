@@ -115,6 +115,8 @@ dart run build_runner build --delete-conflicting-outputs
 #### 2024-08-26
 
 - refactor: 将预设的系统角色信息存入 sqlite 数据库;feat: 添加了系统角色管理页面(列表、新增、导入、删除等);文生图也可选中预设提示词。
+- fix: 修复一些细节问题，整体功能基本完成。
+  - 如果后续没有 tts api 的话，基本上就没有新功能了，都是些优化（还有模型和系统角色的 json 文件优化等）和修 bug 的工作了。
 
 ### todo:
 

@@ -124,20 +124,20 @@ const _$LLModelTypeEnumMap = {
 
 CusSysRoleSpec _$CusSysRoleSpecFromJson(Map<String, dynamic> json) =>
     CusSysRoleSpec(
+      cusSysRoleSpecId: json['cusSysRoleSpecId'] as String?,
       label: json['label'] as String,
+      subtitle: json['subtitle'] as String?,
       name: $enumDecodeNullable(_$CusSysRoleEnumMap, json['name']),
       hintInfo: json['hintInfo'] as String? ?? "",
       systemPrompt: json['systemPrompt'] as String,
+      negativePrompt: json['negativePrompt'] as String?,
+      imageUrl: json['imageUrl'] as String?,
       sysRoleType:
-          $enumDecodeNullable(_$LLModelTypeEnumMap, json['sysRoleType']) ??
-              LLModelType.vision,
-    )
-      ..cusSysRoleSpecId = json['cusSysRoleSpecId'] as String?
-      ..subtitle = json['subtitle'] as String?
-      ..imageUrl = json['imageUrl'] as String?
-      ..gmtCreate = json['gmtCreate'] == null
+          $enumDecodeNullable(_$LLModelTypeEnumMap, json['sysRoleType']),
+      gmtCreate: json['gmtCreate'] == null
           ? null
-          : DateTime.parse(json['gmtCreate'] as String);
+          : DateTime.parse(json['gmtCreate'] as String),
+    );
 
 Map<String, dynamic> _$CusSysRoleSpecToJson(CusSysRoleSpec instance) =>
     <String, dynamic>{
@@ -150,6 +150,7 @@ Map<String, dynamic> _$CusSysRoleSpecToJson(CusSysRoleSpec instance) =>
       'imageUrl': instance.imageUrl,
       'sysRoleType': _$LLModelTypeEnumMap[instance.sysRoleType],
       'gmtCreate': instance.gmtCreate?.toIso8601String(),
+      'negativePrompt': instance.negativePrompt,
     };
 
 const _$CusSysRoleEnumMap = {

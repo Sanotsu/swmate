@@ -97,39 +97,45 @@ class MessageItem extends StatelessWidget {
 
   Widget _buildAvatarAndTimestamp(
       BuildContext context, bool isFromUser, Color textColor) {
-    return SizedBox(
-      height: 40.sp,
-      child: Row(
-        // 来自用户，头像在右边；不是来自用户头像在左边。对齐方向同理
-        mainAxisAlignment:
-            isFromUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+    return MediaQuery(
+      // 头像旁边的时间和模型标签(智能群聊时)不缩放，避免显示溢出
+      data: MediaQuery.of(context).copyWith(
+        textScaler: const TextScaler.linear(1),
+      ),
+      child: SizedBox(
+        height: 40.sp,
+        child: Row(
+          // 来自用户，头像在右边；不是来自用户头像在左边。对齐方向同理
+          mainAxisAlignment:
+              isFromUser ? MainAxisAlignment.end : MainAxisAlignment.start,
 
-        children: [
-          if (!isFromUser) _buildAvatar(isFromUser),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 3.sp),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (isShowModelLable && message.role != 'user')
-                  Text(
-                    message.modelLabel ?? "<无模型名称>",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
+          children: [
+            if (!isFromUser) _buildAvatar(isFromUser),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 3.sp),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isShowModelLable && message.role != 'user')
+                    Text(
+                      message.modelLabel ?? "<无模型名称>",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                      textAlign: TextAlign.start,
                     ),
-                    textAlign: TextAlign.start,
+                  Text(
+                    DateFormat(constDatetimeFormat).format(message.dateTime),
+                    style: TextStyle(fontSize: 12.sp, color: textColor),
                   ),
-                Text(
-                  DateFormat(constDatetimeFormat).format(message.dateTime),
-                  style: TextStyle(fontSize: 12.sp, color: textColor),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          if (isFromUser) _buildAvatar(isFromUser),
-        ],
+            if (isFromUser) _buildAvatar(isFromUser),
+          ],
+        ),
       ),
     );
   }

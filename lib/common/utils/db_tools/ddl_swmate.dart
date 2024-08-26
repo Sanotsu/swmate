@@ -111,6 +111,7 @@ class SWMateDdl {
       name                TEXT,
       hintInfo            TEXT,
       systemPrompt        TEXT    NOT NULL,
+      negativePrompt      TEXT,
       imageUrl            TEXT,
       sysRoleType         TEXT,
       gmtCreate           TEXT    NOT NULL,

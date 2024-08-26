@@ -158,6 +158,10 @@ class CusSysRoleSpec {
   // 数据创建的时候(一般排序用)
   DateTime? gmtCreate;
 
+  // 因为示例的文生图也用这个，所以加上可能有的消极提示词
+  // 正向提示词就 systemPrompt
+  String? negativePrompt;
+
   CusSysRoleSpec({
     this.cusSysRoleSpecId,
     required this.label,
@@ -165,6 +169,7 @@ class CusSysRoleSpec {
     this.name,
     this.hintInfo = "",
     required this.systemPrompt,
+    this.negativePrompt,
     this.imageUrl,
     this.sysRoleType,
     this.gmtCreate,
@@ -191,6 +196,7 @@ class CusSysRoleSpec {
     required this.label,
     this.subtitle,
     required this.systemPrompt,
+    this.negativePrompt,
     this.imageUrl,
     this.sysRoleType = LLModelType.tti,
   });
@@ -200,6 +206,7 @@ class CusSysRoleSpec {
     required this.label,
     this.subtitle,
     required this.systemPrompt,
+    this.negativePrompt,
     this.imageUrl,
     this.sysRoleType = LLModelType.iti,
   });
@@ -227,6 +234,7 @@ class CusSysRoleSpec {
       systemPrompt: map['systemPrompt'],
     )
       ..cusSysRoleSpecId = map['cusSysRoleSpecId']
+      ..negativePrompt = map['negativePrompt']
       ..subtitle = map['subtitle']
       ..imageUrl = map['imageUrl']
       ..sysRoleType = map['sysRoleType'] != null
@@ -244,6 +252,7 @@ class CusSysRoleSpec {
       'name': name?.name.toString(),
       'hintInfo': hintInfo,
       'systemPrompt': systemPrompt,
+      'negativePrompt': negativePrompt,
       'imageUrl': imageUrl,
       'sysRoleType': sysRoleType?.name.toString(),
       'gmtCreate': gmtCreate?.toIso8601String(),

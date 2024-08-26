@@ -337,6 +337,11 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
     setState(() {
       promptController.text = role.systemPrompt;
       prompt = role.systemPrompt;
+
+      if (role.negativePrompt != null) {
+        negativePromptController.text = role.negativePrompt!;
+        negativePrompt = role.negativePrompt!;
+      }
     });
 
     // ScaffoldMessenger.of(context).showSnackBar(
@@ -350,17 +355,18 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
       appBar: AppBar(
         title: Text(getAppBarTitle()),
         actions: [
-          TextButton(
-            onPressed: () {
-              showCusSysRoleList(
-                context,
-                sysRoleList,
-                isInited,
-                onRoleSelected,
-              );
-            },
-            child: const Text("预设提示词"),
-          ),
+          if (isInited && selectedModelSpec.modelType != LLModelType.tti_word)
+            TextButton(
+              onPressed: () {
+                showCusSysRoleList(
+                  context,
+                  sysRoleList,
+                  isInited,
+                  onRoleSelected,
+                );
+              },
+              child: const Text("预设提示词"),
+            ),
           IconButton(
             onPressed: () {
               Navigator.push(

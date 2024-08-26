@@ -47,7 +47,7 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
   // 基类初始话成功了，还要子类也初始化成功，才能渲染页面
   bool isItiInited = false;
   Timer? _timer;
-  int _elapsedSeconds = 0;
+  double _elapsedSeconds = 0;
 
   @override
   void initState() {
@@ -57,10 +57,10 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
 
   // 等待父类初始化，父类初始化完了，才初始化子类，直到超时取消
   itiInit() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (!mounted) return;
       setState(() {
-        _elapsedSeconds++;
+        _elapsedSeconds += 0.1;
       });
 
       if (isInited) {

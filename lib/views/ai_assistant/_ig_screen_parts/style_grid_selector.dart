@@ -10,6 +10,7 @@ class StyleGrid extends StatelessWidget {
   final List<String> subLabels;
   final int selectedIndex;
   final Function(int) onTap;
+  final int crossAxisCount;
 
   const StyleGrid({
     super.key,
@@ -18,12 +19,13 @@ class StyleGrid extends StatelessWidget {
     required this.subLabels,
     required this.selectedIndex,
     required this.onTap,
+    this.crossAxisCount = 4,
   });
 
   @override
   Widget build(BuildContext context) {
     return GridView.count(
-      crossAxisCount: 4,
+      crossAxisCount: crossAxisCount,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: List.generate(imageUrls.length, (index) {

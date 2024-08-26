@@ -202,6 +202,7 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
           child: SizedBox(
             width: 0.8.sw,
             child: StyleGrid(
+              crossAxisCount: 5,
               imageUrls: WANX_StyleImageList,
               labels: WANX_StyleMap.keys.toList(),
               subLabels: WANX_StyleMap.values.toList(),
