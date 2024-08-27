@@ -36,6 +36,12 @@ ComCCResp _$ComCCRespFromJson(Map<String, dynamic> json) => ComCCResp(
           : TencentError.fromJson(json['ErrorMsg'] as Map<String, dynamic>),
       note: json['Note'] as String?,
       requestId: json['RequestId'] as String?,
+      webSearch: (json['web_search'] as List<dynamic>?)
+          ?.map((e) => GLMWebSearch.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      contentFilter: (json['content_filter'] as List<dynamic>?)
+          ?.map((e) => GLMContentFilter.fromJson(e as Map<String, dynamic>))
+          .toList(),
       cusText: json['cusText'] as String?,
     );
 
@@ -63,6 +69,8 @@ Map<String, dynamic> _$ComCCRespToJson(ComCCResp instance) => <String, dynamic>{
       'ErrorMsg': instance.tencentErrorMsg?.toJson(),
       'Note': instance.note,
       'RequestId': instance.requestId,
+      'web_search': instance.webSearch?.map((e) => e.toJson()).toList(),
+      'content_filter': instance.contentFilter?.map((e) => e.toJson()).toList(),
     };
 
 CCQuote _$CCQuoteFromJson(Map<String, dynamic> json) => CCQuote(
@@ -75,6 +83,35 @@ Map<String, dynamic> _$CCQuoteToJson(CCQuote instance) => <String, dynamic>{
       'num': instance.num,
       'url': instance.url,
       'title': instance.title,
+    };
+
+GLMWebSearch _$GLMWebSearchFromJson(Map<String, dynamic> json) => GLMWebSearch(
+      icon: json['icon'] as String?,
+      title: json['title'] as String?,
+      link: json['link'] as String?,
+      media: json['media'] as String?,
+      content: json['content'] as String?,
+    );
+
+Map<String, dynamic> _$GLMWebSearchToJson(GLMWebSearch instance) =>
+    <String, dynamic>{
+      'icon': instance.icon,
+      'title': instance.title,
+      'link': instance.link,
+      'media': instance.media,
+      'content': instance.content,
+    };
+
+GLMContentFilter _$GLMContentFilterFromJson(Map<String, dynamic> json) =>
+    GLMContentFilter(
+      role: json['role'] as String?,
+      level: (json['level'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$GLMContentFilterToJson(GLMContentFilter instance) =>
+    <String, dynamic>{
+      'role': instance.role,
+      'level': instance.level,
     };
 
 CCUsage _$CCUsageFromJson(Map<String, dynamic> json) => CCUsage(

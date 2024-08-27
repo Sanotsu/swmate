@@ -119,7 +119,7 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
         value: platform,
         child: Text(
           CP_NAME_MAP[platform]!,
-          style: const TextStyle(color: Colors.blue),
+          style: TextStyle(color: Colors.blue, fontSize: 15.sp),
         ),
       );
     }).toList();
@@ -137,7 +137,7 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
               alignment: AlignmentDirectional.centerStart,
               child: Text(
                 e.name,
-                style: const TextStyle(color: Colors.blue),
+                style: TextStyle(color: Colors.blue, fontSize: 15.sp),
               ),
             ))
         .toList();
@@ -214,7 +214,7 @@ class PlatAndLlmRowContent extends StatelessWidget {
         ),
         IconButton(
           onPressed: () {
-            commonHintDialog(
+            commonMarkdwonHintDialog(
               context,
               "模型说明",
               selectedModelSpec?.feature ?? selectedModelSpec?.useCase ?? '',

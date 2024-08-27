@@ -18,6 +18,7 @@ import '../../common/utils/dio_client/interceptor_error.dart';
 import '../../services/cus_get_storage.dart';
 import '../_self_keys.dart';
 import '../gen_access_token/tencent_signature_v3.dart';
+import '../gen_access_token/zhipu_signature.dart';
 import '../get_app_key_helper.dart';
 
 final l = ProsteLogger();
@@ -32,6 +33,7 @@ enum PlatUrl {
   siliconFlowCCUrl,
   lingyiwanwuCCUrl,
   xfyunCCUrl,
+  zhipuCCUrl,
 }
 
 const Map<PlatUrl, String> platUrls = {
@@ -46,6 +48,7 @@ const Map<PlatUrl, String> platUrls = {
   PlatUrl.siliconFlowCCUrl: "https://api.siliconflow.cn/v1/chat/completions",
   PlatUrl.lingyiwanwuCCUrl: "https://api.lingyiwanwu.com/v1/chat/completions",
   PlatUrl.xfyunCCUrl: "https://spark-api-open.xf-yun.com/v1/chat/completions",
+  PlatUrl.zhipuCCUrl: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
 };
 
 ///
@@ -195,9 +198,9 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
             .transform(const SseTransformer())
             // 处理每一行数据
             .listen((event) async {
-          // print(
-          //   "Event: ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
-          // );
+          print(
+            "Event: ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
+          );
 
           // 如果包含DONE，是正常获取AI接口的结束
           if ((event.data).contains('[DONE]')) {
@@ -476,6 +479,46 @@ Future<StreamWithCancel<ComCCResp>> tencentCCRespWithCancel(
     platUrls[PlatUrl.tencentCCUrl]!,
     header,
     tempBody,
+    stream: stream,
+  );
+}
+
+/// 智谱AI的请求方法
+Future<StreamWithCancel<ComCCResp>> zhipuCCRespWithCancel(
+  List<CCMessage> messages, {
+  String? model,
+  bool stream = false,
+}) async {
+  var specs = await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.zhipu);
+
+  model = model ??
+      specs.firstWhere((e) => e.cusLlm == CusLLM.zhipu_GLM4_Flash).model;
+
+  var body = ComCCReq.glm(
+    model: model,
+    messages: messages,
+    stream: stream,
+    tools: [
+      CCTool(
+        "web_search",
+        webSearch: CCWebSearch(enable: true, searchResult: true),
+      )
+    ],
+  );
+
+  var token = zhipuGenerateToken(
+    getStoredUserKey(SKN.zhipuAK.name, ZHIPU_AK),
+  );
+
+  var header = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer $token",
+  };
+
+  return getSseCcResponse(
+    platUrls[PlatUrl.zhipuCCUrl]!,
+    header,
+    body.toJson(),
     stream: stream,
   );
 }

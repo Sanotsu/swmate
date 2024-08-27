@@ -15,6 +15,7 @@ enum ApiPlatform {
   siliconCloud,
   lingyiwanwu,
   xfyun, // 讯飞云，官网就是这样写的
+  zhipu, // 智谱AI
 }
 
 // 大模型的分类，在不同页面可以用作模型的筛选
@@ -28,6 +29,7 @@ enum LLModelType {
   tti, // Text To Image
   tti_word, // 生成艺术字图片
   iti, // Image To Image
+  ttv, // Text To Video
 }
 
 // 模型对应的中文名
@@ -38,6 +40,7 @@ final Map<ApiPlatform, String> CP_NAME_MAP = {
   ApiPlatform.siliconCloud: '硅动科技',
   ApiPlatform.lingyiwanwu: '零一万物',
   ApiPlatform.xfyun: '讯飞',
+  ApiPlatform.zhipu: '智谱',
 };
 
 ///
@@ -55,6 +58,8 @@ enum CusLLM {
   baidu_Fuyu_8B, // 图像理解
 
   tencent_Hunyuan_Lite,
+
+  zhipu_GLM4_Flash,
 
   /// 讯飞的星火大模型轻量版
   xfyun_Spark_Lite,
@@ -113,4 +118,33 @@ enum CusLLM {
   siliconCloud_StableDiffusionXL_ITI,
   siliconCloud_StableDiffusion2p1_ITI,
   siliconCloud_StableDiffusionXL_Lighting_ITI,
+
+  /// 硅动科技收费的模型
+  siliconCloud_Qwen2_72B_Instruct,
+  siliconCloud_Qwen2_Math_72B_Instruct,
+  siliconCloud_Qwen2_57B_A14B_Instruct,
+  siliconCloud_Qwen1p5_110B_Chat,
+  siliconCloud_Qwen1p5_32B_Chat,
+  siliconCloud_Qwen1p5_14B_Chat,
+  siliconCloud_Yi1p5_34B_Chat_16K,
+  siliconCloud_DeepSeek_Coder_V2_Instruct,
+  siliconCloud_DeepSeek_V2_Chat,
+  siliconCloud_DeepSeek_LLM_67B_Chat,
+  siliconCloud_internlm2p5_20B_Chat,
+  siliconCloud_Llama3p1_405B_Instruct,
+  siliconCloud_Llama3p1_70B_Instruct,
+  siliconCloud_Llama3_70B_Instruct,
+  siliconCloud_Mixtral_8x7B_Instruct_v0p1,
+  siliconCloud_gemma2_27B_Instruct,
+
+  /// 智谱AI相关收费模型
+  // 对话
+  zhipu_GLM4_0520,
+  zhipu_GLM4_AirX,
+  zhipu_GLM4_Air,
+  zhipu_GLM4_Long,
+  // 多模态
+  zhipu_GLM4V,
+  zhipu_CogView3_TTI,
+  zhipu_CogVideoX_TTV,
 }

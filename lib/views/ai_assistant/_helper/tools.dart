@@ -50,6 +50,10 @@ Future<List<CusLLMSpec>> fetchCusLLMSpecList(LLModelType targetType) async {
     llmSpecList.addAll(tempList
         .where((s) => s.platform == ApiPlatform.lingyiwanwu && !s.isFree));
   }
+  if (getUserKey(SKN.zhipuAK.name) != null) {
+    llmSpecList.addAll(
+        tempList.where((s) => s.platform == ApiPlatform.zhipu && !s.isFree));
+  }
 
   return llmSpecList;
 }

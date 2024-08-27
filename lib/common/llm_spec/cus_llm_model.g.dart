@@ -16,7 +16,6 @@ CusLLMSpec _$CusLLMSpecFromJson(Map<String, dynamic> json) => CusLLMSpec(
       (json['inputPrice'] as num?)?.toDouble(),
       (json['outputPrice'] as num?)?.toDouble(),
       cusLlmSpecId: json['cusLlmSpecId'] as String?,
-      isQuote: json['isQuote'] as bool? ?? false,
       feature: json['feature'] as String?,
       useCase: json['useCase'] as String?,
       modelType: $enumDecodeNullable(_$LLModelTypeEnumMap, json['modelType']) ??
@@ -38,7 +37,6 @@ Map<String, dynamic> _$CusLLMSpecToJson(CusLLMSpec instance) =>
       'isFree': instance.isFree,
       'inputPrice': instance.inputPrice,
       'outputPrice': instance.outputPrice,
-      'isQuote': instance.isQuote,
       'feature': instance.feature,
       'useCase': instance.useCase,
       'modelType': _$LLModelTypeEnumMap[instance.modelType]!,
@@ -53,6 +51,7 @@ const _$ApiPlatformEnumMap = {
   ApiPlatform.siliconCloud: 'siliconCloud',
   ApiPlatform.lingyiwanwu: 'lingyiwanwu',
   ApiPlatform.xfyun: 'xfyun',
+  ApiPlatform.zhipu: 'zhipu',
 };
 
 const _$CusLLMEnumMap = {
@@ -63,6 +62,7 @@ const _$CusLLMEnumMap = {
   CusLLM.baidu_Yi_34B_Chat_4K: 'baidu_Yi_34B_Chat_4K',
   CusLLM.baidu_Fuyu_8B: 'baidu_Fuyu_8B',
   CusLLM.tencent_Hunyuan_Lite: 'tencent_Hunyuan_Lite',
+  CusLLM.zhipu_GLM4_Flash: 'zhipu_GLM4_Flash',
   CusLLM.xfyun_Spark_Lite: 'xfyun_Spark_Lite',
   CusLLM.xfyun_TTI: 'xfyun_TTI',
   CusLLM.aliyun_Wanx_v1_TTI: 'aliyun_Wanx_v1_TTI',
@@ -112,6 +112,13 @@ const _$CusLLMEnumMap = {
       'siliconCloud_StableDiffusion2p1_ITI',
   CusLLM.siliconCloud_StableDiffusionXL_Lighting_ITI:
       'siliconCloud_StableDiffusionXL_Lighting_ITI',
+  CusLLM.zhipu_GLM4_0520: 'zhipu_GLM4_0520',
+  CusLLM.zhipu_GLM4_AirX: 'zhipu_GLM4_AirX',
+  CusLLM.zhipu_GLM4_Air: 'zhipu_GLM4_Air',
+  CusLLM.zhipu_GLM4_Long: 'zhipu_GLM4_Long',
+  CusLLM.zhipu_GLM4V: 'zhipu_GLM4V',
+  CusLLM.zhipu_CogView3_TTI: 'zhipu_CogView3_TTI',
+  CusLLM.zhipu_CogVideoX_TTV: 'zhipu_CogVideoX_TTV',
 };
 
 const _$LLModelTypeEnumMap = {
@@ -120,6 +127,7 @@ const _$LLModelTypeEnumMap = {
   LLModelType.tti: 'tti',
   LLModelType.tti_word: 'tti_word',
   LLModelType.iti: 'iti',
+  LLModelType.ttv: 'ttv',
 };
 
 CusSysRoleSpec _$CusSysRoleSpecFromJson(Map<String, dynamic> json) =>

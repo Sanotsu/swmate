@@ -27,8 +27,6 @@ class CusLLMSpec {
   double? inputPrice;
   double? outputPrice;
 
-  // 是否支持索引用实时全网检索信息服务
-  bool? isQuote;
   // 模型特性
   String? feature;
   // 使用场景
@@ -47,7 +45,6 @@ class CusLLMSpec {
   CusLLMSpec(this.platform, this.cusLlm, this.model, this.name,
       this.contextLength, this.isFree, this.inputPrice, this.outputPrice,
       {this.cusLlmSpecId,
-      this.isQuote = false,
       this.feature,
       this.useCase,
       this.modelType = LLModelType.cc,
@@ -59,7 +56,7 @@ class CusLLMSpec {
       {this.cusLlmSpecId,
       this.feature,
       this.useCase,
-      this.modelType = LLModelType.cc,
+      this.modelType = LLModelType.tti,
       this.costPer = 0.5,
       this.gmtCreate});
 
@@ -71,14 +68,13 @@ class CusLLMSpec {
       this.costPer = 0.5,
       this.gmtCreate});
 
-  CusLLMSpec.init(
-    this.platform,
-    this.cusLlm, {
-    this.model = "",
-    this.name = "",
-    this.isFree = false,
-    this.modelType = LLModelType.iti,
-  });
+  CusLLMSpec.ttv(this.platform, this.cusLlm, this.model, this.name, this.isFree,
+      {this.cusLlmSpecId,
+      this.feature,
+      this.useCase,
+      this.modelType = LLModelType.ttv,
+      this.costPer = 0.5,
+      this.gmtCreate});
 
   // 从字符串转
   factory CusLLMSpec.fromRawJson(String str) =>
@@ -102,7 +98,6 @@ class CusLLMSpec {
       map['inputPrice'],
       map['outputPrice'],
       cusLlmSpecId: map['cusLlmSpecId'],
-      isQuote: map['isQuote'] == 1 ? true : false,
       feature: map['feature'],
       useCase: map['useCase'],
       modelType: LLModelType.values
@@ -124,7 +119,6 @@ class CusLLMSpec {
       'isFree': isFree ? 1 : 0,
       'inputPrice': inputPrice,
       'outputPrice': outputPrice,
-      'isQuote': (isQuote != null && isQuote == true) ? 1 : 0,
       'feature': feature,
       'useCase': useCase,
       'modelType': modelType.toString(),

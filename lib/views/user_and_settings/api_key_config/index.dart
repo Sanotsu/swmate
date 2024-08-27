@@ -1,5 +1,9 @@
 // ignore_for_file: avoid_print
 
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,9 +26,73 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
   // 密钥是否是隐藏状态(就不每个都弄，所有密钥单独一个就好了)
   bool _obscureText = true;
 
-  void _toggle() {
+  // 是否在导入密钥中
+  bool isLoading = true;
+
+  // 导入各个平台的API
+  Future<void> _openJsonFiles() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json', 'JSON'],
+    );
+
+    if (result != null) {
+      setState(() => isLoading = true);
+
+      File file = File(result.files.single.path!);
+
+      print("result--$result");
+
+      try {
+        // 获取json文件中的各个key存入缓存
+        var jsonData = json.decode(await file.readAsString());
+
+        await MyGetStorage().setUserAKMap({
+          SKN.baiduApiKey.name: jsonData[SKN.baiduApiKey.name] ?? "",
+          SKN.baiduSecretKey.name: jsonData[SKN.baiduSecretKey.name] ?? "",
+          SKN.tencentSecretId.name: jsonData[SKN.tencentSecretId.name] ?? "",
+          SKN.tencentSecretKey.name: jsonData[SKN.tencentSecretKey.name] ?? "",
+          SKN.aliyunAppId.name: jsonData[SKN.aliyunAppId.name] ?? "",
+          SKN.aliyunApiKey.name: jsonData[SKN.aliyunApiKey.name] ?? "",
+          SKN.xfyunAppId.name: jsonData[SKN.xfyunAppId.name] ?? "",
+          SKN.xfyunApiSecret.name: jsonData[SKN.xfyunApiSecret.name] ?? "",
+          SKN.xfyunApiKey.name: jsonData[SKN.xfyunApiKey.name] ?? "",
+          SKN.xfyunApiPassword.name: jsonData[SKN.xfyunApiPassword.name] ?? "",
+          SKN.siliconFlowAK.name: jsonData[SKN.siliconFlowAK.name] ?? "",
+          SKN.lingyiwanwuAK.name: jsonData[SKN.lingyiwanwuAK.name] ?? "",
+          SKN.zhipuAK.name: jsonData[SKN.zhipuAK.name] ?? "",
+        });
+
+        // 存入之后更新表单
+        setState(() {
+          _formKey.currentState?.patchValue(MyGetStorage().getUserAKMap());
+        });
+      } catch (e) {
+        // 弹出报错提示框
+        if (!mounted) return;
+        commonExceptionDialog(
+          context,
+          "json导入失败",
+          "json解析失败:${file.path},\n${e.toString}",
+        );
+
+        setState(() => isLoading = false);
+        rethrow;
+      }
+
+      setState(() => isLoading = false);
+    } else {
+      // User canceled the picker
+      return;
+    }
+  }
+
+  clearUserAK() async {
+    await MyGetStorage().setUserAKMap(null);
     setState(() {
-      _obscureText = !_obscureText;
+      _formKey.currentState?.patchValue(MyGetStorage().getUserAKMap());
+
+      _formKey.currentState?.reset();
     });
   }
 
@@ -51,6 +119,7 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
               temp?[SKN.xfyunApiPassword.name]?.value ?? "",
           SKN.siliconFlowAK.name: temp?[SKN.siliconFlowAK.name]?.value ?? "",
           SKN.lingyiwanwuAK.name: temp?[SKN.lingyiwanwuAK.name]?.value ?? "",
+          SKN.zhipuAK.name: temp?[SKN.zhipuAK.name]?.value ?? "",
         });
 
         setState(() {
@@ -64,12 +133,29 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
     }
   }
 
+  // 切换密钥可见性
+  void _toggle() {
+    setState(() {
+      _obscureText = !_obscureText;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('配置的各平台密钥'),
+        title: const Text('配置平台密钥'),
         actions: [
+          if (!_isEditing)
+            IconButton(
+              onPressed: clearUserAK,
+              icon: const Icon(Icons.clear_all),
+            ),
+          if (!_isEditing)
+            IconButton(
+              onPressed: _openJsonFiles,
+              icon: const Icon(Icons.upload_file),
+            ),
           if (_isEditing)
             IconButton(
               icon: const Icon(Icons.close),
@@ -95,25 +181,20 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           ),
         ],
       ),
-      body: ListView(
+      body: Column(
         children: [
           Container(
-            height: 80.sp,
-            margin: EdgeInsets.fromLTRB(20, 0, 10.sp, 0.sp),
+            height: 60.sp,
+            margin: EdgeInsets.fromLTRB(20, 0, 0.sp, 0.sp),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Text(
-                      """配置了本应用支持平台中自己的密钥，\n可以使用一些该平台上的付费的模型。\n密钥仅在设备本地缓存，确保值可用。""",
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 14.sp),
-                    ),
-                    Divider(height: 10.sp, thickness: 1.sp),
-                  ],
+                Text(
+                  """配置了本应用支持平台中自己的密钥，\n可以使用一些该平台上的付费的模型。\n密钥仅在设备本地缓存，确保值可用。""",
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 14.sp),
                 ),
                 IconButton(
                   icon: Icon(
@@ -124,10 +205,14 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
               ],
             ),
           ),
-          Padding(
-            padding: EdgeInsets.all(5.sp),
-            child: SingleChildScrollView(
-              child: buildFormBuilder(),
+          Expanded(
+            child: ListView(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(5.sp),
+                  child: SingleChildScrollView(child: buildFormBuilder()),
+                ),
+              ],
             ),
           ),
         ],
@@ -190,9 +275,13 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           SizedBox(height: 10.sp),
           Card(
             child: Column(
-              children: [
-                buildField(SKN.lingyiwanwuAK.name, "零一万物 AK"),
-              ],
+              children: [buildField(SKN.lingyiwanwuAK.name, "零一万物 AK")],
+            ),
+          ),
+          SizedBox(height: 10.sp),
+          Card(
+            child: Column(
+              children: [buildField(SKN.zhipuAK.name, "智谱AI AK")],
             ),
           ),
         ],

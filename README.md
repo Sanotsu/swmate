@@ -121,6 +121,7 @@ dart run build_runner build --delete-conflicting-outputs
 #### 2024-08-27
 
 - feat: 添加了用户输入自己平台的密钥来启用付费模型的功能,并修改所有获取模型的地方先判断是否有用户密钥来决定是否展示付费模型。
+- feat: “智能助手”的“智能对话”添加了智谱 AI 免费的 GLM4-FLASH 接口;添加可以通过 json 导入各个平台的密钥。
 
 ### todo:
 

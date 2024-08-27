@@ -65,6 +65,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
     // 如果数据库中已经有模型信息了，就不用再导入了
     var ll = await dbHelper.queryCusLLMSpecList();
     if (ll.isNotEmpty) {
+      if (!mounted) return;
       setState(() {
         cusModelList = ll;
       });

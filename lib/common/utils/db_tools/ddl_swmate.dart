@@ -86,7 +86,6 @@ class SWMateDdl {
       isFree         INTEGER NOT NULL,
       inputPrice     REAL,
       outputPrice    REAL,
-      isQuote        INTEGER,
       feature        TEXT,
       useCase        TEXT,
       modelType      TEXT    NOT NULL,

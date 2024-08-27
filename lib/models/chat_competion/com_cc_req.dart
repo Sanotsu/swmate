@@ -35,6 +35,7 @@ class ComCCReq {
   //  在调用时也可以通过将此字段设置为 required 或  {"type": "function", "function": {"name": "some_function"} }
   //  来更强的引导模型使用工具。
   // 2024-08-09 暂时不支持传入格式化的对象(是对象的也转为json字符串)
+  // 2024-08-27 GLM4 仅当工具类型为function时补充。默认为auto，当前仅支持auto
   @JsonKey(name: 'tool_choice')
   String? toolChoice;
 
@@ -86,7 +87,17 @@ class ComCCReq {
 
   // 指定模型最大输出token数，范围[2, 2048]
   @JsonKey(name: 'max_output_tokens')
-  double? maxOutputTokens;
+  int? maxOutputTokens;
+
+  /// 智谱AI在上面没有的还有额外的参数
+  // 由用户端传参，需保证唯一性；用于区分每次请求的唯一标识，用户端不传时平台会默认生成。
+  @JsonKey(name: 'request_id')
+  String? requestId;
+
+  // do_sample 为 true 时启用采样策略，
+  // do_sample 为 false 时采样策略 temperature、top_p 将不生效。默认值为 true。
+  @JsonKey(name: 'do_sample')
+  bool? doSample;
 
   // 默认构造函数就少量主要参数
   ComCCReq({
@@ -174,6 +185,21 @@ class ComCCReq {
     this.stream = false,
   });
 
+  ComCCReq.glm({
+    this.model,
+    this.messages,
+    this.requestId,
+    this.doSample,
+    this.stream = false,
+    this.temperature,
+    this.topP,
+    this.maxTokens,
+    this.stop,
+    this.tools,
+    this.toolChoice = "auto",
+    this.userId,
+  });
+
   // 从字符串转
   factory ComCCReq.fromRawJson(String str) =>
       ComCCReq.fromJson(json.decode(str));
@@ -213,6 +239,9 @@ class ComCCReq {
     if (prompt != null) json['prompt'] = prompt;
     if (image != null) json['image'] = image;
 
+    if (requestId != null) json['request_id'] = requestId;
+    if (doSample != null) json['do_sample'] = doSample;
+
     return json;
   }
 }
@@ -220,18 +249,28 @@ class ComCCReq {
 /// 参数的工具函数类
 @JsonSerializable(explicitToJson: true)
 class CCTool {
-  // 工具的类型，目前只支持 function。
+  // 工具的类型
+  // 2024-08-27 零一万物 目前只支持 function。
+  // 智谱GLM4 支持 function、retrieval、web_search
   @JsonKey(name: 'type')
   String type;
 
   // 具体的函数描述
   @JsonKey(name: 'function')
-  CCFunction function;
+  CCFunction? function;
+
+  @JsonKey(name: 'retrieval')
+  CCRetrieval? retrieval;
+
+  @JsonKey(name: 'web_search')
+  CCWebSearch? webSearch;
 
   CCTool(
-    this.type,
+    this.type, {
     this.function,
-  );
+    this.retrieval,
+    this.webSearch,
+  });
 
   // 从字符串转
   factory CCTool.fromRawJson(String str) => CCTool.fromJson(json.decode(str));
@@ -287,4 +326,81 @@ class CCFunction {
       _$CCFunctionFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$CCFunctionToJson(this);
+}
+
+/// 仅当工具类型为retrieval时补充
+@JsonSerializable(explicitToJson: true)
+class CCRetrieval {
+  // 当涉及到知识库ID时，请前往开放平台的知识库模块进行创建或获取。
+  @JsonKey(name: 'knowledge_id')
+  String knowledgeId;
+
+  // 请求模型时的知识库模板，默认模板：
+  // 从文档
+  // """
+  // {{ knowledge}}
+  // """
+  // 中找问题
+  // """
+  // {{question}}
+  // """
+  // 的答案，找到答案就仅使用文档语句回答问题，找不到答案就用自身知识回答并且告诉用户该信息不是来自文档。
+  // 不要复述问题，直接开始回答
+  //
+  // 注意：用户自定义模板时，知识库内容占位符
+  // 和用户侧问题占位符必是{{ knowledge}} 和{{question}}，其他模板内容用户可根据实际场景定义
+  @JsonKey(name: 'prompt_template')
+  String? promptTemplate;
+
+  CCRetrieval(
+    this.knowledgeId, {
+    this.promptTemplate,
+  });
+
+  // 从字符串转
+  factory CCRetrieval.fromRawJson(String str) =>
+      CCRetrieval.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory CCRetrieval.fromJson(Map<String, dynamic> srcJson) =>
+      _$CCRetrievalFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$CCRetrievalToJson(this);
+}
+
+/// 仅当工具类型为web_search时补充，如果tools中存在类型retrieval，此时web_search不生效。
+@JsonSerializable(explicitToJson: true)
+class CCWebSearch {
+  // 网络搜索功能：默认为关闭状态（False）
+  // 说明：启用搜索后，系统会自动判断是否需要进行网络检索，调用搜索引擎获取相关信息。
+  // 检索成功后，搜索结果将作为输入背景信息提供给大模型进行进一步处理。
+  // 每次网络搜索大约会增加1000 tokens 的消耗。
+  @JsonKey(name: 'enable')
+  bool? enable;
+
+  // 强制搜索自定义关键内容，此时模型会根据自定义搜索关键内容返回的结果作为背景知识来回答用户发起的对话。
+  @JsonKey(name: 'search_query')
+  String? searchQuery;
+
+  // 获取详细的网页搜索来源信息，包括来源网站的图标、标题、链接、来源名称以及引用的文本内容。默认为关闭。
+  @JsonKey(name: 'search_result')
+  bool? searchResult;
+
+  CCWebSearch({
+    this.enable,
+    this.searchQuery,
+    this.searchResult,
+  });
+
+  // 从字符串转
+  factory CCWebSearch.fromRawJson(String str) =>
+      CCWebSearch.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory CCWebSearch.fromJson(Map<String, dynamic> srcJson) =>
+      _$CCWebSearchFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$CCWebSearchToJson(this);
 }

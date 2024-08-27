@@ -128,6 +128,14 @@ class ComCCResp {
   @JsonKey(name: 'RequestId')
   String? requestId;
 
+  /// 2024-08-27 智谱GLM引用的，还会单独返回网页搜索相关信息
+  @JsonKey(name: 'web_search')
+  List<GLMWebSearch>? webSearch;
+
+  // 返回内容安全的相关信息。
+  @JsonKey(name: 'content_filter')
+  List<GLMContentFilter>? contentFilter;
+
   /// 2024-08-13 因为响应体目前只是用来接收API响应，所以暂时把所有平台的栏位放在一起即可
   ComCCResp({
     this.id,
@@ -152,6 +160,8 @@ class ComCCResp {
     this.tencentErrorMsg,
     this.note,
     this.requestId,
+    this.webSearch,
+    this.contentFilter,
     String? cusText,
   }) : cusText = cusText ?? _generatecusText(choices, result);
 
@@ -250,6 +260,101 @@ class CCQuote {
     }
     ''';
   }
+}
+
+/// GLM 查询如果要显示网页列表，就返回这个类
+@JsonSerializable(explicitToJson: true)
+class GLMWebSearch {
+  // 来源网站的icon
+  String? icon;
+  // 搜索结果的标题
+  String? title;
+  // 搜索结果的网页链接
+  String? link;
+  // 搜索结果网页来源的名称
+  String? media;
+  // 从搜索结果网页中引用的文本内容
+  String? content;
+
+  GLMWebSearch({
+    this.icon,
+    this.title,
+    this.link,
+    this.media,
+    this.content,
+  });
+
+  // 从字符串转
+  factory GLMWebSearch.fromRawJson(String str) =>
+      GLMWebSearch.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory GLMWebSearch.fromJson(Map<String, dynamic> srcJson) =>
+      _$GLMWebSearchFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$GLMWebSearchToJson(this);
+
+  factory GLMWebSearch.fromMap(Map<String, dynamic> map) {
+    return GLMWebSearch(
+      icon: map['icon'] as String?,
+      title: map['title'] as String?,
+      link: map['link'] as String?,
+      media: map['media'] as String?,
+      content: map['content'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'icon': icon,
+      'title': title,
+      'link': link,
+      'media': media,
+      'content': content,
+    };
+  }
+
+  @override
+  String toString() {
+    // 这个对话会被作为string存入数据库，然后再被读取转型为CCQuote。
+    // 所以需要是个完整的json字符串，一般fromMap时可以处理
+    return '''
+    {
+     "icon": "$icon", 
+     "title": "$title",
+     "link": "$link", 
+     "media": "$media", 
+     "content": "$content"
+    }
+    ''';
+  }
+}
+
+/// GLM 返回内容安全的相关信息。
+@JsonSerializable(explicitToJson: true)
+class GLMContentFilter {
+  // 安全生效环节，包括 role = assistant 模型推理，
+  // role = user 用户输入，role = history 历史上下文，role = search 联网搜索
+  String? role;
+  // 严重程度 level 0-3，level 0表示最严重，3表示轻微
+  int? level;
+
+  GLMContentFilter({
+    this.role,
+    this.level,
+  });
+
+  // 从字符串转
+  factory GLMContentFilter.fromRawJson(String str) =>
+      GLMContentFilter.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory GLMContentFilter.fromJson(Map<String, dynamic> srcJson) =>
+      _$GLMContentFilterFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$GLMContentFilterToJson(this);
 }
 
 ///

@@ -164,6 +164,12 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
         model: selectedModel,
         stream: isStream,
       );
+    } else if (selectedPlatform == ApiPlatform.zhipu) {
+      tempStream = await zhipuCCRespWithCancel(
+        msgs,
+        model: selectedModel,
+        stream: isStream,
+      );
     } else {
       tempStream = await siliconFlowCCRespWithCancel(
         msgs,
@@ -236,12 +242,20 @@ void commonOnDataHandler({
     csMsg.completionTokens = (crb.usage?.completionTokens ?? 0);
     csMsg.totalTokens = (crb.usage?.totalTokens ?? 0);
 
-    // 更新引用情况
+    // 零一万物RAG 更新引用情况
     if (crb.choices != null &&
         crb.choices?.first != null &&
         crb.choices?.first.delta != null &&
         crb.choices!.first.delta?.quote != null) {
       csMsg.quotes = crb.choices!.first.delta!.quote!;
+    }
+
+    // GLM4 更新引用情况
+    if (crb.webSearch != null) {
+      // 要转成之前旧的CCQuote形式(因为在messageItem中已经订好了，暂时不改)
+      csMsg.quotes = crb.webSearch!
+          .map((e) => CCQuote(title: e.title, url: e.link))
+          .toList();
     }
 
     // 滚动到最下方

@@ -16,6 +16,7 @@ enum SKN {
   xfyunApiPassword,
   siliconFlowAK,
   lingyiwanwuAK,
+  zhipuAK,
 }
 
 // 从缓存中获取用户自定义的密钥,没取到就用预设的
