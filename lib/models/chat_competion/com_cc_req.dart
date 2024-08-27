@@ -73,6 +73,11 @@ class ComCCReq {
   // 表示最终用户的唯一标识符，可以监视和检测滥用行为，防止接口恶意调用
   @JsonKey(name: 'user_id')
   String? userId;
+  // 百度的fuyu8b也是类似的参数，但传入的不支持对话，是只有提示词和图片base64
+  @JsonKey(name: 'prompt')
+  String? prompt;
+  @JsonKey(name: 'image')
+  String? image;
 
   // 通过对已生成的token增加惩罚，减少重复生成的现象。
   //  说明：（1）值越大表示惩罚越大。（2）默认1.0，取值范围：[1.0, 2.0]。
@@ -130,11 +135,24 @@ class ComCCReq {
     this.messages,
     this.stream = false,
     this.temperature,
+    this.topK,
     this.topP,
     this.penaltyScore,
     this.system,
     this.stop,
     this.maxOutputTokens,
+    this.userId,
+  });
+
+  ComCCReq.baiduFuyu8B({
+    this.prompt,
+    this.image,
+    this.stream = false,
+    this.temperature,
+    this.topK,
+    this.topP,
+    this.penaltyScore,
+    this.stop,
     this.userId,
   });
 
@@ -191,6 +209,9 @@ class ComCCReq {
     if (userId != null) json['user_id'] = userId;
     if (penaltyScore != null) json['penalty_score'] = penaltyScore;
     if (maxOutputTokens != null) json['max_output_tokens'] = maxOutputTokens;
+
+    if (prompt != null) json['prompt'] = prompt;
+    if (image != null) json['image'] = image;
 
     return json;
   }

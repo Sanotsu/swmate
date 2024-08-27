@@ -13,7 +13,6 @@ import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
 import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../../common/utils/db_tools/db_helper.dart';
 import '../../../../common/utils/tools.dart';
 import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
@@ -23,6 +22,7 @@ import '../../_chat_screen_parts/chat_user_send_area_with_voice.dart';
 import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
 import '../../_helper/handle_cc_response.dart';
 import '../../_componets/multi_select_dialog.dart';
+import '../../_helper/tools.dart';
 
 /// 2024-07-23
 /// 这个初衷是：
@@ -39,7 +39,6 @@ class ChatBatGroup extends StatefulWidget {
 }
 
 class _ChatBatGroupState extends State<ChatBatGroup> {
-  final DBHelper _dbHelper = DBHelper();
   // 人机对话消息滚动列表
   final ScrollController _scrollController = ScrollController();
 
@@ -86,15 +85,11 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
   }
 
   initCusLabelList() async {
-    var specs = await _dbHelper.queryCusLLMSpecList();
+    var specs = await fetchCusLLMSpecList(LLModelType.cc);
+
     setState(() {
-      _allItems = specs
-          .where((spec) => spec.modelType == LLModelType.cc)
-          .map((e) => CusLabel(
-                cnLabel: e.name,
-                value: e,
-              ))
-          .toList();
+      _allItems =
+          specs.map((e) => CusLabel(cnLabel: e.name, value: e)).toList();
 
       _selectedItems = [
         _allItems[1],
@@ -294,7 +289,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
-                  return CusMultiSelectDialog(
+                  return CusMultiSelectBottomSheet(
                     items: _allItems,
                     selectedItems: _selectedItems,
                     title: "模型多选",

@@ -1,8 +1,11 @@
 // ignore_for_file: avoid_print
 
+import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
@@ -19,10 +22,12 @@ import '../../../../models/chat_competion/com_cc_state.dart';
 import '../../_chat_screen_parts/chat_list_area.dart';
 import '../../_chat_screen_parts/chat_user_send_area_with_voice.dart';
 import '../../_chat_screen_parts/default_system_role_button_row.dart';
+import '../../_componets/cus_platform_and_llm_row.dart';
 import '../../_componets/cus_toggle_button_selector.dart';
 import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
 import '../../_helper/constants.dart';
 import '../../_helper/handle_cc_response.dart';
+import '../../_helper/tools.dart';
 
 abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
   final DBHelper dbHelper = DBHelper();
@@ -32,6 +37,15 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
   ///
   final TextEditingController userInputController = TextEditingController();
   String userInput = "";
+
+  // 所有支持文生图的模型列表(用于下拉的平台和该平台拥有的模型列表也从这里来)
+  late List<CusLLMSpec> llmSpecList;
+
+  /// 级联选择效果：云平台-模型名
+  ApiPlatform selectedPlatform = ApiPlatform.siliconCloud;
+
+  // 被选中的模型信息
+  late CusLLMSpec selectedModelSpec;
 
   ///
   /// 请求状态和配置相关
@@ -72,7 +86,32 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
     super.dispose();
   }
 
-  initSysRoleInfo(String roleName) async {
+  LLModelType getTargetType();
+
+  // 初始化获取可筛选的模型列表、当前选中的平台模型、当前可供选择的系统角色等
+  initCusConfig(String roleName) async {
+    // 获取对话的模型列表(具体逻辑看函数内部)
+    var tempList = await fetchCusLLMSpecList(getTargetType());
+    setState(() {
+      llmSpecList = tempList;
+    });
+
+    // 2024-07-14 每次进来都随机选一个
+    List<ApiPlatform> values =
+        llmSpecList.map((e) => e.platform).toSet().toList();
+    // 不能放在下面一起，因为选中的平台要先生效，才能构建该平台下的模型
+    setState(() {
+      selectedPlatform = values[Random().nextInt(values.length)];
+    });
+
+    // 2024-07-14 同样的，选中的平台后也随机选择一个模型
+    List<CusLLMSpec> models =
+        llmSpecList.where((spec) => spec.platform == selectedPlatform).toList();
+    setState(() {
+      selectedModelSpec = models[Random().nextInt(models.length)];
+    });
+
+    // 获取系统角色列表
     var specs = await dbHelper.queryCusSysRoleSpecList();
 
     setState(() {
@@ -82,9 +121,11 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
           .toList();
 
       selectSysRole = sysRoleItems.first;
-
       renewSystemAndMessages();
+    });
 
+    // 最后才设置为初始化完成
+    setState(() {
       isInited = true;
     });
   }
@@ -145,10 +186,8 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
 
   ///
   /// 获取AI响应
-  /// 获取AI响应略有不同，需要子类传入平台和模型、是图片还是文件
+  /// 获取AI响应略有不同，需要子类传入是图片还是文件、文档内容或选中的图片
   ///
-  ApiPlatform getSelectedPlatform();
-  Future<String> getSelectedModel();
   CC_SWC_TYPE getUseType();
   String getDocContent();
   File? getSelectedImage();
@@ -159,24 +198,45 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
       isBotThinking = true;
     });
 
-    StreamWithCancel<ComCCResp> tempStream = await getCCResponseSWC(
-      messages: messages,
-      selectedPlatform: getSelectedPlatform(),
-      selectedModel: await getSelectedModel(),
-      isStream: isStream,
-      useType: getUseType(),
-      selectedImage: getSelectedImage(),
-      docContent: getDocContent(),
-      onNotImageHint: (error) {
-        commonExceptionDialog(context, "异常提示", error);
-      },
-      onImageError: (error) {
-        commonExceptionDialog(context, "异常提示", error);
-      },
-      onNotDocHint: (error) {
-        commonExceptionDialog(context, "异常提示", error);
-      },
-    );
+    StreamWithCancel<ComCCResp> tempStream;
+    // 2024-08-27 如果是使用百度的Fuyu8B，则无法像下面的通用
+    if (selectedModelSpec.cusLlm == CusLLM.baidu_Fuyu_8B) {
+      // 如果是图像理解、但没有传入图片，模拟模型返回异常信息
+      if (getSelectedImage() == null) {
+        EasyLoading.showError("图像理解模式下，必须选择图片");
+        setState(() {
+          isBotThinking = false;
+        });
+        return;
+      }
+
+      tempStream = await baiduCCRespWithCancel(
+        [],
+        prompt: messages.where((e) => e.role == "user").last.content,
+        image: base64Encode((await getSelectedImage()!.readAsBytes())),
+        model: selectedModelSpec.model,
+        stream: isStream,
+      );
+    } else {
+      tempStream = await getCCResponseSWC(
+        messages: messages,
+        selectedPlatform: selectedPlatform,
+        selectedModel: selectedModelSpec.model,
+        isStream: isStream,
+        useType: getUseType(),
+        selectedImage: getSelectedImage(),
+        docContent: getDocContent(),
+        onNotImageHint: (error) {
+          commonExceptionDialog(context, "异常提示", error);
+        },
+        onImageError: (error) {
+          commonExceptionDialog(context, "异常提示", error);
+        },
+        onNotDocHint: (error) {
+          commonExceptionDialog(context, "异常提示", error);
+        },
+      );
+    }
 
     if (!mounted) return;
     setState(() {
@@ -254,6 +314,36 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          // 2024-08-27 这里如果手机太小，打字键盘弹出来可能会出现溢出的问题
+          // 虽然固定高度，放在SizedBox中添加SingleChildScrollView和Column可以解决，但不好看
+          /// 构建可切换云平台和模型的行
+          Container(
+            color: Colors.grey[300],
+            child: Padding(
+              padding: EdgeInsets.only(left: 10.sp),
+              child: CusPlatformAndLlmRow(
+                initialPlatform: selectedPlatform,
+                initialModelSpec: selectedModelSpec,
+                llmSpecList: llmSpecList,
+                targetModelType: getTargetType(),
+                showToggleSwitch: true,
+                isStream: isStream,
+                onToggle: (index) {
+                  setState(() {
+                    isStream = index == 0 ? true : false;
+                  });
+                },
+                onPlatformOrModelChanged:
+                    (ApiPlatform? cp, CusLLMSpec? llmSpec) {
+                  setState(() {
+                    selectedPlatform = cp!;
+                    selectedModelSpec = llmSpec!;
+                  });
+                },
+              ),
+            ),
+          ),
+
           /// 可切换的预设功能
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,

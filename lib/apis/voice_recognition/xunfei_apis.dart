@@ -9,6 +9,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../models/voice_recognition/xunfei_voice_dictation.dart';
 import '../_self_keys.dart';
 import '../gen_access_token/xfyun_signature.dart';
+import '../get_app_key_helper.dart';
 
 const voiceRegUrl = "wss://iat-api.xfyun.cn/v2/iat";
 
@@ -16,8 +17,8 @@ Future<String> sendAudioToServer(String audioPath) async {
   // 生成鉴权url
   var authUrl = genXfyunAssembleAuthUrl(
     voiceRegUrl,
-    XUNFEI_ALL_API_KEY,
-    XUNFEI_ALL_API_SECRET,
+    getStoredUserKey(SKN.xfyunApiKey.name, XUNFEI_API_KEY),
+    getStoredUserKey(SKN.xfyunApiSecret.name, XUNFEI_API_SECRET),
     "GET",
   );
 
@@ -84,7 +85,7 @@ Future<String> sendAudioToServer(String audioPath) async {
   // 发送参数
   var params = {
     'common': {
-      'app_id': XUNFEI_ALL_APPID,
+      'app_id': getStoredUserKey(SKN.xfyunAppId.name, XUNFEI_APP_ID),
     },
     'business': {
       // 语种。zh_cn：中文（支持简单的英文识别）

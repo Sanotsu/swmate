@@ -10,6 +10,7 @@ import 'package:photo_view/photo_view.dart';
 import '../../common/constants.dart';
 import '../../services/cus_get_storage.dart';
 import '../home.dart';
+import 'api_key_config/index.dart';
 import 'backup_and_restore/index.dart';
 import 'system_prompt_config/index.dart';
 
@@ -101,7 +102,7 @@ class _UserAndSettingsState extends State<UserAndSettings> {
           // 备份还原和更多设置
           SizedBox(
             // height: (screenBodyHeight - 250 - 20),
-            height: 240.sp,
+            height: 320.sp,
             child: Center(child: _buildBakAndRestoreAndMoreSettingRow()),
           ),
         ],
@@ -186,6 +187,24 @@ class _UserAndSettingsState extends State<UserAndSettings> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const BackupAndRestore(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        Expanded(
+          child: SizedBox(
+            height: 80.sp,
+            child: NewCusSettingCard(
+              leadingIcon: Icons.build_circle_outlined,
+              title: "平台密钥配置",
+              onTap: () {
+                // 处理相应的点击事件
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ApiKeyConfig(),
                   ),
                 );
               },

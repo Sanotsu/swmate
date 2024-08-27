@@ -18,6 +18,7 @@ import '../../common/utils/dio_client/interceptor_error.dart';
 import '../../services/cus_get_storage.dart';
 import '../_self_keys.dart';
 import '../gen_access_token/tencent_signature_v3.dart';
+import '../get_app_key_helper.dart';
 
 final l = ProsteLogger();
 final DBHelper _dbHelper = DBHelper();
@@ -26,6 +27,7 @@ enum PlatUrl {
   tencentCCUrl,
   aliyunCCUrl,
   baiduCCUrl,
+  baiduTTIUrl,
   baiduCCAuthUrl,
   siliconFlowCCUrl,
   lingyiwanwuCCUrl,
@@ -38,6 +40,8 @@ const Map<PlatUrl, String> platUrls = {
       "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation",
   PlatUrl.baiduCCUrl:
       "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/",
+  PlatUrl.baiduTTIUrl:
+      "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/image2text/",
   PlatUrl.baiduCCAuthUrl: "https://aip.baidubce.com/oauth/2.0/token",
   PlatUrl.siliconFlowCCUrl: "https://api.siliconflow.cn/v1/chat/completions",
   PlatUrl.lingyiwanwuCCUrl: "https://api.lingyiwanwu.com/v1/chat/completions",
@@ -235,7 +239,7 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
 
         return StreamWithCancel(streamController.stream, cancel);
       } else {
-        throw CusHttpException(code: 500, msg: '不符合预期的数据流响应类型');
+        throw CusHttpException(cusCode: 500, cusMsg: '不符合预期的数据流响应类型');
       }
     } else {
       if (respData.runtimeType == String) {
@@ -256,7 +260,10 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
     // 报错时也要流式返回，并手动添加一条结束标志
     final streamController = StreamController<ComCCResp>();
     streamController.add(
-      ComCCResp(cusText: "HTTP请求响应异常:\n\n错误代码: ${e.code}\n\n错误信息: ${e.msg}"),
+      ComCCResp(
+        cusText:
+            "HTTP请求响应异常:\n\n错误代码: ${e.cusCode}\n\n错误信息: ${e.cusMsg}\n\n\n\n原始信息: ${e.errRespString}",
+      ),
     );
     streamController.add(ComCCResp(cusText: '[DONE]-后台响应错误'));
     streamController.close();
@@ -285,8 +292,9 @@ Future<String> getAccessToken() async {
       },
       data: {
         "grant_type": "client_credentials",
-        "client_id": BAIDU_API_KEY,
-        "client_secret": BAIDU_SECRET_KEY,
+        "client_id": getStoredUserKey(SKN.baiduApiKey.name, BAIDU_API_KEY),
+        "client_secret":
+            getStoredUserKey(SKN.baiduSecretKey.name, BAIDU_SECRET_KEY),
       },
     );
 
@@ -312,8 +320,11 @@ Future<StreamWithCancel<ComCCResp>> baiduCCRespWithCancel(
   String? model,
   bool stream = false,
   String? system,
+  // 百度如果传这两个参数，就是调用Fuyu8
+  String? prompt,
+  String? image,
 }) async {
-  var specs = await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.aliyun);
+  var specs = await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.baidu);
 
   model = model ??
       specs.firstWhere((e) => e.cusLlm == CusLLM.baidu_Ernie_Tiny_8K).model;
@@ -330,12 +341,19 @@ Future<StreamWithCancel<ComCCResp>> baiduCCRespWithCancel(
     token = await getAccessToken();
   }
 
-  var body = ComCCReq.baidu(messages: messages, stream: stream, system: system);
+  ComCCReq body;
+  if (prompt != null && image != null) {
+    body = ComCCReq.baiduFuyu8B(prompt: prompt, image: image, stream: stream);
+  } else {
+    body = ComCCReq.baidu(messages: messages, stream: stream, system: system);
+  }
 
   var headers = {"Content-Type": "application/json"};
 
   return getSseCcResponse(
-    "${platUrls[PlatUrl.baiduCCUrl]!}$model?access_token=$token",
+    (prompt != null && image != null)
+        ? "${platUrls[PlatUrl.baiduTTIUrl]!}$model?access_token=$token"
+        : "${platUrls[PlatUrl.baiduCCUrl]!}$model?access_token=$token",
     headers,
     body.toJson(),
     stream: stream,
@@ -360,7 +378,8 @@ Future<StreamWithCancel<ComCCResp>> siliconFlowCCRespWithCancel(
 
   var headers = {
     "Content-Type": "application/json",
-    "Authorization": "Bearer $SILICON_CLOUD_AK",
+    "Authorization":
+        "Bearer ${getStoredUserKey(SKN.siliconFlowAK.name, SILICON_CLOUD_AK)}",
   };
   return getSseCcResponse(
     platUrls[PlatUrl.siliconFlowCCUrl]!,
@@ -385,7 +404,8 @@ Future<StreamWithCancel<ComCCResp>> lingyiwanwuCCRespWithCancel(
 
   var header = {
     "Content-Type": "application/json",
-    "Authorization": "Bearer $LINGYI_AK",
+    "Authorization":
+        "Bearer ${getStoredUserKey(SKN.lingyiwanwuAK.name, LINGYI_AK)}",
   };
 
   return getSseCcResponse(
@@ -411,7 +431,8 @@ Future<StreamWithCancel<ComCCResp>> xfyunCCRespWithCancel(
 
   var header = {
     "Content-Type": "application/json",
-    "Authorization": "Bearer $XUNFEI_ALL_APIPassword",
+    "Authorization":
+        "Bearer ${getStoredUserKey(SKN.xfyunApiPassword.name, XUNFEI_API_PASSWORD)}",
   };
 
   return getSseCcResponse(
@@ -447,8 +468,8 @@ Future<StreamWithCancel<ComCCResp>> tencentCCRespWithCancel(
 
   var header = genHunyuanLiteSignatureHeaders(
     jsonEncode(tempBody),
-    TENCENT_SECRET_ID,
-    TENCENT_SECRET_KEY,
+    getStoredUserKey(SKN.tencentSecretId.name, TENCENT_SECRET_ID),
+    getStoredUserKey(SKN.tencentSecretKey.name, TENCENT_SECRET_KEY),
   );
 
   return getSseCcResponse(

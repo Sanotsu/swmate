@@ -91,6 +91,18 @@ class _SystemPromptDetailState extends State<SystemPromptDetail> {
       appBar: AppBar(
         title: const Text('系统角色详情'),
         actions: [
+          if (_isEditing)
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                setState(() {
+                  _isEditing = !_isEditing;
+                  _formKey.currentState?.patchValue(
+                    widget.sysRoleSpec?.toMap() ?? {},
+                  );
+                });
+              },
+            ),
           IconButton(
             icon: Icon(_isEditing ? Icons.check : Icons.edit),
             onPressed: () {
@@ -109,75 +121,96 @@ class _SystemPromptDetailState extends State<SystemPromptDetail> {
       body: ListView(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(5.sp),
             child: SingleChildScrollView(
-              child: FormBuilder(
-                key: _formKey,
-                initialValue: widget.sysRoleSpec?.toMap() ?? {},
-                // enabled: _isEditable,
-                child: Column(
-                  children: [
-                    FormBuilderTextField(
-                      name: 'label',
-                      readOnly: !_isEditing,
-                      decoration: const InputDecoration(labelText: '*名称'),
-                      validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.required(),
-                      ]),
-                    ),
-                    FormBuilderTextField(
-                      name: 'imageUrl',
-                      readOnly: !_isEditing,
-                      decoration: const InputDecoration(labelText: '图片地址'),
-                    ),
-                    FormBuilderDropdown(
-                      name: 'sysRoleType',
-                      decoration: const InputDecoration(labelText: '*适用类型'),
-                      items: [
-                        LLModelType.cc.name,
-                        LLModelType.iti.name,
-                        LLModelType.tti.name,
-                      ]
-                          .map((type) => DropdownMenuItem(
-                                value: type,
-                                child: Text(type),
-                              ))
-                          .toList(),
-                      validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.required(),
-                      ]),
-                    ),
-                    FormBuilderTextField(
-                      name: 'subtitle',
-                      readOnly: !_isEditing,
-                      decoration: const InputDecoration(labelText: '简介'),
-                      maxLines: 2,
-                    ),
-                    if (_isEditing)
-                      FormBuilderTextField(
-                        name: 'systemPrompt',
-                        maxLines: 5,
-                        decoration: const InputDecoration(labelText: '*系统提示词'),
-                        validator: FormBuilderValidators.compose([
-                          FormBuilderValidators.required(),
-                        ]),
-                      ),
-                    if (!_isEditing && widget.sysRoleSpec != null)
-                      Padding(
-                        padding: EdgeInsets.all(20.sp),
-                        child: const Text("系统提示词"),
-                      ),
-                    if (!_isEditing && widget.sysRoleSpec != null)
-                      MarkdownBody(
-                        data: widget.sysRoleSpec!.systemPrompt,
-                        selectable: true,
-                      ),
-                  ],
-                ),
-              ),
+              child: buildFormBuilder(),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  buildFormBuilder() {
+    return FormBuilder(
+      key: _formKey,
+      initialValue: widget.sysRoleSpec?.toMap() ?? {},
+      // enabled: _isEditable,
+      child: Column(
+        children: [
+          buildField("label", "*名称"),
+          buildField("imageUrl", "图片地址", required: false),
+          FormBuilderDropdown(
+            name: 'sysRoleType',
+            enabled: _isEditing,
+            decoration: const InputDecoration(labelText: '*适用类型'),
+            items: [
+              LLModelType.cc.name,
+              LLModelType.iti.name,
+              LLModelType.tti.name,
+            ]
+                .map((type) => DropdownMenuItem(
+                      value: type,
+                      child: Text(
+                        type,
+                        style: const TextStyle(color: Colors.green),
+                      ),
+                    ))
+                .toList(),
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(),
+            ]),
+          ),
+          buildField("subtitle", "简介", maxLines: 2),
+          if (_isEditing) buildField("systemPrompt", "*系统提示词", maxLines: 5),
+          if (!_isEditing && widget.sysRoleSpec != null)
+            Padding(
+              padding: EdgeInsets.all(10.sp),
+              child: Column(
+                children: [
+                  Divider(height: 10.sp),
+                  const Text("系统提示词", style: TextStyle(color: Colors.green)),
+                  Divider(height: 10.sp),
+                  MarkdownBody(
+                    data: widget.sysRoleSpec!.systemPrompt,
+                    selectable: true,
+                    // styleSheet: MarkdownStyleSheet(
+                    //   p: const TextStyle(color: Colors.green),
+                    // ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  buildField(
+    String name,
+    String labelText, {
+    int? maxLines,
+    bool required = true,
+  }) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(10.sp, 5.sp, 10.sp, 5.sp),
+      child: FormBuilderTextField(
+        name: name,
+        readOnly: !_isEditing,
+        // 2023-12-04 没有传默认使用name，原本默认的.text会弹安全键盘，可能无法输入中文
+        // 2023-12-21 enableSuggestions 设为 true后键盘类型为text就正常了。
+        enableSuggestions: true,
+        keyboardType: TextInputType.text,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          isDense: true,
+          labelText: labelText,
+          border: _isEditing ? null : InputBorder.none,
+        ),
+        style: TextStyle(color: _isEditing ? Colors.black : Colors.green),
+        validator: required
+            ? FormBuilderValidators.compose([FormBuilderValidators.required()])
+            : null,
       ),
     );
   }

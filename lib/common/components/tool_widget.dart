@@ -389,12 +389,12 @@ Widget cusFormBuilerTextField(String name,
     String? labelText, // 可不传栏位标签，在输入框前面有就行
     String? Function(Object?)? validator,
     bool? isOutline = false, // 输入框是否有线条
-    bool isReadOnly = false, // 输入框是否有线条
+    bool isReadOnly = false, // 输入框是否有只读
     TextInputType? keyboardType,
     void Function(String?)? onChanged,
     List<TextInputFormatter>? inputFormatters}) {
   return Padding(
-    padding: EdgeInsets.symmetric(horizontal: 10.sp),
+    padding: EdgeInsets.all(5.sp),
     child: FormBuilderTextField(
       name: name,
       initialValue: initialValue,

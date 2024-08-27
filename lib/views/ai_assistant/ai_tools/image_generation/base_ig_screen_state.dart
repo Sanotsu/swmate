@@ -17,6 +17,7 @@ import '../../../../models/text_to_image/aliyun_tti_resp.dart';
 import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
 import '../../_componets/cus_system_prompt_modal.dart';
+import '../../_helper/tools.dart';
 import '../../_ig_screen_parts/ig_button_row_area.dart';
 import '../../_helper/constants.dart';
 import '../../_componets/loading_overlay.dart';
@@ -86,15 +87,30 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
   }
 
   initModelInfo() async {
-    var specs = await dbHelper.queryCusLLMSpecList();
-
-    var sysRoles = await dbHelper.queryCusSysRoleSpecList();
-
+    // 获取对话的模型列表(具体逻辑看函数内部)
+    var tempList = await fetchCusLLMSpecList(getModelType());
     setState(() {
-      llmSpecList =
-          specs.where((spec) => spec.modelType == getModelType()).toList();
-      selectedPlatform = getInitialPlatform();
-      selectedModelSpec = getRandomModel();
+      llmSpecList = tempList;
+    });
+
+    // 2024-07-14 每次进来都随机选一个
+    List<ApiPlatform> values =
+        llmSpecList.map((e) => e.platform).toSet().toList();
+    // 不能放在下面一起，因为选中的平台要先生效，才能构建该平台下的模型
+    setState(() {
+      selectedPlatform = values[Random().nextInt(values.length)];
+    });
+
+    // 2024-07-14 同样的，选中的平台后也随机选择一个模型
+    List<CusLLMSpec> models =
+        llmSpecList.where((spec) => spec.platform == selectedPlatform).toList();
+    setState(() {
+      selectedModelSpec = models[Random().nextInt(models.length)];
+    });
+
+    // 获取系统角色列表
+    var sysRoles = await dbHelper.queryCusSysRoleSpecList();
+    setState(() {
       selectedSize = getInitialSize();
 
       // 暂时父组件就把图片相关的都带出来，当然其实子组件各带各的最好，这省事
@@ -404,7 +420,18 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
                     onReset: resetConfig,
                     onGenerate: () async {
                       unfocusHandle();
-                      await getImageGenerationData();
+                      try {
+                        await getImageGenerationData();
+                      } catch (e) {
+                        setState(() {
+                          isGenImage = false;
+                          LoadingOverlay.hide();
+                          EasyLoading.showError(
+                            e.toString(),
+                            duration: const Duration(seconds: 5),
+                          );
+                        });
+                      }
                     },
                     canGenerate: isCanGenerate(),
                   ),

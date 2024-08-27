@@ -27,6 +27,7 @@ import '../../_componets/cus_system_prompt_modal.dart';
 import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
 import '../../_helper/handle_cc_response.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
+import '../../_helper/tools.dart';
 
 /// 2024-07-16
 /// 这个应该会复用，后续抽出chatbatindex出来
@@ -128,51 +129,34 @@ class _ChatBatState extends State<ChatBat> {
 
   // 进入自行配置的对话页面，看看用户配置有没有生效
   initCusConfig() async {
-    // 首先获取对应的模型列表和初始化模型
-    var specs = await _dbHelper.queryCusLLMSpecList();
-
+    // 获取对话的模型列表(具体逻辑看函数内部)
+    var tempList = await fetchCusLLMSpecList(LLModelType.cc);
     setState(() {
-      llmSpecList =
-          specs.where((spec) => spec.modelType == LLModelType.cc).toList();
-
-      selectedModelSpec = specs
-          .where((spec) =>
-              spec.platform == ApiPlatform.siliconCloud &&
-              spec.modelType == LLModelType.cc)
-          .toList()
-          .first;
+      llmSpecList = tempList;
     });
 
     // 2024-07-14 每次进来都随机选一个
-    List<ApiPlatform> values = specs
-        .where((spec) => spec.modelType == LLModelType.cc)
-        .map((e) => e.platform)
-        .toSet()
-        .toList();
-
+    List<ApiPlatform> values =
+        llmSpecList.map((e) => e.platform).toSet().toList();
     // 不能放在下面一起，因为选中的平台要先生效，才能构建该平台下的模型
     setState(() {
       selectedPlatform = values[Random().nextInt(values.length)];
     });
-    // 2024-07-14 同样的，选中的平台后也随机选择一个模型
-    List<CusLLMSpec> models = specs
-        .where((spec) =>
-            spec.platform == selectedPlatform &&
-            spec.modelType == LLModelType.cc)
-        .toList();
 
+    // 2024-07-14 同样的，选中的平台后也随机选择一个模型
+    List<CusLLMSpec> models =
+        llmSpecList.where((spec) => spec.platform == selectedPlatform).toList();
     setState(() {
       selectedModelSpec = models[Random().nextInt(models.length)];
     });
 
     // 2024-08-26 同样的，还要查询到db中所有预设的系统角色
-    var cusSysROleSpecs =
-        await _dbHelper.queryCusSysRoleSpecList(sysRoleType: LLModelType.cc);
-
-    print("cusSysROleSpecs--$cusSysROleSpecs");
+    var cusSysRoleSpecs = await _dbHelper.queryCusSysRoleSpecList(
+      sysRoleType: LLModelType.cc,
+    );
 
     setState(() {
-      ccSysRoleList = cusSysROleSpecs.toList();
+      ccSysRoleList = cusSysRoleSpecs.toList();
     });
 
     // 最后才设置为初始化完成
@@ -628,7 +612,7 @@ class _ChatBatState extends State<ChatBat> {
         chatHistory: chatHistory,
         onTap: (ChatSession e) {
           Navigator.of(context).pop();
-          // 点击了知道历史对话，则替换当前对话
+          // 点击了指定历史对话，则替换当前对话
           setState(() {
             _getChatInfo(e.uuid);
           });

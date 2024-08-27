@@ -29,23 +29,18 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
   void initState() {
     super.initState();
 
-    super.initSysRoleInfo("img");
+    super.initCusConfig("img");
   }
+
+  // 基类需要的模型类型
+  @override
+  LLModelType getTargetType() => LLModelType.vision;
 
   /// 这一个是基类的 renewSystemAndMessages 需要
   @override
   String getSystemPrompt() => selectSysRole.systemPrompt;
 
-  /// 这几个是基类的 getProcessedResult 需要
-  @override
-  ApiPlatform getSelectedPlatform() => ApiPlatform.lingyiwanwu;
-
-  @override
-  Future<String> getSelectedModel() async {
-    var specs = await dbHelper.queryCusLLMSpecList();
-    return specs.firstWhere((e) => e.cusLlm == CusLLM.YiVision).model;
-  }
-
+  /// 这几个是基类的 getProcessedResult 需要的类型、文本内容、图片内容
   @override
   CC_SWC_TYPE getUseType() => CC_SWC_TYPE.image;
   @override
@@ -56,7 +51,6 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
   ///
   /// 构建页面需要的几个函数
   ///
-
   @override
   void setSelectedASysRole(CusSysRoleSpec item) {
     selectSysRole = item;

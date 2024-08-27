@@ -9,6 +9,7 @@ import '../../models/text_to_image/xfyun_tti_req.dart';
 import '../../models/text_to_image/xfyun_tti_resp.dart';
 import '../_self_keys.dart';
 import '../gen_access_token/xfyun_signature.dart';
+import '../get_app_key_helper.dart';
 
 var xfyunTtiUrl = "https://spark-api.cn-huabei-1.xf-yun.com/v2.1/tti";
 
@@ -20,8 +21,8 @@ Future<XfyunTtiResp> getXfyunTtiResp(
   // 生成鉴权后的url
   var authUrl = genXfyunAssembleAuthUrl(
     xfyunTtiUrl,
-    XUNFEI_ALL_API_KEY,
-    XUNFEI_ALL_API_SECRET,
+    getStoredUserKey(SKN.xfyunApiKey.name, XUNFEI_API_KEY),
+    getStoredUserKey(SKN.xfyunApiSecret.name, XUNFEI_API_SECRET),
     "POST",
   );
 
@@ -41,7 +42,9 @@ Future<XfyunTtiResp> getXfyunTtiResp(
   );
 
   var req = XfyunTtiReq(
-    header: XfyunTtiReqHeader(appId: XUNFEI_ALL_APPID),
+    header: XfyunTtiReqHeader(
+      appId: getStoredUserKey(SKN.xfyunAppId.name, XUNFEI_APP_ID),
+    ),
     parameter: parameter,
     payload: payload,
   );
@@ -76,7 +79,7 @@ Future<XfyunTtiResp> getXfyunTtiResp(
   } on CusHttpException catch (e) {
     // 虽然返回的 CusHttpException 是自己定义的类型，但我有把原始保存内容存入其中的变量
     // 可以再转为json返回出来
-    return XfyunTtiResp.fromJson(json.decode(e.responseString));
+    return XfyunTtiResp.fromJson(json.decode(e.errRespString));
   } catch (e) {
     print("xxxxxxxxxx ${e.runtimeType}---$e");
     // API请求报错，显示报错信息

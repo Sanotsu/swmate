@@ -108,25 +108,22 @@ class HttpRequest {
       return response.data;
     } on DioException catch (error) {
       // 2024-03-11 这里是要取得http的错误，但默认类型时Object?，所以要转一下
-      // HttpException httpException = error.error;
-      CusHttpException httpException = error.error as CusHttpException;
+      CusHttpException cusHttpException = error.error as CusHttpException;
 
       print("这里是执行HttpRequest的request()方法在报错:");
-      print(httpException);
-      print(httpException.code);
-      print(httpException.msg);
+      print(cusHttpException);
+      print(cusHttpException.cusCode);
+      print(cusHttpException.cusMsg);
       print(showErrorMessage);
       print("========================");
 
-      // print("code:${httpException.code}");
-      // print("msg:${httpException.msg}");
       if (showErrorMessage) {
-        EasyLoading.showToast(httpException.msg);
+        EasyLoading.showToast(cusHttpException.cusMsg);
       }
 
       // 2024-06-20 这里还是要把错误抛出去，在请求的API处方便trycatch拦截处理
       // 否则接口处就只看到一个null了
-      throw httpException;
+      throw cusHttpException;
     } finally {
       if (showLoading) {
         EasyLoading.dismiss();

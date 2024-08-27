@@ -36,4 +36,12 @@ class MyGetStorage {
     List<dynamic> list = box.read("image_generation_urls") ?? [];
     return List<String>.from(list);
   }
+
+  /// 如果用户有输入自己的API KEY的话，就存入缓存中
+  Future<void> setUserAKMap(Map<String, String>? info) async {
+    await box.write("user_ak_map", info);
+  }
+
+  Map<String, String> getUserAKMap() =>
+      Map<String, String>.from(box.read("user_ak_map") ?? {});
 }

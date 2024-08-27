@@ -40,25 +40,18 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
   void initState() {
     super.initState();
 
-    super.initSysRoleInfo("doc");
+    super.initCusConfig("doc");
   }
+
+  // 基类需要的模型类型
+  @override
+  LLModelType getTargetType() => LLModelType.cc;
 
   /// 这一个是基类的 renewSystemAndMessages 需要
   @override
   String getSystemPrompt() => selectSysRole.systemPrompt;
 
-  /// 这几个是基类的 getProcessedResult 需要
-  @override
-  ApiPlatform getSelectedPlatform() => ApiPlatform.siliconCloud;
-
-  @override
-  Future<String> getSelectedModel() async {
-    var specs = await dbHelper.queryCusLLMSpecList();
-    return specs
-        .firstWhere((e) => e.cusLlm == CusLLM.siliconCloud_Qwen2_7B_Instruct)
-        .model;
-  }
-
+  /// 这几个是基类的 getProcessedResult 需要的类型、文本内容、图片内容
   @override
   CC_SWC_TYPE getUseType() => CC_SWC_TYPE.doc;
   @override

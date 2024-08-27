@@ -7,6 +7,7 @@ import '../../common/utils/dio_client/cus_http_request.dart';
 import '../../models/text_to_image/aliyun_tti_req.dart';
 import '../../models/text_to_image/aliyun_tti_resp.dart';
 import '../_self_keys.dart';
+import '../get_app_key_helper.dart';
 
 ///
 /// 文生图任务提交
@@ -81,7 +82,8 @@ Future<AliyunTtiResp> commitAliyunJob(
       headers: {
         "X-DashScope-Async": "enable",
         "Content-Type": "application/json",
-        "Authorization": "Bearer $ALIYUN_API_KEY",
+        "Authorization":
+            "Bearer ${getStoredUserKey(SKN.aliyunApiKey.name, ALIYUN_API_KEY)}",
       },
       data: body.toJson(),
     );
@@ -117,7 +119,8 @@ Future<AliyunTtiResp> getAliyunText2ImgJobResult(String taskId) async {
       // 文生图有单独的遮罩，不用显示加载圈
       showLoading: false,
       headers: {
-        "Authorization": "Bearer $ALIYUN_API_KEY",
+        "Authorization":
+            "Bearer ${getStoredUserKey(SKN.aliyunApiKey.name, ALIYUN_API_KEY)}",
       },
     );
 
