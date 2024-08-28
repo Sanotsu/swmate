@@ -10,13 +10,13 @@ import 'package:uuid/uuid.dart';
 
 import '../../apis/_self_model_specs.dart';
 import '../../apis/_self_system_role_list.dart';
-import '../../apis/get_app_key_helper.dart';
 import '../../common/components/tool_widget.dart';
 import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
 import '../../common/utils/db_tools/db_helper.dart';
 import '../../services/cus_get_storage.dart';
 import '_componets/custom_entrance_card.dart';
+import '_helper/tools.dart';
 import 'ai_tools/chat_bot/index.dart';
 import 'ai_tools/chat_bot_group/index.dart';
 import 'ai_tools/file_interpret/document_interpret.dart';
@@ -189,11 +189,21 @@ class _AIToolIndexState extends State<AIToolIndex> {
                 crossAxisCount: 2,
                 childAspectRatio: 2 / 1,
                 children: <Widget>[
-                  const CustomEntranceCard(
+                  CustomEntranceCard(
                     title: '智能对话',
                     subtitle: "多个平台多种模型",
                     icon: Icons.chat_outlined,
-                    targetPage: ChatBat(),
+                    onTap: () async {
+                      await navigateToToolScreen(
+                        context,
+                        LLModelType.cc,
+                        (llmSpecList, cusSysRoleSpecs) => ChatBat(
+                          llmSpecList: llmSpecList,
+                          cusSysRoleSpecs: cusSysRoleSpecs,
+                        ),
+                        roleType: LLModelType.cc,
+                      );
+                    },
                   ),
 
                   const CustomEntranceCard(
@@ -203,56 +213,89 @@ class _AIToolIndexState extends State<AIToolIndex> {
                     targetPage: ChatBatGroup(),
                   ),
 
-                  const CustomEntranceCard(
+                  // 文档解读和图片解读不传系统角色类型
+                  CustomEntranceCard(
                     title: '文档解读',
                     subtitle: "文档翻译总结提问",
                     icon: Icons.newspaper_outlined,
-                    targetPage: DocumentInterpret(),
+                    onTap: () async {
+                      await navigateToToolScreen(
+                        context,
+                        LLModelType.cc,
+                        (llmSpecList, cusSysRoleSpecs) => DocumentInterpret(
+                          llmSpecList: llmSpecList,
+                          cusSysRoleSpecs: cusSysRoleSpecs,
+                        ),
+                      );
+                    },
                   ),
 
-                  const CustomEntranceCard(
+                  CustomEntranceCard(
                     title: '图片解读',
                     subtitle: "图片翻译总结问答",
                     icon: Icons.image_outlined,
-                    targetPage: ImageInterpret(),
+                    onTap: () async {
+                      await navigateToToolScreen(
+                        context,
+                        LLModelType.vision,
+                        (llmSpecList, cusSysRoleSpecs) => ImageInterpret(
+                          llmSpecList: llmSpecList,
+                          cusSysRoleSpecs: cusSysRoleSpecs,
+                        ),
+                      );
+                    },
                   ),
 
-                  const CustomEntranceCard(
+                  CustomEntranceCard(
                     title: '文本生图',
                     subtitle: "根据文字描述绘图",
                     icon: Icons.photo_album_outlined,
-                    targetPage: CommonTTIScreen(),
+                    onTap: () async {
+                      await navigateToToolScreen(
+                        context,
+                        LLModelType.tti,
+                        (llmSpecList, cusSysRoleSpecs) => CommonTTIScreen(
+                          llmSpecList: llmSpecList,
+                          cusSysRoleSpecs: cusSysRoleSpecs,
+                        ),
+                        roleType: LLModelType.tti,
+                      );
+                    },
                   ),
 
-                  if (getUserKey(SKN.aliyunAppId.name) != null &&
-                      getUserKey(SKN.aliyunApiKey.name) != null)
-                    const CustomEntranceCard(
-                      title: '创意文字',
-                      subtitle: "纹理变形姓氏创作",
-                      icon: Icons.text_fields_outlined,
-                      targetPage: AliyunWordArtScreen(),
-                    ),
+                  CustomEntranceCard(
+                    title: '创意文字',
+                    subtitle: "纹理变形姓氏创作",
+                    icon: Icons.text_fields_outlined,
+                    onTap: () async {
+                      await navigateToToolScreen(
+                        context,
+                        LLModelType.tti_word,
+                        (llmSpecList, cusSysRoleSpecs) => AliyunWordArtScreen(
+                          llmSpecList: llmSpecList,
+                          cusSysRoleSpecs: cusSysRoleSpecs,
+                        ),
+                        roleType: LLModelType.tti_word,
+                      );
+                    },
+                  ),
 
-                  const CustomEntranceCard(
+                  CustomEntranceCard(
                     title: '图片生图',
                     subtitle: "结合参考图片绘图",
                     icon: Icons.photo_library_outlined,
-                    targetPage: CommonITIScreen(),
+                    onTap: () async {
+                      await navigateToToolScreen(
+                        context,
+                        LLModelType.iti,
+                        (llmSpecList, cusSysRoleSpecs) => CommonITIScreen(
+                          llmSpecList: llmSpecList,
+                          cusSysRoleSpecs: cusSysRoleSpecs,
+                        ),
+                        roleType: LLModelType.iti,
+                      );
+                    },
                   ),
-
-                  // buildToolEntrance(
-                  //   "[测试页]",
-                  //   icon: const Icon(Icons.chat_outlined),
-                  //   color: Colors.blue[100],
-                  //   onTap: () {
-                  //     Navigator.push(
-                  //       context,
-                  //       MaterialPageRoute(
-                  //         builder: (context) => const TestPage(),
-                  //       ),
-                  //     );
-                  //   },
-                  // ),
 
                   buildToolEntrance(
                     "[测试功能]",
@@ -380,4 +423,33 @@ Future<List<CusSysRoleSpec>> readSysRoleListFromJsonFile(
   final jsonString = await File(filePath).readAsString();
   final jsonList = jsonDecode(jsonString) as List;
   return jsonList.map((map) => CusSysRoleSpec.fromMap(map)).toList();
+}
+
+///
+/// 点击智能助手的入口，跳转到子页面
+///
+Future<void> navigateToToolScreen(
+  BuildContext context,
+  LLModelType modelType,
+  Widget Function(List<CusLLMSpec>, List<CusSysRoleSpec>) pageBuilder, {
+  LLModelType? roleType,
+}) async {
+  // 获取对话的模型列表(具体逻辑看函数内部)
+  List<CusLLMSpec> llmSpecList = await fetchCusLLMSpecList(modelType);
+
+  // 获取系统角色列表
+  List<CusSysRoleSpec> cusSysRoleSpecs =
+      await fetchCusSysRoleSpecList(roleType);
+
+  if (!context.mounted) return;
+  if (llmSpecList.isEmpty) {
+    return commonHintDialog(context, "提示", "无可用的模型，该功能不可用");
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => pageBuilder(llmSpecList, cusSysRoleSpecs),
+      ),
+    );
+  }
 }

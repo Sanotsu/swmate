@@ -17,7 +17,6 @@ import '../../../../models/text_to_image/aliyun_tti_resp.dart';
 import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
 import '../../_componets/cus_system_prompt_modal.dart';
-import '../../_helper/tools.dart';
 import '../../_ig_screen_parts/ig_button_row_area.dart';
 import '../../_helper/constants.dart';
 import '../../_componets/loading_overlay.dart';
@@ -72,56 +71,16 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
 
   final DBHelper dbHelper = DBHelper();
 
-  // 阿里云有选择的样式编号
-  int selectedStyleIndex = 0;
-
-  // 是否初始化完成(选择的对话和支持的对话列表，没从数据库获取到就不要加载页面)
-  bool isInited = false;
+  // 被选中的风格
+  String selectedStyle = "";
 
   @override
   void initState() {
     super.initState();
-    initModelInfo();
+
+    initCommonState();
 
     WidgetsBinding.instance.addObserver(this);
-  }
-
-  initModelInfo() async {
-    // 获取对话的模型列表(具体逻辑看函数内部)
-    var tempList = await fetchCusLLMSpecList(getModelType());
-    setState(() {
-      llmSpecList = tempList;
-    });
-
-    // 2024-07-14 每次进来都随机选一个
-    List<ApiPlatform> values =
-        llmSpecList.map((e) => e.platform).toSet().toList();
-    // 不能放在下面一起，因为选中的平台要先生效，才能构建该平台下的模型
-    setState(() {
-      selectedPlatform = values[Random().nextInt(values.length)];
-    });
-
-    // 2024-07-14 同样的，选中的平台后也随机选择一个模型
-    List<CusLLMSpec> models =
-        llmSpecList.where((spec) => spec.platform == selectedPlatform).toList();
-    setState(() {
-      selectedModelSpec = models[Random().nextInt(models.length)];
-    });
-
-    // 获取系统角色列表
-    var sysRoles = await dbHelper.queryCusSysRoleSpecList();
-    setState(() {
-      selectedSize = getInitialSize();
-
-      // 暂时父组件就把图片相关的都带出来，当然其实子组件各带各的最好，这省事
-      sysRoleList = sysRoles
-          .where((role) =>
-              role.sysRoleType == LLModelType.tti ||
-              role.sysRoleType == LLModelType.iti)
-          .toList();
-
-      isInited = true;
-    });
   }
 
   @override
@@ -140,24 +99,47 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
     }
   }
 
-  // 文生图时，默认选中一个模型
-  CusLLMSpec getRandomModel() {
-    List<CusLLMSpec> models = llmSpecList
-        .where((spec) =>
-            spec.platform == selectedPlatform &&
-            spec.modelType == getModelType())
-        .toList();
-    return models[Random().nextInt(models.length)];
+  void initCommonState() {
+    // 赋值模型列表、角色列表
+    final widget = this.widget as dynamic;
+    setState(() {
+      llmSpecList = widget.llmSpecList;
+      sysRoleList = widget.cusSysRoleSpecs;
+    });
+
+    // 每次进来都随机选一个平台
+    List<ApiPlatform> plats =
+        llmSpecList.map((e) => e.platform).toSet().toList();
+    setState(() {
+      selectedPlatform = plats[Random().nextInt(plats.length)];
+    });
+
+    // 同样的，选中的平台后也随机选择一个模型
+    List<CusLLMSpec> models =
+        llmSpecList.where((spec) => spec.platform == selectedPlatform).toList();
+    setState(() {
+      selectedModelSpec = models[Random().nextInt(models.length)];
+    });
+
+    // 选中了平台和模型之后，才能初始化对应的尺寸和样式
+    setState(() {
+      selectedSize = getInitialSize();
+      selectedStyle = getInitialStyle();
+    });
   }
 
-  /// 文生图支持的尺寸列表
+  /// 各个平台图片生成支持的尺寸列表
   List<String> getSizeList();
 
-  // 各个平台的默认尺寸
-  String getInitialSize();
+  /// 各个平台图片生成支持的样式列表
+  List<String> getStyleList();
 
-  // 文生图默认选中的平台
-  ApiPlatform getInitialPlatform();
+  // 各个平台的默认尺寸
+  String getInitialSize() => getSizeList().first;
+
+  // 各个平台的默认样式
+  String getInitialStyle() =>
+      getStyleList().isNotEmpty ? getStyleList().first : "";
 
   /// 文生图支持的模型类型
   LLModelType getModelType();
@@ -269,7 +251,7 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
           taskId: taskId,
           isFinish: false,
           style: selectedPlatform == ApiPlatform.aliyun
-              ? "<${WANX_StyleMap.values.toList()[selectedStyleIndex]}>"
+              ? "<${WANX_StyleMap[selectedStyle]}>"
               : '默认',
           imageUrls: null,
           gmtCreate: DateTime.now(),
@@ -315,7 +297,7 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
           taskId: taskId,
           isFinish: true,
           style: selectedPlatform == ApiPlatform.aliyun
-              ? "<${WANX_StyleMap.values.toList()[selectedStyleIndex]}>"
+              ? "<${WANX_StyleMap[selectedStyle]}>"
               : '默认',
           imageUrls: imageUrls,
           gmtCreate: DateTime.now(),
@@ -331,7 +313,7 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
           taskId: null,
           isFinish: true,
           style: selectedPlatform == ApiPlatform.aliyun
-              ? "<${WANX_StyleMap.values.toList()[selectedStyleIndex]}>"
+              ? "<${WANX_StyleMap[selectedStyle]}>"
               : '默认',
           imageUrls: imageUrls,
           gmtCreate: DateTime.now(),
@@ -371,13 +353,12 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
       appBar: AppBar(
         title: Text(getAppBarTitle()),
         actions: [
-          if (isInited && selectedModelSpec.modelType != LLModelType.tti_word)
+          if (selectedModelSpec.modelType != LLModelType.tti_word)
             TextButton(
               onPressed: () {
                 showCusSysRoleList(
                   context,
                   sysRoleList,
-                  isInited,
                   onRoleSelected,
                 );
               },
@@ -401,56 +382,54 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
           ),
         ],
       ),
-      body: !isInited
-          ? const Center(child: CircularProgressIndicator())
-          : GestureDetector(
-              // 允许子控件（如TextField）接收点击事件
-              behavior: HitTestBehavior.translucent,
-              onTap: () {
-                // 点击空白处可以移除焦点，关闭键盘
+      body: GestureDetector(
+        // 允许子控件（如TextField）接收点击事件
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          // 点击空白处可以移除焦点，关闭键盘
+          unfocusHandle();
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            /// 构建文生图配置和执行按钮区域(固定在上方，配置和生成结果可以滚动)
+            ImageGenerationButtonArea(
+              title: "图片生成配置",
+              onReset: resetConfig,
+              onGenerate: () async {
                 unfocusHandle();
+                try {
+                  await getImageGenerationData();
+                } catch (e) {
+                  setState(() {
+                    isGenImage = false;
+                    LoadingOverlay.hide();
+                    EasyLoading.showError(
+                      e.toString(),
+                      duration: const Duration(seconds: 5),
+                    );
+                  });
+                }
               },
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  /// 构建文生图配置和执行按钮区域(固定在上方，配置和生成结果可以滚动)
-                  ImageGenerationButtonArea(
-                    title: "图片生成配置",
-                    onReset: resetConfig,
-                    onGenerate: () async {
-                      unfocusHandle();
-                      try {
-                        await getImageGenerationData();
-                      } catch (e) {
-                        setState(() {
-                          isGenImage = false;
-                          LoadingOverlay.hide();
-                          EasyLoading.showError(
-                            e.toString(),
-                            duration: const Duration(seconds: 5),
-                          );
-                        });
-                      }
-                    },
-                    canGenerate: isCanGenerate(),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          /// 文生图配置折叠栏
-                          ...buildConfigArea(),
-
-                          /// 文生图的结果
-                          if (rstImageUrls.isNotEmpty) ...buildImageResult(),
-                        ],
-                      ),
-                    ),
-                  )
-                ],
-              ),
+              canGenerate: isCanGenerate(),
             ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    /// 文生图配置折叠栏
+                    ...buildConfigArea(),
+
+                    /// 文生图的结果
+                    if (rstImageUrls.isNotEmpty) ...buildImageResult(),
+                  ],
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
     );
   }
 

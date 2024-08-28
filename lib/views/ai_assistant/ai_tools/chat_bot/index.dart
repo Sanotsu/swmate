@@ -27,7 +27,6 @@ import '../../_componets/cus_system_prompt_modal.dart';
 import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
 import '../../_helper/handle_cc_response.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
-import '../../_helper/tools.dart';
 
 /// 2024-07-16
 /// 这个应该会复用，后续抽出chatbatindex出来
@@ -41,7 +40,16 @@ import '../../_helper/tools.dart';
 ///
 ///
 class ChatBat extends StatefulWidget {
-  const ChatBat({super.key});
+  // 可供挑选的模型列表
+  final List<CusLLMSpec> llmSpecList;
+  // 可供挑选的预设系统角色
+  final List<CusSysRoleSpec> cusSysRoleSpecs;
+
+  const ChatBat({
+    super.key,
+    required this.llmSpecList,
+    required this.cusSysRoleSpecs,
+  });
 
   @override
   State createState() => _ChatBatState();
@@ -57,15 +65,6 @@ class _ChatBatState extends State<ChatBat> {
   final TextEditingController _userInputController = TextEditingController();
   // 用户输入的内容（当不是AI在思考、且输入框有非空文字时才可以点击发送按钮）
   String userInput = "";
-
-  // 所有支持文生图的模型列表(用于下拉的平台和该平台拥有的模型列表也从这里来)
-  late List<CusLLMSpec> llmSpecList;
-
-  /// 级联选择效果：云平台-模型名
-  ApiPlatform selectedPlatform = ApiPlatform.siliconCloud;
-
-  // 被选中的模型信息
-  late CusLLMSpec selectedModelSpec;
 
   // AI是否在思考中(如果是，则不允许再次发送)
   bool isBotThinking = false;
@@ -93,17 +92,33 @@ class _ChatBatState extends State<ChatBat> {
   // 2024-08-23 用户如果选择了预设角色，就得显示出来
   CusSysRoleSpec? selectedRole;
 
-  // 可供选择的系统角色列表
-  late List<CusSysRoleSpec> ccSysRoleList;
-
-  // 是否初始化完成(选择的对话和支持的对话列表，没从数据库获取到就不要加载页面)
-  bool isInited = false;
+  // 当前选中的平台和模型
+  late ApiPlatform selectedPlatform;
+  late CusLLMSpec selectedModelSpec;
 
   @override
   void initState() {
     super.initState();
 
-    initCusConfig();
+    initPlatAndModel();
+  }
+
+  initPlatAndModel() {
+    // 每次进来都随机选一个平台
+    List<ApiPlatform> plats =
+        widget.llmSpecList.map((e) => e.platform).toSet().toList();
+    setState(() {
+      selectedPlatform = plats[Random().nextInt(plats.length)];
+    });
+
+    // 同样的，选中的平台后也随机选择一个模型
+    List<CusLLMSpec> models = widget.llmSpecList
+        .where((spec) => spec.platform == selectedPlatform)
+        .toList();
+
+    setState(() {
+      selectedModelSpec = models[Random().nextInt(models.length)];
+    });
   }
 
   @override
@@ -125,44 +140,6 @@ class _ChatBatState extends State<ChatBat> {
       // 注意：sse的间隔比较短，这个滚动也要快一点
       duration: const Duration(milliseconds: 50),
     );
-  }
-
-  // 进入自行配置的对话页面，看看用户配置有没有生效
-  initCusConfig() async {
-    // 获取对话的模型列表(具体逻辑看函数内部)
-    var tempList = await fetchCusLLMSpecList(LLModelType.cc);
-    setState(() {
-      llmSpecList = tempList;
-    });
-
-    // 2024-07-14 每次进来都随机选一个
-    List<ApiPlatform> values =
-        llmSpecList.map((e) => e.platform).toSet().toList();
-    // 不能放在下面一起，因为选中的平台要先生效，才能构建该平台下的模型
-    setState(() {
-      selectedPlatform = values[Random().nextInt(values.length)];
-    });
-
-    // 2024-07-14 同样的，选中的平台后也随机选择一个模型
-    List<CusLLMSpec> models =
-        llmSpecList.where((spec) => spec.platform == selectedPlatform).toList();
-    setState(() {
-      selectedModelSpec = models[Random().nextInt(models.length)];
-    });
-
-    // 2024-08-26 同样的，还要查询到db中所有预设的系统角色
-    var cusSysRoleSpecs = await _dbHelper.queryCusSysRoleSpecList(
-      sysRoleType: LLModelType.cc,
-    );
-
-    setState(() {
-      ccSysRoleList = cusSysRoleSpecs.toList();
-    });
-
-    // 最后才设置为初始化完成
-    setState(() {
-      isInited = true;
-    });
   }
 
   //获取指定分类的历史对话
@@ -388,8 +365,7 @@ class _ChatBatState extends State<ChatBat> {
   showSystemRoleMadel() {
     showCusSysRoleList(
       context,
-      ccSysRoleList,
-      isInited,
+      widget.cusSysRoleSpecs,
       onRoleSelected,
     );
   }
@@ -440,171 +416,166 @@ class _ChatBatState extends State<ChatBat> {
           // 点击空白处可以移除焦点，关闭键盘
           unfocusHandle();
         },
-        child: !isInited
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// 构建可切换云平台和模型的行
-                  Container(
-                    color: Colors.grey[300],
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 10.sp),
-                      child: CusPlatformAndLlmRow(
-                        initialPlatform: selectedPlatform,
-                        initialModelSpec: selectedModelSpec,
-                        llmSpecList: llmSpecList,
-                        targetModelType: LLModelType.cc,
-                        showToggleSwitch: true,
-                        isStream: isStream,
-                        onToggle: (index) {
-                          setState(() {
-                            isStream = index == 0 ? true : false;
-                            // 切换流式/同步响应也新开对话
-                            // chatSession = null;
-                            // messages.clear();
-                          });
-                        },
-                        onPlatformOrModelChanged:
-                            (ApiPlatform? cp, CusLLMSpec? llmSpec) {
-                          setState(() {
-                            selectedPlatform = cp!;
-                            selectedModelSpec = llmSpec!;
-                            // 模型可供输出的图片尺寸列表也要更新
-                            // 2024-06-15 切换模型应该新建对话，因为上下文丢失了。
-                            // 建立新对话就是把已有的对话清空就好(因为保存什么的在发送消息时就处理了)
-                            // 2024-08-23 切换了模型也要清空预设角色
-                            restartChat();
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-
-                  /// 如果对话是空，显示预设的问题
-                  // 预设的问题标题
-                  if (messages.isEmpty)
-                    Padding(
-                      padding: EdgeInsets.all(10.sp),
-                      child:
-                          Text(" 你可以试着问我：", style: TextStyle(fontSize: 18.sp)),
-                    ),
-                  // 预设的问题列表
-                  if (messages.isEmpty)
-                    ChatDefaultQuestionArea(
-                      defaultQuestions: defaultQuestions,
-                      onQuestionTap: _userSendMessage,
-                    ),
-
-                  /// 如果有选择了预设角色，则显示改角色
-                  if (selectedRole != null)
-                    Container(
-                      height: 32.sp,
-                      color: Colors.grey[100],
-                      child: Center(
-                        child: Text(
-                          "选择的预设角色: ${selectedRole!.label}",
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-
-                  /// 对话的标题区域
-                  /// 在顶部显示对话标题(避免在appbar显示，内容太挤)
-                  if (chatSession != null)
-                    ChatTitleArea(
-                      chatSession: chatSession,
-                      onUpdate: (ChatSession e) async {
-                        // 修改对话的标题
-                        await _dbHelper.updateChatSession(e);
-
-                        // 修改后更新标题
-                        if (!mounted) return;
-                        setState(() {
-                          chatSession = e;
-                        });
-                      },
-                    ),
-
-                  /// 标题和对话正文的分割线
-                  if (chatSession != null)
-                    Divider(height: 3.sp, thickness: 1.sp),
-
-                  /// 显示对话消息主体
-                  ChatListArea(
-                    messages: messages,
-                    // 如果不想显示system信息，这里可以移除掉(但不能修改原消息列表)
-                    // messages: messages.where((e) => e.role != "system").toList(),
-                    scrollController: _scrollController,
-                    isBotThinking: isBotThinking,
-                    regenerateLatestQuestion: regenerateLatestQuestion,
-                  ),
-
-                  /// 显示输入框和发送按钮
-                  const Divider(),
-
-                  /// 用户发送区域
-                  ChatUserVoiceSendArea(
-                    controller: _userInputController,
-                    hintText: '可以向我提任何问题哦',
-                    isBotThinking: isBotThinking,
-                    isSendClickable: userInput.isNotEmpty,
-                    onInpuChanged: (text) {
-                      setState(() {
-                        userInput = text.trim();
-                      });
-                    },
-                    // onSendPressed 和 onSendSounds 理论上不会都触发的
-                    onSendPressed: () {
-                      _userSendMessage(userInput);
-                      setState(() {
-                        userInput = "";
-                      });
-                    },
-                    // 点击了语音发送，可能是文件，也可能是语音转的文字
-                    onSendSounds: (type, content) async {
-                      print("语音发送的玩意儿 $type $content");
-
-                      if (type == SendContentType.text) {
-                        _userSendMessage(content);
-                      } else if (type == SendContentType.voice) {
-                        //
-
-                        /// 同一份语言有两个部分，一个是原始录制的m4a的格式，一个是转码厚的pcm格式
-                        /// 前者用于语音识别，后者用于播放
-                        String tempPath = path.join(
-                          path.dirname(content),
-                          path.basenameWithoutExtension(content),
-                        );
-
-                        var transcription =
-                            await sendAudioToServer("$tempPath.pcm");
-                        // 注意：语言转换文本必须pcm格式，但是需要点击播放的语音则需要原本的m4a格式
-                        // 都在同一个目录下同一路径不同扩展名
-                        _userSendMessage(
-                          transcription,
-                          contentVoicePath: "$tempPath.m4a",
-                        );
-                      }
-                    },
-                    // 2024-08-08 手动点击了终止
-                    onStop: () async {
-                      await respStream.cancel();
-                      if (!mounted) return;
-                      setState(() {
-                        _saveToDb();
-                        _userInputController.clear();
-                        // 滚动到ListView的底部
-                        chatListScrollToBottom();
-
-                        isBotThinking = false;
-                      });
-                    },
-                  ),
-                ],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// 构建可切换云平台和模型的行
+            Container(
+              color: Colors.grey[300],
+              child: Padding(
+                padding: EdgeInsets.only(left: 10.sp),
+                child: CusPlatformAndLlmRow(
+                  initialPlatform: selectedPlatform,
+                  initialModelSpec: selectedModelSpec,
+                  llmSpecList: widget.llmSpecList,
+                  targetModelType: LLModelType.cc,
+                  showToggleSwitch: true,
+                  isStream: isStream,
+                  onToggle: (index) {
+                    setState(() {
+                      isStream = index == 0 ? true : false;
+                      // 切换流式/同步响应也新开对话
+                      // chatSession = null;
+                      // messages.clear();
+                    });
+                  },
+                  onPlatformOrModelChanged:
+                      (ApiPlatform? cp, CusLLMSpec? llmSpec) {
+                    setState(() {
+                      selectedPlatform = cp!;
+                      selectedModelSpec = llmSpec!;
+                      // 模型可供输出的图片尺寸列表也要更新
+                      // 2024-06-15 切换模型应该新建对话，因为上下文丢失了。
+                      // 建立新对话就是把已有的对话清空就好(因为保存什么的在发送消息时就处理了)
+                      // 2024-08-23 切换了模型也要清空预设角色
+                      restartChat();
+                    });
+                  },
+                ),
               ),
+            ),
+
+            /// 如果对话是空，显示预设的问题
+            // 预设的问题标题
+            if (messages.isEmpty)
+              Padding(
+                padding: EdgeInsets.all(10.sp),
+                child: Text(" 你可以试着问我：", style: TextStyle(fontSize: 18.sp)),
+              ),
+            // 预设的问题列表
+            if (messages.isEmpty)
+              ChatDefaultQuestionArea(
+                defaultQuestions: defaultQuestions,
+                onQuestionTap: _userSendMessage,
+              ),
+
+            /// 如果有选择了预设角色，则显示改角色
+            if (selectedRole != null)
+              Container(
+                height: 32.sp,
+                color: Colors.grey[100],
+                child: Center(
+                  child: Text(
+                    "选择的预设角色: ${selectedRole!.label}",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+
+            /// 对话的标题区域
+            /// 在顶部显示对话标题(避免在appbar显示，内容太挤)
+            if (chatSession != null)
+              ChatTitleArea(
+                chatSession: chatSession,
+                onUpdate: (ChatSession e) async {
+                  // 修改对话的标题
+                  await _dbHelper.updateChatSession(e);
+
+                  // 修改后更新标题
+                  if (!mounted) return;
+                  setState(() {
+                    chatSession = e;
+                  });
+                },
+              ),
+
+            /// 标题和对话正文的分割线
+            if (chatSession != null) Divider(height: 3.sp, thickness: 1.sp),
+
+            /// 显示对话消息主体
+            ChatListArea(
+              messages: messages,
+              // 如果不想显示system信息，这里可以移除掉(但不能修改原消息列表)
+              // messages: messages.where((e) => e.role != "system").toList(),
+              scrollController: _scrollController,
+              isBotThinking: isBotThinking,
+              regenerateLatestQuestion: regenerateLatestQuestion,
+            ),
+
+            /// 显示输入框和发送按钮
+            const Divider(),
+
+            /// 用户发送区域
+            ChatUserVoiceSendArea(
+              controller: _userInputController,
+              hintText: '可以向我提任何问题哦',
+              isBotThinking: isBotThinking,
+              isSendClickable: userInput.isNotEmpty,
+              onInpuChanged: (text) {
+                setState(() {
+                  userInput = text.trim();
+                });
+              },
+              // onSendPressed 和 onSendSounds 理论上不会都触发的
+              onSendPressed: () {
+                _userSendMessage(userInput);
+                setState(() {
+                  userInput = "";
+                });
+              },
+              // 点击了语音发送，可能是文件，也可能是语音转的文字
+              onSendSounds: (type, content) async {
+                print("语音发送的玩意儿 $type $content");
+
+                if (type == SendContentType.text) {
+                  _userSendMessage(content);
+                } else if (type == SendContentType.voice) {
+                  //
+
+                  /// 同一份语言有两个部分，一个是原始录制的m4a的格式，一个是转码厚的pcm格式
+                  /// 前者用于语音识别，后者用于播放
+                  String tempPath = path.join(
+                    path.dirname(content),
+                    path.basenameWithoutExtension(content),
+                  );
+
+                  var transcription = await sendAudioToServer("$tempPath.pcm");
+                  // 注意：语言转换文本必须pcm格式，但是需要点击播放的语音则需要原本的m4a格式
+                  // 都在同一个目录下同一路径不同扩展名
+                  _userSendMessage(
+                    transcription,
+                    contentVoicePath: "$tempPath.m4a",
+                  );
+                }
+              },
+              // 2024-08-08 手动点击了终止
+              onStop: () async {
+                await respStream.cancel();
+                if (!mounted) return;
+                setState(() {
+                  _saveToDb();
+                  _userInputController.clear();
+                  // 滚动到ListView的底部
+                  chatListScrollToBottom();
+
+                  isBotThinking = false;
+                });
+              },
+            ),
+          ],
+        ),
       ),
 
       /// 构建在对话历史中的对话标题列表

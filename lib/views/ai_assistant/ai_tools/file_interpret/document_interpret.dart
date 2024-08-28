@@ -22,7 +22,16 @@ import '../../_helper/document_parser.dart';
 import 'base_interpret_screen_state.dart';
 
 class DocumentInterpret extends StatefulWidget {
-  const DocumentInterpret({super.key});
+  // 可供挑选的模型列表
+  final List<CusLLMSpec> llmSpecList;
+  // 可供挑选的预设系统角色
+  final List<CusSysRoleSpec> cusSysRoleSpecs;
+
+  const DocumentInterpret({
+    super.key,
+    required this.llmSpecList,
+    required this.cusSysRoleSpecs,
+  });
 
   @override
   State createState() => _DocumentInterpretState();

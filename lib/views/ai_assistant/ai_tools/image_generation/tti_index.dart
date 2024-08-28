@@ -22,7 +22,16 @@ import '../../_ig_screen_parts/style_grid_selector.dart';
 import 'base_ig_screen_state.dart';
 
 class CommonTTIScreen extends StatefulWidget {
-  const CommonTTIScreen({super.key});
+  // 可供挑选的模型列表
+  final List<CusLLMSpec> llmSpecList;
+  // 可供挑选的预设系统角色
+  final List<CusSysRoleSpec> cusSysRoleSpecs;
+
+  const CommonTTIScreen({
+    super.key,
+    required this.llmSpecList,
+    required this.cusSysRoleSpecs,
+  });
 
   @override
   State<CommonTTIScreen> createState() => _CommonTTIScreenState();
@@ -48,29 +57,15 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
     return SF_ImageSizeList;
   }
 
-  /// 文生图各个平台的默认尺寸
+  /// 不同模型有的可能有默认的样式
   @override
-  String getInitialSize() {
-    if (selectedPlatform == ApiPlatform.siliconCloud) {
-      return SF_ImageSizeList.first;
-    }
-
-    if (selectedPlatform == ApiPlatform.xfyun) {
-      return XFYUN_ImageSizeList.first;
-    }
-
+  List<String> getStyleList() {
     if (selectedPlatform == ApiPlatform.aliyun) {
-      return ALIYUN_ImageSizeList.first;
+      return WANX_StyleMap.keys.toList();
     }
 
-    // 没有匹配上的，都返回siliconCloud的配置
-    return SF_ImageSizeList.first;
-  }
-
-  /// 文生图默认选中的平台(sf限时免费的)
-  @override
-  ApiPlatform getInitialPlatform() {
-    return ApiPlatform.siliconCloud;
+    // 文字变形不需要样式
+    return [];
   }
 
   /// 文生图支持的模型类型
@@ -88,6 +83,8 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
       // 模型可供输出的图片尺寸列表、样式、预选字体也要更新
       getSizeList();
       selectedSize = getInitialSize();
+      getStyleList();
+      selectedStyle = getInitialStyle();
     });
   }
 
@@ -112,8 +109,9 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
         negativePrompt: negativePrompt,
       );
 
+      // 2024-08-28 除了万相，其他也行？？？
       var parameters = AliyunTtiParameter(
-        style: "<${WANX_StyleMap.values.toList()[selectedStyleIndex]}>",
+        style: "<${WANX_StyleMap[selectedStyle]}>",
         size: selectedSize,
         n: selectedNum,
       );
@@ -206,10 +204,10 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
               imageUrls: WANX_StyleImageList,
               labels: WANX_StyleMap.keys.toList(),
               subLabels: WANX_StyleMap.values.toList(),
-              selectedIndex: selectedStyleIndex,
+              selectedIndex: WANX_StyleMap.keys.toList().indexOf(selectedStyle),
               onTap: (index) {
                 setState(() {
-                  selectedStyleIndex = selectedStyleIndex == index ? -1 : index;
+                  selectedStyle = WANX_StyleMap.keys.toList()[index];
                 });
               },
             ),

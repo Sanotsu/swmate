@@ -9,7 +9,6 @@ import '../../../common/llm_spec/cus_llm_model.dart';
 void showCusSysRoleList(
   BuildContext context,
   List<CusSysRoleSpec> ccSysRoleList,
-  bool isInited,
   Function(CusSysRoleSpec) onRoleSelected,
 ) {
   showModalBottomSheet(
@@ -18,7 +17,6 @@ void showCusSysRoleList(
     builder: (BuildContext context) {
       return CusSysRoleListModal(
         ccSysRoleList: ccSysRoleList,
-        isInited: isInited,
         onRoleSelected: onRoleSelected,
       );
     },
@@ -31,13 +29,11 @@ void showCusSysRoleList(
 
 class CusSysRoleListModal extends StatelessWidget {
   final List<CusSysRoleSpec> ccSysRoleList;
-  final bool isInited;
   final Function(CusSysRoleSpec) onRoleSelected;
 
   const CusSysRoleListModal({
     super.key,
     required this.ccSysRoleList,
-    required this.isInited,
     required this.onRoleSelected,
   });
 
@@ -86,26 +82,24 @@ class CusSysRoleListModal extends StatelessWidget {
               ],
             ),
           ),
-          if (isInited)
-            Expanded(
-              child: ListView.builder(
-                itemCount: ccSysRoleList.length,
-                itemBuilder: (BuildContext context, int index) {
-                  var a = ccSysRoleList[index];
-
-                  return Card(
-                    child: ListTile(
-                      title: Text(a.label),
-                      subtitle: a.subtitle != null ? Text(a.subtitle!) : null,
-                      dense: true,
-                      onTap: () {
-                        Navigator.pop(context, a);
-                      },
-                    ),
-                  );
-                },
-              ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: ccSysRoleList.length,
+              itemBuilder: (BuildContext context, int index) {
+                var a = ccSysRoleList[index];
+                return Card(
+                  child: ListTile(
+                    title: Text(a.label),
+                    subtitle: a.subtitle != null ? Text(a.subtitle!) : null,
+                    dense: true,
+                    onTap: () {
+                      Navigator.pop(context, a);
+                    },
+                  ),
+                );
+              },
             ),
+          ),
         ],
       ),
     );

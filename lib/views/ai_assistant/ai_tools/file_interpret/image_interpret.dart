@@ -15,7 +15,16 @@ import '../../_ig_screen_parts/image_pick_and_view_area.dart';
 import 'base_interpret_screen_state.dart';
 
 class ImageInterpret extends StatefulWidget {
-  const ImageInterpret({super.key});
+  // 可供挑选的模型列表
+  final List<CusLLMSpec> llmSpecList;
+  // 可供挑选的预设系统角色
+  final List<CusSysRoleSpec> cusSysRoleSpecs;
+
+  const ImageInterpret({
+    super.key,
+    required this.llmSpecList,
+    required this.cusSysRoleSpecs,
+  });
 
   @override
   State<ImageInterpret> createState() => _ImageInterpretState();

@@ -6,7 +6,8 @@ class CustomEntranceCard extends StatelessWidget {
   final String? subtitle;
   final IconData icon;
   final Color iconColor;
-  final Widget targetPage;
+  final Widget? targetPage;
+  final void Function()? onTap;
 
   const CustomEntranceCard({
     super.key,
@@ -14,7 +15,8 @@ class CustomEntranceCard extends StatelessWidget {
     this.subtitle,
     required this.icon,
     this.iconColor = Colors.blue,
-    required this.targetPage,
+    this.targetPage,
+    this.onTap,
   });
 
   @override
@@ -25,12 +27,15 @@ class CustomEntranceCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(10.sp), // 设置InkWell的圆角
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => targetPage),
-          );
-        },
+        // 如果有传目标页面，直接跳转，不管有没有onTap函数；如果没有目标页面，再执行onTap操作
+        onTap: (targetPage != null)
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => targetPage!),
+                );
+              }
+            : onTap,
         child: Row(
           children: [
             Padding(
@@ -59,39 +64,6 @@ class CustomEntranceCard extends StatelessWidget {
                   ),
                 ],
               ),
-
-              // Center(
-              //   child: ListTile(
-              //     leading: CircleAvatar(
-              //       backgroundColor: iconColor,
-              //       radius: 15.sp,
-              //       child: Icon(icon, size: 20.sp, color: Colors.white),
-              //     ),
-              //     // dense: true,
-              //     title: Text(
-              //       title,
-              //       style: TextStyle(
-              //         fontSize: 18.sp,
-              //         // color: Colors.blueAccent,
-              //         fontWeight: FontWeight.bold,
-              //       ),
-              //       maxLines: 1,
-              //       softWrap: true,
-              //       overflow: TextOverflow.ellipsis,
-              //       textAlign: TextAlign.center,
-              //     ),
-              //     subtitle: subtitle != null
-              //         ? Text(
-              //             subtitle!,
-              //             style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-              //             maxLines: 10,
-              //             softWrap: true,
-              //             overflow: TextOverflow.ellipsis,
-              //             textAlign: TextAlign.center,
-              //           )
-              //         : null,
-              //   ),
-              // ),
             ),
           ],
         ),

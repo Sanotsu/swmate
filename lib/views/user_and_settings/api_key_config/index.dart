@@ -29,6 +29,22 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
   // 是否在导入密钥中
   bool isLoading = true;
 
+  // 表单初始值为空
+  Map<String, dynamic> initData = {};
+
+  @override
+  void initState() {
+    super.initState();
+    initMapData();
+  }
+
+  initMapData() {
+    // 初始化时，从缓存中取值
+    setState(() {
+      initData = MyGetStorage().getUserAKMap();
+    });
+  }
+
   // 导入各个平台的API
   Future<void> _openJsonFiles() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -47,6 +63,10 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
         // 获取json文件中的各个key存入缓存
         var jsonData = json.decode(await file.readAsString());
 
+        // 获取到json中的值了，把缓存中的都清除
+        await MyGetStorage().setUserAKMap({});
+
+        // 存入缓存
         await MyGetStorage().setUserAKMap({
           SKN.baiduApiKey.name: jsonData[SKN.baiduApiKey.name] ?? "",
           SKN.baiduSecretKey.name: jsonData[SKN.baiduSecretKey.name] ?? "",
@@ -63,8 +83,13 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           SKN.zhipuAK.name: jsonData[SKN.zhipuAK.name] ?? "",
         });
 
-        // 存入之后更新表单
         setState(() {
+          // 先重置掉表单的值
+          final formState = _formKey.currentState;
+          if (formState != null) {
+            formState.reset();
+          }
+          // 再更新表单的值
           _formKey.currentState?.patchValue(MyGetStorage().getUserAKMap());
         });
       } catch (e) {
@@ -90,9 +115,9 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
   clearUserAK() async {
     await MyGetStorage().setUserAKMap(null);
     setState(() {
-      _formKey.currentState?.patchValue(MyGetStorage().getUserAKMap());
-
+      initData = {};
       _formKey.currentState?.reset();
+      _formKey.currentState?.patchValue(MyGetStorage().getUserAKMap());
     });
   }
 
@@ -102,6 +127,9 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
       var temp = _formKey.currentState?.fields;
 
       try {
+        // 先清空缓存
+        await MyGetStorage().setUserAKMap({});
+
         // 保存token信息到缓存
         await MyGetStorage().setUserAKMap({
           SKN.baiduApiKey.name: temp?[SKN.baiduApiKey.name]?.value ?? "",
@@ -123,6 +151,14 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
         });
 
         setState(() {
+          // 先重置掉表单的值
+          final formState = _formKey.currentState;
+          if (formState != null) {
+            formState.reset();
+          }
+          // 再更新表单的值
+          _formKey.currentState?.patchValue(MyGetStorage().getUserAKMap());
+
           _isEditing = !_isEditing;
         });
       } catch (e) {
@@ -144,11 +180,39 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('配置平台密钥'),
+        title: const Text('平台密钥'),
         actions: [
           if (!_isEditing)
             IconButton(
-              onPressed: clearUserAK,
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text("清空确认"),
+                      content: const Text("确认清空缓存的密钥？"),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text("取消"),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            await clearUserAK();
+                            if (mounted) {
+                              if (!context.mounted) return;
+                              Navigator.of(context).pop(true);
+                            }
+                          },
+                          child: const Text("确定"),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
               icon: const Icon(Icons.clear_all),
             ),
           if (!_isEditing)
@@ -223,7 +287,7 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
   buildFormBuilder() {
     return FormBuilder(
       key: _formKey,
-      initialValue: MyGetStorage().getUserAKMap(),
+      initialValue: initData,
       // enabled: _isEditable,
       child: Column(
         children: [

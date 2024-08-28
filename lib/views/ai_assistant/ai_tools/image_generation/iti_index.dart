@@ -28,7 +28,16 @@ import 'base_ig_screen_state.dart';
 /// 和图生图的有十分相识，所以继承图生图页面base页面
 ///
 class CommonITIScreen extends StatefulWidget {
-  const CommonITIScreen({super.key});
+  // 可供挑选的模型列表
+  final List<CusLLMSpec> llmSpecList;
+  // 可供挑选的预设系统角色
+  final List<CusSysRoleSpec> cusSysRoleSpecs;
+
+  const CommonITIScreen({
+    super.key,
+    required this.llmSpecList,
+    required this.cusSysRoleSpecs,
+  });
 
   @override
   State<CommonITIScreen> createState() => _CommonITIScreenState();
@@ -41,58 +50,14 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
   File? selectedFaceImage;
   File? selectedPoseImage;
 
-  // 被选中的风格
-  String selectedStyle = "";
-
-  // 基类初始话成功了，还要子类也初始化成功，才能渲染页面
-  bool isItiInited = false;
-  Timer? _timer;
-  double _elapsedSeconds = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    itiInit();
-  }
-
-  // 等待父类初始化，父类初始化完了，才初始化子类，直到超时取消
-  itiInit() {
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      if (!mounted) return;
-      setState(() {
-        _elapsedSeconds += 0.1;
-      });
-
-      if (isInited) {
-        selectedSize = getInitialSize();
-        selectedStyle = getInitialStyle();
-
-        if (!mounted) return;
-        setState(() {
-          isItiInited = true;
-        });
-        _timer?.cancel();
-      }
-
-      if (_elapsedSeconds >= 60) {
-        _timer?.cancel();
-      }
-    });
-  }
-
   /// 图生图各个平台支持的尺寸
   @override
   List<String> getSizeList() {
     return SF_ITISizeList;
   }
 
-  /// 图生图各个平台的默认尺寸
-  @override
-  String getInitialSize() {
-    return SF_ITISizeList.first;
-  }
-
   /// 不同模型有的可能有默认的样式
+  @override
   List<String> getStyleList() {
     if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_PhotoMaker_ITI) {
       return PhotoMaker_StyleMap.keys.toList();
@@ -104,26 +69,6 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
 
     // 文字变形不需要样式
     return [];
-  }
-
-  /// 不同模型有的可能有默认的样式
-  String getInitialStyle() {
-    if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_PhotoMaker_ITI) {
-      return PhotoMaker_StyleMap.keys.toList().first;
-    }
-
-    if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI) {
-      return InstantID_StyleMap.keys.toList().first;
-    }
-
-    // 文字变形不需要样式
-    return '';
-  }
-
-  /// 图生图默认选中的平台(sf限时免费的)
-  @override
-  ApiPlatform getInitialPlatform() {
-    return ApiPlatform.siliconCloud;
   }
 
   /// 图生图支持的模型类型
@@ -141,7 +86,6 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
       // 模型可供输出的图片尺寸列表、样式、预选字体也要更新
       getSizeList();
       selectedSize = getInitialSize();
-
       getStyleList();
       selectedStyle = getInitialStyle();
     });
@@ -295,10 +239,8 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
       // 平台模型选中和尺寸张数选择结构大体一样的，放在基类
       ...super.buildConfigArea(),
 
-      if (isInited &&
-          isItiInited &&
-          (selectedModelSpec.cusLlm == CusLLM.siliconCloud_PhotoMaker_ITI ||
-              selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI))
+      if ((selectedModelSpec.cusLlm == CusLLM.siliconCloud_PhotoMaker_ITI ||
+          selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI))
         Container(
           margin: EdgeInsets.fromLTRB(5.sp, 5.sp, 5.sp, 0),
           height: 32.sp,
@@ -323,9 +265,7 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
 
       // ？？？2024-08-23 实测腾讯的photoMaker会报500错误，无法解决
       // 正常的图生图，只需要一个参考图
-      if (isInited &&
-          isItiInited &&
-          selectedModelSpec.cusLlm != CusLLM.siliconCloud_InstantID_ITI)
+      if (selectedModelSpec.cusLlm != CusLLM.siliconCloud_InstantID_ITI)
         SizedBox(
           height: 100.sp,
           child: ImagePickAndViewArea(
@@ -336,9 +276,7 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
         ),
 
       // InstantID 需要传两个图片，和其他的不一样
-      if (isInited &&
-          isItiInited &&
-          selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI)
+      if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI)
         SizedBox(
           height: 100.sp,
           child: Row(

@@ -57,3 +57,11 @@ Future<List<CusLLMSpec>> fetchCusLLMSpecList(LLModelType targetType) async {
 
   return llmSpecList;
 }
+
+/// 获取指定类型的系统角色
+Future<List<CusSysRoleSpec>> fetchCusSysRoleSpecList(
+  LLModelType? roleType,
+) async {
+  return (await _dbHelper.queryCusSysRoleSpecList(sysRoleType: roleType))
+      .toList();
+}
