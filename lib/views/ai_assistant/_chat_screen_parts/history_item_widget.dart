@@ -46,6 +46,13 @@ class ChatHistoryItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
+                      chatSession.llmName,
+                      style: TextStyle(fontSize: 15.sp),
+                      maxLines: 2,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
                       gmtCreate,
                       style: TextStyle(fontSize: 12.sp),
                     ),

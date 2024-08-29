@@ -127,6 +127,10 @@ dart run build_runner build --delete-conflicting-outputs
 
 - refactor: 重构智能助手各个功能页面获取模型列表和系统角色的逻辑到父页面。
 
+#### 2024-08-29
+
+- refactor: 重构了部分下拉选择框样式，修正智能对话点击历史记录后当前平台和模型没有改变的问题。
+
 ### todo:
 
 - （done）得到流式响应的数据的处理都非常相似，可以抽出来公共函数

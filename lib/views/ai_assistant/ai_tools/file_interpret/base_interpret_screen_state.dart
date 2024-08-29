@@ -303,30 +303,24 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
         // 2024-08-27 这里如果手机太小，打字键盘弹出来可能会出现溢出的问题
         // 虽然固定高度，放在SizedBox中添加SingleChildScrollView和Column可以解决，但不好看
         /// 构建可切换云平台和模型的行
-        Container(
-          color: Colors.grey[300],
-          child: Padding(
-            padding: EdgeInsets.only(left: 10.sp),
-            child: CusPlatformAndLlmRow(
-              initialPlatform: selectedPlatform,
-              initialModelSpec: selectedModelSpec,
-              llmSpecList: llmSpecList,
-              targetModelType: getTargetType(),
-              showToggleSwitch: true,
-              isStream: isStream,
-              onToggle: (index) {
-                setState(() {
-                  isStream = index == 0 ? true : false;
-                });
-              },
-              onPlatformOrModelChanged: (ApiPlatform? cp, CusLLMSpec? llmSpec) {
-                setState(() {
-                  selectedPlatform = cp!;
-                  selectedModelSpec = llmSpec!;
-                });
-              },
-            ),
-          ),
+        CusPlatformAndLlmRow(
+          initialPlatform: selectedPlatform,
+          initialModelSpec: selectedModelSpec,
+          llmSpecList: llmSpecList,
+          targetModelType: getTargetType(),
+          showToggleSwitch: true,
+          isStream: isStream,
+          onToggle: (index) {
+            setState(() {
+              isStream = index == 0 ? true : false;
+            });
+          },
+          onPlatformOrModelChanged: (ApiPlatform? cp, CusLLMSpec? llmSpec) {
+            setState(() {
+              selectedPlatform = cp!;
+              selectedModelSpec = llmSpec!;
+            });
+          },
         ),
 
         /// 可切换的预设功能

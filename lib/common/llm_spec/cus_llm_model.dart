@@ -126,6 +126,52 @@ class CusLLMSpec {
       'gmtCreate': gmtCreate?.toIso8601String(),
     };
   }
+
+  ///
+  /// 2024-08-29
+  /// 在 Dart 中，默认的对象比较是基于实例的引用，而不是对象的内容。
+  /// 比如在平台和模型下拉框的时候，如果有更新当前选中的平台和模型，会判断是否在预选列表中
+  /// 虽然看起来在(比如selectedModelSpec.name相等)，但可能引用不同，
+  /// 两个CusLLMSpec实例判等就失败了
+  /// 之前没注意是因为平台列表是enum，不存在这个问题
+  ///
+  ///
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CusLLMSpec &&
+          runtimeType == other.runtimeType &&
+          cusLlmSpecId == other.cusLlmSpecId &&
+          platform == other.platform &&
+          model == other.model &&
+          cusLlm == other.cusLlm &&
+          name == other.name &&
+          contextLength == other.contextLength &&
+          isFree == other.isFree &&
+          inputPrice == other.inputPrice &&
+          outputPrice == other.outputPrice &&
+          feature == other.feature &&
+          useCase == other.useCase &&
+          modelType == other.modelType &&
+          costPer == other.costPer &&
+          gmtCreate == other.gmtCreate;
+
+  @override
+  int get hashCode =>
+      cusLlmSpecId.hashCode ^
+      platform.hashCode ^
+      model.hashCode ^
+      cusLlm.hashCode ^
+      name.hashCode ^
+      contextLength.hashCode ^
+      isFree.hashCode ^
+      inputPrice.hashCode ^
+      outputPrice.hashCode ^
+      feature.hashCode ^
+      useCase.hashCode ^
+      modelType.hashCode ^
+      costPer.hashCode ^
+      gmtCreate.hashCode;
 }
 
 /// 文档解读这页面可能需要的一些栏位

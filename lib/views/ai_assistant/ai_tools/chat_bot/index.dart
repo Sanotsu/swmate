@@ -421,40 +421,35 @@ class _ChatBatState extends State<ChatBat> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// 构建可切换云平台和模型的行
-            Container(
-              color: Colors.grey[300],
-              child: Padding(
-                padding: EdgeInsets.only(left: 10.sp),
-                child: CusPlatformAndLlmRow(
-                  initialPlatform: selectedPlatform,
-                  initialModelSpec: selectedModelSpec,
-                  llmSpecList: widget.llmSpecList,
-                  targetModelType: LLModelType.cc,
-                  showToggleSwitch: true,
-                  isStream: isStream,
-                  onToggle: (index) {
-                    setState(() {
-                      isStream = index == 0 ? true : false;
-                      // 切换流式/同步响应也新开对话
-                      // chatSession = null;
-                      // messages.clear();
-                    });
-                  },
-                  onPlatformOrModelChanged:
-                      (ApiPlatform? cp, CusLLMSpec? llmSpec) {
-                    setState(() {
-                      selectedPlatform = cp!;
-                      selectedModelSpec = llmSpec!;
-                      // 模型可供输出的图片尺寸列表也要更新
-                      // 2024-06-15 切换模型应该新建对话，因为上下文丢失了。
-                      // 建立新对话就是把已有的对话清空就好(因为保存什么的在发送消息时就处理了)
-                      // 2024-08-23 切换了模型也要清空预设角色
-                      restartChat();
-                    });
-                  },
-                ),
-              ),
+            CusPlatformAndLlmRow(
+              initialPlatform: selectedPlatform,
+              initialModelSpec: selectedModelSpec,
+              llmSpecList: widget.llmSpecList,
+              targetModelType: LLModelType.cc,
+              showToggleSwitch: true,
+              isStream: isStream,
+              onToggle: (index) {
+                setState(() {
+                  isStream = index == 0 ? true : false;
+                  // 切换流式/同步响应也新开对话
+                  // chatSession = null;
+                  // messages.clear();
+                });
+              },
+              onPlatformOrModelChanged: (ApiPlatform? cp, CusLLMSpec? llmSpec) {
+                setState(() {
+                  selectedPlatform = cp!;
+                  selectedModelSpec = llmSpec!;
+                  // 模型可供输出的图片尺寸列表也要更新
+                  // 2024-06-15 切换模型应该新建对话，因为上下文丢失了。
+                  // 建立新对话就是把已有的对话清空就好(因为保存什么的在发送消息时就处理了)
+                  // 2024-08-23 切换了模型也要清空预设角色
+                  restartChat();
+                });
+              },
             ),
+
+            Divider(height: 1.sp),
 
             /// 如果对话是空，显示预设的问题
             // 预设的问题标题

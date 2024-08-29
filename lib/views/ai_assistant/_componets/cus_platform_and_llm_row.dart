@@ -1,3 +1,4 @@
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:toggle_switch/toggle_switch.dart';
@@ -56,24 +57,17 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.grey[300],
-      child: Padding(
-        padding: EdgeInsets.only(left: 10.sp),
-        child: PlatAndLlmRowContent(
-          selectedPlatform: selectedPlatform,
-          onPlatformChanged: onCloudPlatformChanged,
-          selectedModelSpec: selectedModelSpec,
-          onModelSpecChanged: onModelChange,
-          buildPlatformList: buildCloudPlatforms,
-          buildModelSpecList: buildPlatformLLMs,
-          showToggleSwitch: widget.showToggleSwitch,
-          isStream: widget.isStream,
-          onToggle: widget.onToggle,
-        ),
-      ),
-    );
+  void didUpdateWidget(covariant CusPlatformAndLlmRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // 检查是否需要更新 selectedPlatform 和 selectedModelSpec
+    if (widget.initialPlatform != oldWidget.initialPlatform ||
+        widget.initialModelSpec != oldWidget.initialModelSpec) {
+      setState(() {
+        selectedPlatform = widget.initialPlatform;
+        selectedModelSpec = widget.initialModelSpec;
+      });
+    }
   }
 
   /// 当切换了云平台时，要同步切换选中的大模型
@@ -126,7 +120,7 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
   }
 
   /// 选定了云平台后，要构建用于下拉选择的该平台的大模型列表
-  List<DropdownMenuItem<CusLLMSpec>> buildPlatformLLMs() {
+  List<DropdownMenuItem<CusLLMSpec>> buildCusLLMs() {
     // 用于下拉的模型除了属于指定平台，还需要是指定的目标类型的模型
     return widget.llmSpecList
         .where((spec) =>
@@ -142,74 +136,64 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
             ))
         .toList();
   }
-}
-
-class PlatAndLlmRowContent extends StatelessWidget {
-  final ApiPlatform? selectedPlatform;
-  final Function(ApiPlatform?) onPlatformChanged;
-  final CusLLMSpec? selectedModelSpec;
-  final Function(CusLLMSpec?) onModelSpecChanged;
-  final List<DropdownMenuItem<ApiPlatform?>> Function() buildPlatformList;
-  final List<DropdownMenuItem<CusLLMSpec?>> Function() buildModelSpecList;
-  final bool showToggleSwitch;
-  final bool? isStream;
-  final void Function(int?)? onToggle;
-
-  const PlatAndLlmRowContent({
-    super.key,
-    required this.selectedPlatform,
-    required this.onPlatformChanged,
-    required this.selectedModelSpec,
-    required this.onModelSpecChanged,
-    required this.buildPlatformList,
-    required this.buildModelSpecList,
-    required this.showToggleSwitch,
-    required this.isStream,
-    required this.onToggle,
-  });
 
   @override
   Widget build(BuildContext context) {
-    Widget cpRow = Row(
+    return Container(
+      color: Colors.grey[100],
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(5.sp, 1, 5, 1.sp),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            buildPlatRow(),
+            buildModelRow(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 平台选择行
+  Widget buildPlatRow() {
+    return Row(
       children: [
-        const Text("平台:"),
+        const Text("平台:", style: TextStyle(fontWeight: FontWeight.bold)),
         SizedBox(width: 10.sp),
         Expanded(
-          child: DropdownButton<ApiPlatform?>(
+          child: buildDropdownButton2<ApiPlatform?>(
+            items: buildCloudPlatforms(),
             value: selectedPlatform,
-            isDense: true,
-            underline: Container(),
-            items: buildPlatformList(),
-            onChanged: onPlatformChanged,
+            onChanged: onCloudPlatformChanged,
           ),
         ),
-        if (showToggleSwitch)
+        if (widget.showToggleSwitch)
           ToggleSwitch(
             minHeight: 26.sp,
             minWidth: 48.sp,
             fontSize: 13.sp,
             cornerRadius: 5.sp,
-            initialLabelIndex: isStream == true ? 0 : 1,
+            initialLabelIndex: widget.isStream == true ? 0 : 1,
             totalSwitches: 2,
             labels: const ['分段', '直出'],
-            onToggle: onToggle,
+            onToggle: widget.onToggle,
           ),
-        if (showToggleSwitch) SizedBox(width: 10.sp),
+        if (widget.showToggleSwitch) SizedBox(width: 10.sp),
       ],
     );
+  }
 
-    Widget modelRow = Row(
+  // 模型选择行
+  Widget buildModelRow() {
+    return Row(
       children: [
-        const Text("模型:"),
+        const Text("模型:", style: TextStyle(fontWeight: FontWeight.bold)),
         SizedBox(width: 10.sp),
         Expanded(
-          child: DropdownButton<CusLLMSpec?>(
+          child: buildDropdownButton2<CusLLMSpec?>(
+            items: buildCusLLMs(),
             value: selectedModelSpec,
-            isDense: true,
-            underline: Container(),
-            menuMaxHeight: 300.sp,
-            items: buildModelSpecList(),
-            onChanged: onModelSpecChanged,
+            onChanged: onModelChange,
           ),
         ),
         IconButton(
@@ -225,13 +209,66 @@ class PlatAndLlmRowContent extends StatelessWidget {
         ),
       ],
     );
-
-    return Padding(
-      padding: EdgeInsets.all(5.sp),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [cpRow, modelRow],
-      ),
-    );
   }
+}
+
+// 构建切换mqtt broker的下拉列表，切换后重新连接
+Widget buildDropdownButton2<T>({
+  required List<DropdownMenuItem<T>>? items,
+  T? value,
+  Function(T?)? onChanged,
+  double? height,
+}) {
+  return DropdownButtonHideUnderline(
+    child: DropdownButton2<T>(
+      isExpanded: true,
+      // 下拉选择
+      items: items,
+      // 下拉按钮当前被选中的值
+      value: value,
+      // 当值切换时触发的函数
+      onChanged: onChanged,
+      // 默认的按钮的样式(下拉框旋转的样式)
+      buttonStyleData: ButtonStyleData(
+        height: height ?? 30.sp,
+        // width: 190.sp,
+        padding: EdgeInsets.all(0.sp),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5.sp),
+          border: Border.all(color: Colors.black26),
+          // color: Colors.blue[50],
+          color: Colors.white,
+        ),
+        elevation: 0,
+      ),
+      // 按钮后面的图标的样式(默认也有个下三角)
+      iconStyleData: IconStyleData(
+        icon: const Icon(Icons.arrow_drop_down),
+        iconSize: 20.sp,
+        iconEnabledColor: Colors.blue,
+        iconDisabledColor: Colors.grey,
+      ),
+      // 下拉选项列表区域的样式
+      dropdownStyleData: DropdownStyleData(
+        maxHeight: 300.sp,
+        // 不设置且isExpanded为true就是外部最宽
+        // width: 190.sp, // 可以根据下面的offset偏移和上面按钮的长度来调整
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5.sp),
+          color: Colors.white,
+        ),
+        // offset: const Offset(-20, 0),
+        offset: const Offset(0, 0),
+        scrollbarTheme: ScrollbarThemeData(
+          radius: Radius.circular(40.sp),
+          thickness: WidgetStateProperty.all(5.sp),
+          thumbVisibility: WidgetStateProperty.all(true),
+        ),
+      ),
+      // 下拉选项单个选项的样式
+      menuItemStyleData: MenuItemStyleData(
+        padding: EdgeInsets.all(5.sp),
+      ),
+    ),
+  );
 }
