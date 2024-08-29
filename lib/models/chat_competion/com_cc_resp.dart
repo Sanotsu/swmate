@@ -111,13 +111,13 @@ class ComCCResp {
   String? errorMsg;
 
   /// 讯飞云的错误码等稍微不同
-  int? code;
+  String? code;
   String? message;
   // 会话的唯一id，用于讯飞技术人员查询服务端会话日志使用,出现调用错误时建议留存该字段
   String? sid;
 
   /// 腾讯的错误还封装了一层(ModerationLevel、SearchInfo就匹配了)
-  @JsonKey(name: 'ErrorMsg')
+  @JsonKey(name: 'Error')
   TencentError? tencentErrorMsg;
 
   // 免责声明。

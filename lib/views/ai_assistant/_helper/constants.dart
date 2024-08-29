@@ -126,6 +126,7 @@ final XFYUN_ImageSizeList = [
 
 // 可选的图片风格
 Map<String, String> WANX_StyleMap = {
+  "默认": 'auto',
   "摄影": 'photography',
   "人像写真": 'portrait',
   "3D卡通": '3d cartoon',
@@ -135,10 +136,10 @@ Map<String, String> WANX_StyleMap = {
   "素描": 'sketch',
   "中国画": 'chinese painting',
   "扁平插画": 'flat illustration',
-  "默认": 'auto',
 };
 // 选定的风格对应的预览本地图片
 List<String> WANX_StyleImageList = [
+  'assets/aliyun_wanx_styles/默认.jpg',
   'assets/aliyun_wanx_styles/摄影.png',
   'assets/aliyun_wanx_styles/人像写真.png',
   'assets/aliyun_wanx_styles/3D卡通.jpg',
@@ -148,7 +149,6 @@ List<String> WANX_StyleImageList = [
   'assets/aliyun_wanx_styles/素描.jpg',
   'assets/aliyun_wanx_styles/中国画.jpg',
   'assets/aliyun_wanx_styles/扁平插画.jpg',
-  'assets/aliyun_wanx_styles/默认.jpg',
 ];
 
 /// 锦书文字纹理（字体变形也一样）支持的字体名称(如果没有自己传字体，默认支持的字体列表)

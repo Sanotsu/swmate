@@ -130,6 +130,7 @@ dart run build_runner build --delete-conflicting-outputs
 #### 2024-08-29
 
 - refactor: 重构了部分下拉选择框样式，修正智能对话点击历史记录后当前平台和模型没有改变的问题。
+- fix: 完善了一些细节，添加了更多的平台支持的付费模型规格数据，添加模型列表展示页面等。
 
 ### todo:
 

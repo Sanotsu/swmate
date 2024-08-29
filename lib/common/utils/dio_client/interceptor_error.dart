@@ -79,6 +79,18 @@ class CusHttpException implements Exception {
     this.errRespString = defaultRespString,
   });
 
+  Map<String, dynamic> toJson() {
+    return {
+      'cusCode': cusCode,
+      'cusMsg': cusMsg,
+      'errMessage': errMessage,
+      'errRespString': errRespString,
+      // 方便大模型响应体转型
+      'code': cusCode.toString(),
+      'messgae': errRespString,
+    };
+  }
+
   @override
   String toString() {
     return '''Cus Http Error: 

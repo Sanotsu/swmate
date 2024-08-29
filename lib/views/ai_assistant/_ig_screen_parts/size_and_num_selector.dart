@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../common/components/tool_widget.dart';
+
 ///
 /// 图片的尺寸和数量选择区域部件
 ///
@@ -77,59 +79,20 @@ class SizeAndNumSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey, width: 1.sp),
-        borderRadius: BorderRadius.circular(4.sp),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          SizedBox(
-            width: 40.sp,
-            child: Center(child: Text(label)),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text("$label:", style: const TextStyle(fontWeight: FontWeight.bold)),
+        SizedBox(width: 10.sp),
+        Expanded(
+          child: buildDropdownButton2<dynamic>(
+            items: items,
+            value: selectedValue,
+            onChanged: onChanged,
+            itemToString: (e) => itemToString(e),
           ),
-          VerticalDivider(width: 1.sp, thickness: 1.sp),
-          Expanded(
-            child: DropdownButton<dynamic>(
-              value: selectedValue,
-              // selectedItemBuilder: (BuildContext context) {
-              //   return items.map((item) {
-              //     return Container(
-              //       alignment: Alignment.centerRight,
-              //       constraints: const BoxConstraints(minWidth: 80),
-              //       child: Text(
-              //         item.toString(),
-              //       ),
-              //     );
-              //   }).toList();
-              // },
-              underline: Container(),
-              alignment: AlignmentDirectional.centerEnd,
-              menuMaxHeight: 300.sp,
-              items: items
-                  .map((e) => DropdownMenuItem<dynamic>(
-                        value: e,
-                        alignment: AlignmentDirectional.center,
-                        // 让选中的文字稍微居中显示
-                        child: Container(
-                          alignment: Alignment.center,
-                          constraints: BoxConstraints(minWidth: 0.5.sw - 80.sp),
-                          child: Text(
-                            itemToString(e),
-                            style: TextStyle(
-                              fontSize: labelSize ?? 15.sp,
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ),
-                      ))
-                  .toList(),
-              onChanged: onChanged,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

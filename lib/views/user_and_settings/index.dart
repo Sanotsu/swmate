@@ -3,16 +3,25 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../apis/_self_model_specs.dart';
+import '../../apis/_self_system_role_list.dart';
 import '../../common/constants.dart';
+import '../../common/llm_spec/cus_llm_model.dart';
+import '../../common/utils/db_tools/db_helper.dart';
 import '../../services/cus_get_storage.dart';
+import '../ai_assistant/index.dart';
 import '../home.dart';
 import 'api_key_config/index.dart';
 import 'backup_and_restore/index.dart';
 import 'system_prompt_config/index.dart';
+
+final DBHelper dbHelper = DBHelper();
 
 class UserAndSettings extends StatefulWidget {
   const UserAndSettings({super.key});
@@ -59,6 +68,20 @@ class _UserAndSettingsState extends State<UserAndSettings> {
       appBar: AppBar(
         title: const Text("用户设置"),
         actions: [
+          TextButton(
+            onPressed: () async {
+              await testInitModelAndSysRole(FREE_CusLLM_SPEC_LIST);
+              EasyLoading.showInfo("导入【自用】模型完成");
+            },
+            child: const Text("[自用]"),
+          ),
+          TextButton(
+            onPressed: () async {
+              await testInitModelAndSysRole(CusLLM_SPEC_LIST);
+              EasyLoading.showInfo("导入【全部】模型完成");
+            },
+            child: const Text("[全部]"),
+          ),
           TextButton(
             onPressed: () {
               showDialog(
@@ -307,4 +330,65 @@ void reloadApp(BuildContext context) {
     MaterialPageRoute(builder: (_) => const HomePage()),
     (route) => false,
   );
+}
+
+testInitModelAndSysRole(List<CusLLMSpec> cslist) async {
+  final tempDir = Directory('/storage/emulated/0/swmate/jsons');
+
+  ///
+  /// 初始化模型信息
+  ///
+
+  // 定义文件路径
+  const String filePath = 'iti_spec_list.json';
+
+  if (!await tempDir.exists()) {
+    await tempDir.create(recursive: true);
+  }
+  final file = File('${tempDir.path}/$filePath');
+
+  // 将列表转换为 JSON 并写入文件
+  writeListToJsonFile(cslist, file.path);
+
+  /// 后续没有上面转的这一步，直接从这里开始从文件读取
+  // 从文件中读取存入数据库
+  var list = await readListFromJsonFile(file.path);
+  list = list.map((e) {
+    e.cusLlmSpecId = const Uuid().v4();
+    e.gmtCreate = DateTime.now();
+    return e;
+  }).toList();
+
+  dbHelper.clearCusLLMSpecs();
+
+  await dbHelper.insertCusLLMSpecList(list);
+
+  ///
+  /// 初始化系统角色
+  ///
+
+  // 定义文件路径
+  const String sysroleFilePath = 'sysrole_spec_list.json';
+
+  if (!await tempDir.exists()) {
+    await tempDir.create(recursive: true);
+  }
+  final sysroleFile = File('${tempDir.path}/$sysroleFilePath');
+
+  // 将列表转换为 JSON 并写入文件
+  writeSysRoleListToJsonFile(DEFAULT_SysRole_LIST, sysroleFile.path);
+
+  ///
+  /// 后续没有上面转的这一步，直接从这里开始从文件读取
+  // 从文件中读取存入数据库
+  var sysroleList = await readSysRoleListFromJsonFile(sysroleFile.path);
+
+  sysroleList = sysroleList.map((e) {
+    e.cusSysRoleSpecId = const Uuid().v4();
+    e.gmtCreate = DateTime.now();
+    return e;
+  }).toList();
+
+  dbHelper.clearCusSysRoleSpecs();
+  await dbHelper.insertCusSysRoleSpecList(sysroleList);
 }

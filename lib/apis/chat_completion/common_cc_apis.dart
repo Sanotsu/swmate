@@ -26,7 +26,7 @@ final DBHelper _dbHelper = DBHelper();
 
 enum PlatUrl {
   tencentCCUrl,
-  aliyunCCUrl,
+  aliyunCompatibleCCUrl,
   baiduCCUrl,
   baiduTTIUrl,
   baiduCCAuthUrl,
@@ -38,8 +38,8 @@ enum PlatUrl {
 
 const Map<PlatUrl, String> platUrls = {
   PlatUrl.tencentCCUrl: "https://hunyuan.tencentcloudapi.com/",
-  PlatUrl.aliyunCCUrl:
-      "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation",
+  PlatUrl.aliyunCompatibleCCUrl:
+      "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
   PlatUrl.baiduCCUrl:
       "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/",
   PlatUrl.baiduTTIUrl:
@@ -202,17 +202,30 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
             "Event: ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
           );
 
-          // 如果包含DONE，是正常获取AI接口的结束
-          if ((event.data).contains('[DONE]')) {
+          // 如果流式响应其实在报错，则要单独
+          // 腾讯的响应，报错的时候不是正常流格式，是一个含Response栏位的json字符串,
+          // 得取出来才和其他结构类似
+          if ((event.data).contains('"Response":{"Error"')) {
             if (!streamController.isClosed) {
-              streamController.add(ComCCResp(cusText: '[DONE]'));
+              streamController.add(
+                ComCCResp.fromJson(jsonDecode(event.data)["Response"]),
+              );
               streamController.close();
             }
           } else {
-            final jsonData = json.decode(event.data);
-            final commonRespBody = ComCCResp.fromJson(jsonData);
-            if (!streamController.isClosed) {
-              streamController.add(commonRespBody);
+            // 正常的分段数据
+            // 如果包含DONE，是正常获取AI接口的结束
+            if ((event.data).contains('[DONE]')) {
+              if (!streamController.isClosed) {
+                streamController.add(ComCCResp(cusText: '[DONE]'));
+                streamController.close();
+              }
+            } else {
+              final jsonData = json.decode(event.data);
+              final commonRespBody = ComCCResp.fromJson(jsonData);
+              if (!streamController.isClosed) {
+                streamController.add(commonRespBody);
+              }
             }
           }
         }, onDone: () {
@@ -341,7 +354,18 @@ Future<StreamWithCancel<ComCCResp>> baiduCCRespWithCancel(
       DateTime.now().isBefore(DateTime.parse(tokenInfo["expiredDate"]!))) {
     token = tokenInfo["accessToken"]!;
   } else {
-    token = await getAccessToken();
+    try {
+      token = await getAccessToken();
+    } catch (e) {
+      // 请求token报错就直接返回了
+      return StreamWithCancel(
+        Stream.value(ComCCResp(
+          errorCode: (e as CusHttpException).cusCode,
+          errorMsg: (e).errRespString,
+        )),
+        () async {},
+      );
+    }
   }
 
   ComCCReq body;
@@ -401,7 +425,8 @@ Future<StreamWithCancel<ComCCResp>> lingyiwanwuCCRespWithCancel(
   var specs =
       await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.lingyiwanwu);
 
-  model = model ?? specs.firstWhere((e) => e.cusLlm == CusLLM.YiSpark).model;
+  model = model ??
+      specs.firstWhere((e) => e.cusLlm == CusLLM.lingyiwanwu_YiSpark).model;
 
   var body = ComCCReq(model: model, messages: messages, stream: stream);
 
@@ -517,6 +542,33 @@ Future<StreamWithCancel<ComCCResp>> zhipuCCRespWithCancel(
 
   return getSseCcResponse(
     platUrls[PlatUrl.zhipuCCUrl]!,
+    header,
+    body.toJson(),
+    stream: stream,
+  );
+}
+
+/// 零一万物的请求方法
+Future<StreamWithCancel<ComCCResp>> aliyunCCRespWithCancel(
+  List<CCMessage> messages, {
+  String? model,
+  bool stream = false,
+}) async {
+  var specs = await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.aliyun);
+
+  model = model ??
+      specs.firstWhere((e) => e.cusLlm == CusLLM.aliyun_Qwen_VL_Max_0809).model;
+
+  var body = ComCCReq(model: model, messages: messages, stream: stream);
+
+  var header = {
+    "Content-Type": "application/json",
+    "Authorization":
+        "Bearer ${getStoredUserKey(SKN.aliyunApiKey.name, ALIYUN_API_KEY)}",
+  };
+
+  return getSseCcResponse(
+    platUrls[PlatUrl.aliyunCompatibleCCUrl]!,
     header,
     body.toJson(),
     stream: stream,

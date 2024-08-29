@@ -170,6 +170,12 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
         model: selectedModel,
         stream: isStream,
       );
+    } else if (selectedPlatform == ApiPlatform.aliyun) {
+      tempStream = await aliyunCCRespWithCancel(
+        msgs,
+        model: selectedModel,
+        stream: isStream,
+      );
     } else {
       tempStream = await siliconFlowCCRespWithCancel(
         msgs,
@@ -230,9 +236,12 @@ void commonOnDataHandler({
     setIsResponsing();
 
     // 更新响应文本
-    if (crb.errorCode != null) {
-      csMsg.content +=
-          "后台响应报错:\n\n 错误代码: ${crb.errorCode}\n\n 错误原因: ${crb.errorMsg}";
+    if (crb.errorCode != null || crb.tencentErrorMsg != null) {
+      csMsg.content += """后台响应报错:
+          \n\n错误代码: ${crb.errorCode ?? crb.tencentErrorMsg?.code}
+          \n\n错误原因: ${crb.errorMsg ?? crb.tencentErrorMsg?.message}
+          """;
+      onStreamDone();
     } else {
       csMsg.content += crb.cusText;
     }

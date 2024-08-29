@@ -56,8 +56,20 @@ enum CusLLM {
   baidu_Ernie_Tiny_8K,
   baidu_Yi_34B_Chat_4K,
   baidu_Fuyu_8B, // 图像理解
+  /// 百度收费的模型
+  baidu_ERNIE4p0_8K,
+  baidu_ERNIE4p0_Turbo_8K,
+  baidu_ERNIE3p5_8K,
+  baidu_ERNIE3p5_128K,
+  baidu_ERNIE_Novel_8K,
 
   tencent_Hunyuan_Lite,
+
+  /// 腾讯收费的模型
+  tencent_Hunyuan_Pro,
+  tencent_Hunyuan_Standard,
+  tencent_Hunyuan_Standard_256K,
+  tencent_Hunyuan_Vision,
 
   zhipu_GLM4_Flash,
 
@@ -66,29 +78,64 @@ enum CusLLM {
   // 讯飞云文生图就是图片生成，没什么特别名字
   xfyun_TTI,
 
-  // 通义万相，收费文生图
+  /// 通义万相，收费文生图
+  /// 文生图模型地址
+  // https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis
   aliyun_Wanx_v1_TTI,
-  // 部署在阿里云的flux.1，限时免费
+  // 部署在阿里云的flux.1，限时免费，地址同上
   aliyun_Flux_Merged_TTI,
   aliyun_Flux_Schnell_TTI,
   aliyun_Flux_Dev_TTI,
 
+  // /// 阿里云的收费模型（对话的没有免费token 了，第三方不兼容openAI，VL要上传文件不支持base64，所以都不处理了）
+  // 2024-08-29 实测 Qwen_VL_Max_0809 图像理解兼容openAI的接口，可以上传base64的数据
+  // /// 对话模型地址
+  // // https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation
+  // // 兼容openAI的地址(只支持通义千问（含VL）及其开源系列)
+  // // https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+  aliyun_Qwen_Max,
+  aliyun_Qwen_Max_LongContext,
+  aliyun_Qwen_Plus,
+  aliyun_Qwen_Turbo,
+  aliyun_Qwen_Long,
+  // // 第三方对话，地址同上(不支持openAI兼容)
+  // aliyun_Baichuan2_Turbo,
+  // aliyun_Moonshot_V1_8K,
+  // aliyun_Moonshot_V1_32K,
+  // aliyun_Moonshot_V1_128K,
+  // // https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation
+  // aliyun_Yi_Large,
+  // aliyun_Yi_Large_Turbo,
+  // aliyun_Yi_Large_RAG,
+  // aliyun_Yi_Medium,
+
+  /// 视觉模型
+  // https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
+  // 兼容openAI的地址(只支持通义千文VL)
+  // https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+  aliyun_Qwen_VL_Max_0809,
+  aliyun_Qwen_VL_Max,
+  aliyun_Qwen_VL_Plus,
+
   /// 阿里云 锦书 创意文字
   // 文字纹理
+  // https://dashscope.aliyuncs.com/api/v1/services/aigc/wordart/texture
   aliyun_Wordart_Texture_TTI_WORD,
   // 文字变形
+  // https://dashscope.aliyuncs.com/api/v1/services/aigc/wordart/semantic
   aliyun_Wordart_Semantic_TTI_WORD,
   // 百家姓生成
+  // https://dashscope.aliyuncs.com/api/v1/services/aigc/wordart/surnames
   aliyun_Wordart_Surnames_TTI_WORD,
 
   /// Yi前缀，零一万物中，全都收费的
-  YiLarge,
-  YiMedium,
-  YiVision,
-  YiMedium200k,
-  YiSpark,
-  YiLargeRag,
-  YiLargeTurbo,
+  lingyiwanwu_YiLarge,
+  lingyiwanwu_YiMedium,
+  lingyiwanwu_YiVision,
+  lingyiwanwu_YiMedium200k,
+  lingyiwanwu_YiSpark,
+  lingyiwanwu_YiLargeRag,
+  lingyiwanwu_YiLargeTurbo,
 
   /// 硅动科技免费的对话模型
   siliconCloud_Qwen2_7B_Instruct,

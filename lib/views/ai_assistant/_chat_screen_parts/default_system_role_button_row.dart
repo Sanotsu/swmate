@@ -47,38 +47,27 @@ class DefaultSysRoleButtonRow extends StatelessWidget {
           if (isShowLanguageSwitch)
             Expanded(
               flex: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey, width: 1.0),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    const Icon(Icons.swap_vert),
-                    DropdownButton<TargetLanguage?>(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  SizedBox(
+                    width: 60.sp,
+                    child: const Icon(Icons.swap_vert),
+                  ),
+                  Expanded(
+                    child: buildDropdownButton2<TargetLanguage?>(
                       value: targetLang,
-                      underline: Container(),
-                      alignment: AlignmentDirectional.center,
-                      menuMaxHeight: 300.sp,
-                      items: TargetLanguage.values
-                          .map((e) => DropdownMenuItem<TargetLanguage>(
-                                value: e,
-                                alignment: AlignmentDirectional.center,
-                                child: Text(
-                                  langLabel?[e]! ?? "<未选择>",
-                                  style: const TextStyle(color: Colors.blue),
-                                ),
-                              ))
-                          .toList(),
+                      itemMaxHeight: 200.sp,
+                      items: TargetLanguage.values,
                       onChanged: (val) {
                         if (val != null && onLanguageChanged != null) {
                           onLanguageChanged!(val);
                         }
                       },
+                      itemToString: (e) => langLabel?[e]! ?? "<未选择>",
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           if (!isShowLanguageSwitch) Expanded(flex: 3, child: Container()),

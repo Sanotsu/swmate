@@ -24,6 +24,7 @@ import 'ai_tools/file_interpret/image_interpret.dart';
 import 'ai_tools/image_generation/iti_index.dart';
 import 'ai_tools/image_generation/tti_index.dart';
 import 'ai_tools/image_generation/word_art_index.dart';
+import 'model_list.dart';
 
 ///
 /// 规划一系列有AI加成的使用工具，这里是主入口
@@ -137,6 +138,17 @@ class _AIToolIndexState extends State<AIToolIndex> {
           child: const Text('AI 智能助手'),
         ),
         actions: [
+          IconButton(
+            onPressed: () async {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ModelListIndex(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.list_alt),
+          ),
           IconButton(
             onPressed: () async {
               if (!mounted) return;
@@ -297,14 +309,12 @@ class _AIToolIndexState extends State<AIToolIndex> {
                     },
                   ),
 
-                  buildToolEntrance(
-                    "[测试功能]",
-                    icon: const Icon(Icons.chat_outlined),
-                    color: Colors.blue[100],
-                    onTap: () async {
-                      await testInitModelAndSysRole();
-                    },
-                  ),
+                  // buildToolEntrance(
+                  //   "[全部]",
+                  //   icon: const Icon(Icons.chat_outlined),
+                  //   color: Colors.blue[100],
+                  //   onTap: () async {},
+                  // ),
 
                   // buildAIToolEntrance(
                   //   "功能\n占位(TODO)",
@@ -316,87 +326,6 @@ class _AIToolIndexState extends State<AIToolIndex> {
         ],
       ),
     );
-  }
-
-  testInitModelAndSysRole() async {
-    final tempDir = Directory('/storage/emulated/0/swmate/jsons');
-
-    ///
-    /// 初始化模型信息
-    ///
-
-    // 定义文件路径
-    const String filePath = 'iti_spec_list.json';
-
-    if (!await tempDir.exists()) {
-      await tempDir.create(recursive: true);
-    }
-    final file = File('${tempDir.path}/$filePath');
-
-    // 将列表转换为 JSON 并写入文件
-    writeListToJsonFile(CusLLM_SPEC_LIST, file.path);
-
-    print(file.path);
-
-    var list = await readListFromJsonFile(file.path);
-
-    list = list.map((e) {
-      e.cusLlmSpecId = const Uuid().v4();
-      e.gmtCreate = DateTime.now();
-      return e;
-    }).toList();
-
-    print(list);
-
-    dbHelper.showTableNameList();
-
-    dbHelper.clearCusLLMSpecs();
-
-    await dbHelper.insertCusLLMSpecList(list);
-
-    var ll = await dbHelper.queryCusLLMSpecList();
-    print(ll);
-
-    setState(() {
-      cusModelList = ll;
-    });
-
-    ///
-    /// 初始化系统角色
-    ///
-
-    // 定义文件路径
-    const String sysroleFilePath = 'sysrole_spec_list.json';
-
-    if (!await tempDir.exists()) {
-      await tempDir.create(recursive: true);
-    }
-    final sysroleFile = File('${tempDir.path}/$sysroleFilePath');
-
-    // 将列表转换为 JSON 并写入文件
-    writeSysRoleListToJsonFile(DEFAULT_SysRole_LIST, sysroleFile.path);
-
-    print(sysroleFile.path);
-
-    var sysroleList = await readSysRoleListFromJsonFile(sysroleFile.path);
-
-    sysroleList = sysroleList.map((e) {
-      e.cusSysRoleSpecId = const Uuid().v4();
-      e.gmtCreate = DateTime.now();
-      return e;
-    }).toList();
-
-    print(sysroleList);
-
-    dbHelper.showTableNameList();
-
-    dbHelper.clearCusSysRoleSpecs();
-
-    await dbHelper.insertCusSysRoleSpecList(sysroleList);
-
-    var sysroleLl =
-        await dbHelper.queryCusSysRoleSpecList(sysRoleType: LLModelType.cc);
-    print(sysroleLl);
   }
 }
 

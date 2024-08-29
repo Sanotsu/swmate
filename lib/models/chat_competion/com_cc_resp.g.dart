@@ -28,12 +28,12 @@ ComCCResp _$ComCCRespFromJson(Map<String, dynamic> json) => ComCCResp(
       banRound: (readJsonValue(json, 'banRound') as num?)?.toInt(),
       errorCode: (readJsonValue(json, 'errorCode') as num?)?.toInt(),
       errorMsg: readJsonValue(json, 'errorMsg') as String?,
-      code: (json['code'] as num?)?.toInt(),
+      code: json['code'] as String?,
       message: json['message'] as String?,
       sid: json['sid'] as String?,
-      tencentErrorMsg: json['ErrorMsg'] == null
+      tencentErrorMsg: json['Error'] == null
           ? null
-          : TencentError.fromJson(json['ErrorMsg'] as Map<String, dynamic>),
+          : TencentError.fromJson(json['Error'] as Map<String, dynamic>),
       note: json['Note'] as String?,
       requestId: json['RequestId'] as String?,
       webSearch: (json['web_search'] as List<dynamic>?)
@@ -66,7 +66,7 @@ Map<String, dynamic> _$ComCCRespToJson(ComCCResp instance) => <String, dynamic>{
       'code': instance.code,
       'message': instance.message,
       'sid': instance.sid,
-      'ErrorMsg': instance.tencentErrorMsg?.toJson(),
+      'Error': instance.tencentErrorMsg?.toJson(),
       'Note': instance.note,
       'RequestId': instance.requestId,
       'web_search': instance.webSearch?.map((e) => e.toJson()).toList(),

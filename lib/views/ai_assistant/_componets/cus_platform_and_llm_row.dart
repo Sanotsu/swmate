@@ -1,4 +1,3 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:toggle_switch/toggle_switch.dart';
@@ -111,6 +110,7 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
         .map((platform) {
       return DropdownMenuItem(
         value: platform,
+        alignment: AlignmentDirectional.center,
         child: Text(
           CP_NAME_MAP[platform]!,
           style: TextStyle(color: Colors.blue, fontSize: 15.sp),
@@ -139,17 +139,14 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.grey[100],
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(5.sp, 1, 5, 1.sp),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            buildPlatRow(),
-            buildModelRow(),
-          ],
-        ),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(5.sp, 1.sp, 5.sp, 1.sp),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          buildPlatRow(),
+          buildModelRow(),
+        ],
       ),
     );
   }
@@ -162,14 +159,19 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
         SizedBox(width: 10.sp),
         Expanded(
           child: buildDropdownButton2<ApiPlatform?>(
-            items: buildCloudPlatforms(),
             value: selectedPlatform,
+            items: widget.llmSpecList
+                .map((spec) => spec.platform)
+                .toSet()
+                .toList(),
             onChanged: onCloudPlatformChanged,
+            itemToString: (e) => CP_NAME_MAP[e]!,
           ),
         ),
+        if (widget.showToggleSwitch) SizedBox(width: 10.sp),
         if (widget.showToggleSwitch)
           ToggleSwitch(
-            minHeight: 26.sp,
+            minHeight: 30.sp,
             minWidth: 48.sp,
             fontSize: 13.sp,
             cornerRadius: 5.sp,
@@ -178,7 +180,6 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
             labels: const ['分段', '直出'],
             onToggle: widget.onToggle,
           ),
-        if (widget.showToggleSwitch) SizedBox(width: 10.sp),
       ],
     );
   }
@@ -191,9 +192,15 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
         SizedBox(width: 10.sp),
         Expanded(
           child: buildDropdownButton2<CusLLMSpec?>(
-            items: buildCusLLMs(),
             value: selectedModelSpec,
+            items: widget.llmSpecList
+                .where((spec) =>
+                    spec.platform == selectedPlatform &&
+                    spec.modelType == widget.targetModelType)
+                .toList(),
             onChanged: onModelChange,
+            itemToString: (e) => e.name,
+            alignment: AlignmentDirectional.centerStart,
           ),
         ),
         IconButton(
@@ -210,65 +217,4 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
       ],
     );
   }
-}
-
-// 构建切换mqtt broker的下拉列表，切换后重新连接
-Widget buildDropdownButton2<T>({
-  required List<DropdownMenuItem<T>>? items,
-  T? value,
-  Function(T?)? onChanged,
-  double? height,
-}) {
-  return DropdownButtonHideUnderline(
-    child: DropdownButton2<T>(
-      isExpanded: true,
-      // 下拉选择
-      items: items,
-      // 下拉按钮当前被选中的值
-      value: value,
-      // 当值切换时触发的函数
-      onChanged: onChanged,
-      // 默认的按钮的样式(下拉框旋转的样式)
-      buttonStyleData: ButtonStyleData(
-        height: height ?? 30.sp,
-        // width: 190.sp,
-        padding: EdgeInsets.all(0.sp),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5.sp),
-          border: Border.all(color: Colors.black26),
-          // color: Colors.blue[50],
-          color: Colors.white,
-        ),
-        elevation: 0,
-      ),
-      // 按钮后面的图标的样式(默认也有个下三角)
-      iconStyleData: IconStyleData(
-        icon: const Icon(Icons.arrow_drop_down),
-        iconSize: 20.sp,
-        iconEnabledColor: Colors.blue,
-        iconDisabledColor: Colors.grey,
-      ),
-      // 下拉选项列表区域的样式
-      dropdownStyleData: DropdownStyleData(
-        maxHeight: 300.sp,
-        // 不设置且isExpanded为true就是外部最宽
-        // width: 190.sp, // 可以根据下面的offset偏移和上面按钮的长度来调整
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5.sp),
-          color: Colors.white,
-        ),
-        // offset: const Offset(-20, 0),
-        offset: const Offset(0, 0),
-        scrollbarTheme: ScrollbarThemeData(
-          radius: Radius.circular(40.sp),
-          thickness: WidgetStateProperty.all(5.sp),
-          thumbVisibility: WidgetStateProperty.all(true),
-        ),
-      ),
-      // 下拉选项单个选项的样式
-      menuItemStyleData: MenuItemStyleData(
-        padding: EdgeInsets.all(5.sp),
-      ),
-    ),
-  );
 }

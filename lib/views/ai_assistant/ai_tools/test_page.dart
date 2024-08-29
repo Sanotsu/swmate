@@ -33,7 +33,9 @@ class _TestPageState extends State<TestPage> {
     var specs = await _dbHelper.queryCusLLMSpecList();
 
     var list = [CCMessage(role: "user", content: "巴里奥运金牌榜")];
-    var model = specs.firstWhere((e) => e.cusLlm == CusLLM.YiLargeRag).model;
+    var model = specs
+        .firstWhere((e) => e.cusLlm == CusLLM.lingyiwanwu_YiLargeRag)
+        .model;
     // var temp = await lingyiSseCCResp(list, model: model, stream: true);
     var temp =
         await lingyiwanwuCCRespWithCancel(list, model: model, stream: true);

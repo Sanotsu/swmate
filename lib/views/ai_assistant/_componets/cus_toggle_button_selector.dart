@@ -55,6 +55,9 @@ class _CusToggleButtonSelectorState<T>
                 widget.onItemSelected(widget.items[index]);
               });
             },
+            // 这个是预设只有3个的情况，宽度各3分之一
+            // constraints: BoxConstraints(minHeight: 36.sp, minWidth: 0.32.sw),
+            // 一般长度不定，还是这个
             // 设置按钮的最小高度和最小宽度(得根据传入的label来判断)
             constraints: BoxConstraints(minHeight: 36.sp, minWidth: 80.sp),
             // 设置选中按钮的文本颜色

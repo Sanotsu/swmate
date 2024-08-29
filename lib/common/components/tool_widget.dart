@@ -6,6 +6,7 @@ import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -850,4 +851,89 @@ unfocusHandle() {
   // FocusScope.of(context).unfocus();
 
   FocusManager.instance.primaryFocus?.unfocus();
+}
+
+///
+/// 使用 DropdownButton2 构建的自定义下拉框
+///
+Widget buildDropdownButton2<T>({
+  required List<T> items,
+  T? value,
+  Function(T?)? onChanged,
+  // 如何从传入的类型中获取显示的字符串
+  final String Function(dynamic)? itemToString,
+  // 下拉框的高度
+  double? height,
+  // 选项列表的最大高度
+  double? itemMaxHeight,
+  // 标签的字号
+  double? labelSize,
+  // 标签对齐方式(默认居中，像模型列表靠左，方便对比)
+  AlignmentGeometry? alignment,
+}) {
+  return DropdownButtonHideUnderline(
+    child: DropdownButton2<T>(
+      isExpanded: true,
+      // 下拉选择
+      items: items
+          .map((e) => DropdownMenuItem<T>(
+                value: e,
+                alignment: alignment ?? AlignmentDirectional.center,
+                child: Text(
+                  itemToString != null ? itemToString(e) : e.toString(),
+                  style: TextStyle(
+                    fontSize: labelSize ?? 15.sp,
+                    color: Colors.blue,
+                  ),
+                ),
+              ))
+          .toList(),
+      // 下拉按钮当前被选中的值
+      value: value,
+      // 当值切换时触发的函数
+      onChanged: onChanged,
+      // 默认的按钮的样式(下拉框旋转的样式)
+      buttonStyleData: ButtonStyleData(
+        height: height ?? 30.sp,
+        // width: 190.sp,
+        padding: EdgeInsets.all(0.sp),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5.sp),
+          border: Border.all(color: Colors.black26),
+          // color: Colors.blue[50],
+          color: Colors.white,
+        ),
+        elevation: 0,
+      ),
+      // 按钮后面的图标的样式(默认也有个下三角)
+      iconStyleData: IconStyleData(
+        icon: const Icon(Icons.arrow_drop_down),
+        iconSize: 20.sp,
+        iconEnabledColor: Colors.blue,
+        iconDisabledColor: Colors.grey,
+      ),
+      // 下拉选项列表区域的样式
+      dropdownStyleData: DropdownStyleData(
+        maxHeight: itemMaxHeight ?? 300.sp,
+        // 不设置且isExpanded为true就是外部最宽
+        // width: 190.sp, // 可以根据下面的offset偏移和上面按钮的长度来调整
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5.sp),
+          color: Colors.white,
+        ),
+        // offset: const Offset(-20, 0),
+        offset: const Offset(0, 0),
+        scrollbarTheme: ScrollbarThemeData(
+          radius: Radius.circular(40.sp),
+          thickness: WidgetStateProperty.all(5.sp),
+          thumbVisibility: WidgetStateProperty.all(true),
+        ),
+      ),
+      // 下拉选项单个选项的样式
+      menuItemStyleData: MenuItemStyleData(
+        height: 40.sp,
+        padding: EdgeInsets.all(5.sp),
+      ),
+    ),
+  );
 }
