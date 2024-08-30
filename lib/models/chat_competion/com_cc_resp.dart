@@ -110,8 +110,8 @@ class ComCCResp {
   @JsonKey(readValue: readJsonValue)
   String? errorMsg;
 
-  /// 讯飞云的错误码等稍微不同
-  String? code;
+  /// 讯飞云的错误码等稍微不同(可能是String，可能是int)
+  dynamic code;
   String? message;
   // 会话的唯一id，用于讯飞技术人员查询服务端会话日志使用,出现调用错误时建议留存该字段
   String? sid;

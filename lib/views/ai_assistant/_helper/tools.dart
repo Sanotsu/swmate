@@ -55,6 +55,18 @@ Future<List<CusLLMSpec>> fetchCusLLMSpecList(LLModelType targetType) async {
         tempList.where((s) => s.platform == ApiPlatform.zhipu && !s.isFree));
   }
 
+  // 固定平台排序后模型名排序
+  llmSpecList.sort((a, b) {
+    // 先比较 平台名称
+    int compareA = a.platform.name.compareTo(b.platform.name);
+    if (compareA != 0) {
+      return compareA;
+    }
+
+    // 如果 平台名称 相同，再比较 模型名称
+    return a.name.compareTo(b.name);
+  });
+
   return llmSpecList;
 }
 

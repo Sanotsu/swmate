@@ -1,7 +1,5 @@
 // ignore_for_file: avoid_print,
 
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path/path.dart' as path;
@@ -13,10 +11,11 @@ import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
 import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../../common/utils/tools.dart';
+import '../../../../common/utils/db_tools/db_helper.dart';
 import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
 import '../../_chat_screen_parts/chat_default_question_area.dart';
+import '../../_chat_screen_parts/chat_history_drawer.dart';
 import '../../_chat_screen_parts/chat_list_area.dart';
 import '../../_chat_screen_parts/chat_user_send_area_with_voice.dart';
 import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
@@ -39,6 +38,8 @@ class ChatBatGroup extends StatefulWidget {
 }
 
 class _ChatBatGroupState extends State<ChatBatGroup> {
+  final DBHelper _dbHelper = DBHelper();
+
   // 人机对话消息滚动列表
   final ScrollController _scrollController = ScrollController();
 
@@ -58,6 +59,11 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
   // 2024-07-24 用于在一个列表中显示的消息对话
   List<ChatMessage> messages = [];
 
+  // 当前的群聊对话记录(用于存入数据库或者从数据库中查询某个历史对话)
+  GroupChatHistory? chatSession;
+  // 最近的群聊对话记录列表
+  List<GroupChatHistory> chatHistory = [];
+
   // 进入对话页面简单预设的一些问题
   List<String> defaultQuestions = chatQuestionSamples;
 
@@ -75,7 +81,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
   // 否则就是一个用户输入，下面多个AI回复
   bool isBattleMode = false;
 
-  bool isStream = true;
+  bool isStream = false;
 
   @override
   void initState() {
@@ -88,14 +94,15 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
     var specs = await fetchCusLLMSpecList(LLModelType.cc);
 
     setState(() {
-      _allItems =
-          specs.map((e) => CusLabel(cnLabel: e.name, value: e)).toList();
+      _allItems = specs
+          .map((e) => CusLabel(cnLabel: e.name, enLabel: e.model, value: e))
+          .toList();
 
       _selectedItems = [
-        _allItems[1],
+        // _allItems[1],
         _allItems[5],
         _allItems[6],
-        _allItems[11],
+        // _allItems[11],
       ];
     });
   }
@@ -121,6 +128,85 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
     );
   }
 
+  //获取指定分类的历史对话
+  Future<List<GroupChatHistory>> getHistoryChats() async {
+    return await _dbHelper.queryGroupChatList();
+  }
+
+  /// 获取指定对话列表
+  _getChatInfo(String chatId) async {
+    // 默认查询到所有的历史对话(这里有uuid了，应该就只有1条存在才对)
+    var list = await _dbHelper.queryGroupChatList(uuid: chatId);
+
+    if (list.isNotEmpty) {
+      if (!mounted) return;
+      setState(() {
+        chatSession = list.first;
+        chatSession?.messages = list.first.messages;
+        chatSession?.modelMsgMap = list.first.modelMsgMap;
+
+        // 查到了db中的历史记录，则需要替换成当前的
+        messages = chatSession!.messages;
+        msgMap = chatSession!.modelMsgMap;
+
+        // 获取群聊历史记录中选中的模型，构建选中编号
+
+        // _selectedItems = msgMap.keys
+        //     .toList()
+        //     .map((label) =>
+        //         _allItems.indexWhere((item) => item.cnLabel == label))
+        //     .where((index) => index != -1)
+        //     .toList();
+
+        _selectedItems = msgMap.keys
+            .toList()
+            .map((label) => _allItems.firstWhere(
+                (item) => item.enLabel == label,
+                orElse: () => _allItems.first))
+            .toSet() // 因为上面orElse可能多个都不匹配就有多个first的值
+            .toList();
+      });
+    }
+  }
+
+  /// 保存对话到数据库
+  _saveToDb() async {
+    print("保存到数据库前---${chatSession?.toRawJson()}");
+    // 如果插入时只有一条，那就是用户首次输入，截取部分内容和生成对话记录的uuid
+    // 2024-08-23 如果对话中只有1个user或者1个user和1个system(即两条信息)，则表明是新建对话
+    if (messages.isNotEmpty &&
+            (messages.length == 1 &&
+                messages.where((e) => e.role == "user").length == 1) ||
+        (messages.length == 2 &&
+            messages.where((e) => e.role == "user").length == 1 &&
+            messages.where((e) => e.role == "system").length == 1)) {
+      // 如果没有对话记录(即上层没有传入，且当前时用户第一次输入文字还没有创建对话记录)，则新建对话记录
+      chatSession ??= GroupChatHistory(
+        uuid: const Uuid().v4(),
+        title: messages.first.content.length > 30
+            ? messages.first.content.substring(0, 30)
+            : messages.first.content,
+        gmtCreate: DateTime.now(),
+        gmtModified: DateTime.now(),
+        messages: messages,
+        modelMsgMap: msgMap,
+      );
+
+      await _dbHelper.insertGroupChatList(chatSession!);
+
+      // 如果已经有多个对话了，理论上该对话已经存入db了，只需要修改该对话的实际对话内容即可
+    } else if (messages.length > 1) {
+      chatSession!.messages = messages;
+      chatSession!.modelMsgMap = msgMap;
+      // 2024-08-30,如果用户有修改之前的对话记录，则需要更新对话记录的时间
+      chatSession!.gmtModified = DateTime.now();
+
+      await _dbHelper.updateGroupChatSession(chatSession!);
+    }
+
+    // 其他没有对话记录、没有消息列表的情况，就不做任何处理了
+  }
+
   // 先多选了几个模型，发送后，每个模型都要调用
   _userSendMessage(
     String text, {
@@ -141,6 +227,10 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
       messages.add(temp);
       _userInputController.clear();
     });
+
+    // 在每次添加了对话之后，都把整个对话列表存入对话历史中去
+    _saveToDb();
+
     // 注意，因为下面每个模型响应中都已经调用滚动了，所以用户输入后不用调用滚动
     // 调用了反而会出错 ：
     //    ScrollController not attached to any scroll views.
@@ -215,6 +305,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
           onStreamDone: () {
             if (!mounted) return;
             setState(() {
+              _saveToDb();
               csMsg = null;
               isBotThinking = false;
             });
@@ -239,6 +330,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
           if (!mounted) return;
           // 流式响应结束了，就保存数据到db，并重置流式变量和aip响应标志
           setState(() {
+            _saveToDb();
             csMsg = null;
             isBotThinking = false;
           });
@@ -277,6 +369,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
             onPressed: messages.isNotEmpty
                 ? () {
                     setState(() {
+                      chatSession = null;
                       messages.clear();
                       msgMap.clear();
                     });
@@ -308,36 +401,24 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
               });
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: messages.isNotEmpty
-                ? () async {
-                    // 将 ChatMessage 列表转换为可以序列化的格式
-                    final Map<String, dynamic> serializableMsgMap = {};
-                    msgMap.forEach((key, messages) {
-                      final List<dynamic> serializedMessages =
-                          messages.map((m) => m.toJson()).toList();
-                      serializableMsgMap[key] = serializedMessages;
-                    });
 
-                    // 将 Map 转换为 JSON 字符串
-                    final jsonString = jsonEncode(serializableMsgMap);
+          Builder(
+            builder: (BuildContext context) {
+              return IconButton(
+                icon: const Icon(Icons.history),
+                onPressed: () async {
+                  var list = await getHistoryChats();
+                  if (!context.mounted) return;
+                  setState(() {
+                    chatHistory = list;
+                  });
+                  unfocusHandle();
 
-                    // 对话的第一条用户输入的内容为标题
-                    var tempTitle = msgMap.values.first.first.content;
-                    tempTitle = tempTitle.length > 15
-                        ? tempTitle.substring(0, 15)
-                        : tempTitle;
-
-                    /// 这个直接保存记录json文件到设备指定文件夹
-                    await saveTextFileToStorage(
-                      jsonString,
-                      SAVE_MODEL_BATTLE_DIR,
-                      tempTitle,
-                      extension: 'json',
-                    );
-                  }
-                : null,
+                  print("xxxxxxxxxxxx");
+                  Scaffold.of(context).openEndDrawer();
+                },
+              );
+            },
           ),
         ],
       ),
@@ -526,6 +607,8 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
 
                 if (!mounted) return;
                 setState(() {
+                  _saveToDb();
+
                   _userInputController.clear();
                   // 滚动到ListView的底部
                   // 如果是对战模式，上下两个滚动，所以这里使用会报错
@@ -538,6 +621,46 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
             ),
           ],
         ),
+      ),
+
+      /// 构建在对话历史中的对话标题列表
+      endDrawer: ChatHistoryDrawer(
+        chatHistory: chatHistory,
+        onTap: (GroupChatHistory e) {
+          Navigator.of(context).pop();
+          // 点击了指定历史对话，则替换当前对话
+          setState(() {
+            _getChatInfo(e.uuid);
+          });
+        },
+        onUpdate: (GroupChatHistory e) async {
+          // 修改对话的标题
+          await _dbHelper.updateGroupChatSession(e);
+          // 修改成功后重新查询更新
+          var list = await getHistoryChats();
+          if (!mounted) return;
+          setState(() {
+            chatHistory = list;
+          });
+        },
+        onDelete: (GroupChatHistory e) async {
+          // 先删除
+          await _dbHelper.deleteGroupChatById(e.uuid);
+          // 然后重新查询并更新
+          var list = await getHistoryChats();
+          if (!mounted) return;
+          setState(() {
+            chatHistory = list;
+          });
+          // 如果删除的历史对话是当前对话，跳到新开对话页面
+          if (chatSession?.uuid == e.uuid) {
+            setState(() {
+              chatSession = null;
+              messages.clear();
+              msgMap.clear();
+            });
+          }
+        },
       ),
     );
   }

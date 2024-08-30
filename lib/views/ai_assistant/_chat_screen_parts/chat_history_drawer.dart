@@ -4,17 +4,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
 import '../../../common/constants.dart';
-import '../../../models/chat_competion/com_cc_state.dart';
 import 'history_item_widget.dart';
 
 ///
 /// 对话历史记录抽屉
 ///
 class ChatHistoryDrawer extends StatelessWidget {
-  final List<ChatSession> chatHistory;
-  final Function(ChatSession)? onTap;
-  final Function(ChatSession)? onUpdate;
-  final Function(ChatSession)? onDelete;
+  final List<dynamic> chatHistory;
+  final Function? onTap;
+  final Function? onUpdate;
+  final Function? onDelete;
 
   const ChatHistoryDrawer({
     super.key,
@@ -50,14 +49,14 @@ class ChatHistoryDrawer extends StatelessWidget {
                 (e) => ChatHistoryItem(
                   chatSession: e,
                   onTap: onTap != null ? (e) => onTap!(e) : null,
-                  onUpdate: onUpdate != null
-                      ? (ChatSession e) async => await onUpdate!(e)
-                      : null,
-                  onDelete: onDelete != null
-                      ? (ChatSession e) async => await onDelete!(e)
-                      : null,
+                  onUpdate:
+                      onUpdate != null ? (e) async => await onUpdate!(e) : null,
+                  onDelete:
+                      onDelete != null ? (e) async => await onDelete!(e) : null,
                   gmtCreate:
                       DateFormat(constDatetimeFormat).format(e.gmtCreate),
+                  gmtModified:
+                      DateFormat(constDatetimeFormat).format(e.gmtModified),
                 ),
               )
               .toList()),

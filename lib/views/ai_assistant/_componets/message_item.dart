@@ -177,64 +177,36 @@ class MessageItem extends StatelessWidget {
       elevation: 3,
       child: Padding(
         padding: EdgeInsets.all(5.sp),
-        child: (message.isPlaceholder == true)
-            // 如果是占位的消息，则显示转圈圈(2024-08-14 新设计应该没有了)
-            ? Builder(
-                builder: (context) {
-                  // RichText 组件允许在文本中嵌入其他小部件，并应用文本缩放因子。
-                  // 因为richtext无法自动获取到缩放因子，所以需要手动获取全局的文本缩放因子
-                  return RichText(
-                    // 应用文本缩放因子
-                    textScaler: MediaQuery.of(context).textScaler,
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: message.content,
-                          style: const TextStyle(color: Colors.black),
-                        ),
-                        // 设置一个固定宽度，以确保 CircularProgressIndicator 不会占用太多空间
-                        WidgetSpan(
-                          child: SizedBox(
-                            width: 15.sp,
-                            height: 15.sp,
-                            child: CircularProgressIndicator(strokeWidth: 2.sp),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              )
-            : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 显示对话正文内容
-                    MarkdownBody(
-                      data: message.content,
-                      selectable: true,
-                      styleSheet: MarkdownStyleSheet(
-                        p: TextStyle(color: textColor),
-                      ),
-                    ),
-                    // 如果是流式加载中，显示一个加载圈
-                    if (message.role != "user" && isBotThinking == true)
-                      SizedBox(
-                        width: 16.sp,
-                        height: 16.sp,
-                        child: CircularProgressIndicator(strokeWidth: 2.sp),
-                      ),
-                    // 如果是语音输入，显示语言文件，可点击播放
-                    // Text(message.contentVoicePath ?? ''),
-                    if (message.contentVoicePath != null &&
-                        message.contentVoicePath!.trim() != "")
-                      VoiceWaveBubble(
-                        path: message.contentVoicePath!,
-                      ),
-                  ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 显示对话正文内容
+              MarkdownBody(
+                data: message.content,
+                selectable: true,
+                styleSheet: MarkdownStyleSheet(
+                  p: TextStyle(color: textColor),
                 ),
               ),
+              // 如果是流式加载中，显示一个加载圈
+              if (message.role != "user" && isBotThinking == true)
+                SizedBox(
+                  width: 16.sp,
+                  height: 16.sp,
+                  child: CircularProgressIndicator(strokeWidth: 2.sp),
+                ),
+              // 如果是语音输入，显示语言文件，可点击播放
+              // Text(message.contentVoicePath ?? ''),
+              if (message.contentVoicePath != null &&
+                  message.contentVoicePath!.trim() != "")
+                VoiceWaveBubble(
+                  path: message.contentVoicePath!,
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -267,3 +239,32 @@ class MessageItem extends StatelessWidget {
     }
   }
 }
+
+
+// 如果是占位的消息，则显示转圈圈(2024-08-14 新设计应该没有了)
+// ? Builder(
+//     builder: (context) {
+//       // RichText 组件允许在文本中嵌入其他小部件，并应用文本缩放因子。
+//       // 因为richtext无法自动获取到缩放因子，所以需要手动获取全局的文本缩放因子
+//       return RichText(
+//         // 应用文本缩放因子
+//         textScaler: MediaQuery.of(context).textScaler,
+//         text: TextSpan(
+//           children: [
+//             TextSpan(
+//               text: message.content,
+//               style: const TextStyle(color: Colors.black),
+//             ),
+//             // 设置一个固定宽度，以确保 CircularProgressIndicator 不会占用太多空间
+//             WidgetSpan(
+//               child: SizedBox(
+//                 width: 15.sp,
+//                 height: 15.sp,
+//                 child: CircularProgressIndicator(strokeWidth: 2.sp),
+//               ),
+//             ),
+//           ],
+//         ),
+//       );
+//     },
+//   )

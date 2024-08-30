@@ -2,15 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../models/chat_competion/com_cc_state.dart';
-
 ///
 /// 文本对话中最近记录列表里的删除、修改按钮
-/// chat_bot 和 aggregate_search 都可以用
+/// 智能助手和智能群聊都有用，类型不同所以动态，但用于显示title栏位都有
 ///
 class ChatHistoryDeleteButton extends StatelessWidget {
-  final ChatSession chatSession;
-  final Function(ChatSession) onDelete;
+  final dynamic chatSession;
+  final Function(dynamic) onDelete;
 
   const ChatHistoryDeleteButton({
     super.key,
@@ -29,6 +27,7 @@ class ChatHistoryDeleteButton extends StatelessWidget {
             builder: (context) {
               return AlertDialog(
                 title: const Text("确认删除对话记录:"),
+                // 智能对话或者智能群聊都有title
                 content: Text(chatSession.title),
                 actions: [
                   TextButton(
@@ -63,8 +62,8 @@ class ChatHistoryDeleteButton extends StatelessWidget {
 }
 
 class ChatHistoryUpdateButton extends StatefulWidget {
-  final ChatSession chatSession;
-  final Function(ChatSession) onUpdate;
+  final dynamic chatSession;
+  final Function(dynamic) onUpdate;
 
   const ChatHistoryUpdateButton({
     super.key,
@@ -73,7 +72,8 @@ class ChatHistoryUpdateButton extends StatefulWidget {
   });
 
   @override
-  State<ChatHistoryUpdateButton> createState() => _ChatHistoryUpdateButtonState();
+  State<ChatHistoryUpdateButton> createState() =>
+      _ChatHistoryUpdateButtonState();
 }
 
 class _ChatHistoryUpdateButtonState extends State<ChatHistoryUpdateButton> {
@@ -93,6 +93,7 @@ class _ChatHistoryUpdateButtonState extends State<ChatHistoryUpdateButton> {
       child: IconButton(
         onPressed: () {
           setState(() {
+            // 智能对话和智能群聊的类型都有title
             _selectedTitleController.text = widget.chatSession.title;
           });
           showDialog(

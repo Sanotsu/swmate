@@ -1,16 +1,22 @@
 import 'dart:convert';
 
-import 'package:intl/intl.dart';
+import 'package:json_annotation/json_annotation.dart';
 
-import '../../common/constants.dart';
 import 'com_cc_resp.dart';
 
+part 'com_cc_state.g.dart';
+
+// 新版本
+///
+/// =============
+///
 ///
 /// 这个文件是基础的文本对话相关功能会用到的【工具模型类】
 ///
 
 /// 人机对话的每一条消息的结果
 /// 对话页面就是包含一系列时间顺序排序后的对话消息的list
+@JsonSerializable(explicitToJson: true)
 class ChatMessage {
   String messageId; // 每个消息有个ID方便整个对话列表的保存？？？
   DateTime dateTime; // 时间
@@ -26,13 +32,14 @@ class ChatMessage {
   List<CCQuote>? quotes;
   // 2024-07-17 有可能对话存在输入图片(假如后续一个用户对话中存在图片切来切去，就最后每个问答来回都存上图片)
   String? imageUrl;
-  bool? isPlaceholder; // 是否是等待响应时的占位消息
+
   /// 记录对话耗费
   int? promptTokens;
   int? completionTokens;
   int? totalTokens;
   // 2024-07-24 如果是多个模型在一个页面同时响应的话，则需要显示每个消息对应的模型名称
   // 具体是什么文本，根据需求来定
+  // 2024-08-30 就是各个api接口使用那个model字符串
   String? modelLabel;
 
   ChatMessage({
@@ -43,27 +50,36 @@ class ChatMessage {
     this.contentVoicePath,
     this.quotes,
     this.imageUrl,
-    this.isPlaceholder,
     this.promptTokens,
     this.completionTokens,
     this.totalTokens,
     this.modelLabel,
   });
 
+  // 从字符串转
+  factory ChatMessage.fromRawJson(String str) =>
+      ChatMessage.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory ChatMessage.fromJson(Map<String, dynamic> srcJson) =>
+      _$ChatMessageFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$ChatMessageToJson(this);
+
   Map<String, dynamic> toMap() {
     return {
-      'message_id': messageId,
-      'date_time': dateTime,
+      'messageId': messageId,
+      'dateTime': dateTime,
       'role': role,
       'content': content,
-      'content_voice_path': contentVoicePath,
+      'contentVoicePath': contentVoicePath,
       'quotes': quotes.toString(),
-      'image_url': imageUrl,
-      'is_placeholder': isPlaceholder,
-      'prompt_tokens': promptTokens,
-      'completion_tokens': completionTokens,
-      'total_tokens': totalTokens,
-      'model_label': modelLabel,
+      'imageUrl': imageUrl,
+      'promptTokens': promptTokens,
+      'completionTokens': completionTokens,
+      'totalTokens': totalTokens,
+      'modelLabel': modelLabel,
     };
   }
 
@@ -73,83 +89,46 @@ class ChatMessage {
 //    但是存入数据不对就是逻辑实现哪里出了问题。使用后者默认值也不知道该使用哪个。
   factory ChatMessage.fromMap(Map<String, dynamic> map) {
     return ChatMessage(
-      messageId: map['message_id'] as String,
-      dateTime: DateTime.parse(map['date_time']),
+      messageId: map['messageId'] as String,
+      dateTime: DateTime.parse(map['dateTime']),
       role: map['role'] as String,
       content: map['content'] as String,
-      contentVoicePath: map['content_voice_path'] as String?,
+      contentVoicePath: map['contentVoicePath'] as String?,
       quotes: map['quotes'] != null
           ? (map['quotes'] as List<dynamic>)
               .map((quoteMap) =>
                   CCQuote.fromMap(quoteMap as Map<String, dynamic>))
               .toList()
           : null,
-      imageUrl: map['image_url'] as String?,
-      isPlaceholder: bool.tryParse(map['is_placeholder']),
-      promptTokens: int.tryParse(map['prompt_tokens']),
-      completionTokens: int.tryParse(map['completion_tokens']),
-      totalTokens: int.tryParse(map['total_tokens']),
-      modelLabel: map['model_label'] as String?,
+      imageUrl: map['imageUrl'] as String?,
+      promptTokens: int.tryParse(map['promptTokens'].toString()),
+      completionTokens: int.tryParse(map['completionTokens'].toString()),
+      totalTokens: int.tryParse(map['totalTokens'].toString()),
+      modelLabel: map['modelLabel'] as String?,
     );
   }
 
-  factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
-        messageId: json["message_id"],
-        dateTime: DateTime.parse(json["date_time"]),
-        role: json["role"],
-        content: json["content"],
-        contentVoicePath: json["content_voice_path"],
-        quotes: json["quotes"] == null
-            ? []
-            : List<CCQuote>.from(
-                json["quotes"]!.map((x) => CCQuote.fromJson(x)),
-              ),
-        imageUrl: json["image_url"],
-        isPlaceholder: bool.tryParse(json["is_placeholder"]),
-        promptTokens: int.tryParse(json["prompt_tokens"]),
-        completionTokens: int.tryParse(json["completion_tokens"]),
-        totalTokens: int.tryParse(json["total_tokens"]),
-        modelLabel: json["model_label"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "message_id": messageId,
-        "date_time": dateTime.toIso8601String(),
-        'role': role,
-        "content": content,
-        "content_voice_path": contentVoicePath,
-        "quotes": quotes == null
-            ? []
-            : List<dynamic>.from(quotes!.map((x) => x.toJson())),
-        "image_url": imageUrl,
-        "is_placeholder": isPlaceholder,
-        "prompt_tokens": promptTokens,
-        "completion_tokens": completionTokens,
-        "total_tokens": totalTokens,
-        "model_label": modelLabel,
-      };
-
-  @override
-  String toString() {
-    // 2024-06-03 这个对话会被作为string存入数据库，然后再被读取转型为ChatMessage。
-    // 所以需要是个完整的json字符串，一般fromMap时可以处理
-    return '''
-    {
-     "message_id": "$messageId", 
-     "date_time": "$dateTime", 
-     "role": "$role", 
-     "content": ${jsonEncode(content)}, 
-     "content_voice_path":"$contentVoicePath",
-     "quotes": ${jsonEncode(quotes)}, 
-     "image_url": "$imageUrl", 
-     "is_placeholder":"$isPlaceholder",
-     "prompt_tokens":"$promptTokens",
-     "completion_tokens":"$completionTokens",
-     "total_tokens":"$totalTokens",
-     "model_label":"$modelLabel"
-    }
-    ''';
-  }
+  // @override
+  // String toString() {
+  //   // 2024-06-03 这个对话会被作为string存入数据库，然后再被读取转型为ChatMessage。
+  //   // 所以需要是个完整的json字符串，一般fromMap时可以处理
+  //   return '''
+  //   {
+  //    "message_id": "$messageId",
+  //    "date_time": "$dateTime",
+  //    "role": "$role",
+  //    "content": ${jsonEncode(content)},
+  //    "content_voice_path":"$contentVoicePath",
+  //    "quotes": ${jsonEncode(quotes)},
+  //    "image_url": "$imageUrl",
+  //    "is_placeholder":"$isPlaceholder",
+  //    "prompt_tokens":"$promptTokens",
+  //    "completion_tokens":"$completionTokens",
+  //    "total_tokens":"$totalTokens",
+  //    "model_label":"$modelLabel"
+  //   }
+  //   ''';
+  // }
 }
 
 ///
@@ -163,13 +142,12 @@ List<ChatMessage> filterAlternatingRoles(List<ChatMessage> messages) {
   for (ChatMessage message in messages) {
     if (message.role == expectedRole) {
       // 如果是保存的占位回复，则直接显示重试
-      if (expectedRole == "assistant" && message.isPlaceholder == true) {
+      if (expectedRole == "assistant") {
         filteredMessages.add(ChatMessage(
           messageId: "retry",
           dateTime: DateTime.now(),
           role: "assistant",
           content: "问题回答已遗失，请重新提问",
-          isPlaceholder: false,
         ));
       } else {
         filteredMessages.add(message);
@@ -187,11 +165,14 @@ List<ChatMessage> filterAlternatingRoles(List<ChatMessage> messages) {
 
 /// 对话记录 这个是存入sqlite的表对应的模型
 // 一次对话记录需要一个标题，首次创建的时间，然后包含很多的对话消息
+@JsonSerializable(explicitToJson: true)
 class ChatSession {
   final String uuid;
   // 因为该栏位需要可修改，就不能为final了
   String title;
   final DateTime gmtCreate;
+  // 2024-08-30 用户对历史回话进行追问后，查看历史记录时要排在前面
+  DateTime gmtModified;
   // 因为该栏位需要可修改，就不能为final了
   List<ChatMessage> messages;
   // 2024-06-01 大模型名称也要记一下，说不定后续要存API的原始返回内容复用
@@ -212,6 +193,7 @@ class ChatSession {
     required this.uuid,
     required this.title,
     required this.gmtCreate,
+    required this.gmtModified,
     required this.messages,
     required this.llmName,
     this.cloudPlatformName,
@@ -219,19 +201,31 @@ class ChatSession {
     required this.chatType,
   });
 
+  // 从字符串转
+  factory ChatSession.fromRawJson(String str) =>
+      ChatSession.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory ChatSession.fromJson(Map<String, dynamic> srcJson) =>
+      _$ChatSessionFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$ChatSessionToJson(this);
+
   factory ChatSession.fromMap(Map<String, dynamic> map) {
     return ChatSession(
       uuid: map['uuid'] as String,
       title: map['title'] as String,
-      gmtCreate: DateTime.tryParse(map['gmt_create']) ?? DateTime.now(),
+      gmtCreate: DateTime.tryParse(map['gmtCreate']) ?? DateTime.now(),
+      gmtModified: DateTime.tryParse(map['gmtModified']) ?? DateTime.now(),
       messages: (jsonDecode(map['messages'] as String) as List<dynamic>)
           .map((messageMap) =>
               ChatMessage.fromMap(messageMap as Map<String, dynamic>))
           .toList(),
-      llmName: map['llm_name'] as String,
-      cloudPlatformName: map['yun_platform_name'] as String?,
-      i2tImagePath: map['i2t_image_path'] as String?,
-      chatType: map['chat_type'] as String,
+      llmName: map['llmName'] as String,
+      cloudPlatformName: map['cloudPlatformName'] as String?,
+      chatType: map['chatType'] as String,
+      i2tImagePath: map['i2tImagePath'] as String?,
     );
   }
 
@@ -239,38 +233,16 @@ class ChatSession {
     return {
       'uuid': uuid,
       'title': title,
-      'gmt_create': DateFormat(constDatetimeFormat).format(gmtCreate),
-      'messages': messages.toString(),
-      'llm_name': llmName,
-      'yun_platform_name': cloudPlatformName,
-      'chat_type': chatType,
-      'i2t_image_path': i2tImagePath,
+      'gmtCreate': gmtCreate.toIso8601String(),
+      'gmtModified': gmtModified.toIso8601String(),
+      // 这样应该把List<ChatMessage> 转为了字符串数组，再转为了字符串数组字符串
+      'messages': messages.map((e) => e.toRawJson()).toList().toString(),
+      'llmName': llmName,
+      'cloudPlatformName': cloudPlatformName,
+      'chatType': chatType,
+      'i2tImagePath': i2tImagePath,
     };
   }
-
-  factory ChatSession.fromJson(Map<String, dynamic> json) => ChatSession(
-        uuid: json["uuid"],
-        messages: List<ChatMessage>.from(
-          json["messages"].map((x) => ChatMessage.fromJson(x)),
-        ),
-        title: json["title"],
-        gmtCreate: json["gmt_create"],
-        llmName: json["llm_name"],
-        cloudPlatformName: json["yun_platform_name"],
-        chatType: json["chat_type"],
-        i2tImagePath: json["i2t_image_path"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "uuid": uuid,
-        "messages": List<dynamic>.from(messages.map((x) => x.toJson())),
-        "title": title,
-        "gmt_create": gmtCreate,
-        "llm_name": llmName,
-        "yun_platform_name": cloudPlatformName,
-        "i2t_image_path": i2tImagePath,
-        'chat_type': chatType,
-      };
 
   @override
   String toString() {
@@ -282,9 +254,78 @@ class ChatSession {
       "llmName": $llmName,
       "cloudPlatformName": $cloudPlatformName,
       'chatType': $chatType,
-      "i2tImageBase64": ${(i2tImagePath != null && i2tImagePath!.length > 10) ? i2tImagePath?.substring(0, 10) : i2tImagePath},
+      "i2tImagePath": $i2tImagePath,
       "messages": $messages
     }
     ''';
+  }
+}
+
+/// 2024-08-30 智能群聊存入数据库
+/// 这个是存入sqlite的表对应的模型,基本同单个模型对话相似，
+/// 只不过把msgMap和messages全部转为string存数据库，用的时候再转回来
+@JsonSerializable(explicitToJson: true)
+class GroupChatHistory {
+  final String uuid;
+  String title;
+  List<ChatMessage> messages;
+  Map<String, List<ChatMessage>> modelMsgMap;
+  final DateTime gmtCreate;
+  DateTime gmtModified;
+
+  GroupChatHistory({
+    required this.uuid,
+    required this.title,
+    required this.messages,
+    required this.modelMsgMap,
+    required this.gmtCreate,
+    required this.gmtModified,
+  });
+
+  // 从字符串转
+  factory GroupChatHistory.fromRawJson(String str) =>
+      GroupChatHistory.fromJson(json.decode(str));
+
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  // 从Json转
+  factory GroupChatHistory.fromJson(Map<String, dynamic> json) =>
+      _$GroupChatHistoryFromJson(json);
+
+  // 转为Json
+  Map<String, dynamic> toJson() => _$GroupChatHistoryToJson(this);
+
+  // 添加 fromMap 方法
+  factory GroupChatHistory.fromMap(Map<String, dynamic> map) {
+    return GroupChatHistory(
+      uuid: map['uuid'],
+      title: map['title'],
+      messages: (json.decode(map['messages']) as List<dynamic>)
+          .map((messageMap) => ChatMessage.fromJson(messageMap))
+          .toList(),
+      modelMsgMap: (json.decode(map['modelMsgMap']) as Map<String, dynamic>)
+          .map((key, value) => MapEntry(
+                key,
+                (value as List<dynamic>)
+                    .map((e) => ChatMessage.fromJson(e))
+                    .toList(),
+              )),
+      gmtCreate: DateTime.parse(map['gmtCreate']),
+      gmtModified: DateTime.parse(map['gmtModified']),
+    );
+  }
+
+  // 添加 toMap 方法
+  Map<String, dynamic> toMap() {
+    return {
+      'uuid': uuid,
+      'title': title,
+      'messages': json.encode(messages.map((e) => e.toJson()).toList()),
+      'modelMsgMap': json.encode(modelMsgMap.map((key, value) =>
+          MapEntry(key, value.map((e) => e.toJson()).toList()))),
+      'gmtCreate': gmtCreate.toIso8601String(),
+      'gmtModified': gmtModified.toIso8601String(),
+    };
   }
 }

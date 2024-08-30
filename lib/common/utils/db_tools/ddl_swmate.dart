@@ -31,7 +31,6 @@ class SWMateDdl {
     """;
 
   /// 2024-06-01 新增AI对话留存
-  // 账单条目表
   static const tableNameOfChatHistory = '${DB_TABLE_PREFIX}chat_history';
 
   // 2024-06-14
@@ -41,12 +40,31 @@ class SWMateDdl {
     CREATE TABLE $tableNameOfChatHistory (
       uuid                TEXT    NOT NULL,
       title               TEXT    NOT NULL,
-      gmt_create	        TEXT    NOT NULL,
+      gmtCreate	          TEXT    NOT NULL,
+      gmtModified	        TEXT    NOT NULL,
       messages            TEXT    NOT NULL,
-      llm_name            TEXT    NOT NULL,
-      yun_platform_name   TEXT,
-      i2t_image_path      TEXT,
-      chat_type           TEXT    NOT NULL,
+      llmName             TEXT    NOT NULL,
+      cloudPlatformName   TEXT,
+      chatType            TEXT    NOT NULL,
+      i2tImagePath        TEXT,
+      PRIMARY KEY(uuid)
+    );
+    """;
+
+  /// 2024-08-30 新增AI群聊对话留存
+  static const tableNameOfGroupChatHistory =
+      '${DB_TABLE_PREFIX}group_chat_history';
+
+  // 单纯为了省事，直接把智能群聊中的msgMap和messages转为字符串存入数据库
+  // 读取后再转为对应格式，所以内容可能会非常打
+  static const String ddlForGroupChatHistory = """
+    CREATE TABLE $tableNameOfGroupChatHistory (
+      uuid                TEXT    NOT NULL,
+      title               TEXT    NOT NULL,
+      messages            TEXT    NOT NULL,
+      modelMsgMap         TEXT    NOT NULL,
+      gmtCreate	          TEXT    NOT NULL,
+      gmtModified	        TEXT    NOT NULL,
       PRIMARY KEY(uuid)
     );
     """;

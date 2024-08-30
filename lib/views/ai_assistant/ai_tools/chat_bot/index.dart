@@ -144,39 +144,24 @@ class _ChatBatState extends State<ChatBat> {
 
   //获取指定分类的历史对话
   Future<List<ChatSession>> getHistoryChats() async {
-    return await _dbHelper.queryChatList(cateType: "aigc");
+    return await _dbHelper.queryChatList(chatType: "cc");
   }
 
   /// 获取指定对话列表
   _getChatInfo(String chatId) async {
     // 默认查询到所有的历史对话(这里有uuid了，应该就只有1条存在才对)
-    var list = await _dbHelper.queryChatList(uuid: chatId, cateType: "aigc");
+    var list = await _dbHelper.queryChatList(uuid: chatId, chatType: "cc");
 
     if (list.isNotEmpty) {
-      // 2024-07-23 注意！！！这里要处理该条历史记录中的消息列表，具体看_sendMessage中的说明
-      List<ChatMessage> resultList =
-          filterAlternatingRoles(list.first.messages);
-
-      // 注意，如果遍历结束，但只剩下一条role为user的消息列表，则补一个占位消息
-      if (resultList.length == 1 && resultList.first.role == "user") {
-        resultList.add(ChatMessage(
-          messageId: "retry",
-          dateTime: DateTime.now(),
-          role: "assistant",
-          content: "问题回答已遗失，请重新提问",
-        ));
-      }
-
-      var specs = await _dbHelper.queryCusLLMSpecList();
       if (!mounted) return;
       setState(() {
         chatSession = list.first;
-        chatSession?.messages = resultList;
+        chatSession?.messages = list.first.messages;
 
         // 如果有存是哪个模型，也默认选中该模型
         // ？？？2024-06-11 虽然同一个对话现在可以切换平台和模型了，但这里只是保留第一次对话取的值
         // 后面对话过程中切换平台和模型，只会在该次对话过程中有效
-        var tempSpecs = specs
+        var tempSpecs = widget.llmSpecList
             // 数据库存的模型名就是自定义的模型名
             .where((e) => e.name == list.first.llmName)
             .toList();
@@ -322,12 +307,13 @@ class _ChatBatState extends State<ChatBat> {
             ? messages.first.content.substring(0, 30)
             : messages.first.content,
         gmtCreate: DateTime.now(),
+        gmtModified: DateTime.now(),
         messages: messages,
         // 2026-06-20 这里记录的自定义模型枚举的值，因为后续查询结果过滤有需要用来判断
         llmName: selectedModelSpec.name,
         cloudPlatformName: selectedPlatform.name,
         // 2026-06-06 对话历史默认带上类别
-        chatType: "aigc",
+        chatType: "cc",
       );
 
       await _dbHelper.insertChatList([chatSession!]);
@@ -335,6 +321,8 @@ class _ChatBatState extends State<ChatBat> {
       // 如果已经有多个对话了，理论上该对话已经存入db了，只需要修改该对话的实际对话内容即可
     } else if (messages.length > 1) {
       chatSession!.messages = messages;
+      // 2024-08-30,如果用户有修改之前的对话记录，则需要更新对话记录的时间
+      chatSession!.gmtModified = DateTime.now();
 
       await _dbHelper.updateChatSession(chatSession!);
     }

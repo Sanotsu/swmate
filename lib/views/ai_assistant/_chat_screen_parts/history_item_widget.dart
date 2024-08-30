@@ -7,13 +7,15 @@ import 'history_button_widget.dart';
 ///
 /// 文本对话中的最近对话列表
 /// 后续这几个按钮可以是可选的
+/// 智能助手和智能群聊都有用，类型不同所以动态，但用于显示title栏位都有
 ///
 class ChatHistoryItem extends StatelessWidget {
-  final ChatSession chatSession;
-  final Function(ChatSession)? onTap;
-  final Function(ChatSession)? onUpdate;
-  final Function(ChatSession)? onDelete;
+  final dynamic chatSession;
+  final Function(dynamic)? onTap;
+  final Function(dynamic)? onUpdate;
+  final Function(dynamic)? onDelete;
   final String gmtCreate;
+  final String gmtModified;
 
   const ChatHistoryItem({
     super.key,
@@ -22,6 +24,7 @@ class ChatHistoryItem extends StatelessWidget {
     this.onUpdate,
     this.onDelete,
     required this.gmtCreate,
+    required this.gmtModified,
   });
 
   @override
@@ -45,15 +48,32 @@ class ChatHistoryItem extends StatelessWidget {
                       softWrap: true,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (chatSession is ChatSession)
+                      Text(
+                        (chatSession as ChatSession).llmName,
+                        style: TextStyle(fontSize: 15.sp),
+                        maxLines: 2,
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    if (chatSession is GroupChatHistory)
+                      Text(
+                        (chatSession as GroupChatHistory)
+                            .modelMsgMap
+                            .keys
+                            .toList()
+                            .toString(),
+                        style: TextStyle(fontSize: 12.sp),
+                        maxLines: 2,
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     Text(
-                      chatSession.llmName,
-                      style: TextStyle(fontSize: 15.sp),
-                      maxLines: 2,
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis,
+                      "上次对话: $gmtModified",
+                      style: TextStyle(fontSize: 12.sp),
                     ),
                     Text(
-                      gmtCreate,
+                      "创建时间: $gmtCreate",
                       style: TextStyle(fontSize: 12.sp),
                     ),
                   ],

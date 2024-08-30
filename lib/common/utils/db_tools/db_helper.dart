@@ -62,6 +62,7 @@ class DBHelper {
 
     await db.transaction((txn) async {
       txn.execute(SWMateDdl.ddlForChatHistory);
+      txn.execute(SWMateDdl.ddlForGroupChatHistory);
       txn.execute(SWMateDdl.ddlForImageGenerationHistory);
       txn.execute(SWMateDdl.ddlForCusLlmSpec);
       txn.execute(SWMateDdl.ddlForCusSySroleSpec);
@@ -513,14 +514,14 @@ class DBHelper {
   Future<List<ChatSession>> queryChatList({
     String? uuid,
     String? keyword,
-    String? cateType = 'aigc',
+    String? chatType = 'cc',
   }) async {
     Database db = await database;
 
     print("对话历史记录查询参数：");
     print("uuid $uuid");
     print("keyword $keyword");
-    print("cateType $cateType");
+    print("chatType $chatType");
 
     final where = <String>[];
     final whereArgs = <dynamic>[];
@@ -535,16 +536,16 @@ class DBHelper {
       whereArgs.add("%$keyword%");
     }
 
-    if (cateType != null) {
-      where.add('chat_type = ?');
-      whereArgs.add(cateType);
+    if (chatType != null) {
+      where.add('chatType = ?');
+      whereArgs.add(chatType);
     }
 
     final rows = await db.query(
       SWMateDdl.tableNameOfChatHistory,
       where: where.isNotEmpty ? where.join(' AND ') : null,
       whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
-      orderBy: "gmt_create DESC",
+      orderBy: "gmtModified DESC", // 以修改时间倒序排序
     );
 
     return rows.map((row) => ChatSession.fromMap(row)).toList();
@@ -570,6 +571,70 @@ class DBHelper {
   Future<int> updateChatSession(ChatSession item) async =>
       (await database).update(
         SWMateDdl.tableNameOfChatHistory,
+        item.toMap(),
+        where: 'uuid = ?',
+        whereArgs: [item.uuid],
+      );
+
+  ///***********************************************/
+  /// AI group chat 智能群聊的相关操作
+  ///
+
+  // 查询所有对话记录
+  Future<List<GroupChatHistory>> queryGroupChatList({
+    String? uuid,
+    String? keyword,
+  }) async {
+    Database db = await database;
+
+    print("对话历史记录查询参数：");
+    print("uuid $uuid");
+    print("keyword $keyword");
+
+    final where = <String>[];
+    final whereArgs = <dynamic>[];
+
+    if (uuid != null) {
+      where.add('uuid = ?');
+      whereArgs.add(uuid);
+    }
+
+    if (keyword != null) {
+      where.add('title LIKE ?');
+      whereArgs.add("%$keyword%");
+    }
+
+    final rows = await db.query(
+      SWMateDdl.tableNameOfGroupChatHistory,
+      where: where.isNotEmpty ? where.join(' AND ') : null,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
+      orderBy: "gmtModified DESC", // 以修改时间倒序排序
+    );
+
+    return rows.map((row) => GroupChatHistory.fromMap(row)).toList();
+  }
+
+  // 删除单条
+  Future<int> deleteGroupChatById(String uuid) async => (await database).delete(
+        SWMateDdl.tableNameOfGroupChatHistory,
+        where: "uuid=?",
+        whereArgs: [uuid],
+      );
+
+  // 新增(只有单个的时候就一个值的数组，理论上不会批量插入)
+  // 在智能群聊时，可以因为异步问题，A B 在构建时都没有值，所以同一个实例A B 都在用
+  // 当A 先插入之后，B再插入就会报错。
+  // 但如果此时后者进行修改的话，就会覆盖了前者的数据。
+  Future<int> insertGroupChatList(GroupChatHistory item) async =>
+      (await database).insert(
+        SWMateDdl.tableNameOfGroupChatHistory,
+        item.toMap(),
+      );
+
+  // 修改单条(只让修改标题其实)
+  Future<int> updateGroupChatSession(GroupChatHistory item) async =>
+      (await database).update(
+        SWMateDdl.tableNameOfGroupChatHistory,
         item.toMap(),
         where: 'uuid = ?',
         whereArgs: [item.uuid],

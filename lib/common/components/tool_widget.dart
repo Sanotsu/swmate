@@ -925,14 +925,14 @@ Widget buildDropdownButton2<T>({
         offset: const Offset(0, 0),
         scrollbarTheme: ScrollbarThemeData(
           radius: Radius.circular(40.sp),
-          thickness: WidgetStateProperty.all(5.sp),
+          thickness: WidgetStateProperty.all(6.sp),
           thumbVisibility: WidgetStateProperty.all(true),
         ),
       ),
       // 下拉选项单个选项的样式
       menuItemStyleData: MenuItemStyleData(
-        height: 40.sp,
-        padding: EdgeInsets.all(5.sp),
+        height: 48.sp, // 方便超过1行的模型名显示，所有设置高点
+        padding: EdgeInsets.symmetric(horizontal: 5.sp),
       ),
     ),
   );

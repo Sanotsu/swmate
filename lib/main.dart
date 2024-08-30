@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:proste_logger/proste_logger.dart';
 
 import 'views/home.dart';
 
@@ -17,6 +18,8 @@ GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() {
   AppCatchError().run();
 }
+
+final pl = ProsteLogger();
 
 //全局异常的捕捉
 class AppCatchError {
@@ -51,6 +54,7 @@ class AppCatchError {
     //是否是 Release版本
     debugPrint("AppCatchError>>>>>>>>>> [ kReleaseMode ] $kReleaseMode");
     debugPrint('AppCatchError>>>>>>>>>> [ Message ] $error');
+    pl.d(error);
     debugPrint('AppCatchError>>>>>>>>>> [ Stack ] \n$stack');
 
     // 弹窗提醒用户

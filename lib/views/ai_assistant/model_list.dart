@@ -27,7 +27,19 @@ class _ModelListIndexState extends State<ModelListIndex> {
 
   getSystemPromptSpecs() async {
     var sysroleLl = await dbHelper.queryCusLLMSpecList();
-    sysroleLl.sort((a, b) => a.platform.name.compareTo(b.platform.name));
+    // sysroleLl.sort((a, b) => a.platform.name.compareTo(b.platform.name));
+
+    sysroleLl.sort((a, b) {
+      // 先比较 平台名称
+      int compareA = a.platform.name.compareTo(b.platform.name);
+      if (compareA != 0) {
+        return compareA;
+      }
+
+      // 如果 平台名称 相同，再比较 模型名称
+      return a.name.compareTo(b.name);
+    });
+
     setState(() {
       // 2024-08-26 目前系统角色中，文档解读和翻译解读预设的6个有name，过滤不显示(因为这6个和代码逻辑相关，不能被删除)，
       // 其他是没有的，用户新增删除可以自行管理
@@ -113,18 +125,19 @@ class _ModelListIndexState extends State<ModelListIndex> {
                       }),
                       cells: <DataCell>[
                         DataCell(
-                          SizedBox(width: 20.sp, child: Text('${index + 1} ')),
+                          SizedBox(width: 40.sp, child: Text('${index + 1} ')),
                         ),
                         DataCell(
                           SizedBox(
-                            width: 70.sp,
+                            width: 80.sp,
                             child: Text(
-                                CP_NAME_MAP[cusLlmSpecs[index].platform] ?? ""),
+                              CP_NAME_MAP[cusLlmSpecs[index].platform] ?? "",
+                            ),
                           ),
                         ),
                         DataCell(
                           Text(
-                            cusLlmSpecs[index].model,
+                            cusLlmSpecs[index].name,
                             style: TextStyle(fontSize: 13.sp),
                           ),
                         ),
