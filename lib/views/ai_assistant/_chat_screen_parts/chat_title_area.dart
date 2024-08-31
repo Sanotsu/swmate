@@ -9,12 +9,12 @@ import 'title_update_button_widget.dart';
 /// 对话页面的标题区域
 ///
 class ChatTitleArea extends StatelessWidget {
-  final ChatSession? chatSession;
-  final Function(ChatSession) onUpdate;
+  final ChatHistory? chatHistory;
+  final Function(ChatHistory) onUpdate;
 
   const ChatTitleArea({
     super.key,
-    required this.chatSession,
+    required this.chatHistory,
     required this.onUpdate,
   });
 
@@ -28,7 +28,7 @@ class ChatTitleArea extends StatelessWidget {
           SizedBox(width: 10.sp),
           Expanded(
             child: Text(
-              '${(chatSession != null) ? chatSession?.title : '<暂未建立对话>'}',
+              '${(chatHistory != null) ? chatHistory?.title : '<暂未建立对话>'}',
               maxLines: 2,
               softWrap: true,
               overflow: TextOverflow.ellipsis,
@@ -39,7 +39,7 @@ class ChatTitleArea extends StatelessWidget {
             ),
           ),
           TitleUpdateButton(
-            chatSession: chatSession,
+            chatHistory: chatHistory,
             onUpdate: onUpdate,
           ),
         ],

@@ -511,7 +511,7 @@ class DBHelper {
   ///
 
   // 查询所有对话记录
-  Future<List<ChatSession>> queryChatList({
+  Future<List<ChatHistory>> queryChatList({
     String? uuid,
     String? keyword,
     String? chatType = 'cc',
@@ -548,7 +548,7 @@ class DBHelper {
       orderBy: "gmtModified DESC", // 以修改时间倒序排序
     );
 
-    return rows.map((row) => ChatSession.fromMap(row)).toList();
+    return rows.map((row) => ChatHistory.fromMap(row)).toList();
   }
 
   // 删除单条
@@ -558,8 +558,8 @@ class DBHelper {
         whereArgs: [uuid],
       );
 
-  // 新增(只有单个的时候就一个值的数组，理论上不会批量插入)
-  Future<List<Object?>> insertChatList(List<ChatSession> chats) async {
+  // 新增(只有单个的时候就一个值的数组，理论上不会批量插入,备份恢复除外)
+  Future<List<Object?>> insertChatList(List<ChatHistory> chats) async {
     var batch = (await database).batch();
     for (var item in chats) {
       batch.insert(SWMateDdl.tableNameOfChatHistory, item.toMap());
@@ -568,7 +568,7 @@ class DBHelper {
   }
 
   // 修改单条(只让修改标题其实)
-  Future<int> updateChatSession(ChatSession item) async =>
+  Future<int> updateChatHistory(ChatHistory item) async =>
       (await database).update(
         SWMateDdl.tableNameOfChatHistory,
         item.toMap(),
@@ -621,18 +621,18 @@ class DBHelper {
         whereArgs: [uuid],
       );
 
-  // 新增(只有单个的时候就一个值的数组，理论上不会批量插入)
-  // 在智能群聊时，可以因为异步问题，A B 在构建时都没有值，所以同一个实例A B 都在用
-  // 当A 先插入之后，B再插入就会报错。
-  // 但如果此时后者进行修改的话，就会覆盖了前者的数据。
-  Future<int> insertGroupChatList(GroupChatHistory item) async =>
-      (await database).insert(
-        SWMateDdl.tableNameOfGroupChatHistory,
-        item.toMap(),
-      );
+  // 新增(只有单个的时候就一个值的数组)
+  Future<List<Object?>> insertGroupChatList(
+      List<GroupChatHistory> items) async {
+    var batch = (await database).batch();
+    for (var item in items) {
+      batch.insert(SWMateDdl.tableNameOfGroupChatHistory, item.toMap());
+    }
+    return await batch.commit();
+  }
 
   // 修改单条(只让修改标题其实)
-  Future<int> updateGroupChatSession(GroupChatHistory item) async =>
+  Future<int> updateGroupChatHistory(GroupChatHistory item) async =>
       (await database).update(
         SWMateDdl.tableNameOfGroupChatHistory,
         item.toMap(),

@@ -166,7 +166,7 @@ List<ChatMessage> filterAlternatingRoles(List<ChatMessage> messages) {
 /// 对话记录 这个是存入sqlite的表对应的模型
 // 一次对话记录需要一个标题，首次创建的时间，然后包含很多的对话消息
 @JsonSerializable(explicitToJson: true)
-class ChatSession {
+class ChatHistory {
   final String uuid;
   // 因为该栏位需要可修改，就不能为final了
   String title;
@@ -189,7 +189,7 @@ class ChatSession {
   // i2t => image to text
   String? i2tImagePath;
 
-  ChatSession({
+  ChatHistory({
     required this.uuid,
     required this.title,
     required this.gmtCreate,
@@ -202,18 +202,18 @@ class ChatSession {
   });
 
   // 从字符串转
-  factory ChatSession.fromRawJson(String str) =>
-      ChatSession.fromJson(json.decode(str));
+  factory ChatHistory.fromRawJson(String str) =>
+      ChatHistory.fromJson(json.decode(str));
   // 转为字符串
   String toRawJson() => json.encode(toJson());
 
-  factory ChatSession.fromJson(Map<String, dynamic> srcJson) =>
-      _$ChatSessionFromJson(srcJson);
+  factory ChatHistory.fromJson(Map<String, dynamic> srcJson) =>
+      _$ChatHistoryFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$ChatSessionToJson(this);
+  Map<String, dynamic> toJson() => _$ChatHistoryToJson(this);
 
-  factory ChatSession.fromMap(Map<String, dynamic> map) {
-    return ChatSession(
+  factory ChatHistory.fromMap(Map<String, dynamic> map) {
+    return ChatHistory(
       uuid: map['uuid'] as String,
       title: map['title'] as String,
       gmtCreate: DateTime.tryParse(map['gmtCreate']) ?? DateTime.now(),
@@ -247,7 +247,7 @@ class ChatSession {
   @override
   String toString() {
     return '''
-    ChatSession { 
+    ChatHistory { 
       "uuid": $uuid,
       "title": $title,
       "gmtCreate": $gmtCreate,

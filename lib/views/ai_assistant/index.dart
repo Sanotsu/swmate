@@ -1,15 +1,11 @@
-// ignore_for_file: avoid_print
-
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:uuid/uuid.dart';
 
-import '../../apis/_self_model_specs.dart';
-import '../../apis/_self_system_role_list.dart';
+import '../../apis/_self_model_and_system_role_list/index.dart';
 import '../../common/components/tool_widget.dart';
 import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
@@ -24,7 +20,8 @@ import 'ai_tools/file_interpret/image_interpret.dart';
 import 'ai_tools/image_generation/iti_index.dart';
 import 'ai_tools/image_generation/tti_index.dart';
 import 'ai_tools/image_generation/word_art_index.dart';
-import 'model_list.dart';
+import 'config_llm_list/index.dart';
+import 'config_system_prompt/index.dart';
 
 ///
 /// 规划一系列有AI加成的使用工具，这里是主入口
@@ -74,39 +71,17 @@ class _AIToolIndexState extends State<AIToolIndex> {
     }
 
     ///
-    /// 初始化模型信息(后续默认可能是从asset中导入一次json文件，但可以在配置中导入支持的平台支持的模型)
+    /// 初始化模型信息和系统角色
+    /// (后续默认可能是从asset中导入一次json文件，但可以在配置中导入支持的平台支持的模型)
     /// 要考虑万一用户导入收费模型使用，顶不顶得住
     ///
-    var list = CusLLM_SPEC_LIST.map((e) {
-      e.cusLlmSpecId = const Uuid().v4();
-      e.gmtCreate = DateTime.now();
-      return e;
-    }).toList();
-
-    print(list);
-
-    dbHelper.clearCusLLMSpecs();
-
-    await dbHelper.insertCusLLMSpecList(list);
+    await testInitModelAndSysRole(FREE_all_MODELS);
 
     var afterList = await dbHelper.queryCusLLMSpecList();
-    print(afterList);
 
     setState(() {
       cusModelList = afterList;
     });
-
-    ///
-    /// 初始化系统角色
-    ///
-    var sysroleList = DEFAULT_SysRole_LIST.map((e) {
-      e.cusSysRoleSpecId = const Uuid().v4();
-      e.gmtCreate = DateTime.now();
-      return e;
-    }).toList();
-
-    dbHelper.clearCusSysRoleSpecs();
-    await dbHelper.insertCusSysRoleSpecList(sysroleList);
   }
 
   @override
@@ -127,17 +102,19 @@ class _AIToolIndexState extends State<AIToolIndex> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: GestureDetector(
-          onLongPress: () async {
-            // 长按之后，先改变是否使用作者应用的标志
-            setState(() {
-              isEnableMyCose = !isEnableMyCose;
-            });
-            EasyLoading.showInfo("${isEnableMyCose ? "已启用" : "已关闭"}作者API Key");
-          },
-          child: const Text('AI 智能助手'),
-        ),
+        title: const Text('AI 智能助手'),
         actions: [
+          IconButton(
+            onPressed: () async {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SystemPromptIndex(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.face),
+          ),
           IconButton(
             onPressed: () async {
               Navigator.push(
@@ -167,7 +144,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
                     (_textScaleFactor - 0.6).remainder(1.6) + 0.6;
 
                 EasyLoading.showInfo(
-                  "连续对话文本缩放 ${_textScaleFactor.toStringAsFixed(1)} 倍",
+                  "对话文字缩放 ${_textScaleFactor.toStringAsFixed(1)} 倍",
                 );
               });
               // 缩放比例存入缓存
@@ -175,7 +152,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
                 _textScaleFactor,
               );
             },
-            icon: const Icon(Icons.crop_free),
+            icon: const Icon(Icons.format_size_outlined),
           ),
         ],
       ),
@@ -209,7 +186,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
                       await navigateToToolScreen(
                         context,
                         LLModelType.cc,
-                        (llmSpecList, cusSysRoleSpecs) => ChatBat(
+                        (llmSpecList, cusSysRoleSpecs) => ChatBot(
                           llmSpecList: llmSpecList,
                           cusSysRoleSpecs: cusSysRoleSpecs,
                         ),
@@ -218,11 +195,18 @@ class _AIToolIndexState extends State<AIToolIndex> {
                     },
                   ),
 
-                  const CustomEntranceCard(
-                    title: '智能群聊',
-                    subtitle: "一个问题多个回答",
+                  CustomEntranceCard(
+                    title: '智能多聊',
+                    subtitle: "一个问题多模型回答",
                     icon: Icons.balance_outlined,
-                    targetPage: ChatBatGroup(),
+                    onTap: () async {
+                      await navigateToToolScreen(
+                        context,
+                        LLModelType.cc,
+                        (llmSpecList, cusSysRoleSpecs) => const ChatBotGroup(),
+                        roleType: LLModelType.cc,
+                      );
+                    },
                   ),
 
                   // 文档解读和图片解读不传系统角色类型

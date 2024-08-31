@@ -30,6 +30,27 @@ class SWMateDdl {
     );
     """;
 
+  ///
+  /// 菜品基础表
+  ///
+  static const tableNameOfDish = '${DB_TABLE_PREFIX}dish';
+
+  // 2023-03-10 避免导入时重复导入，还是加一个unique
+  static const String ddlForDish = """
+    CREATE TABLE $tableNameOfDish (
+      dish_id           TEXT      NOT NULL PRIMARY KEY,
+      dish_name         TEXT      NOT NULL,
+      description       TEXT,
+      photos            TEXT,
+      videos            TEXT,
+      tags              TEXT,
+      meal_categories   TEXT,
+      recipe            TEXT,
+      recipe_picture    TEXT,
+      UNIQUE(dish_name,tags)
+    );
+    """;
+
   /// 2024-06-01 新增AI对话留存
   static const tableNameOfChatHistory = '${DB_TABLE_PREFIX}chat_history';
 
@@ -134,27 +155,6 @@ class SWMateDdl {
       gmtCreate           TEXT    NOT NULL,
       PRIMARY KEY(cusSysRoleSpecId),
       UNIQUE(label,sysRoleType,name)
-    );
-    """;
-
-  ///
-  /// 菜品基础表
-  ///
-  static const tableNameOfDish = '${DB_TABLE_PREFIX}dish';
-
-  // 2023-03-10 避免导入时重复导入，还是加一个unique
-  static const String ddlForDish = """
-    CREATE TABLE $tableNameOfDish (
-      dish_id           TEXT      NOT NULL PRIMARY KEY,
-      dish_name         TEXT      NOT NULL,
-      description       TEXT,
-      photos            TEXT,
-      videos            TEXT,
-      tags              TEXT,
-      meal_categories   TEXT,
-      recipe            TEXT,
-      recipe_picture    TEXT,
-      UNIQUE(dish_name,tags)
     );
     """;
 }

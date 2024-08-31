@@ -37,7 +37,7 @@ Map<String, dynamic> _$ChatMessageToJson(ChatMessage instance) =>
       'modelLabel': instance.modelLabel,
     };
 
-ChatSession _$ChatSessionFromJson(Map<String, dynamic> json) => ChatSession(
+ChatHistory _$ChatHistoryFromJson(Map<String, dynamic> json) => ChatHistory(
       uuid: json['uuid'] as String,
       title: json['title'] as String,
       gmtCreate: DateTime.parse(json['gmtCreate'] as String),
@@ -51,7 +51,7 @@ ChatSession _$ChatSessionFromJson(Map<String, dynamic> json) => ChatSession(
       chatType: json['chatType'] as String,
     );
 
-Map<String, dynamic> _$ChatSessionToJson(ChatSession instance) =>
+Map<String, dynamic> _$ChatHistoryToJson(ChatHistory instance) =>
     <String, dynamic>{
       'uuid': instance.uuid,
       'title': instance.title,

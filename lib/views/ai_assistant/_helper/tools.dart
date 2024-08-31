@@ -1,3 +1,6 @@
+import 'package:uuid/uuid.dart';
+
+import '../../../apis/_self_model_and_system_role_list/_self_system_role_list.dart';
 import '../../../apis/get_app_key_helper.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
@@ -76,4 +79,96 @@ Future<List<CusSysRoleSpec>> fetchCusSysRoleSpecList(
 ) async {
   return (await _dbHelper.queryCusSysRoleSpecList(sysRoleType: roleType))
       .toList();
+}
+
+final DBHelper dbHelper = DBHelper();
+
+/// 将预设的大模型数据导入数据库
+Future testInitModelAndSysRole(List<CusLLMSpec> cslist) async {
+  dbHelper.clearCusLLMSpecs();
+
+  // 列表中没有uuid和创建时间
+  cslist = cslist.map((e) {
+    e.cusLlmSpecId = const Uuid().v4();
+    e.gmtCreate = DateTime.now();
+    return e;
+  }).toList();
+
+  await dbHelper.insertCusLLMSpecList(cslist);
+
+  dbHelper.clearCusSysRoleSpecs();
+
+  // 预设角色不用传，就默认的，反正都不花钱
+  // 列表中没有uuid和创建时间
+  var sysroleList = DEFAULT_SysRole_LIST.map((e) {
+    e.cusSysRoleSpecId = const Uuid().v4();
+    e.gmtCreate = DateTime.now();
+    return e;
+  }).toList();
+  await dbHelper.insertCusSysRoleSpecList(sysroleList);
+
+/*
+  ///
+  /// 下面是将列表转为json，再转为列表，再存入数据库的测试。
+  /// 实际发布时不必，直接存入数据库即可，列表文件不上传就好。
+  ///
+  final tempDir = Directory('/storage/emulated/0/swmate/jsons');
+
+  ///
+  /// 初始化模型信息
+  ///
+
+  // 定义文件路径
+  const String filePath = 'iti_spec_list.json';
+
+  if (!await tempDir.exists()) {
+    await tempDir.create(recursive: true);
+  }
+  final file = File('${tempDir.path}/$filePath');
+
+  // 将列表转换为 JSON 并写入文件
+  writeListToJsonFile(cslist, file.path);
+
+  /// 后续没有上面转的这一步，直接从这里开始从文件读取
+  // 从文件中读取存入数据库
+  var list = await readListFromJsonFile(file.path);
+  list = list.map((e) {
+    e.cusLlmSpecId = const Uuid().v4();
+    e.gmtCreate = DateTime.now();
+    return e;
+  }).toList();
+
+  dbHelper.clearCusLLMSpecs();
+
+  await dbHelper.insertCusLLMSpecList(list);
+
+  ///
+  /// 初始化系统角色
+  ///
+
+  // 定义文件路径
+  const String sysroleFilePath = 'sysrole_spec_list.json';
+
+  if (!await tempDir.exists()) {
+    await tempDir.create(recursive: true);
+  }
+  final sysroleFile = File('${tempDir.path}/$sysroleFilePath');
+
+  // 将列表转换为 JSON 并写入文件
+  writeSysRoleListToJsonFile(DEFAULT_SysRole_LIST, sysroleFile.path);
+
+  ///
+  /// 后续没有上面转的这一步，直接从这里开始从文件读取
+  // 从文件中读取存入数据库
+  var sysroleList = await readSysRoleListFromJsonFile(sysroleFile.path);
+
+  sysroleList = sysroleList.map((e) {
+    e.cusSysRoleSpecId = const Uuid().v4();
+    e.gmtCreate = DateTime.now();
+    return e;
+  }).toList();
+
+  dbHelper.clearCusSysRoleSpecs();
+  await dbHelper.insertCusSysRoleSpecList(sysroleList);
+*/
 }

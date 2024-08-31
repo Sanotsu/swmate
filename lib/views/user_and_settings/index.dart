@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,19 +8,14 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:uuid/uuid.dart';
 
-import '../../apis/_self_model_specs.dart';
-import '../../apis/_self_system_role_list.dart';
+import '../../apis/_self_model_and_system_role_list/index.dart';
 import '../../common/constants.dart';
-import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/utils/db_tools/db_helper.dart';
 import '../../services/cus_get_storage.dart';
-import '../ai_assistant/index.dart';
+import '../ai_assistant/_helper/tools.dart';
 import '../home.dart';
-import 'api_key_config/index.dart';
 import 'backup_and_restore/index.dart';
-import 'system_prompt_config/index.dart';
 
 final DBHelper dbHelper = DBHelper();
 
@@ -47,6 +43,22 @@ class _UserAndSettingsState extends State<UserAndSettings> {
     }
   }
 
+  // 长按5秒启动作者测试的模型(但是付费的还是用不了，没有加载作者的密钥)
+  Timer? _timer;
+  void _startTimer() {
+    _timer = Timer(const Duration(seconds: 5), () async {
+      await testInitModelAndSysRole(SELF_MODELS);
+      EasyLoading.showInfo("已启用作者的测试模型列表");
+    });
+  }
+
+  void _cancelTimer() {
+    if (_timer != null) {
+      _timer!.cancel();
+      _timer = null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // 计算屏幕剩余的高度
@@ -66,22 +78,12 @@ class _UserAndSettingsState extends State<UserAndSettings> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("用户设置"),
+        title: GestureDetector(
+          onLongPressStart: (_) => _startTimer(),
+          onLongPressEnd: (_) => _cancelTimer(),
+          child: const Text('用户设置'),
+        ),
         actions: [
-          TextButton(
-            onPressed: () async {
-              await testInitModelAndSysRole(FREE_CusLLM_SPEC_LIST);
-              EasyLoading.showInfo("导入【自用】模型完成");
-            },
-            child: const Text("[自用]"),
-          ),
-          TextButton(
-            onPressed: () async {
-              await testInitModelAndSysRole(CusLLM_SPEC_LIST);
-              EasyLoading.showInfo("导入【全部】模型完成");
-            },
-            child: const Text("[全部]"),
-          ),
           TextButton(
             onPressed: () {
               showDialog(
@@ -125,7 +127,7 @@ class _UserAndSettingsState extends State<UserAndSettings> {
           // 备份还原和更多设置
           SizedBox(
             // height: (screenBodyHeight - 250 - 20),
-            height: 320.sp,
+            height: 160.sp,
             child: Center(child: _buildBakAndRestoreAndMoreSettingRow()),
           ),
         ],
@@ -220,42 +222,6 @@ class _UserAndSettingsState extends State<UserAndSettings> {
           child: SizedBox(
             height: 80.sp,
             child: NewCusSettingCard(
-              leadingIcon: Icons.build_circle_outlined,
-              title: "平台密钥配置",
-              onTap: () {
-                // 处理相应的点击事件
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ApiKeyConfig(),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        Expanded(
-          child: SizedBox(
-            height: 80.sp,
-            child: NewCusSettingCard(
-              leadingIcon: Icons.build_circle_outlined,
-              title: "系统角色配置",
-              onTap: () {
-                // 处理相应的点击事件
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SystemPromptIndex(),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        Expanded(
-          child: SizedBox(
-            height: 80.sp,
-            child: NewCusSettingCard(
               leadingIcon: Icons.question_mark,
               title: '常见问题(TBD)',
               onTap: () {
@@ -330,65 +296,4 @@ void reloadApp(BuildContext context) {
     MaterialPageRoute(builder: (_) => const HomePage()),
     (route) => false,
   );
-}
-
-testInitModelAndSysRole(List<CusLLMSpec> cslist) async {
-  final tempDir = Directory('/storage/emulated/0/swmate/jsons');
-
-  ///
-  /// 初始化模型信息
-  ///
-
-  // 定义文件路径
-  const String filePath = 'iti_spec_list.json';
-
-  if (!await tempDir.exists()) {
-    await tempDir.create(recursive: true);
-  }
-  final file = File('${tempDir.path}/$filePath');
-
-  // 将列表转换为 JSON 并写入文件
-  writeListToJsonFile(cslist, file.path);
-
-  /// 后续没有上面转的这一步，直接从这里开始从文件读取
-  // 从文件中读取存入数据库
-  var list = await readListFromJsonFile(file.path);
-  list = list.map((e) {
-    e.cusLlmSpecId = const Uuid().v4();
-    e.gmtCreate = DateTime.now();
-    return e;
-  }).toList();
-
-  dbHelper.clearCusLLMSpecs();
-
-  await dbHelper.insertCusLLMSpecList(list);
-
-  ///
-  /// 初始化系统角色
-  ///
-
-  // 定义文件路径
-  const String sysroleFilePath = 'sysrole_spec_list.json';
-
-  if (!await tempDir.exists()) {
-    await tempDir.create(recursive: true);
-  }
-  final sysroleFile = File('${tempDir.path}/$sysroleFilePath');
-
-  // 将列表转换为 JSON 并写入文件
-  writeSysRoleListToJsonFile(DEFAULT_SysRole_LIST, sysroleFile.path);
-
-  ///
-  /// 后续没有上面转的这一步，直接从这里开始从文件读取
-  // 从文件中读取存入数据库
-  var sysroleList = await readSysRoleListFromJsonFile(sysroleFile.path);
-
-  sysroleList = sysroleList.map((e) {
-    e.cusSysRoleSpecId = const Uuid().v4();
-    e.gmtCreate = DateTime.now();
-    return e;
-  }).toList();
-
-  dbHelper.clearCusSysRoleSpecs();
-  await dbHelper.insertCusSysRoleSpecList(sysroleList);
 }

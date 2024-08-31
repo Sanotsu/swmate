@@ -10,7 +10,7 @@ import 'history_button_widget.dart';
 /// 智能助手和智能群聊都有用，类型不同所以动态，但用于显示title栏位都有
 ///
 class ChatHistoryItem extends StatelessWidget {
-  final dynamic chatSession;
+  final dynamic chatHistory;
   final Function(dynamic)? onTap;
   final Function(dynamic)? onUpdate;
   final Function(dynamic)? onDelete;
@@ -19,7 +19,7 @@ class ChatHistoryItem extends StatelessWidget {
 
   const ChatHistoryItem({
     super.key,
-    required this.chatSession,
+    required this.chatHistory,
     this.onTap,
     this.onUpdate,
     this.onDelete,
@@ -30,7 +30,7 @@ class ChatHistoryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap != null ? () => onTap!(chatSession) : null,
+      onTap: onTap != null ? () => onTap!(chatHistory) : null,
       child: Card(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -42,23 +42,23 @@ class ChatHistoryItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      chatSession.title,
+                      chatHistory.title,
                       style: TextStyle(fontSize: 15.sp),
                       maxLines: 2,
                       softWrap: true,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (chatSession is ChatSession)
+                    if (chatHistory is ChatHistory)
                       Text(
-                        (chatSession as ChatSession).llmName,
+                        (chatHistory as ChatHistory).llmName,
                         style: TextStyle(fontSize: 15.sp),
                         maxLines: 2,
                         softWrap: true,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    if (chatSession is GroupChatHistory)
+                    if (chatHistory is GroupChatHistory)
                       Text(
-                        (chatSession as GroupChatHistory)
+                        (chatHistory as GroupChatHistory)
                             .modelMsgMap
                             .keys
                             .toList()
@@ -87,12 +87,12 @@ class ChatHistoryItem extends StatelessWidget {
                 children: [
                   if (onUpdate != null)
                     ChatHistoryUpdateButton(
-                      chatSession: chatSession,
+                      chatHistory: chatHistory,
                       onUpdate: onUpdate!,
                     ),
                   if (onDelete != null)
                     ChatHistoryDeleteButton(
-                      chatSession: chatSession,
+                      chatHistory: chatHistory,
                       onDelete: onDelete!,
                     ),
                 ],

@@ -8,12 +8,12 @@ import '../../../models/chat_competion/com_cc_state.dart';
 /// 对话页面中的修改标题按钮
 ///
 class TitleUpdateButton extends StatefulWidget {
-  final ChatSession? chatSession;
-  final Function(ChatSession) onUpdate;
+  final ChatHistory? chatHistory;
+  final Function(ChatHistory) onUpdate;
 
   const TitleUpdateButton({
     super.key,
-    required this.chatSession,
+    required this.chatHistory,
     required this.onUpdate,
   });
 
@@ -36,9 +36,9 @@ class _TitleUpdateButtonState extends State<TitleUpdateButton> {
       width: 56.sp,
       child: IconButton(
         onPressed: () {
-          if (widget.chatSession != null) {
+          if (widget.chatHistory != null) {
             setState(() {
-              _titleController.text = widget.chatSession!.title;
+              _titleController.text = widget.chatHistory!.title;
             });
             showDialog(
               context: context,
@@ -70,7 +70,7 @@ class _TitleUpdateButtonState extends State<TitleUpdateButton> {
               },
             ).then((value) async {
               if (value == true) {
-                var temp = widget.chatSession!;
+                var temp = widget.chatHistory!;
                 temp.title = _titleController.text.trim();
                 widget.onUpdate(temp);
               }

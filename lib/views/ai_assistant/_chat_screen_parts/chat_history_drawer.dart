@@ -47,7 +47,7 @@ class ChatHistoryDrawer extends StatelessWidget {
           ...(chatHistory
               .map(
                 (e) => ChatHistoryItem(
-                  chatSession: e,
+                  chatHistory: e,
                   onTap: onTap != null ? (e) => onTap!(e) : null,
                   onUpdate:
                       onUpdate != null ? (e) async => await onUpdate!(e) : null,

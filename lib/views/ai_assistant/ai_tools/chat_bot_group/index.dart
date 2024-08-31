@@ -30,14 +30,14 @@ import '../../_helper/tools.dart';
 ///   3 用户继续询问，各个模型根据自己的上下文继续问答问题
 ///   4 用户可以【保存】对话，下次进入时，可以恢复对话（这个和之前的设计差别挺大，暂时不做）
 ///
-class ChatBatGroup extends StatefulWidget {
-  const ChatBatGroup({super.key});
+class ChatBotGroup extends StatefulWidget {
+  const ChatBotGroup({super.key});
 
   @override
-  State createState() => _ChatBatGroupState();
+  State createState() => _ChatBotGroupState();
 }
 
-class _ChatBatGroupState extends State<ChatBatGroup> {
+class _ChatBotGroupState extends State<ChatBotGroup> {
   final DBHelper _dbHelper = DBHelper();
 
   // 人机对话消息滚动列表
@@ -51,6 +51,10 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
   // AI是否在思考中(如果是，则不允许再次发送)
   bool isBotThinking = false;
 
+  bool isStream = false;
+
+  ///============
+
   // 2024-07-23 对话现在需要考虑更多
   // 用户输入、AI响应、不同平台的消息要单独分开、等待错误重试等占位
   // map的key为模型名，value为该模型的消息列表
@@ -60,9 +64,9 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
   List<ChatMessage> messages = [];
 
   // 当前的群聊对话记录(用于存入数据库或者从数据库中查询某个历史对话)
-  GroupChatHistory? chatSession;
+  GroupChatHistory? chatHistory;
   // 最近的群聊对话记录列表
-  List<GroupChatHistory> chatHistory = [];
+  List<GroupChatHistory> chatHistoryList = [];
 
   // 进入对话页面简单预设的一些问题
   List<String> defaultQuestions = chatQuestionSamples;
@@ -80,8 +84,6 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
   // 如果选中的对比模型是2个，且启用对战模式，才上下两个列表分别显示各自模型的对话
   // 否则就是一个用户输入，下面多个AI回复
   bool isBattleMode = false;
-
-  bool isStream = false;
 
   @override
   void initState() {
@@ -141,13 +143,13 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
     if (list.isNotEmpty) {
       if (!mounted) return;
       setState(() {
-        chatSession = list.first;
-        chatSession?.messages = list.first.messages;
-        chatSession?.modelMsgMap = list.first.modelMsgMap;
+        chatHistory = list.first;
+        chatHistory?.messages = list.first.messages;
+        chatHistory?.modelMsgMap = list.first.modelMsgMap;
 
         // 查到了db中的历史记录，则需要替换成当前的
-        messages = chatSession!.messages;
-        msgMap = chatSession!.modelMsgMap;
+        messages = chatHistory!.messages;
+        msgMap = chatHistory!.modelMsgMap;
 
         // 获取群聊历史记录中选中的模型，构建选中编号
 
@@ -171,7 +173,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
 
   /// 保存对话到数据库
   _saveToDb() async {
-    print("保存到数据库前---${chatSession?.toRawJson()}");
+    print("保存到数据库前---${chatHistory?.toRawJson()}");
     // 如果插入时只有一条，那就是用户首次输入，截取部分内容和生成对话记录的uuid
     // 2024-08-23 如果对话中只有1个user或者1个user和1个system(即两条信息)，则表明是新建对话
     if (messages.isNotEmpty &&
@@ -181,7 +183,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
             messages.where((e) => e.role == "user").length == 1 &&
             messages.where((e) => e.role == "system").length == 1)) {
       // 如果没有对话记录(即上层没有传入，且当前时用户第一次输入文字还没有创建对话记录)，则新建对话记录
-      chatSession ??= GroupChatHistory(
+      chatHistory ??= GroupChatHistory(
         uuid: const Uuid().v4(),
         title: messages.first.content.length > 30
             ? messages.first.content.substring(0, 30)
@@ -192,16 +194,16 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
         modelMsgMap: msgMap,
       );
 
-      await _dbHelper.insertGroupChatList(chatSession!);
+      await _dbHelper.insertGroupChatList([chatHistory!]);
 
       // 如果已经有多个对话了，理论上该对话已经存入db了，只需要修改该对话的实际对话内容即可
     } else if (messages.length > 1) {
-      chatSession!.messages = messages;
-      chatSession!.modelMsgMap = msgMap;
+      chatHistory!.messages = messages;
+      chatHistory!.modelMsgMap = msgMap;
       // 2024-08-30,如果用户有修改之前的对话记录，则需要更新对话记录的时间
-      chatSession!.gmtModified = DateTime.now();
+      chatHistory!.gmtModified = DateTime.now();
 
-      await _dbHelper.updateGroupChatSession(chatSession!);
+      await _dbHelper.updateGroupChatHistory(chatHistory!);
     }
 
     // 其他没有对话记录、没有消息列表的情况，就不做任何处理了
@@ -369,7 +371,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
             onPressed: messages.isNotEmpty
                 ? () {
                     setState(() {
-                      chatSession = null;
+                      chatHistory = null;
                       messages.clear();
                       msgMap.clear();
                     });
@@ -410,7 +412,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
                   var list = await getHistoryChats();
                   if (!context.mounted) return;
                   setState(() {
-                    chatHistory = list;
+                    chatHistoryList = list;
                   });
                   unfocusHandle();
 
@@ -427,7 +429,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
         behavior: HitTestBehavior.translucent,
         onTap: () {
           // 点击空白处可以移除焦点，关闭键盘
-          FocusScope.of(context).unfocus();
+          unfocusHandle();
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -625,7 +627,7 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
 
       /// 构建在对话历史中的对话标题列表
       endDrawer: ChatHistoryDrawer(
-        chatHistory: chatHistory,
+        chatHistory: chatHistoryList,
         onTap: (GroupChatHistory e) {
           Navigator.of(context).pop();
           // 点击了指定历史对话，则替换当前对话
@@ -635,12 +637,12 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
         },
         onUpdate: (GroupChatHistory e) async {
           // 修改对话的标题
-          await _dbHelper.updateGroupChatSession(e);
+          await _dbHelper.updateGroupChatHistory(e);
           // 修改成功后重新查询更新
           var list = await getHistoryChats();
           if (!mounted) return;
           setState(() {
-            chatHistory = list;
+            chatHistoryList = list;
           });
         },
         onDelete: (GroupChatHistory e) async {
@@ -650,12 +652,12 @@ class _ChatBatGroupState extends State<ChatBatGroup> {
           var list = await getHistoryChats();
           if (!mounted) return;
           setState(() {
-            chatHistory = list;
+            chatHistoryList = list;
           });
           // 如果删除的历史对话是当前对话，跳到新开对话页面
-          if (chatSession?.uuid == e.uuid) {
+          if (chatHistory?.uuid == e.uuid) {
             setState(() {
-              chatSession = null;
+              chatHistory = null;
               messages.clear();
               msgMap.clear();
             });

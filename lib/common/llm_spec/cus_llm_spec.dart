@@ -186,12 +186,15 @@ enum CusLLM {
 
   /// 智谱AI相关收费模型
   // 对话
+  zhipu_GLM4_Plus,
   zhipu_GLM4_0520,
   zhipu_GLM4_AirX,
   zhipu_GLM4_Air,
   zhipu_GLM4_Long,
   // 多模态
+  zhipu_GLM4V_Plus,
   zhipu_GLM4V,
+  zhipu_CogView3_Plus_TTI,
   zhipu_CogView3_TTI,
   zhipu_CogVideoX_TTV,
 }

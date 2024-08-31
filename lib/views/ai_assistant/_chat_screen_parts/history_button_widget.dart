@@ -7,12 +7,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 /// 智能助手和智能群聊都有用，类型不同所以动态，但用于显示title栏位都有
 ///
 class ChatHistoryDeleteButton extends StatelessWidget {
-  final dynamic chatSession;
+  final dynamic chatHistory;
   final Function(dynamic) onDelete;
 
   const ChatHistoryDeleteButton({
     super.key,
-    required this.chatSession,
+    required this.chatHistory,
     required this.onDelete,
   });
 
@@ -28,7 +28,7 @@ class ChatHistoryDeleteButton extends StatelessWidget {
               return AlertDialog(
                 title: const Text("确认删除对话记录:"),
                 // 智能对话或者智能群聊都有title
-                content: Text(chatSession.title),
+                content: Text(chatHistory.title),
                 actions: [
                   TextButton(
                     onPressed: () {
@@ -47,7 +47,7 @@ class ChatHistoryDeleteButton extends StatelessWidget {
             },
           ).then((value) async {
             if (value == true) {
-              onDelete(chatSession);
+              onDelete(chatHistory);
             }
           });
         },
@@ -62,12 +62,12 @@ class ChatHistoryDeleteButton extends StatelessWidget {
 }
 
 class ChatHistoryUpdateButton extends StatefulWidget {
-  final dynamic chatSession;
+  final dynamic chatHistory;
   final Function(dynamic) onUpdate;
 
   const ChatHistoryUpdateButton({
     super.key,
-    required this.chatSession,
+    required this.chatHistory,
     required this.onUpdate,
   });
 
@@ -94,7 +94,7 @@ class _ChatHistoryUpdateButtonState extends State<ChatHistoryUpdateButton> {
         onPressed: () {
           setState(() {
             // 智能对话和智能群聊的类型都有title
-            _selectedTitleController.text = widget.chatSession.title;
+            _selectedTitleController.text = widget.chatHistory.title;
           });
           showDialog(
             context: context,
@@ -126,8 +126,10 @@ class _ChatHistoryUpdateButtonState extends State<ChatHistoryUpdateButton> {
             },
           ).then((value) async {
             if (value == true) {
-              var temp = widget.chatSession;
+              var temp = widget.chatHistory;
+              // 这里是单独智能对话或者群聊，对应的类都有标题和修改日期栏位
               temp.title = _selectedTitleController.text.trim();
+              temp.gmtModified = DateTime.now();
               widget.onUpdate(temp);
             }
           });

@@ -152,11 +152,14 @@ const _$CusLLMEnumMap = {
   CusLLM.siliconCloud_Mixtral_8x7B_Instruct_v0p1:
       'siliconCloud_Mixtral_8x7B_Instruct_v0p1',
   CusLLM.siliconCloud_gemma2_27B_Instruct: 'siliconCloud_gemma2_27B_Instruct',
+  CusLLM.zhipu_GLM4_Plus: 'zhipu_GLM4_Plus',
   CusLLM.zhipu_GLM4_0520: 'zhipu_GLM4_0520',
   CusLLM.zhipu_GLM4_AirX: 'zhipu_GLM4_AirX',
   CusLLM.zhipu_GLM4_Air: 'zhipu_GLM4_Air',
   CusLLM.zhipu_GLM4_Long: 'zhipu_GLM4_Long',
+  CusLLM.zhipu_GLM4V_Plus: 'zhipu_GLM4V_Plus',
   CusLLM.zhipu_GLM4V: 'zhipu_GLM4V',
+  CusLLM.zhipu_CogView3_Plus_TTI: 'zhipu_CogView3_Plus_TTI',
   CusLLM.zhipu_CogView3_TTI: 'zhipu_CogView3_TTI',
   CusLLM.zhipu_CogVideoX_TTV: 'zhipu_CogVideoX_TTV',
 };

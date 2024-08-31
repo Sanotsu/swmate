@@ -39,23 +39,23 @@ import '../../_componets/cus_platform_and_llm_row.dart';
 /// 2024-08-11 把http请求等待响应的加载圈放在拦截器里面，这里的对话列表中就不再需要占位的消息了
 ///
 ///
-class ChatBat extends StatefulWidget {
+class ChatBot extends StatefulWidget {
   // 可供挑选的模型列表
   final List<CusLLMSpec> llmSpecList;
   // 可供挑选的预设系统角色
   final List<CusSysRoleSpec> cusSysRoleSpecs;
 
-  const ChatBat({
+  const ChatBot({
     super.key,
     required this.llmSpecList,
     required this.cusSysRoleSpecs,
   });
 
   @override
-  State createState() => _ChatBatState();
+  State createState() => _ChatBotState();
 }
 
-class _ChatBatState extends State<ChatBat> {
+class _ChatBotState extends State<ChatBot> {
   final DBHelper _dbHelper = DBHelper();
 
   // 人机对话消息滚动列表
@@ -78,10 +78,10 @@ class _ChatBatState extends State<ChatBat> {
   List<ChatMessage> messages = [];
 
   // 2024-06-01 当前的对话记录(用于存入数据库或者从数据库中查询某个历史对话)
-  ChatSession? chatSession;
+  ChatHistory? chatHistory;
 
   // 最近对话需要的记录历史对话的变量
-  List<ChatSession> chatHistory = [];
+  List<ChatHistory> chatHistoryList = [];
 
   // 进入对话页面简单预设的一些问题
   List<String> defaultQuestions = chatQuestionSamples;
@@ -143,7 +143,7 @@ class _ChatBatState extends State<ChatBat> {
   }
 
   //获取指定分类的历史对话
-  Future<List<ChatSession>> getHistoryChats() async {
+  Future<List<ChatHistory>> getHistoryChats() async {
     return await _dbHelper.queryChatList(chatType: "cc");
   }
 
@@ -155,8 +155,8 @@ class _ChatBatState extends State<ChatBat> {
     if (list.isNotEmpty) {
       if (!mounted) return;
       setState(() {
-        chatSession = list.first;
-        chatSession?.messages = list.first.messages;
+        chatHistory = list.first;
+        chatHistory?.messages = list.first.messages;
 
         // 如果有存是哪个模型，也默认选中该模型
         // ？？？2024-06-11 虽然同一个对话现在可以切换平台和模型了，但这里只是保留第一次对话取的值
@@ -173,7 +173,7 @@ class _ChatBatState extends State<ChatBat> {
         }
 
         // 查到了db中的历史记录，则需要替换成当前的(父页面没选择历史对话进来就是空，则都不会有这个函数)
-        messages = chatSession!.messages;
+        messages = chatHistory!.messages;
       });
     }
   }
@@ -301,7 +301,7 @@ class _ChatBatState extends State<ChatBat> {
             messages.where((e) => e.role == "user").length == 1 &&
             messages.where((e) => e.role == "system").length == 1)) {
       // 如果没有对话记录(即上层没有传入，且当前时用户第一次输入文字还没有创建对话记录)，则新建对话记录
-      chatSession ??= ChatSession(
+      chatHistory ??= ChatHistory(
         uuid: const Uuid().v4(),
         title: messages.first.content.length > 30
             ? messages.first.content.substring(0, 30)
@@ -316,15 +316,15 @@ class _ChatBatState extends State<ChatBat> {
         chatType: "cc",
       );
 
-      await _dbHelper.insertChatList([chatSession!]);
+      await _dbHelper.insertChatList([chatHistory!]);
 
       // 如果已经有多个对话了，理论上该对话已经存入db了，只需要修改该对话的实际对话内容即可
     } else if (messages.length > 1) {
-      chatSession!.messages = messages;
+      chatHistory!.messages = messages;
       // 2024-08-30,如果用户有修改之前的对话记录，则需要更新对话记录的时间
-      chatSession!.gmtModified = DateTime.now();
+      chatHistory!.gmtModified = DateTime.now();
 
-      await _dbHelper.updateChatSession(chatSession!);
+      await _dbHelper.updateChatHistory(chatHistory!);
     }
 
     // 其他没有对话记录、没有消息列表的情况，就不做任何处理了
@@ -343,7 +343,7 @@ class _ChatBatState extends State<ChatBat> {
 // 重新开启对话要清空一些内容
   restartChat() {
     setState(() {
-      chatSession = null;
+      chatHistory = null;
       messages.clear();
       selectedRole = null;
     });
@@ -375,6 +375,18 @@ class _ChatBatState extends State<ChatBat> {
       );
     });
 
+    // 2024-08-31 才知道像下面这样也行：
+    // restartChat();
+    // selectedRole = role;
+    // messages.add(ChatMessage(
+    //   messageId: const Uuid().v4(),
+    //   role: "system",
+    //   content: role.systemPrompt,
+    //   contentVoicePath: "",
+    //   dateTime: DateTime.now(),
+    // ));
+    // setState(() {});
+
     // ScaffoldMessenger.of(context).showSnackBar(
     //   SnackBar(content: Text('Selected: ${role.label}')),
     // );
@@ -388,22 +400,27 @@ class _ChatBatState extends State<ChatBat> {
         onCusSysRolePressed: showSystemRoleMadel,
         onNewChatPressed: () => restartChat(),
         onHistoryPressed: (BuildContext context) async {
-          var list = await getHistoryChats();
-          if (!context.mounted) return;
-          setState(() {
-            chatHistory = list;
-          });
+          // var list = await getHistoryChats();
+          // if (!context.mounted) return;
+          // setState(() {
+          //   chatHistory = list;
+          // });
+          // unfocusHandle();
+          // Scaffold.of(context).openEndDrawer();
+
+          // 2024-08-31 上面的代码还可以这样写：
+          chatHistoryList = await getHistoryChats();
           unfocusHandle();
+          if (!context.mounted) return;
           Scaffold.of(context).openEndDrawer();
+          setState(() {});
         },
       ),
       body: GestureDetector(
         // 允许子控件（如TextField）接收点击事件
         behavior: HitTestBehavior.translucent,
-        onTap: () {
-          // 点击空白处可以移除焦点，关闭键盘
-          unfocusHandle();
-        },
+        // 点击空白处可以移除焦点，关闭键盘
+        onTap: unfocusHandle,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,7 +437,7 @@ class _ChatBatState extends State<ChatBat> {
                 setState(() {
                   isStream = index == 0 ? true : false;
                   // 切换流式/同步响应也新开对话
-                  // chatSession = null;
+                  // chatHistory = null;
                   // messages.clear();
                 });
               },
@@ -469,23 +486,23 @@ class _ChatBatState extends State<ChatBat> {
 
             /// 对话的标题区域
             /// 在顶部显示对话标题(避免在appbar显示，内容太挤)
-            if (chatSession != null)
+            if (chatHistory != null)
               ChatTitleArea(
-                chatSession: chatSession,
-                onUpdate: (ChatSession e) async {
+                chatHistory: chatHistory,
+                onUpdate: (ChatHistory e) async {
                   // 修改对话的标题
-                  await _dbHelper.updateChatSession(e);
+                  await _dbHelper.updateChatHistory(e);
 
                   // 修改后更新标题
                   if (!mounted) return;
                   setState(() {
-                    chatSession = e;
+                    chatHistory = e;
                   });
                 },
               ),
 
             /// 标题和对话正文的分割线
-            if (chatSession != null) Divider(height: 3.sp, thickness: 1.sp),
+            if (chatHistory != null) Divider(height: 3.sp, thickness: 1.sp),
 
             /// 显示对话消息主体
             ChatListArea(
@@ -563,35 +580,38 @@ class _ChatBatState extends State<ChatBat> {
 
       /// 构建在对话历史中的对话标题列表
       endDrawer: ChatHistoryDrawer(
-        chatHistory: chatHistory,
-        onTap: (ChatSession e) {
+        chatHistory: chatHistoryList,
+        onTap: (ChatHistory e) {
           Navigator.of(context).pop();
           // 点击了指定历史对话，则替换当前对话
-          setState(() {
-            _getChatInfo(e.uuid);
-          });
+          _getChatInfo(e.uuid);
         },
-        onUpdate: (ChatSession e) async {
+        onUpdate: (ChatHistory e) async {
           // 修改对话的标题
-          await _dbHelper.updateChatSession(e);
+          // await _dbHelper.updateChatHistory(e);
           // 修改成功后重新查询更新
-          var list = await getHistoryChats();
+          // var list = await getHistoryChats();
+          // if (!mounted) return;
+          // setState(() {
+          //   chatHistory = list;
+          // });
+
+          await _dbHelper.updateChatHistory(e);
+          chatHistoryList = await getHistoryChats();
           if (!mounted) return;
-          setState(() {
-            chatHistory = list;
-          });
+          setState(() {});
         },
-        onDelete: (ChatSession e) async {
+        onDelete: (ChatHistory e) async {
           // 先删除
           await _dbHelper.deleteChatById(e.uuid);
           // 然后重新查询并更新
           var list = await getHistoryChats();
           if (!mounted) return;
           setState(() {
-            chatHistory = list;
+            chatHistoryList = list;
           });
           // 如果删除的历史对话是当前对话，跳到新开对话页面
-          if (chatSession?.uuid == e.uuid) {
+          if (chatHistory?.uuid == e.uuid) {
             restartChat();
           }
         },

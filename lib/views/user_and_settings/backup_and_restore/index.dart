@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../common/components/tool_widget.dart';
 
+import '../../../common/llm_spec/cus_llm_model.dart';
 import '../../../common/utils/db_tools/db_helper.dart';
 import '../../../common/utils/db_tools/ddl_swmate.dart';
 import '../../../common/utils/tools.dart';
@@ -25,7 +26,7 @@ import '../../../models/text_to_image/com_ig_state.dart';
 ///
 ///
 // 全量备份导出的文件的前缀(_时间戳.zip)
-const ZIP_FILE_PREFIX = "智能轻生活全量数据备份_";
+const ZIP_FILE_PREFIX = "思文智能助手全量数据备份_";
 // 导出文件要压缩，临时存放的地址
 const ZIP_TEMP_DIR_AT_EXPORT = "temp_zip";
 const ZIP_TEMP_DIR_AT_UNZIP = "temp_de_zip";
@@ -375,21 +376,34 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
       var filename = p.basename(file.path).toLowerCase();
 
       // 根据不同文件名，构建不同的数据
-      if (filename == "${DB_TABLE_PREFIX}bill_item.json") {
+      if (filename == "${SWMateDdl.tableNameOfBillItem}.json") {
         await _dbHelper.insertBillItemList(
           jsonMapList.map((e) => BillItem.fromMap(e)).toList(),
         );
-      } else if (filename == "${DB_TABLE_PREFIX}chat_history.json") {
-        await _dbHelper.insertChatList(
-          jsonMapList.map((e) => ChatSession.fromMap(e)).toList(),
+      } else if (filename == "${SWMateDdl.tableNameOfDish}.json") {
+        await _dbHelper.insertDishList(
+          jsonMapList.map((e) => Dish.fromMap(e)).toList(),
         );
-      } else if (filename == "${DB_TABLE_PREFIX}image_eneration_history.json") {
+      } else if (filename == "${SWMateDdl.tableNameOfChatHistory}.json") {
+        await _dbHelper.insertChatList(
+          jsonMapList.map((e) => ChatHistory.fromMap(e)).toList(),
+        );
+      } else if (filename == "${SWMateDdl.tableNameOfGroupChatHistory}.json") {
+        await _dbHelper.insertGroupChatList(
+          jsonMapList.map((e) => GroupChatHistory.fromMap(e)).toList(),
+        );
+      } else if (filename ==
+          "${SWMateDdl.tableNameOfImageGenerationHistory}.json") {
         await _dbHelper.insertImageGenerationResultList(
           jsonMapList.map((e) => LlmIGResult.fromMap(e)).toList(),
         );
-      } else if (filename == "${DB_TABLE_PREFIX}dish.json") {
-        await _dbHelper.insertDishList(
-          jsonMapList.map((e) => Dish.fromMap(e)).toList(),
+      } else if (filename == "${SWMateDdl.tableNameOfCusLlmSpec}.json") {
+        await _dbHelper.insertCusLLMSpecList(
+          jsonMapList.map((e) => CusLLMSpec.fromMap(e)).toList(),
+        );
+      } else if (filename == "${SWMateDdl.tableNameOfCusSysRoleSpec}.json") {
+        await _dbHelper.insertCusSysRoleSpecList(
+          jsonMapList.map((e) => CusSysRoleSpec.fromMap(e)).toList(),
         );
       }
     }

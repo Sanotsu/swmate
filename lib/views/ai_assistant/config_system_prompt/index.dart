@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -33,7 +31,6 @@ class _SystemPromptIndexState extends State<SystemPromptIndex> {
       // 其他是没有的，用户新增删除可以自行管理
       sysRoleSpecs = sysroleLl.where((e) => e.name == null).toList();
     });
-    print(sysroleLl);
   }
 
   @override
@@ -98,7 +95,7 @@ class _SystemPromptIndexState extends State<SystemPromptIndex> {
                     ],
                   ),
                   Text(
-                    """内部预设一些系统角色，用户可以自行创建、导入、删除。\n系统角色需要指定不同使用场景\n(cc: 智能对话; tti: 文本生图; iti: 图片生图)。""",
+                    """内部预设一些系统角色，用户可以自行创建、导入、删除。\n系统角色需要指定不同使用场景，但不是所有模型都适配。\n(cc: 智能对话; tti: 文本生图; iti: 图片生图)。""",
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 12.sp),
