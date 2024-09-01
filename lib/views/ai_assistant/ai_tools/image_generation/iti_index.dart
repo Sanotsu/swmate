@@ -80,15 +80,7 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
   /// 平台和模型切换后的回调
   @override
   cpModelChangedCB(ApiPlatform? cp, CusLLMSpec? llmSpec) {
-    setState(() {
-      selectedPlatform = cp!;
-      selectedModelSpec = llmSpec!;
-      // 模型可供输出的图片尺寸列表、样式、预选字体也要更新
-      getSizeList();
-      selectedSize = getInitialSize();
-      getStyleList();
-      selectedStyle = getInitialStyle();
-    });
+    super.cpModelChangedCB(cp, llmSpec);
   }
 
   // 图生图页面的标题
@@ -169,27 +161,8 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
         imageSize: selectedSize,
         batchSize: selectedNum,
         styleName: PhotoMaker_StyleMap[selectedStyle],
-      );
-    } else if (selectedModelSpec.cusLlm ==
-            CusLLM.siliconCloud_StableDiffusionXL_ITI ||
-        selectedModelSpec.cusLlm ==
-            CusLLM.siliconCloud_StableDiffusion2p1_ITI ||
-        selectedModelSpec.cusLlm ==
-            CusLLM.siliconCloud_StableDiffusionXL_Lighting_ITI) {
-      a = SiliconflowItiReq.sd(
-        prompt: prompt,
-        negativePrompt: negativePrompt,
-        image: imageBase64String,
-        imageSize: selectedSize,
-        batchSize: selectedNum,
-        numInferenceSteps: selectedModelSpec.cusLlm ==
-                CusLLM.siliconCloud_StableDiffusionXL_Lighting_ITI
-            ? 4
-            : 20,
-        guidanceScale: selectedModelSpec.cusLlm ==
-                CusLLM.siliconCloud_StableDiffusionXL_Lighting_ITI
-            ? 1
-            : 7.5,
+        numInferenceSteps: inferenceStepsValue.toInt(),
+        guidanceScale: guidanceScaleValue,
       );
     } else if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI) {
       a = SiliconflowItiReq.instantID(
@@ -198,6 +171,8 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
         prompt: prompt,
         negativePrompt: negativePrompt,
         styleName: InstantID_StyleMap[selectedStyle],
+        numInferenceSteps: inferenceStepsValue.toInt(),
+        guidanceScale: guidanceScaleValue,
       );
     } else {
       // 默认就是SD这样必要的参数
@@ -207,6 +182,8 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
         image: imageBase64String,
         imageSize: selectedSize,
         batchSize: selectedNum,
+        numInferenceSteps: inferenceStepsValue.toInt(),
+        guidanceScale: guidanceScaleValue,
       );
     }
 
@@ -234,10 +211,13 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
 
   /// 构建配置区域
   @override
-  List<Widget> buildConfigArea() {
+  List<Widget> buildConfigArea({bool? isOnlySize}) {
     return [
       // 平台模型选中和尺寸张数选择结构大体一样的，放在基类
-      ...super.buildConfigArea(),
+      // 2024-09-01 但智谱传数量没有意义，其他的之前没处理好暂时不管
+      if (selectedPlatform == ApiPlatform.zhipu)
+        ...super.buildConfigArea(isOnlySize: true),
+      if (selectedPlatform != ApiPlatform.zhipu) ...super.buildConfigArea(),
 
       if ((selectedModelSpec.cusLlm == CusLLM.siliconCloud_PhotoMaker_ITI ||
           selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI))
@@ -319,8 +299,10 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
           ),
           PromptInput(
             label: "反向提示词",
-            hintText: '画面中不想出现的内容描述词信息。通过指定用户不想看到的内容来优化模型输出，使模型产生更有针对性和理想的结果。',
+            hintText: '画面中不想出现的内容描述词信息。通过指定用户不想看到的内容来优化输出，使模型产生更有针对性和理想的结果。',
             controller: negativePromptController,
+            maxLines: 2,
+            minLines: 1,
             onChanged: (text) {
               setState(() {
                 negativePrompt = text.trim();

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:swmate/apis/text_to_image/zhipuai_tti_apis.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../apis/text_to_image/aliyun_tti_apis.dart';
 import '../../../../apis/text_to_image/silicon_flow_tti_apis.dart';
@@ -14,6 +16,7 @@ import '../../../../models/text_to_image/aliyun_tti_req.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
 import '../../../../models/text_to_image/silicon_flow_tti_req.dart';
 import '../../../../models/text_to_image/silicon_flow_ig_resp.dart';
+import '../../../../models/text_to_image/zhipu_tti_req.dart';
 import '../../../../services/cus_get_storage.dart';
 import '../../_componets/loading_overlay.dart';
 import '../../_componets/prompt_input.dart';
@@ -52,6 +55,9 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
     if (selectedPlatform == ApiPlatform.aliyun) {
       return ALIYUN_ImageSizeList;
     }
+    if (selectedPlatform == ApiPlatform.zhipu) {
+      return ZHIPU_CogViewSizeList;
+    }
 
     // 没有匹配上的，都返回siliconCloud的配置
     return SF_ImageSizeList;
@@ -77,15 +83,7 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
   /// 平台和模型切换后的回调
   @override
   cpModelChangedCB(ApiPlatform? cp, CusLLMSpec? llmSpec) {
-    setState(() {
-      selectedPlatform = cp!;
-      selectedModelSpec = llmSpec!;
-      // 模型可供输出的图片尺寸列表、样式、预选字体也要更新
-      getSizeList();
-      selectedSize = getInitialSize();
-      getStyleList();
-      selectedStyle = getInitialStyle();
-    });
+    super.cpModelChangedCB(cp, llmSpec);
   }
 
   // 文生图页面的标题
@@ -114,6 +112,9 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
         style: "<${WANX_StyleMap[selectedStyle]}>",
         size: selectedSize,
         n: selectedNum,
+        seed: int.tryParse(seedController.text),
+        steps: inferenceStepsValue.toInt(),
+        guidance: guidanceScaleValue,
       );
 
       return commitAliyunText2ImgJob(
@@ -128,17 +129,21 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
   }
 
   /// (讯飞、sf平台)获取文生图直接是返回的结果
+  /// 2024-90-01 智谱cogview也可以是直接的结果
   @override
   Future<List<String>?>? getDirectImageGenerationResult() async {
     // 请求得到的图片结果
     List<String> imageUrls = [];
 
     if (selectedPlatform == ApiPlatform.siliconCloud) {
-      var a = SiliconFlowTtiReq.sdLighting(
+      SiliconFlowTtiReq a = SiliconFlowTtiReq.sdX(
         prompt: prompt,
         negativePrompt: negativePrompt,
         imageSize: selectedSize,
         batchSize: selectedNum,
+        seed: int.tryParse(seedController.text),
+        numInferenceSteps: inferenceStepsValue.toInt(),
+        guidanceScale: guidanceScaleValue,
       );
 
       SiliconFlowIGResp result = await getSFTtiResp(a, selectedModelSpec.model);
@@ -158,7 +163,7 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
           }
         }
       }
-    } else {
+    } else if (selectedPlatform == ApiPlatform.xfyun) {
       var result = await getXfyunTtiResp(selectedSize, prompt);
       print(result.toRawJson());
 
@@ -183,13 +188,48 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
           });
         }
       }
+    } else if (selectedPlatform == ApiPlatform.zhipu) {
+      CogViewReq a = CogViewReq(
+        model: selectedModelSpec.model,
+        prompt: prompt,
+        size: selectedSize,
+        userId: const Uuid().v4(),
+      );
+
+      var result = await getZhipuTtiResp(a);
+      print(result.toRawJson());
+
+      if (!mounted) return null;
+      if (result.error?.code != null) {
+        EasyLoading.showError("服务器报错:\n${result.error?.message}");
+        setState(() {
+          isGenImage = false;
+          LoadingOverlay.hide();
+        });
+      } else {
+        // 目前数组中只包含一张图片。
+        var cont = (result.data != null && result.data!.isNotEmpty)
+            ? result.data?.first.url
+            : null;
+        if (cont != null) {
+          print("xxxxxxxxxxxxxxxxxxxxxxxxx$cont");
+
+          imageUrls.add(cont);
+        } else {
+          EasyLoading.showError("图片数据为空:\n${result.error?.message}");
+          setState(() {
+            isGenImage = false;
+            LoadingOverlay.hide();
+          });
+        }
+      }
     }
     return imageUrls;
   }
 
   /// 构建配置区域
   @override
-  List<Widget> buildConfigArea() {
+  List<Widget> buildConfigArea({bool? isOnlySize}) {
     return [
       // 平台模型选中和尺寸张数选择结构大体一样的，放在基类
       ...super.buildConfigArea(),
@@ -228,16 +268,20 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
             },
             isRequired: true,
           ),
-          PromptInput(
-            label: "反向提示词",
-            hintText: '画面中不想出现的内容描述词信息。通过指定用户不想看到的内容来优化模型输出，使模型产生更有针对性和理想的结果。',
-            controller: negativePromptController,
-            onChanged: (text) {
-              setState(() {
-                negativePrompt = text.trim();
-              });
-            },
-          ),
+          // 2024-09-01 之前的其他不知道，但智谱的文生图这个肯定没用
+          if (selectedPlatform != ApiPlatform.zhipu)
+            PromptInput(
+              label: "反向提示词",
+              hintText: '画面中不想出现的内容描述词信息。通过指定用户不想看到的内容来优化输出，使模型产生更有针对性和理想的结果。',
+              controller: negativePromptController,
+              maxLines: 2,
+              minLines: 1,
+              onChanged: (text) {
+                setState(() {
+                  negativePrompt = text.trim();
+                });
+              },
+            ),
         ],
       ),
     ];

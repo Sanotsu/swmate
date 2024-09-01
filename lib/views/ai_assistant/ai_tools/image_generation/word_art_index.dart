@@ -144,13 +144,8 @@ class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
   /// 平台和模型切换后的回调
   @override
   cpModelChangedCB(ApiPlatform? cp, CusLLMSpec? llmSpec) {
+    super.cpModelChangedCB(cp, llmSpec);
     setState(() {
-      selectedPlatform = cp!;
-      selectedModelSpec = llmSpec!;
-      // 模型可供输出的图片尺寸列表、样式、预选字体也要更新
-      getSizeList();
-      selectedSize = getInitialSize();
-      getStyleList();
       selectedStyle = getInitialStyle();
       getFontNameList();
       selectedFontName = getInitialFontName();
@@ -243,7 +238,7 @@ class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
 
   /// 构建配置区域
   @override
-  List<Widget> buildConfigArea() {
+  List<Widget> buildConfigArea({bool? isOnlySize}) {
     return [
       ...super.buildConfigArea(),
 

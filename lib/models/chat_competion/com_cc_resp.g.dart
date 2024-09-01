@@ -40,7 +40,7 @@ ComCCResp _$ComCCRespFromJson(Map<String, dynamic> json) => ComCCResp(
           ?.map((e) => GLMWebSearch.fromJson(e as Map<String, dynamic>))
           .toList(),
       contentFilter: (json['content_filter'] as List<dynamic>?)
-          ?.map((e) => GLMContentFilter.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => ZhipuContentFilter.fromJson(e as Map<String, dynamic>))
           .toList(),
       cusText: json['cusText'] as String?,
     );
@@ -102,13 +102,13 @@ Map<String, dynamic> _$GLMWebSearchToJson(GLMWebSearch instance) =>
       'content': instance.content,
     };
 
-GLMContentFilter _$GLMContentFilterFromJson(Map<String, dynamic> json) =>
-    GLMContentFilter(
+ZhipuContentFilter _$ZhipuContentFilterFromJson(Map<String, dynamic> json) =>
+    ZhipuContentFilter(
       role: json['role'] as String?,
       level: (json['level'] as num?)?.toInt(),
     );
 
-Map<String, dynamic> _$GLMContentFilterToJson(GLMContentFilter instance) =>
+Map<String, dynamic> _$ZhipuContentFilterToJson(ZhipuContentFilter instance) =>
     <String, dynamic>{
       'role': instance.role,
       'level': instance.level,

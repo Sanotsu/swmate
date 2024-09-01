@@ -7,6 +7,8 @@ class PromptInput extends StatelessWidget {
   final TextEditingController controller;
   final Function(String) onChanged;
   final bool isRequired;
+  final int? maxLines;
+  final int? minLines;
 
   const PromptInput({
     super.key,
@@ -15,6 +17,8 @@ class PromptInput extends StatelessWidget {
     required this.controller,
     required this.onChanged,
     this.isRequired = false,
+    this.maxLines = 5,
+    this.minLines = 3,
   });
 
   @override
@@ -36,8 +40,8 @@ class PromptInput extends StatelessWidget {
               hintStyle: TextStyle(fontSize: 12.sp),
               border: const OutlineInputBorder(), // 添加边框
             ),
-            maxLines: 5,
-            minLines: 3,
+            maxLines: maxLines,
+            minLines: minLines,
             onChanged: onChanged,
           ),
         ],

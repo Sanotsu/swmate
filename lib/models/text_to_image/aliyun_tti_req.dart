@@ -179,6 +179,12 @@ class AliyunTtiParameter {
   @JsonKey(name: 'steps')
   int? steps;
 
+  // 指导度量值，用于在图像生成过程中调整模型的创造性与文本指导的紧密度。
+  // 较高的值会使得生成的图像更忠于文本提示，但可能减少多样性；
+  // 较低的值则允许更多创造性，增加图像变化。默认值为3.5。
+  @JsonKey(name: 'guidance')
+  double? guidance;
+
   /// 2024-08-20 阿里云的 wordArt 锦书创意文字，额外的参数栏位(n是需要的)
   /// 文字纹理、文字变形、百家姓生成各自参数还不一样
   // 生成的图片短边的长度，默认为704，取值范围为[512, 1024]，
@@ -207,6 +213,7 @@ class AliyunTtiParameter {
     this.strength,
     this.refMode,
     this.steps,
+    this.guidance,
   });
 
   AliyunTtiParameter.wanx(

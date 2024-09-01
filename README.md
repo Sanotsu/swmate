@@ -140,6 +140,10 @@ dart run build_runner build --delete-conflicting-outputs
 
 - fix: 修正了本地数据全量备份恢复不完整的问题；重构了大模型列表数据，以及其他细节问题。
 
+#### 2024-09-01
+
+- feat: 添加了智谱 AI 的 CogView 文生图的接口；添加了之前部分文生图模型可以设定高级选项。
+
 ### todo:
 
 - （done）得到流式响应的数据的处理都非常相似，可以抽出来公共函数

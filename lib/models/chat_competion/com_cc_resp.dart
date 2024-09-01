@@ -134,7 +134,7 @@ class ComCCResp {
 
   // 返回内容安全的相关信息。
   @JsonKey(name: 'content_filter')
-  List<GLMContentFilter>? contentFilter;
+  List<ZhipuContentFilter>? contentFilter;
 
   /// 2024-08-13 因为响应体目前只是用来接收API响应，所以暂时把所有平台的栏位放在一起即可
   ComCCResp({
@@ -333,28 +333,28 @@ class GLMWebSearch {
 
 /// GLM 返回内容安全的相关信息。
 @JsonSerializable(explicitToJson: true)
-class GLMContentFilter {
+class ZhipuContentFilter {
   // 安全生效环节，包括 role = assistant 模型推理，
   // role = user 用户输入，role = history 历史上下文，role = search 联网搜索
   String? role;
   // 严重程度 level 0-3，level 0表示最严重，3表示轻微
   int? level;
 
-  GLMContentFilter({
+  ZhipuContentFilter({
     this.role,
     this.level,
   });
 
   // 从字符串转
-  factory GLMContentFilter.fromRawJson(String str) =>
-      GLMContentFilter.fromJson(json.decode(str));
+  factory ZhipuContentFilter.fromRawJson(String str) =>
+      ZhipuContentFilter.fromJson(json.decode(str));
   // 转为字符串
   String toRawJson() => json.encode(toJson());
 
-  factory GLMContentFilter.fromJson(Map<String, dynamic> srcJson) =>
-      _$GLMContentFilterFromJson(srcJson);
+  factory ZhipuContentFilter.fromJson(Map<String, dynamic> srcJson) =>
+      _$ZhipuContentFilterFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$GLMContentFilterToJson(this);
+  Map<String, dynamic> toJson() => _$ZhipuContentFilterToJson(this);
 }
 
 ///

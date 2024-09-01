@@ -105,7 +105,7 @@ commonHintDialog(
         title: Text(title),
         content: Text(
           message,
-          style: TextStyle(fontSize: msgFontSize ?? 12.sp),
+          style: TextStyle(fontSize: msgFontSize ?? 14.sp),
         ),
         actions: [
           TextButton(

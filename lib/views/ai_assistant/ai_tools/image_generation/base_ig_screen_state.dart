@@ -74,11 +74,69 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
   // 被选中的风格
   String selectedStyle = "";
 
+  /// 下面主要是文生图的高级选项相关参数
+  // 不同的模型，这两个值的取值范围不同，lighting和turbo会小很多
+  // 但这个取值范围就不设为API参数支持了，而设置成体验中心的那个
+  List lightingCus = [
+    CusLLM.siliconCloud_StableDiffusionXL_Lighting_ITI,
+    CusLLM.siliconCloud_StableDiffusionXL_Lighting_TTI,
+  ];
+
+  List turborCus = [
+    CusLLM.siliconCloud_StableDiffusion_Turbo_TTI,
+    CusLLM.siliconCloud_StableDiffusionXL_Turbo_TTI,
+  ];
+
+  // 初始值也不太一样
+  double inferenceStepsValue = 1;
+  double guidanceScaleValue = 1;
+
+  double initInferenceSteps() {
+    return lightingCus.contains(selectedModelSpec.cusLlm)
+        ? 1
+        : turborCus.contains(selectedModelSpec.cusLlm)
+            ? 2
+            : 25;
+  }
+
+  double getInferenceSteps() {
+    return lightingCus.contains(selectedModelSpec.cusLlm)
+        ? 4
+        : turborCus.contains(selectedModelSpec.cusLlm)
+            ? 10
+            : 50;
+  }
+
+  double initGuidanceScale() {
+    return (lightingCus + turborCus).contains(selectedModelSpec.cusLlm)
+        ? 1
+        : 7.5;
+  }
+
+  double getGuidanceScale() {
+    return (lightingCus + turborCus).contains(selectedModelSpec.cusLlm)
+        ? 2
+        : 20;
+  }
+
+  bool _isExpanded = false;
+  final TextEditingController seedController = TextEditingController();
+
+  void _generateRandomSeed() {
+    setState(() {
+      seedController.text = (Random().nextInt(4000000000)).toString();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
 
     initCommonState();
+
+    inferenceStepsValue = initInferenceSteps();
+    guidanceScaleValue = initGuidanceScale();
+    _generateRandomSeed();
 
     WidgetsBinding.instance.addObserver(this);
   }
@@ -146,7 +204,23 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
 
   // 平台和模型选择切换后的回调
   // tti和wordard要执行的不一样
-  cpModelChangedCB(ApiPlatform? cp, CusLLMSpec? llmSpec);
+  cpModelChangedCB(ApiPlatform? cp, CusLLMSpec? llmSpec) {
+    setState(() {
+      selectedPlatform = cp!;
+      selectedModelSpec = llmSpec!;
+      // 模型可供输出的图片尺寸列表、样式、预选字体也要更新
+      getSizeList();
+      selectedSize = getInitialSize();
+      getStyleList();
+      selectedStyle = getInitialStyle();
+
+      // 高级选项的重置
+      getInferenceSteps();
+      getGuidanceScale();
+      inferenceStepsValue = initInferenceSteps();
+      guidanceScaleValue = initGuidanceScale();
+    });
+  }
 
   // 文生图页面的标题
   String getAppBarTitle();
@@ -347,6 +421,99 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
     // );
   }
 
+  Widget _buildPanel() {
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: ExpansionTile(
+        title: const Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [Text('高级选项')],
+        ),
+        initiallyExpanded: _isExpanded,
+        onExpansionChanged: (bool expanded) {
+          setState(() {
+            _isExpanded = expanded;
+          });
+        },
+        children: [
+          // 2024-09-01 虽然seed这里有了，但是没有作为参数，感觉用处不大
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: seedController,
+                  decoration: const InputDecoration(labelText: 'Seed'),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.casino),
+                onPressed: _generateRandomSeed,
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              const Text('Inference Steps:'),
+              Tooltip(
+                // ？？？改为tap不显示
+                // triggerMode: TooltipTriggerMode.tap,
+                showDuration: const Duration(seconds: 5),
+                message:
+                    'Number of inference/sampling steps . More steps produce higher quality but take longer.',
+                child: IconButton(
+                  icon: const Icon(Icons.info),
+                  onPressed: () {},
+                ),
+              ),
+              Text(inferenceStepsValue.toStringAsFixed(0)),
+            ],
+          ),
+          Slider(
+            value: inferenceStepsValue,
+            min: 1,
+            max: getInferenceSteps(),
+            divisions: (getInferenceSteps() - 1).toInt(),
+            label: inferenceStepsValue.toStringAsFixed(0),
+            onChanged: (value) {
+              setState(() {
+                inferenceStepsValue = value;
+              });
+            },
+          ),
+          Row(
+            children: [
+              const Text('Guidance Scale:'),
+              Tooltip(
+                showDuration: const Duration(seconds: 5),
+                message:
+                    'Classifier Free Guidance. How close you want the model to stick to your prompt when looking for a related image to show you.',
+                child: IconButton(
+                  icon: const Icon(Icons.info),
+                  onPressed: () {},
+                ),
+              ),
+              Text(guidanceScaleValue.toStringAsFixed(1)),
+            ],
+          ),
+          Slider(
+            value: guidanceScaleValue,
+            min: 1,
+            max: getGuidanceScale(),
+            divisions: ((getGuidanceScale() - 1) * 5).toInt(),
+            label: guidanceScaleValue.toStringAsFixed(1),
+            onChanged: (value) {
+              print("xxxxxxxxxxxxxxxxxxx$value");
+
+              setState(() {
+                guidanceScaleValue = value;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -421,6 +588,9 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
                     /// 文生图配置折叠栏
                     ...buildConfigArea(),
 
+                    // 2024-09-01 之前的其他不知道，但智谱的文生图这个肯定没用
+                    if (selectedPlatform != ApiPlatform.zhipu) _buildPanel(),
+
                     /// 文生图的结果
                     if (rstImageUrls.isNotEmpty) ...buildImageResult(),
                   ],
@@ -439,7 +609,7 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
 
   /// 构建文生图的配置区域
   /// 这两个是都用的，其他不同的子类去重载
-  List<Widget> buildConfigArea() {
+  List<Widget> buildConfigArea({bool? isOnlySize}) {
     return [
       /// 平台和模型选择
       CusPlatformAndLlmRow(
@@ -452,14 +622,16 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
       ),
 
       /// 尺寸、张数选择
-      SizeAndNumArea(
-        selectedSize: selectedSize,
-        selectedNum: selectedNum,
-        sizeList: getSizeList(),
-        numList: ImageNumList,
-        onSizeChanged: (val) => setState(() => selectedSize = val),
-        onNumChanged: (val) => setState(() => selectedNum = val),
-      ),
+
+      if (isOnlySize != false)
+        SizeAndNumArea(
+          selectedSize: selectedSize,
+          selectedNum: selectedNum,
+          sizeList: getSizeList(),
+          numList: ImageNumList,
+          onSizeChanged: (val) => setState(() => selectedSize = val),
+          onNumChanged: (val) => setState(() => selectedNum = val),
+        ),
     ];
   }
 

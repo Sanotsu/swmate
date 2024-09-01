@@ -46,7 +46,7 @@ class _UserAndSettingsState extends State<UserAndSettings> {
   // 长按5秒启动作者测试的模型(但是付费的还是用不了，没有加载作者的密钥)
   Timer? _timer;
   void _startTimer() {
-    _timer = Timer(const Duration(seconds: 5), () async {
+    _timer = Timer(const Duration(seconds: 3), () async {
       await testInitModelAndSysRole(SELF_MODELS);
       EasyLoading.showInfo("已启用作者的测试模型列表");
     });

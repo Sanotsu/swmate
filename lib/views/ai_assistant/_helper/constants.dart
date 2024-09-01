@@ -57,6 +57,16 @@ final ImageNumList = [1, 2, 3, 4];
 //   '768*1152',
 // ];
 
+var ZHIPU_CogViewSizeList = [
+  "1024x1024",
+  "768x1344",
+  "864x1152",
+  "1344x768",
+  "1152x864",
+  "1440x720",
+  "720x1440",
+];
+
 // siliconflow平台文生图参数
 var SF_ImageSizeList = [
   "512x512",

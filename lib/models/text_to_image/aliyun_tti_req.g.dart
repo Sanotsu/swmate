@@ -59,6 +59,7 @@ AliyunTtiParameter _$AliyunTtiParameterFromJson(Map<String, dynamic> json) =>
       strength: (json['strength'] as num?)?.toDouble(),
       refMode: json['ref_mode'] as String?,
       steps: (json['steps'] as num?)?.toInt(),
+      guidance: (json['guidance'] as num?)?.toDouble(),
     )
       ..imageShortSize = (json['image_short_size'] as num?)?.toInt()
       ..alphaChannel = json['alpha_channel'] as bool?
@@ -75,6 +76,7 @@ Map<String, dynamic> _$AliyunTtiParameterToJson(AliyunTtiParameter instance) =>
       'strength': instance.strength,
       'ref_mode': instance.refMode,
       'steps': instance.steps,
+      'guidance': instance.guidance,
       'image_short_size': instance.imageShortSize,
       'alpha_channel': instance.alphaChannel,
       'font_name': instance.fontName,

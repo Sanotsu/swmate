@@ -13,6 +13,8 @@ class SizeAndNumArea extends StatelessWidget {
   final List<int> numList;
   final Function(dynamic) onSizeChanged;
   final Function(dynamic) onNumChanged;
+  // 很多文生图不支持多个图片生成，所以放这个数量就会有干扰
+  final bool? isOnlySize;
 
   const SizeAndNumArea({
     super.key,
@@ -22,6 +24,7 @@ class SizeAndNumArea extends StatelessWidget {
     required this.numList,
     required this.onSizeChanged,
     required this.onNumChanged,
+    this.isOnlySize = false,
   });
 
   @override
@@ -42,15 +45,16 @@ class SizeAndNumArea extends StatelessWidget {
             ),
           ),
           SizedBox(width: 5.sp),
-          Expanded(
-            child: SizeAndNumSelector(
-              label: "数量",
-              selectedValue: selectedNum,
-              items: numList,
-              onChanged: onNumChanged,
-              itemToString: (item) => item.toString(),
+          if (isOnlySize == false)
+            Expanded(
+              child: SizeAndNumSelector(
+                label: "数量",
+                selectedValue: selectedNum,
+                items: numList,
+                onChanged: onNumChanged,
+                itemToString: (item) => item.toString(),
+              ),
             ),
-          ),
           SizedBox(width: 5.sp),
         ],
       ),
