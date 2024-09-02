@@ -77,7 +77,10 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           SKN.xfyunAppId.name: jsonData[SKN.xfyunAppId.name] ?? "",
           SKN.xfyunApiSecret.name: jsonData[SKN.xfyunApiSecret.name] ?? "",
           SKN.xfyunApiKey.name: jsonData[SKN.xfyunApiKey.name] ?? "",
-          SKN.xfyunApiPassword.name: jsonData[SKN.xfyunApiPassword.name] ?? "",
+          SKN.xfyunSparkLiteApiPassword.name:
+              jsonData[SKN.xfyunSparkLiteApiPassword.name] ?? "",
+          SKN.xfyunSparkProApiPassword.name:
+              jsonData[SKN.xfyunSparkProApiPassword.name] ?? "",
           SKN.siliconFlowAK.name: jsonData[SKN.siliconFlowAK.name] ?? "",
           SKN.lingyiwanwuAK.name: jsonData[SKN.lingyiwanwuAK.name] ?? "",
           SKN.zhipuAK.name: jsonData[SKN.zhipuAK.name] ?? "",
@@ -143,8 +146,10 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           SKN.xfyunAppId.name: temp?[SKN.xfyunAppId.name]?.value ?? "",
           SKN.xfyunApiSecret.name: temp?[SKN.xfyunApiSecret.name]?.value ?? "",
           SKN.xfyunApiKey.name: temp?[SKN.xfyunApiKey.name]?.value ?? "",
-          SKN.xfyunApiPassword.name:
-              temp?[SKN.xfyunApiPassword.name]?.value ?? "",
+          SKN.xfyunSparkLiteApiPassword.name:
+              temp?[SKN.xfyunSparkLiteApiPassword.name]?.value ?? "",
+          SKN.xfyunSparkProApiPassword.name:
+              temp?[SKN.xfyunSparkProApiPassword.name]?.value ?? "",
           SKN.siliconFlowAK.name: temp?[SKN.siliconFlowAK.name]?.value ?? "",
           SKN.lingyiwanwuAK.name: temp?[SKN.lingyiwanwuAK.name]?.value ?? "",
           SKN.zhipuAK.name: temp?[SKN.zhipuAK.name]?.value ?? "",
@@ -324,7 +329,10 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
                 buildField(SKN.xfyunAppId.name, "科大讯飞 APP ID"),
                 buildField(SKN.xfyunApiSecret.name, "科大讯飞 API SECRET"),
                 buildField(SKN.xfyunApiKey.name, "科大讯飞 API Key"),
-                buildField(SKN.xfyunApiPassword.name, "科大讯飞 API PASSWORD"),
+                buildField(SKN.xfyunSparkLiteApiPassword.name,
+                    "科大讯飞 Spark Lite API PASSWORD"),
+                buildField(SKN.xfyunSparkProApiPassword.name,
+                    "科大讯飞 Spark Pro API PASSWORD"),
               ],
             ),
           ),

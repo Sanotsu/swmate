@@ -30,9 +30,9 @@ class ChatHistoryDrawer extends StatelessWidget {
         children: <Widget>[
           SizedBox(
             // 调整DrawerHeader的高度
-            height: 100.sp,
+            height: 60.sp,
             child: DrawerHeader(
-              decoration: const BoxDecoration(color: Colors.lightGreen),
+              // decoration: BoxDecoration(color: Colors.lightBlue[50]),
               child: Center(
                 child: Text(
                   '最近对话',
@@ -60,6 +60,7 @@ class ChatHistoryDrawer extends StatelessWidget {
                 ),
               )
               .toList()),
+          if (chatHistory.isEmpty) const Center(child: Text("暂无数据"))
         ],
       ),
     );

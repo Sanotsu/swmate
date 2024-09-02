@@ -38,7 +38,7 @@ class _SystemPromptIndexState extends State<SystemPromptIndex> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "系统角色配置",
+          "系统角色列表",
         ),
         actions: [
           IconButton(

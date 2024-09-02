@@ -46,9 +46,17 @@ Future<List<CusLLMSpec>> fetchCusLLMSpecList(LLModelType targetType) async {
     llmSpecList.addAll(
         tempList.where((s) => s.platform == ApiPlatform.tencent && !s.isFree));
   }
-  if (getUserKey(SKN.xfyunApiPassword.name) != null) {
-    llmSpecList.addAll(
-        tempList.where((s) => s.platform == ApiPlatform.xfyun && !s.isFree));
+  // 2024-09-02 讯飞每个模型的API密钥还不一样
+
+  // if (getUserKey(SKN.xfyunSparkLiteApiPassword.name) != null) {
+  // lite 已经在免费的时候加过了，有密钥也不做什么
+  // llmSpecList.removeWhere((s) => s.cusLlm == CusLLM.xfyun_Spark_Lite);
+  // llmSpecList
+  //     .addAll(tempList.where((s) => s.cusLlm == CusLLM.xfyun_Spark_Lite));
+  // }
+  if (getUserKey(SKN.xfyunSparkProApiPassword.name) != null) {
+    llmSpecList
+        .addAll(tempList.where((s) => s.cusLlm == CusLLM.xfyun_Spark_Pro));
   }
   if (getUserKey(SKN.siliconFlowAK.name) != null) {
     llmSpecList.addAll(tempList

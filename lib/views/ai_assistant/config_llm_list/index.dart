@@ -21,6 +21,8 @@ class _ModelListIndexState extends State<ModelListIndex> {
   List<CusLLMSpec> cusLlmSpecs = [];
   List<ApiPlatform> platList = [];
 
+  List<bool> selectedRows = [];
+
   @override
   void initState() {
     getCusLLMSpecs();
@@ -47,6 +49,31 @@ class _ModelListIndexState extends State<ModelListIndex> {
       cusLlmSpecs = tempList;
 
       platList = cusLlmSpecs.map((spec) => spec.platform).toSet().toList();
+
+      // 一开始所有行都是未选中的
+      selectedRows = List.filled(cusLlmSpecs.length, false);
+    });
+  }
+
+  // 点击行选中框时改变状态
+  void toggleSelection(int index) {
+    setState(() {
+      selectedRows[index] = !selectedRows[index];
+    });
+  }
+
+  // 点击删除时删除选中的模型
+  void deleteSelectedRows() async {
+    // 删除选中的模型
+    for (int i = selectedRows.length - 1; i >= 0; i--) {
+      if (selectedRows[i]) {
+        await dbHelper.deleteCusLLMSpecById(cusLlmSpecs[i].cusLlmSpecId!);
+      }
+    }
+
+    // 重新加载
+    setState(() {
+      getCusLLMSpecs();
     });
   }
 
@@ -92,7 +119,7 @@ class _ModelListIndexState extends State<ModelListIndex> {
         child: Column(
           children: [
             Container(
-              height: 70.sp,
+              height: 120.sp,
               margin: EdgeInsets.fromLTRB(20, 0, 10.sp, 0.sp),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -113,6 +140,15 @@ class _ModelListIndexState extends State<ModelListIndex> {
                     ),
                   ),
                   Divider(height: 10.sp, thickness: 1.sp),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: deleteSelectedRows,
+                        child: const Text('删除选中的模型'),
+                      )
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -180,9 +216,10 @@ class _ModelListIndexState extends State<ModelListIndex> {
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(1),
-        1: FlexColumnWidth(2),
+        1: FlexColumnWidth(1),
         2: FlexColumnWidth(2),
-        3: FlexColumnWidth(7),
+        3: FlexColumnWidth(2),
+        4: FlexColumnWidth(6),
       },
       // border: TableBorder.all(),
       children: [
@@ -191,6 +228,9 @@ class _ModelListIndexState extends State<ModelListIndex> {
             color: Colors.grey[300],
           ),
           children: const [
+            TableCell(
+              child: SizedBox(),
+            ),
             TableCell(
               child: Center(
                 child: Text(
@@ -233,30 +273,28 @@ class _ModelListIndexState extends State<ModelListIndex> {
             ),
             children: <TableCell>[
               TableCell(
-                child: Padding(
-                  padding: EdgeInsets.all(5.sp),
-                  child: Center(child: Text('${index + 1}')),
+                child: Checkbox(
+                  value: selectedRows[index],
+                  onChanged: (value) => toggleSelection(index),
                 ),
               ),
               TableCell(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5.sp),
-                  child: Center(
-                    child: Text(CP_NAME_MAP[cusLlmSpecs[index].platform] ?? ""),
-                  ),
+                verticalAlignment: TableCellVerticalAlignment.middle,
+                child: Center(child: Text('${index + 1}')),
+              ),
+              TableCell(
+                verticalAlignment: TableCellVerticalAlignment.middle,
+                child: Center(
+                  child: Text(CP_NAME_MAP[cusLlmSpecs[index].platform] ?? ""),
                 ),
               ),
               TableCell(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5.sp),
-                  child: Center(child: Text(cusLlmSpecs[index].modelType.name)),
-                ),
+                verticalAlignment: TableCellVerticalAlignment.middle,
+                child: Center(child: Text(cusLlmSpecs[index].modelType.name)),
               ),
               TableCell(
-                child: Padding(
-                  padding: EdgeInsets.all(5.sp),
-                  child: Text(cusLlmSpecs[index].name),
-                ),
+                verticalAlignment: TableCellVerticalAlignment.middle,
+                child: Text(cusLlmSpecs[index].name),
               ),
             ],
           ),

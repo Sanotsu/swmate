@@ -55,12 +55,15 @@ class _IGVGHistoryScreenState extends State<IGVGHistoryScreen> {
       appBar: AppBar(
         title: Text('${widget.lable}历史记录'),
       ),
-      body: ListView.builder(
-        itemCount: imageGenerationHistory.length,
-        itemBuilder: (context, index) {
-          return buildGestureItems(imageGenerationHistory[index], context);
-        },
-      ),
+      body: imageGenerationHistory.isEmpty
+          ? const Center(child: Text("暂无数据"))
+          : ListView.builder(
+              itemCount: imageGenerationHistory.length,
+              itemBuilder: (context, index) {
+                return buildGestureItems(
+                    imageGenerationHistory[index], context);
+              },
+            ),
     );
   }
 

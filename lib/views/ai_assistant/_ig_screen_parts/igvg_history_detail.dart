@@ -230,8 +230,7 @@ class _IGVGHistoryDetailState extends State<IGVGHistoryDetail> {
             _buildTableRow("创建时间",
                 DateFormat(constDatetimeFormat).format(currentIgvg.gmtCreate)),
 
-            _buildTableRow("正向提示词",
-                currentIgvg.prompt + currentIgvg.prompt + currentIgvg.prompt),
+            _buildTableRow("正向提示词", currentIgvg.prompt),
             _buildTableRow("反向提示词", currentIgvg.negativePrompt ?? ""),
             _buildTableRow("参考图地址", currentIgvg.refImageUrls?.join(",") ?? ""),
           ],

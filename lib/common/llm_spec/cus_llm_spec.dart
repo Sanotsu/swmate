@@ -85,6 +85,9 @@ enum CusLLM {
 
   /// 讯飞的星火大模型轻量版
   xfyun_Spark_Lite,
+  // 讯飞付费大模型
+  xfyun_Spark_Pro,
+
   // 讯飞云文生图就是图片生成，没什么特别名字
   xfyun_TTI,
 

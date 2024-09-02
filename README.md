@@ -147,6 +147,7 @@ dart run build_runner build --delete-conflicting-outputs
 #### 2024-09-02
 
 - feat: 添加了智谱 AI 的 CogVideoX 文生视频的功能页面；重构了文生图文生视频的历史记录详情页面。
+- feat: 添加了讯飞的 Spark Pro 接口;添加了模型列表可多选删除;文档和图片解读每个问答完成自动导出 pdf;fix:一些细节。
 
 ### todo:
 

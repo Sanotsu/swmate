@@ -73,6 +73,7 @@ const _$CusLLMEnumMap = {
   CusLLM.tencent_Hunyuan_Vision: 'tencent_Hunyuan_Vision',
   CusLLM.zhipu_GLM4_Flash: 'zhipu_GLM4_Flash',
   CusLLM.xfyun_Spark_Lite: 'xfyun_Spark_Lite',
+  CusLLM.xfyun_Spark_Pro: 'xfyun_Spark_Pro',
   CusLLM.xfyun_TTI: 'xfyun_TTI',
   CusLLM.aliyun_Wanx_v1_TTI: 'aliyun_Wanx_v1_TTI',
   CusLLM.aliyun_Flux_Merged_TTI: 'aliyun_Flux_Merged_TTI',

@@ -22,11 +22,11 @@ class LoadingOverlay {
                 const CircularProgressIndicator(color: Colors.white),
                 SizedBox(height: 10.sp),
                 Text(
-                  "图片生成中",
+                  "图片或视频生成中",
                   style: TextStyle(fontSize: 16.sp, color: Colors.white),
                 ),
                 Text(
-                  "请耐心等待几秒钟",
+                  "请耐心等待一会儿",
                   style: TextStyle(fontSize: 16.sp, color: Colors.white),
                 ),
                 Text(

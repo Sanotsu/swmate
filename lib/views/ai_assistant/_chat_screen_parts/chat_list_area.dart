@@ -145,7 +145,7 @@ class _ChatListAreaState extends State<ChatListArea> {
     );
   }
 
-  // 保存最后一条对话和图片(2024-08-13 目前就拍照翻译会用到)
+  // 保存最后一条对话和图片(2024-08-13 目前就图片解读会用到)
   buildDLPopupMenuButton() {
     return PopupMenuButton<String>(
       icon: Icon(Icons.download_outlined, size: 20.sp),
@@ -156,10 +156,24 @@ class _ChatListAreaState extends State<ChatListArea> {
         // 处理选中的菜单项
         // 之前还有个预览页面，现在直接保存了
         if (value == 'txt') {
-          saveMarkdownAsTxt(widget.messages.last.content);
+          saveMarkdownAsTxt(
+            // widget.messages.last.content,
+            widget.messages
+                .map((e) => e.role == "assistant"
+                    ? "【输出】 ${e.content}"
+                    : "【输入】 ${e.content}")
+                .toList()
+                .join("\n\n"),
+          );
         } else if (value == 'pdf') {
           saveMarkdownHtmlAsPdf(
-            widget.messages.last.content,
+            // widget.messages.last.content,
+            widget.messages
+                .map((e) => e.role == "assistant"
+                    ? "【输出】 ${e.content}"
+                    : "【输入】 ${e.content}")
+                .toList()
+                .join("\n\n"),
             widget.selectedImage!,
           );
         } else {
@@ -173,7 +187,12 @@ class _ChatListAreaState extends State<ChatListArea> {
           //   ),
           // );
           saveMarkdownAsPdf(
-            widget.messages.last.content,
+            widget.messages
+                .map((e) => e.role == "assistant"
+                    ? "【输出】 ${e.content}"
+                    : "【输入】 ${e.content}")
+                .toList()
+                .join("\n\n"),
             widget.selectedImage!,
           );
         }

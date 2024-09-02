@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path/path.dart' as path;
+import 'package:toggle_switch/toggle_switch.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../apis/chat_completion/common_cc_apis.dart';
@@ -51,7 +52,7 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
   // AI是否在思考中(如果是，则不允许再次发送)
   bool isBotThinking = false;
 
-  bool isStream = false;
+  bool isStream = true;
 
   ///============
 
@@ -352,20 +353,6 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
       appBar: AppBar(
         title: const Text('智能群聊'),
         actions: [
-          // 只有选中的模型仅2个时才支持对战模式
-          if (_selectedItems.length == 2)
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  isBattleMode = !isBattleMode;
-                });
-              },
-              icon: Icon(
-                Icons.compare,
-                // 如果已经是对战模式，则为蓝色；如果不是对战模式，用默认颜色，表示可以开启对战模式
-                color: isBattleMode ? Colors.blue : null,
-              ),
-            ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: messages.isNotEmpty
@@ -403,7 +390,6 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
               });
             },
           ),
-
           Builder(
             builder: (BuildContext context) {
               return IconButton(
@@ -445,10 +431,6 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      Text(
-                        "选中的模型\n可横向滚动",
-                        style: TextStyle(fontSize: 10.sp),
-                      ),
                       SizedBox(width: 10.sp),
                       Wrap(
                         direction: Axis.horizontal,
@@ -467,6 +449,48 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
                   ),
                 ),
               ),
+            ),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(width: 20.sp),
+                Expanded(
+                  child: Text(
+                    "可横向滚动查看选中模型",
+                    style: TextStyle(fontSize: 13.sp),
+                  ),
+                ),
+                // 只有选中的模型仅2个时才支持对战模式
+                if (_selectedItems.length == 2)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.sp),
+                    child: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          isBattleMode = !isBattleMode;
+                        });
+                      },
+                      icon: Icon(
+                        Icons.compare,
+                        // 如果已经是对战模式，则为蓝色；如果不是对战模式，用默认颜色，表示可以开启对战模式
+                        color: isBattleMode ? Colors.blue : null,
+                      ),
+                    ),
+                  ),
+                ToggleSwitch(
+                  minHeight: 30.sp,
+                  minWidth: 48.sp,
+                  fontSize: 13.sp,
+                  cornerRadius: 5.sp,
+                  initialLabelIndex: isStream == true ? 0 : 1,
+                  totalSwitches: 2,
+                  labels: const ['分段', '直出'],
+                  onToggle: (index) =>
+                      setState(() => isStream = index == 0 ? true : false),
+                ),
+                SizedBox(width: 5.sp),
+              ],
             ),
 
             Divider(height: 1.sp),

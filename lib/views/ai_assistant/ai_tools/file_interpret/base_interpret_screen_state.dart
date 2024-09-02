@@ -27,6 +27,8 @@ import '../../_componets/cus_toggle_button_selector.dart';
 import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
 import '../../_helper/constants.dart';
 import '../../_helper/handle_cc_response.dart';
+import '../../_helper/save_markdown_as_pdf.dart';
+import '../../_helper/save_markdown_as_txt.dart';
 
 abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
   final DBHelper dbHelper = DBHelper();
@@ -247,6 +249,27 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
               csMsg = null;
               isBotThinking = false;
             });
+
+            if (getDocContent().isNotEmpty) {
+              saveMarkdownAsTxt(
+                // widget.messages.last.content,
+                "【文档】\n\n${getDocContent()}\n\n【问答】\n\n${messages.map((e) => e.role == "assistant" ? "【输出】 ${e.content}" : "【输入】 ${e.content}").toList().join("\n\n")}",
+              );
+            }
+
+            if (getSelectedImage() != null) {
+              // saveMarkdownHtmlAsPdf
+              saveMarkdownAsPdf(
+                // widget.messages.last.content,
+                messages
+                    .map((e) => e.role == "assistant"
+                        ? "【输出】 ${e.content}"
+                        : "【输入】 ${e.content}")
+                    .toList()
+                    .join("\n\n"),
+                getSelectedImage()!,
+              );
+            }
           },
           setIsResponsing: () {
             setState(() {

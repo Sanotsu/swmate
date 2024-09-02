@@ -457,10 +457,24 @@ Future<StreamWithCancel<ComCCResp>> xfyunCCRespWithCancel(
 
   var body = ComCCReq.xfyun(model: model, messages: messages, stream: stream);
 
+  var ak = "";
+
+  if (model ==
+      specs.firstWhere((e) => e.cusLlm == CusLLM.xfyun_Spark_Lite).model) {
+    ak = getStoredUserKey(
+      SKN.xfyunSparkLiteApiPassword.name,
+      XUNFEI_SPARK_LITE_API_PASSWORD,
+    );
+  } else if (model ==
+      specs.firstWhere((e) => e.cusLlm == CusLLM.xfyun_Spark_Pro).model) {
+    ak = getStoredUserKey(
+      SKN.xfyunSparkProApiPassword.name,
+      XUNFEI_SPARK_PRO_API_PASSWORD,
+    );
+  }
   var header = {
     "Content-Type": "application/json",
-    "Authorization":
-        "Bearer ${getStoredUserKey(SKN.xfyunApiPassword.name, XUNFEI_API_PASSWORD)}",
+    "Authorization": "Bearer $ak",
   };
 
   return getSseCcResponse(
