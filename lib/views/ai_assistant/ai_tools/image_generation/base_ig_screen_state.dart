@@ -17,11 +17,12 @@ import '../../../../models/text_to_image/aliyun_tti_resp.dart';
 import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
 import '../../_componets/cus_system_prompt_modal.dart';
+import '../../_helper/tools.dart';
 import '../../_ig_screen_parts/ig_button_row_area.dart';
 import '../../_helper/constants.dart';
 import '../../_componets/loading_overlay.dart';
 import '../../_ig_screen_parts/size_and_num_selector.dart';
-import '../../_ig_screen_parts/ig_history_screen.dart';
+import '../../_ig_screen_parts/igvg_history_screen.dart';
 
 ///
 /// 文生图、图生图大体结构是一样的，不再单独出来，统一为IG(Image Generation)
@@ -286,6 +287,22 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
     // 如阿里云这种先生成任务后查询状态的，就需要保存任务编号；直接返回结果的就存null即可
     String? taskId;
 
+    // 初始化的文生图的历史记录，后面根据不同情况进行一些修改
+    LlmIGVGResult temp = LlmIGVGResult(
+      requestId: const Uuid().v4(),
+      prompt: prompt,
+      negativePrompt: negativePrompt,
+      taskId: null,
+      isFinish: false,
+      style: selectedPlatform == ApiPlatform.aliyun
+          ? "<${WANX_StyleMap[selectedStyle]}>"
+          : '默认',
+      imageUrls: null,
+      gmtCreate: DateTime.now(),
+      llmSpec: selectedModelSpec,
+      modelType: getModelType(),
+    );
+
     // 提交文生图任务,如果不是null，则说明是阿里云先有job，再查询job状态的方式
     // 如果是null，说明是sf、讯飞这种直接返回tti结果的方式
     var jobResp = await commitImageGenerationJob();
@@ -308,30 +325,19 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
       taskId = jobResp.output.taskId;
 
       // 将job任务存入数据库，方便后续查询(比如发起调用后job成功创建，但还没有产生结果时就关闭页面了)
+      temp.requestId = jobResp.requestId;
+      temp.taskId = taskId;
 
-      AliyunTtiResp? result = await timedImageGenerationJobStatus(
+      await dbHelper.insertIGVGResultList([temp]);
+
+      // 定时查询任务状态
+      AliyunTtiResp? result = await timedImageGenerationTaskStatus(
         taskId,
         () => setState(() {
           isGenImage = false;
           LoadingOverlay.hide();
         }),
       );
-
-      await dbHelper.insertImageGenerationResultList([
-        LlmIGResult(
-          requestId: const Uuid().v4(),
-          prompt: prompt,
-          negativePrompt: negativePrompt,
-          taskId: taskId,
-          isFinish: false,
-          style: selectedPlatform == ApiPlatform.aliyun
-              ? "<${WANX_StyleMap[selectedStyle]}>"
-              : '默认',
-          imageUrls: null,
-          gmtCreate: DateTime.now(),
-          llmSpec: selectedModelSpec,
-        )
-      ]);
 
       if (!mounted) return;
       if (result?.code != null) {
@@ -363,37 +369,15 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
 
     // 正确获得文生图结果之后，将生成记录保存
     if (taskId != null) {
-      await dbHelper.updateImageGenerationResultById(
-        LlmIGResult(
-          requestId: const Uuid().v4(),
-          prompt: prompt,
-          negativePrompt: negativePrompt,
-          taskId: taskId,
-          isFinish: true,
-          style: selectedPlatform == ApiPlatform.aliyun
-              ? "<${WANX_StyleMap[selectedStyle]}>"
-              : '默认',
-          imageUrls: imageUrls,
-          gmtCreate: DateTime.now(),
-          llmSpec: selectedModelSpec,
-        ),
-      );
+      temp.isFinish = true;
+      temp.imageUrls = imageUrls;
+
+      await dbHelper.updateIGVGResultById(temp);
     } else {
-      await dbHelper.insertImageGenerationResultList([
-        LlmIGResult(
-          requestId: const Uuid().v4(),
-          prompt: prompt,
-          negativePrompt: negativePrompt,
-          taskId: null,
-          isFinish: true,
-          style: selectedPlatform == ApiPlatform.aliyun
-              ? "<${WANX_StyleMap[selectedStyle]}>"
-              : '默认',
-          imageUrls: imageUrls,
-          gmtCreate: DateTime.now(),
-          llmSpec: selectedModelSpec,
-        )
-      ]);
+      temp.taskId = null;
+      temp.isFinish = true;
+      temp.imageUrls = imageUrls;
+      await dbHelper.insertIGVGResultList([temp]);
     }
 
     if (!mounted) return;
@@ -502,8 +486,6 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
             divisions: ((getGuidanceScale() - 1) * 5).toInt(),
             label: guidanceScaleValue.toStringAsFixed(1),
             onChanged: (value) {
-              print("xxxxxxxxxxxxxxxxxxx$value");
-
               setState(() {
                 guidanceScaleValue = value;
               });
@@ -536,7 +518,7 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ImageGenerationHistoryScreen(
+                  builder: (context) => IGVGHistoryScreen(
                     lable: getHistoryLabel(),
                     modelType: getModelType(),
                   ),
@@ -592,7 +574,12 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
                     if (selectedPlatform != ApiPlatform.zhipu) _buildPanel(),
 
                     /// 文生图的结果
-                    if (rstImageUrls.isNotEmpty) ...buildImageResult(),
+                    if (rstImageUrls.isNotEmpty)
+                      ...buildImageResult(
+                        context,
+                        rstImageUrls,
+                        "${selectedPlatform.name}_${selectedModelSpec.name}",
+                      ),
                   ],
                 ),
               ),
@@ -634,95 +621,64 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
         ),
     ];
   }
-
-  /// 构建生成的图片区域
-  List<Widget> buildImageResult() {
-    return [
-      const Divider(),
-
-      /// 文生图结果提示行
-      Padding(
-        padding: EdgeInsets.all(5.sp),
-        child: Text(
-          "生成的图片(点击查看、长按保存)",
-          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-        ),
-      ),
-
-      /// 图片放一行，最多只有4张
-      SizedBox(
-        // 最多4张图片，放在一排就好(高度即四分之一的宽度左右)。在最下面留点空即可
-        height: 0.25.sw + 5.sp,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 2.sp),
-                child: buildNetworkImageViewGrid(
-                  context,
-                  rstImageUrls,
-                  crossAxisCount: 4,
-                  // 模型名有空格或斜线，等后续更新spec，用name来
-                  prefix: "${selectedPlatform.name}_${selectedModelSpec.name}",
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ];
-  }
 }
 
 // 查询阿里云文生图任务的状态
-Future<AliyunTtiResp?> timedImageGenerationJobStatus(
+Future<AliyunTtiResp?> timedImageGenerationTaskStatus(
   String taskId,
   Function onTimeOut,
 ) async {
-  bool isMaxWaitTimeExceeded = false;
-
   const maxWaitDuration = Duration(minutes: 10);
 
-  Timer timer = Timer(maxWaitDuration, () {
-    // setState(() {
-    //   isGenImage = false;
-    //   LoadingOverlay.hide();
-    // });
+  return timedTaskStatus<AliyunTtiResp>(
+    taskId,
+    onTimeOut,
+    maxWaitDuration,
+    getAliyunText2ImgJobResult,
+    (result) =>
+        result.output.taskStatus == "SUCCEEDED" ||
+        result.output.taskStatus == "FAILED",
+  );
+}
 
-    onTimeOut();
+/// 构建生成的图片区域
+List<Widget> buildImageResult(
+  BuildContext context,
+  List<String> urls,
+  String? prefix,
+) {
+  return [
+    const Divider(),
 
-    EasyLoading.showError(
-      "生成图片超时，请稍候重试！",
-      duration: const Duration(seconds: 10),
-    );
+    /// 文生图结果提示行
+    Padding(
+      padding: EdgeInsets.all(5.sp),
+      child: Text(
+        "生成的图片(点击查看、长按保存)",
+        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+      ),
+    ),
 
-    isMaxWaitTimeExceeded = true;
-
-    print('文生图任务处理耗时，状态查询终止。');
-  });
-
-  bool isRequestSuccessful = false;
-  while (!isRequestSuccessful && !isMaxWaitTimeExceeded) {
-    try {
-      var result = await getAliyunText2ImgJobResult(taskId);
-
-      var boolFlag = result.output.taskStatus == "SUCCEEDED" ||
-          result.output.taskStatus == "FAILED";
-
-      if (boolFlag) {
-        isRequestSuccessful = true;
-        print('文生图任务处理完成!');
-        timer.cancel();
-
-        return result;
-      } else {
-        print('文生图任务还在处理中，请稍候重试……');
-        await Future.delayed(const Duration(seconds: 5));
-      }
-    } catch (e) {
-      print('发生异常: $e');
-      await Future.delayed(const Duration(seconds: 5));
-    }
-  }
-  return null;
+    /// 图片放一行，最多只有4张
+    SizedBox(
+      // 最多4张图片，放在一排就好(高度即四分之一的宽度左右)。在最下面留点空即可
+      height: 0.25.sw + 5.sp,
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 2.sp),
+              child: buildNetworkImageViewGrid(
+                context,
+                urls,
+                crossAxisCount: 4,
+                // 模型名有空格或斜线，等后续更新spec，用name来
+                prefix: prefix,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  ];
 }

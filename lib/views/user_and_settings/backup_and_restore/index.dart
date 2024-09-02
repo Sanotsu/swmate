@@ -393,9 +393,9 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
           jsonMapList.map((e) => GroupChatHistory.fromMap(e)).toList(),
         );
       } else if (filename ==
-          "${SWMateDdl.tableNameOfImageGenerationHistory}.json") {
-        await _dbHelper.insertImageGenerationResultList(
-          jsonMapList.map((e) => LlmIGResult.fromMap(e)).toList(),
+          "${SWMateDdl.tableNameOfIGVGHistory}.json") {
+        await _dbHelper.insertIGVGResultList(
+          jsonMapList.map((e) => LlmIGVGResult.fromMap(e)).toList(),
         );
       } else if (filename == "${SWMateDdl.tableNameOfCusLlmSpec}.json") {
         await _dbHelper.insertCusLLMSpecList(

@@ -18,6 +18,17 @@ enum ApiPlatform {
   zhipu, // 智谱AI
 }
 
+// 模型对应的中文名
+final Map<ApiPlatform, String> CP_NAME_MAP = {
+  ApiPlatform.baidu: '百度',
+  ApiPlatform.tencent: '腾讯',
+  ApiPlatform.aliyun: '阿里',
+  ApiPlatform.siliconCloud: '硅动科技',
+  ApiPlatform.lingyiwanwu: '零一万物',
+  ApiPlatform.xfyun: '讯飞',
+  ApiPlatform.zhipu: '智谱',
+};
+
 // 大模型的分类，在不同页面可以用作模型的筛选
 enum LLModelType {
   // CC, // Chat Completions
@@ -32,15 +43,14 @@ enum LLModelType {
   ttv, // Text To Video
 }
 
-// 模型对应的中文名
-final Map<ApiPlatform, String> CP_NAME_MAP = {
-  ApiPlatform.baidu: '百度',
-  ApiPlatform.tencent: '腾讯',
-  ApiPlatform.aliyun: '阿里',
-  ApiPlatform.siliconCloud: '硅动科技',
-  ApiPlatform.lingyiwanwu: '零一万物',
-  ApiPlatform.xfyun: '讯飞',
-  ApiPlatform.zhipu: '智谱',
+// 模型类型对应的中文名
+final Map<LLModelType, String> MT_NAME_MAP = {
+  LLModelType.cc: '文本对话',
+  LLModelType.vision: '图片解读',
+  LLModelType.tti: '文本生图',
+  LLModelType.tti_word: '创意文字',
+  LLModelType.iti: '图片生图',
+  LLModelType.ttv: '文生视频',
 };
 
 ///

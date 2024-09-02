@@ -91,21 +91,27 @@ class SWMateDdl {
     """;
 
   /// 2024-06-13 新增文生图简单内容流程
-  static const tableNameOfImageGenerationHistory =
-      '${DB_TABLE_PREFIX}image_generation_history';
+  /// 2024-09-02 图片生成，视频生成都放在这里面，通过 modelType 来区分
+  /// igvi =>  Image Generation Video Generation
+  static const tableNameOfIGVGHistory = '${DB_TABLE_PREFIX}igvg_history';
 
-  static const String ddlForImageGenerationHistory = """
-    CREATE TABLE $tableNameOfImageGenerationHistory (
-      request_id      TEXT    NOT NULL,
-      prompt          TEXT    NOT NULL,
-      negative_prompt TEXT,
-      task_id         TEXT,
-      is_finish       INTEGER,
-      style           TEXT    NOT NULL,
-      image_urls      TEXT,
-      gmt_create      TEXT    NOT NULL,
-      llm_spec        TEXT    NOT NULL,
-      PRIMARY KEY(request_id)
+  static const String ddlForIGVGHistory = """
+    CREATE TABLE $tableNameOfIGVGHistory (
+      requestId           TEXT    NOT NULL,
+      prompt              TEXT    NOT NULL,
+      negativePrompt      TEXT,
+      taskId              TEXT,
+      isFinish            INTEGER,
+      style               TEXT,
+      imageUrls           TEXT,
+      videoUrls           TEXT,
+      videoCoverImageUrls TEXT,
+      refImageUrls        TEXT,
+      gmtCreate           TEXT    NOT NULL,
+      llmSpec             TEXT    NOT NULL,
+      modelType           TEXT    NOT NULL,
+ 
+      PRIMARY KEY(requestId)
     );
     """;
 

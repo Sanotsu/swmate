@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../apis/_self_model_and_system_role_list/index.dart';
+import '../../apis/_self_model_list/index.dart';
 import '../../common/components/tool_widget.dart';
 import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
@@ -20,6 +20,7 @@ import 'ai_tools/file_interpret/image_interpret.dart';
 import 'ai_tools/image_generation/iti_index.dart';
 import 'ai_tools/image_generation/tti_index.dart';
 import 'ai_tools/image_generation/word_art_index.dart';
+import 'ai_tools/video_generation/cogvideox_index.dart';
 import 'config_llm_list/index.dart';
 import 'config_system_prompt/index.dart';
 
@@ -289,6 +290,23 @@ class _AIToolIndexState extends State<AIToolIndex> {
                           cusSysRoleSpecs: cusSysRoleSpecs,
                         ),
                         roleType: LLModelType.iti,
+                      );
+                    },
+                  ),
+
+                  CustomEntranceCard(
+                    title: '文生视频',
+                    subtitle: "文本或图生成视频",
+                    icon: Icons.video_call,
+                    onTap: () async {
+                      await navigateToToolScreen(
+                        context,
+                        LLModelType.ttv,
+                        (llmSpecList, cusSysRoleSpecs) => CogVideoXScreen(
+                          llmSpecList: llmSpecList,
+                          cusSysRoleSpecs: cusSysRoleSpecs,
+                        ),
+                        roleType: LLModelType.ttv,
                       );
                     },
                   ),

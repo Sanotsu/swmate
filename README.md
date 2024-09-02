@@ -144,6 +144,10 @@ dart run build_runner build --delete-conflicting-outputs
 
 - feat: 添加了智谱 AI 的 CogView 文生图的接口；添加了之前部分文生图模型可以设定高级选项。
 
+#### 2024-09-02
+
+- feat: 添加了智谱 AI 的 CogVideoX 文生视频的功能页面；重构了文生图文生视频的历史记录详情页面。
+
 ### todo:
 
 - （done）得到流式响应的数据的处理都非常相似，可以抽出来公共函数

@@ -6,14 +6,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 ///
 class ImageGenerationButtonArea extends StatelessWidget {
   final String title;
-  final VoidCallback onReset;
+  final String? buttonLable;
+  final VoidCallback? onReset;
   final VoidCallback onGenerate;
   final bool canGenerate;
 
   const ImageGenerationButtonArea({
     super.key,
     required this.title,
-    required this.onReset,
+    this.buttonLable,
+    this.onReset,
     required this.onGenerate,
     required this.canGenerate,
   });
@@ -35,10 +37,11 @@ class ImageGenerationButtonArea extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(
-                onPressed: onReset,
-                child: const Text("还原配置"),
-              ),
+              if (onReset != null)
+                TextButton(
+                  onPressed: onReset,
+                  child: const Text("还原配置"),
+                ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(80.sp, 32.sp),
@@ -50,9 +53,9 @@ class ImageGenerationButtonArea extends StatelessWidget {
                   backgroundColor: Colors.blue,
                 ),
                 onPressed: canGenerate ? onGenerate : null,
-                child: const Text(
-                  "生成图片",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                child: Text(
+                  buttonLable ?? "生成图片",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ],

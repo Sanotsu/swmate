@@ -1,6 +1,11 @@
+// ignore_for_file: avoid_print
+
+import 'dart:async';
+
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../apis/_self_model_and_system_role_list/_self_system_role_list.dart';
+import '../../../apis/_self_system_role_list/index.dart';
 import '../../../apis/get_app_key_helper.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
@@ -100,7 +105,7 @@ Future testInitModelAndSysRole(List<CusLLMSpec> cslist) async {
 
   // 预设角色不用传，就默认的，反正都不花钱
   // 列表中没有uuid和创建时间
-  var sysroleList = DEFAULT_SysRole_LIST.map((e) {
+  var sysroleList = DEFAULT_SysRole_Prompt_LIST.map((e) {
     e.cusSysRoleSpecId = const Uuid().v4();
     e.gmtCreate = DateTime.now();
     return e;
@@ -171,4 +176,53 @@ Future testInitModelAndSysRole(List<CusLLMSpec> cslist) async {
   dbHelper.clearCusSysRoleSpecs();
   await dbHelper.insertCusSysRoleSpecList(sysroleList);
 */
+}
+
+///
+/// 通用的查询任务状态的方法
+/// 就是先提交了task，然后默认会查询task，这里就是等待查询结果的方法
+/// 2024-09-02 目前阿里云的文生图、智谱的文生视频都会用到
+Future<T?> timedTaskStatus<T>(
+  String taskId,
+  Function onTimeOut,
+  Duration maxWaitDuration,
+  Future<T> Function(String) queryTaskStatus,
+  bool Function(T) isTaskComplete,
+) async {
+  bool isMaxWaitTimeExceeded = false;
+
+  Timer timer = Timer(maxWaitDuration, () {
+    onTimeOut();
+
+    EasyLoading.showError(
+      "生成超时，请稍候重试！",
+      duration: const Duration(seconds: 5),
+    );
+
+    isMaxWaitTimeExceeded = true;
+
+    print('任务处理耗时，状态查询终止。');
+  });
+
+  bool isRequestSuccessful = false;
+  while (!isRequestSuccessful && !isMaxWaitTimeExceeded) {
+    try {
+      var result = await queryTaskStatus(taskId);
+
+      if (isTaskComplete(result)) {
+        isRequestSuccessful = true;
+        print('任务处理完成!');
+        timer.cancel();
+
+        return result;
+      } else {
+        print('任务还在处理中，请稍候重试……');
+        await Future.delayed(const Duration(seconds: 5));
+      }
+    } catch (e) {
+      print('发生异常: $e');
+      await Future.delayed(const Duration(seconds: 5));
+    }
+  }
+  return null;
 }

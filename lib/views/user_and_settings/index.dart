@@ -9,7 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_view/photo_view.dart';
 
-import '../../apis/_self_model_and_system_role_list/index.dart';
+import '../../apis/_self_model_list/index.dart';
 import '../../common/constants.dart';
 import '../../common/utils/db_tools/db_helper.dart';
 import '../../services/cus_get_storage.dart';

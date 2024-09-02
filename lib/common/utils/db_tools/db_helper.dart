@@ -63,7 +63,7 @@ class DBHelper {
     await db.transaction((txn) async {
       txn.execute(SWMateDdl.ddlForChatHistory);
       txn.execute(SWMateDdl.ddlForGroupChatHistory);
-      txn.execute(SWMateDdl.ddlForImageGenerationHistory);
+      txn.execute(SWMateDdl.ddlForIGVGHistory);
       txn.execute(SWMateDdl.ddlForCusLlmSpec);
       txn.execute(SWMateDdl.ddlForCusSySroleSpec);
       txn.execute(SWMateDdl.ddlForBillItem);
@@ -642,12 +642,14 @@ class DBHelper {
 
   ///***********************************************/
   /// AI 文生图的相关操作
+  /// 2024-09-02 文生视频也用这个
   ///
 
 // 查询所有记录
-  Future<List<LlmIGResult>> queryImageGenerationResultList({
+  Future<List<LlmIGVGResult>> queryIGVGResultList({
     String? requestId,
     String? prompt,
+    String? modelType, // 在调用处取枚举的name
   }) async {
     Database db = await database;
 
@@ -659,8 +661,13 @@ class DBHelper {
     final whereArgs = <dynamic>[];
 
     if (requestId != null) {
-      where.add('request_id = ?');
+      where.add('requestId = ?');
       whereArgs.add(requestId);
+    }
+
+    if (modelType != null) {
+      where.add('modelType = ?');
+      whereArgs.add(modelType);
     }
 
     if (prompt != null) {
@@ -669,30 +676,29 @@ class DBHelper {
     }
 
     final rows = await db.query(
-      SWMateDdl.tableNameOfImageGenerationHistory,
+      SWMateDdl.tableNameOfIGVGHistory,
       where: where.isNotEmpty ? where.join(' AND ') : null,
       whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
-      orderBy: "gmt_create DESC",
+      orderBy: "gmtCreate DESC",
     );
 
-    return rows.map((row) => LlmIGResult.fromMap(row)).toList();
+    return rows.map((row) => LlmIGVGResult.fromMap(row)).toList();
   }
 
   // 删除单条
-  Future<int> deleteImageGenerationResultById(String requestId) async =>
+  Future<int> deleteIGVGResultById(String requestId) async =>
       (await database).delete(
-        SWMateDdl.tableNameOfImageGenerationHistory,
-        where: "request_id=?",
+        SWMateDdl.tableNameOfIGVGHistory,
+        where: "requestId=?",
         whereArgs: [requestId],
       );
 
   // 新增(只有单个的时候就一个值的数组，理论上不会批量插入)
-  Future<List<Object?>> insertImageGenerationResultList(
-      List<LlmIGResult> rsts) async {
+  Future<List<Object?>> insertIGVGResultList(List<LlmIGVGResult> rsts) async {
     var batch = (await database).batch();
     for (var item in rsts) {
       batch.insert(
-        SWMateDdl.tableNameOfImageGenerationHistory,
+        SWMateDdl.tableNameOfIGVGHistory,
         item.toMap(),
       );
     }
@@ -700,12 +706,12 @@ class DBHelper {
   }
 
   // 如果先生成任务，后查询任务结果的文生图，就会在提交任务后新增记录，生成结果后修改数据
-  Future<int> updateImageGenerationResultById(LlmIGResult igRst) async =>
+  Future<int> updateIGVGResultById(LlmIGVGResult igvgRst) async =>
       (await database).update(
-        SWMateDdl.tableNameOfImageGenerationHistory,
-        igRst.toMap(),
-        where: "task_id=?",
-        whereArgs: [igRst.taskId],
+        SWMateDdl.tableNameOfIGVGHistory,
+        igvgRst.toMap(),
+        where: "taskId=?",
+        whereArgs: [igvgRst.taskId],
       );
 
   ///***********************************************/

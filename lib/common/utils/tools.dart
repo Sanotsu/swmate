@@ -281,6 +281,46 @@ saveTtiImageToLocal(String netImageUrl, {String? prefix}) async {
   // EasyLoading.showToast("图片已保存${file.path}");
 }
 
+// 保存文生视频的视频到本地
+savevgVideoToLocal(String netVideoUrl, {String? prefix}) async {
+  print("视频地址--$netVideoUrl");
+
+// 首先获取设备外部存储管理权限
+  if (!(await requestStoragePermission())) {
+    return EasyLoading.showError("未授权访问设备外部存储，无法保存图片");
+  }
+
+  try {
+    // 2024-08-17 直接保存文件到指定位置
+    if (!await LLM_VG_DIR.exists()) {
+      await LLM_VG_DIR.create(recursive: true);
+    }
+    final filePath =
+        '${LLM_VG_DIR.path}/${prefix ?? ""}${DateTime.now().microsecondsSinceEpoch}_${netVideoUrl.split('/').last}';
+
+    EasyLoading.show(status: '【视频保存中...】');
+    await Dio().download(
+      netVideoUrl,
+      filePath,
+      // options: Options(responseType: ResponseType.bytes),
+    );
+
+    EasyLoading.showToast("视频已保存在$filePath");
+  } finally {
+    EasyLoading.dismiss();
+  }
+
+  // 用这个自定义的，阿里云地址会报403错误，原因不清楚
+  // var respData = await HttpUtils.get(
+  //   path: netImageUrl,
+  //   showLoading: true,
+  //   responseType: CusRespType.bytes,
+  // );
+
+  // await file.writeAsBytes(respData);
+  // EasyLoading.showToast("图片已保存${file.path}");
+}
+
 /// 获取图片的base64编码
 Future<String?> getImageBase64String(File? image) async {
   if (image == null) return null;

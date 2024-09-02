@@ -26,6 +26,7 @@ class CogViewResp {
   // 通用错误信息
   @JsonKey(name: 'error')
   ZhipuError? error;
+
   CogViewResp({
     this.created,
     this.data,

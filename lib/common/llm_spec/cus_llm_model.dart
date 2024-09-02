@@ -251,6 +251,15 @@ class CusSysRoleSpec {
     this.sysRoleType = LLModelType.iti,
   });
 
+  CusSysRoleSpec.ttv({
+    required this.label,
+    this.subtitle,
+    required this.systemPrompt,
+    this.negativePrompt,
+    this.imageUrl,
+    this.sysRoleType = LLModelType.ttv,
+  });
+
   // 从字符串转
   factory CusSysRoleSpec.fromRawJson(String str) =>
       CusSysRoleSpec.fromJson(json.decode(str));

@@ -140,6 +140,9 @@ final CHAT_AUDIO_DIR = Directory('/storage/emulated/0/swmate/chat_audio');
 /// 所有的文生图都保存在同一个位置吧
 final LLM_TTI_DIR = Directory('/storage/emulated/0/swmate/tti');
 
+/// 所有的文生视频都保存在同一个位置
+final LLM_VG_DIR = Directory('/storage/emulated/0/swmate/vg');
+
 // 可供翻译的目标语言
 enum TargetLanguage {
   simplifiedChinese, // 中文(简体)
