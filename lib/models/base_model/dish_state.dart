@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 // 食物
 class Dish {
   String dishId; // 用uuid生成

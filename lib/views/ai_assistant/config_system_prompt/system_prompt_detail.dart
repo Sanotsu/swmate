@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -28,6 +26,8 @@ class _SystemPromptDetailState extends State<SystemPromptDetail> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool _isEditing = false;
 
+  CusSysRoleSpec? currentRole;
+
   @override
   void initState() {
     super.initState();
@@ -35,17 +35,15 @@ class _SystemPromptDetailState extends State<SystemPromptDetail> {
     // 如果没有传系统角色信息，就是新增，设为可编辑
     if (widget.sysRoleSpec == null) {
       _isEditing = true;
+    } else {
+      currentRole = widget.sysRoleSpec;
     }
   }
 
-  // 将菜品信息保存到数据库中
   _saveToDb() async {
     // 如果表单验证都通过了，保存数据到数据库，并返回上一页
     if (_formKey.currentState!.saveAndValidate()) {
       var temp = _formKey.currentState;
-
-      print(
-          "temp?.fields['sysRoleType']?.value--${temp?.fields['sysRoleType']?.value}");
 
       // 理论上这个type一定存在的
       var tempType = LLModelType.values
@@ -65,9 +63,9 @@ class _SystemPromptDetailState extends State<SystemPromptDetail> {
 
       try {
         // 有旧菜品信息就是修改；没有就是新增
-        if (widget.sysRoleSpec != null) {
+        if (currentRole != null) {
           // 修改的话要保留原本的编号
-          tempSysRole.cusSysRoleSpecId = widget.sysRoleSpec!.cusSysRoleSpecId;
+          tempSysRole.cusSysRoleSpecId = currentRole!.cusSysRoleSpecId;
 
           await _dbHelper.updateCusSysRoleSpec(tempSysRole);
         } else {
@@ -76,6 +74,8 @@ class _SystemPromptDetailState extends State<SystemPromptDetail> {
 
         setState(() {
           _isEditing = !_isEditing;
+
+          currentRole = tempSysRole;
         });
       } catch (e) {
         if (!mounted) return;
@@ -98,7 +98,7 @@ class _SystemPromptDetailState extends State<SystemPromptDetail> {
                 setState(() {
                   _isEditing = !_isEditing;
                   _formKey.currentState?.patchValue(
-                    widget.sysRoleSpec?.toMap() ?? {},
+                    currentRole?.toMap() ?? {},
                   );
                 });
               },
@@ -134,7 +134,7 @@ class _SystemPromptDetailState extends State<SystemPromptDetail> {
   buildFormBuilder() {
     return FormBuilder(
       key: _formKey,
-      initialValue: widget.sysRoleSpec?.toMap() ?? {},
+      initialValue: currentRole?.toMap() ?? {},
       // enabled: _isEditable,
       child: Column(
         children: [
@@ -144,15 +144,11 @@ class _SystemPromptDetailState extends State<SystemPromptDetail> {
             name: 'sysRoleType',
             enabled: _isEditing,
             decoration: const InputDecoration(labelText: '*适用类型'),
-            items: [
-              LLModelType.cc.name,
-              LLModelType.iti.name,
-              LLModelType.tti.name,
-            ]
+            items: LLModelType.values
                 .map((type) => DropdownMenuItem(
-                      value: type,
+                      value: type.name,
                       child: Text(
-                        type,
+                        "${MT_NAME_MAP[type]}: ${type.name}",
                         style: const TextStyle(color: Colors.green),
                       ),
                     ))
@@ -163,7 +159,7 @@ class _SystemPromptDetailState extends State<SystemPromptDetail> {
           ),
           buildField("subtitle", "简介", maxLines: 2),
           if (_isEditing) buildField("systemPrompt", "*系统提示词", maxLines: 5),
-          if (!_isEditing && widget.sysRoleSpec != null)
+          if (!_isEditing && currentRole != null)
             Padding(
               padding: EdgeInsets.all(10.sp),
               child: Column(
@@ -172,7 +168,7 @@ class _SystemPromptDetailState extends State<SystemPromptDetail> {
                   const Text("系统提示词", style: TextStyle(color: Colors.green)),
                   Divider(height: 10.sp),
                   MarkdownBody(
-                    data: widget.sysRoleSpec!.systemPrompt,
+                    data: currentRole!.systemPrompt,
                     selectable: true,
                     // styleSheet: MarkdownStyleSheet(
                     //   p: const TextStyle(color: Colors.green),

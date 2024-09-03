@@ -242,8 +242,6 @@ Future<File> saveTtiBase64ImageToLocal(
 
 // 保存文生图的图片到本地
 saveTtiImageToLocal(String netImageUrl, {String? prefix}) async {
-  print("图片地址--$netImageUrl");
-
 // 首先获取设备外部存储管理权限
   if (!(await requestStoragePermission())) {
     return EasyLoading.showError("未授权访问设备外部存储，无法保存图片");
@@ -283,11 +281,9 @@ saveTtiImageToLocal(String netImageUrl, {String? prefix}) async {
 
 // 保存文生视频的视频到本地
 savevgVideoToLocal(String netVideoUrl, {String? prefix}) async {
-  print("视频地址--$netVideoUrl");
-
 // 首先获取设备外部存储管理权限
   if (!(await requestStoragePermission())) {
-    return EasyLoading.showError("未授权访问设备外部存储，无法保存图片");
+    return EasyLoading.showError("未授权访问设备外部存储，无法保存视频");
   }
 
   try {

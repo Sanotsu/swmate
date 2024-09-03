@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print, constant_identifier_names
+// ignore_for_file: constant_identifier_names
 
 import 'dart:convert';
 import 'dart:io';
@@ -127,7 +127,7 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
 
         // 把文件从缓存的位置放到用户选择的位置
         sourceFile.copySync(p.join(selectedDirectory, zipName));
-        print('文件已成功复制到：${p.join(selectedDirectory, zipName)}');
+        debugPrint('文件已成功复制到：${p.join(selectedDirectory, zipName)}');
 
         // 删除临时zip文件
         if (sourceFile.existsSync()) {
@@ -146,13 +146,13 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
           backgroundColor: Colors.green,
         );
       } catch (e) {
-        print('保存操作出现错误: $e');
+        debugPrint('保存操作出现错误: $e');
         setState(() {
           isLoading = false;
         });
       }
     } else {
-      print('保存操作已取消');
+      debugPrint('保存操作已取消');
       return;
     }
   }
@@ -233,8 +233,8 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
       // 不允许多选，理论就是第一个文件，且不为空
       File file = File(result.files.first.path!);
 
-      print("获取的上传zip文件路径：${p.basename(file.path)}");
-      print("获取的上传zip文件路径 result： $result");
+      debugPrint("获取的上传zip文件路径：${p.basename(file.path)}");
+      debugPrint("获取的上传zip文件路径 result： $result");
 
       // 这个判断虽然不准确，但先这样
       if (p.basename(file.path).toUpperCase().startsWith(ZIP_FILE_PREFIX) &&
@@ -249,7 +249,7 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
               .map((entity) => entity as File)
               .toList();
 
-          print("解压得到的jsonFiles：$jsonFiles");
+          debugPrint("解压得到的jsonFiles：$jsonFiles");
 
           /// 删除前可以先备份一下到临时文件，避免出错后完成无法使用(最多确认恢复成功之后再删除就好了)
 
@@ -348,17 +348,17 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
           outFile = await outFile.create(recursive: true);
           await outFile.writeAsBytes(file.content);
 
-          print("解压时的outFile：$outFile");
+          debugPrint("解压时的outFile：$outFile");
         } else {
           Directory dir = Directory(filename);
           await dir.create(recursive: true);
         }
       }
-      print('解压完成');
+      debugPrint('解压完成');
 
       return tempPath;
     } catch (e) {
-      print('解压失败: $e');
+      debugPrint('解压失败: $e');
       throw Exception(e);
     }
   }
@@ -367,7 +367,7 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
   _saveJsonFileDataToDb(List<File> jsonFiles) async {
     // 解压之后获取到所有的json文件，逐个添加到数据库，会先清空数据库的数据
     for (File file in jsonFiles) {
-      print("执行json保存到db时对应的json文件：${file.path}");
+      debugPrint("执行json保存到db时对应的json文件：${file.path}");
 
       String jsonData = await file.readAsString();
       // db导出时json文件是列表
@@ -392,8 +392,7 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
         await _dbHelper.insertGroupChatList(
           jsonMapList.map((e) => GroupChatHistory.fromMap(e)).toList(),
         );
-      } else if (filename ==
-          "${SWMateDdl.tableNameOfIGVGHistory}.json") {
+      } else if (filename == "${SWMateDdl.tableNameOfIGVGHistory}.json") {
         await _dbHelper.insertIGVGResultList(
           jsonMapList.map((e) => LlmIGVGResult.fromMap(e)).toList(),
         );

@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:io';
 
 import 'package:flutter/services.dart' show rootBundle;
@@ -20,11 +18,6 @@ import '../../../common/utils/tools.dart';
 ///
 
 Future<void> saveMarkdownHtmlAsPdf(String mdString, File imageFile) async {
-  // print("传入pdf的markdown文本 --$mdString");
-
-  // 测试用
-  // mdString = await rootBundle.loadString('assets/bak_md_doc.md');
-
   var mdHtml = md.markdownToHtml(mdString);
 
   /// 这个直接下载到设备指定文件夹

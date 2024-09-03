@@ -1,13 +1,11 @@
-// ignore_for_file: avoid_print
-
 import 'dart:convert';
 
 import '../../common/utils/dio_client/cus_http_client.dart';
 import '../../common/utils/dio_client/cus_http_request.dart';
 import '../../models/text_to_image/aliyun_tti_req.dart';
 import '../../models/text_to_image/aliyun_tti_resp.dart';
-import '../_self_keys.dart';
 import '../get_app_key_helper.dart';
+import '../platform_keys.dart';
 
 ///
 /// 文生图任务提交
@@ -30,7 +28,6 @@ Future<AliyunTtiResp> commitAliyunText2ImgJob(
 }
 
 /// 锦书的路径不一样
-
 var wordartUrl = "https://dashscope.aliyuncs.com/api/v1/services/aigc/wordart/";
 
 /// 文字纹理 https://dashscope.aliyuncs.com/api/v1/services/aigc/wordart/texture
@@ -70,11 +67,7 @@ Future<AliyunTtiResp> commitAliyunJob(
     parameters: parameters,
   );
 
-  print("阿里云生图参数${body.toRawJson()}");
-
   try {
-    var start = DateTime.now().millisecondsSinceEpoch;
-
     var respData = await HttpUtils.post(
       path: url,
       method: CusHttpMethod.post,
@@ -88,19 +81,12 @@ Future<AliyunTtiResp> commitAliyunJob(
       data: body.toJson(),
     );
 
-    print("阿里云文生图---------------------$respData");
-
-    var end = DateTime.now().millisecondsSinceEpoch;
-
-    print("2222222222xxxxxxxxxxxxxxxxx${(end - start) / 1000} 秒");
-
     if (respData.runtimeType == String) {
       respData = json.decode(respData);
     }
 
     return AliyunTtiResp.fromJson(respData ?? {});
   } catch (e) {
-    print("bbbbbbbbbbbbbbbb ${e.runtimeType}---$e");
     rethrow;
   }
 }
@@ -111,8 +97,6 @@ Future<AliyunTtiResp> commitAliyunJob(
 ///
 Future<AliyunTtiResp> getAliyunText2ImgJobResult(String taskId) async {
   try {
-    var start = DateTime.now().millisecondsSinceEpoch;
-
     var respData = await HttpUtils.post(
       path: "https://dashscope.aliyuncs.com/api/v1/tasks/$taskId",
       method: CusHttpMethod.get,
@@ -124,12 +108,6 @@ Future<AliyunTtiResp> getAliyunText2ImgJobResult(String taskId) async {
       },
     );
 
-    print("阿里云文生图结果查询---------------------$respData");
-
-    var end = DateTime.now().millisecondsSinceEpoch;
-
-    print("333333xxxxxxxxxxxxxxxxx${(end - start) / 1000} 秒");
-
     ///？？？ 2024-06-11 阿里云请求报错，会进入dio的错误拦截器，这里ret就是个null了
     if (respData.runtimeType == String) {
       respData = json.decode(respData);
@@ -138,7 +116,6 @@ Future<AliyunTtiResp> getAliyunText2ImgJobResult(String taskId) async {
     // 响应是json格式
     return AliyunTtiResp.fromJson(respData ?? {});
   } catch (e) {
-    print("aaaaaas ${e.runtimeType}---$e");
     // API请求报错，显示报错信息
     rethrow;
   }

@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -56,8 +54,6 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
       setState(() => isLoading = true);
 
       File file = File(result.files.single.path!);
-
-      print("result--$result");
 
       try {
         // 获取json文件中的各个key存入缓存

@@ -1,6 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-// ignore_for_file: avoid_print
-
 import 'dart:async';
 import 'dart:io';
 
@@ -147,7 +144,7 @@ class SoundsRecorderController {
       var time = path.value?.split("/").last.split(".").first;
       final pcmPath = '${CHAT_AUDIO_DIR.path}/$time.pcm';
 
-      print("转换后的地址--$pcmPath");
+      debugPrint("转换后的地址--$pcmPath");
 
       if (path.value?.isNotEmpty == true) {
         debugPrint(path.value);

@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -49,8 +47,6 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
         if (file.path.toLowerCase().endsWith('.json')) {
           try {
             String jsonData = await file.readAsString();
-
-            print("jsonData--$jsonData");
 
             // 如果一个json文件只是一个动作，那就加上中括号；如果本身就是带了中括号的多个，就不再加
             List cusRoleMaps =

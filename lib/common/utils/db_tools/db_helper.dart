@@ -193,6 +193,13 @@ class DBHelper {
         whereArgs: [billItemId],
       );
 
+  // 清空所有
+  Future<int> clearBillItems() async => (await database).delete(
+        SWMateDdl.tableNameOfBillItem,
+        where: "bill_item_id != ?",
+        whereArgs: ["bill_item_id"],
+      );
+
   // 账单查询默认查询所有不分页(全部查询到但加载时上滑显示更多；还是上滑时再查询？？？)
   // 但前端不会显示查询所有的选项，而是会指定日期范围
   // 一般是当日、当月、当年、最近3年，更多自定义范围根据需要来看是否支持
@@ -209,15 +216,6 @@ class DBHelper {
   }) async {
     Database db = await database;
 
-    print("账单查询传入的条件：");
-    print("billItemId $billItemId");
-    print("itemType $itemType");
-    print("itemKeyword $itemKeyword");
-    print("startDate $startDate");
-    print("endDate $endDate");
-    print("page $page");
-    print("pageSize $pageSize");
-
     // 分页相关处理
     page ??= 1;
     // 如果size为0,则查询所有(暂时这个所有就10w吧)
@@ -227,10 +225,17 @@ class DBHelper {
       pageSize = 10;
     }
 
-    print("page2222 $page");
-    print("pageSize2222 $pageSize");
-
     final offset = (page - 1) * pageSize;
+
+    // print("账单查询传入的条件：");
+    // print("billItemId $billItemId");
+    // print("itemType $itemType");
+    // print("itemKeyword $itemKeyword");
+    // print("startDate $startDate");
+    // print("endDate $endDate");
+    // print("page $page");
+    // print("pageSize $pageSize");
+    // print("offset $offset");
 
     final where = <String>[];
     final whereArgs = <dynamic>[];
@@ -286,9 +291,6 @@ class DBHelper {
     int totalCount =
         Sqflite.firstIntValue(await db.rawQuery(sql, whereArgs)) ?? 0;
 
-    print(sql);
-    print("whereArgs $whereArgs totalCount $totalCount");
-
     var dishes = rows.map((row) => BillItem.fromMap(row)).toList();
 
     return CusDataResult(data: dishes, total: totalCount);
@@ -302,12 +304,6 @@ class DBHelper {
   }) async {
     Database db = await database;
 
-    print("queryBillItemWithBillCountList 账单查询传入的条件：");
-    print("startDate $startDate");
-    print("endDate $endDate");
-    print("page $page");
-    print("pageSize $pageSize");
-
     // 分页相关处理
     page ??= 1;
     // 如果size为0,则查询所有(暂时这个所有就10w吧)
@@ -317,10 +313,14 @@ class DBHelper {
       pageSize = 10;
     }
 
-    print("page2222 $page");
-    print("pageSize2222 $pageSize");
-
     final offset = (page - 1) * pageSize;
+
+    // print("queryBillItemWithBillCountList 账单查询传入的条件：");
+    // print("startDate $startDate");
+    // print("endDate $endDate");
+    // print("page $page");
+    // print("pageSize $pageSize");
+    // print("offset $offset");
 
     final where = <String>[];
     final whereArgs = <dynamic>[];
@@ -374,14 +374,11 @@ class DBHelper {
       int totalCount =
           Sqflite.firstIntValue(await db.rawQuery(sql, whereArgs)) ?? 0;
 
-      print(sql);
-      print("whereArgs $whereArgs totalCount $totalCount");
-
       var dishes = rows.map((row) => BillItem.fromMap(row)).toList();
 
       return CusDataResult(data: dishes, total: totalCount);
     } catch (e) {
-      print("eeeeeeeeeeeeeeee=$e");
+      print("queryBillItemWithBillCountList查询异常：$e");
 
       return CusDataResult(data: [], total: 1);
     }
@@ -413,7 +410,6 @@ class DBHelper {
       maxDate: DateTime.now(),
     );
 
-    print("------------------$list");
     // 如果有账单记录，则获取到最大最小值
     if (list.isNotEmpty &&
         list.first["min_date"] != null &&
@@ -518,10 +514,10 @@ class DBHelper {
   }) async {
     Database db = await database;
 
-    print("对话历史记录查询参数：");
-    print("uuid $uuid");
-    print("keyword $keyword");
-    print("chatType $chatType");
+    // print("对话历史记录查询参数：");
+    // print("uuid $uuid");
+    // print("keyword $keyword");
+    // print("chatType $chatType");
 
     final where = <String>[];
     final whereArgs = <dynamic>[];
@@ -587,9 +583,9 @@ class DBHelper {
   }) async {
     Database db = await database;
 
-    print("对话历史记录查询参数：");
-    print("uuid $uuid");
-    print("keyword $keyword");
+    // print("对话历史记录查询参数：");
+    // print("uuid $uuid");
+    // print("keyword $keyword");
 
     final where = <String>[];
     final whereArgs = <dynamic>[];
@@ -653,9 +649,10 @@ class DBHelper {
   }) async {
     Database db = await database;
 
-    print("文生图历史记录查询参数：");
-    print("uuid $requestId");
-    print("正向提示词关键字 $prompt");
+    // print("文生图历史记录查询参数：");
+    // print("uuid $requestId");
+    // print("正向提示词关键字 $prompt");
+    // print("modelType $modelType");
 
     final where = <String>[];
     final whereArgs = <dynamic>[];
@@ -729,13 +726,13 @@ class DBHelper {
   }) async {
     Database db = await database;
 
-    print("模型规格查询参数：");
-    print("uuid $cusLlmSpecId");
-    print("平台 $platform");
-    print("cusLlm $cusLlm");
-    print("name $name");
-    print("modelType $modelType");
-    print("isFree $isFree");
+    // print("模型规格查询参数：");
+    // print("uuid $cusLlmSpecId");
+    // print("平台 $platform");
+    // print("cusLlm $cusLlm");
+    // print("name $name");
+    // print("modelType $modelType");
+    // print("isFree $isFree");
 
     final where = <String>[];
     final whereArgs = <dynamic>[];
@@ -766,9 +763,6 @@ class DBHelper {
       where.add('isFree = ?');
       whereArgs.add(isFree == true ? 1 : 0);
     }
-
-    print("where $where");
-    print("whereArgs $whereArgs");
 
     final rows = await db.query(
       SWMateDdl.tableNameOfCusLlmSpec,
@@ -821,12 +815,12 @@ class DBHelper {
   }) async {
     Database db = await database;
 
-    print("自定义的系统角色查询参数：");
-    print("cusSysRoleSpecId $cusSysRoleSpecId");
-    print("labelKeyword $labelKeyword");
-    print("systemPromptKeyword $systemPromptKeyword");
-    print("name $name");
-    print("sysRoleType $sysRoleType");
+    // print("自定义的系统角色查询参数：");
+    // print("cusSysRoleSpecId $cusSysRoleSpecId");
+    // print("labelKeyword $labelKeyword");
+    // print("systemPromptKeyword $systemPromptKeyword");
+    // print("name $name");
+    // print("sysRoleType $sysRoleType");
 
     final where = <String>[];
     final whereArgs = <dynamic>[];
@@ -853,8 +847,8 @@ class DBHelper {
       whereArgs.add(sysRoleType.name);
     }
 
-    print("where $where");
-    print("whereArgs $whereArgs");
+    // print("where $where");
+    // print("whereArgs $whereArgs");
 
     final rows = await db.query(
       SWMateDdl.tableNameOfCusSysRoleSpec,
@@ -942,19 +936,20 @@ class DBHelper {
   }) async {
     Database db = await database;
 
-    print("菜品条件查询传入的条件：");
-    print("dishId $dishId");
-    print("dishName $dishName");
-    print("tags $tags");
-    print("mealCategories $mealCategories");
-    print("page $page");
-    print("pageSize $pageSize");
-
     // f分页相关处理
     page ??= 1;
     pageSize ??= 10;
 
     final offset = (page - 1) * pageSize;
+
+    // print("菜品条件查询传入的条件：");
+    // print("dishId $dishId");
+    // print("dishName $dishName");
+    // print("tags $tags");
+    // print("mealCategories $mealCategories");
+    // print("page $page");
+    // print("pageSize $pageSize");
+    // print("offset $offset");
 
     final where = <String>[];
     final whereArgs = <dynamic>[];
@@ -1000,8 +995,6 @@ class DBHelper {
         ['%$dishName%'],
       ),
     );
-
-    print('dish Total count: $totalCount, dishRows 长度 ${dishRows.length}');
 
     var dishes = dishRows.map((row) => Dish.fromMap(row)).toList();
 

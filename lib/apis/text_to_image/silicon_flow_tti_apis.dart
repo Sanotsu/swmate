@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:convert';
 
 import '../../common/utils/dio_client/cus_http_client.dart';
@@ -7,8 +5,8 @@ import '../../common/utils/dio_client/cus_http_request.dart';
 import '../../common/utils/dio_client/interceptor_error.dart';
 import '../../models/text_to_image/silicon_flow_tti_req.dart';
 import '../../models/text_to_image/silicon_flow_ig_resp.dart';
-import '../_self_keys.dart';
 import '../get_app_key_helper.dart';
+import '../platform_keys.dart';
 
 ///
 /// 获取siliconFlow的文生图响应结果
@@ -24,7 +22,6 @@ String genSfTtiPath(String model) =>
 Future<SiliconFlowIGResp> getSFTtiResp(
     SiliconFlowTtiReq req, String model) async {
   try {
-    var start = DateTime.now().millisecondsSinceEpoch;
     var respData = await HttpUtils.post(
       path: genSfTtiPath(model),
       method: CusHttpMethod.post,
@@ -39,12 +36,6 @@ Future<SiliconFlowIGResp> getSFTtiResp(
       data: req.toJson(),
     );
 
-    var end = DateTime.now().millisecondsSinceEpoch;
-    print("getSFTtiResp 响应耗时: ${(end - start) / 1000} 秒");
-    print("getSFTtiResp 返回的结果：${respData.runtimeType} $respData");
-
-    // lr.e(respData);
-
     /// 2024-06-06 注意，这里报错的时候，响应的是String，而正常获取回复响应是_Map<String, dynamic>
     if (respData.runtimeType == String) {
       respData = json.decode(respData);
@@ -57,7 +48,6 @@ Future<SiliconFlowIGResp> getSFTtiResp(
     // 可以再转为json返回出来
     return SiliconFlowIGResp.fromJson(json.decode(e.errRespString));
   } catch (e) {
-    print("gggggggggggggggggggggggggg ${e.runtimeType}---$e");
     // API请求报错，显示报错信息
     rethrow;
   }

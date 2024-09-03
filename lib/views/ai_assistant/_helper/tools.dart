@@ -1,15 +1,16 @@
-// ignore_for_file: avoid_print
-
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../apis/_self_system_role_list/index.dart';
+import '../../../apis/_default_system_role_list/index.dart';
 import '../../../apis/get_app_key_helper.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/db_tools/db_helper.dart';
+import '../index.dart';
 
 final DBHelper _dbHelper = DBHelper();
 
@@ -98,29 +99,28 @@ final DBHelper dbHelper = DBHelper();
 
 /// 将预设的大模型数据导入数据库
 Future testInitModelAndSysRole(List<CusLLMSpec> cslist) async {
-  dbHelper.clearCusLLMSpecs();
+  // dbHelper.clearCusLLMSpecs();
 
-  // 列表中没有uuid和创建时间
-  cslist = cslist.map((e) {
-    e.cusLlmSpecId = const Uuid().v4();
-    e.gmtCreate = DateTime.now();
-    return e;
-  }).toList();
+  // // 列表中没有uuid和创建时间
+  // cslist = cslist.map((e) {
+  //   e.cusLlmSpecId = const Uuid().v4();
+  //   e.gmtCreate = DateTime.now();
+  //   return e;
+  // }).toList();
 
-  await dbHelper.insertCusLLMSpecList(cslist);
+  // await dbHelper.insertCusLLMSpecList(cslist);
 
-  dbHelper.clearCusSysRoleSpecs();
+  // dbHelper.clearCusSysRoleSpecs();
 
-  // 预设角色不用传，就默认的，反正都不花钱
-  // 列表中没有uuid和创建时间
-  var sysroleList = DEFAULT_SysRole_Prompt_LIST.map((e) {
-    e.cusSysRoleSpecId = const Uuid().v4();
-    e.gmtCreate = DateTime.now();
-    return e;
-  }).toList();
-  await dbHelper.insertCusSysRoleSpecList(sysroleList);
+  // // 预设角色不用传，就默认的，反正都不花钱
+  // // 列表中没有uuid和创建时间
+  // var sysroleList = DEFAULT_SysRole_Prompt_LIST.map((e) {
+  //   e.cusSysRoleSpecId = const Uuid().v4();
+  //   e.gmtCreate = DateTime.now();
+  //   return e;
+  // }).toList();
+  // await dbHelper.insertCusSysRoleSpecList(sysroleList);
 
-/*
   ///
   /// 下面是将列表转为json，再转为列表，再存入数据库的测试。
   /// 实际发布时不必，直接存入数据库即可，列表文件不上传就好。
@@ -132,7 +132,7 @@ Future testInitModelAndSysRole(List<CusLLMSpec> cslist) async {
   ///
 
   // 定义文件路径
-  const String filePath = 'iti_spec_list.json';
+  const String filePath = 'cusllm_spec_list.json';
 
   if (!await tempDir.exists()) {
     await tempDir.create(recursive: true);
@@ -168,7 +168,7 @@ Future testInitModelAndSysRole(List<CusLLMSpec> cslist) async {
   final sysroleFile = File('${tempDir.path}/$sysroleFilePath');
 
   // 将列表转换为 JSON 并写入文件
-  writeSysRoleListToJsonFile(DEFAULT_SysRole_LIST, sysroleFile.path);
+  writeSysRoleListToJsonFile(DEFAULT_SysRole_Prompt_LIST, sysroleFile.path);
 
   ///
   /// 后续没有上面转的这一步，直接从这里开始从文件读取
@@ -183,7 +183,6 @@ Future testInitModelAndSysRole(List<CusLLMSpec> cslist) async {
 
   dbHelper.clearCusSysRoleSpecs();
   await dbHelper.insertCusSysRoleSpecList(sysroleList);
-*/
 }
 
 ///
@@ -208,8 +207,7 @@ Future<T?> timedTaskStatus<T>(
     );
 
     isMaxWaitTimeExceeded = true;
-
-    print('任务处理耗时，状态查询终止。');
+    debugPrint('任务处理耗时，状态查询终止。');
   });
 
   bool isRequestSuccessful = false;
@@ -219,16 +217,16 @@ Future<T?> timedTaskStatus<T>(
 
       if (isTaskComplete(result)) {
         isRequestSuccessful = true;
-        print('任务处理完成!');
+        debugPrint('任务处理完成!');
         timer.cancel();
 
         return result;
       } else {
-        print('任务还在处理中，请稍候重试……');
+        debugPrint('任务还在处理中，请稍候重试……');
         await Future.delayed(const Duration(seconds: 5));
       }
     } catch (e) {
-      print('发生异常: $e');
+      debugPrint('发生异常: $e');
       await Future.delayed(const Duration(seconds: 5));
     }
   }

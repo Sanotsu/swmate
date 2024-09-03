@@ -4,6 +4,7 @@ import 'package:swmate/common/components/tool_widget.dart';
 
 import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/utils/db_tools/db_helper.dart';
+import '../../../apis/_default_free_model_list/index.dart';
 import '../../../apis/_self_model_list/index.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../_helper/tools.dart';

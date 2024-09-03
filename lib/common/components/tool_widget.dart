@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -231,8 +229,6 @@ buildImageList(
       child: GestureDetector(
         // 单击预览
         onTap: () {
-          print("图片地址---${urls[index]}");
-
           showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -284,8 +280,6 @@ Widget buildImageView(
       ),
     );
   }
-
-  print("显示的图片类型---${image.runtimeType == File}-${image.runtimeType} -$image");
 
   ImageProvider imageProvider;
   // 只有base64的字符串或者文件格式

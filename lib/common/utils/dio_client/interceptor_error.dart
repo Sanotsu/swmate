@@ -32,8 +32,6 @@ err 详情
     if (err.type == DioExceptionType.unknown) {
       var connectivityResult = await (Connectivity().checkConnectivity());
 
-      print("connectivityResult这里以前是返回一个，现在是列表里？？？$connectivityResult");
-
       if (connectivityResult.first == ConnectivityResult.none) {
         cusHttpException = CusHttpException(cusCode: -100, cusMsg: '【无网络】');
       }
@@ -104,8 +102,8 @@ class CusHttpException implements Exception {
     String response = error.response?.toString() ?? error.error.toString();
     String message = error.message ?? defaultMessage;
 
-    print("error.response?.toString()--$response");
-    print("error.message?.toString()--$message");
+    // print("error.response?.toString()--$response");
+    // print("error.message?.toString()--$message");
 
     /// 自定义处理 dio 异常
     switch (error.type) {

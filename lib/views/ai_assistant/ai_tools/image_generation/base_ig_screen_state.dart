@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:async';
 import 'dart:math';
 
@@ -150,8 +148,6 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    print("当前页面状态--$state");
-
     if (state == AppLifecycleState.detached ||
         state == AppLifecycleState.inactive) {
       LoadingOverlay.hide();
@@ -274,12 +270,12 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
       );
     });
 
-    print("选择的平台 $selectedPlatform");
-    print("选择的模型 ${selectedModelSpec.toRawJson()}");
-    print("尺寸 $selectedSize");
-    print("张数 $selectedNum");
-    print("正向词 $prompt");
-    print("消极词 $negativePrompt");
+    debugPrint("选择的平台 $selectedPlatform");
+    debugPrint("选择的模型 ${selectedModelSpec.toRawJson()}");
+    debugPrint("尺寸 $selectedSize");
+    debugPrint("张数 $selectedNum");
+    debugPrint("正向词 $prompt");
+    debugPrint("消极词 $negativePrompt");
 
     // 请求得到的图片结果
     List<String> imageUrls = [];

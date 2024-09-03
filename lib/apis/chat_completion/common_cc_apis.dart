@@ -16,10 +16,10 @@ import '../../common/utils/dio_client/cus_http_client.dart';
 import '../../common/utils/dio_client/cus_http_request.dart';
 import '../../common/utils/dio_client/interceptor_error.dart';
 import '../../services/cus_get_storage.dart';
-import '../_self_keys.dart';
 import '../gen_access_token/tencent_signature_v3.dart';
 import '../gen_access_token/zhipu_signature.dart';
 import '../get_app_key_helper.dart';
+import '../platform_keys.dart';
 
 final l = ProsteLogger();
 final DBHelper _dbHelper = DBHelper();
@@ -163,8 +163,6 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
   bool stream = false,
 }) async {
   try {
-    var start = DateTime.now().millisecondsSinceEpoch;
-
     var respData = await HttpUtils.post(
       path: url,
       method: CusHttpMethod.post,
@@ -172,10 +170,6 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
       headers: headers,
       data: data,
     );
-
-    var end = DateTime.now().millisecondsSinceEpoch;
-    print("API响应耗时: ${(end - start) / 1000} 秒");
-    print("-------------在转换前--------$respData)----------");
 
     if (stream) {
       // 处理流式响应
@@ -198,9 +192,9 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
             .transform(const SseTransformer())
             // 处理每一行数据
             .listen((event) async {
-          print(
-            "Event: ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
-          );
+          // print(
+          //   "Event: ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
+          // );
 
           // 如果流式响应其实在报错，则要单独
           // 腾讯的响应，报错的时候不是正常流格式，是一个含Response栏位的json字符串,
@@ -242,7 +236,6 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
         });
 
         Future<void> cancel() async {
-          print("执行了取消-----");
           // ？？？占位用的，先发送最后一个手动终止的信息，再实际取消(手动的更没有token信息了)
           if (!streamController.isClosed) {
             streamController.add(ComCCResp(cusText: '[手动终止]'));

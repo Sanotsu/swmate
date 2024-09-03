@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:async';
 import 'dart:io';
 
@@ -319,7 +317,7 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source);
 
-    print("选中的图片---------$pickedFile");
+    debugPrint("选中的图片---------$pickedFile");
 
     if (pickedFile != null) {
       setState(() {
@@ -332,7 +330,7 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source);
 
-    print("选中的Face图片---------$pickedFile");
+    debugPrint("选中的Face图片---------$pickedFile");
 
     if (pickedFile != null) {
       setState(() => selectedFaceImage = File(pickedFile.path));
@@ -343,7 +341,7 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source);
 
-    print("选中的Pose图片---------$pickedFile");
+    debugPrint("选中的Pose图片---------$pickedFile");
 
     if (pickedFile != null) {
       setState(() => selectedPoseImage = File(pickedFile.path));

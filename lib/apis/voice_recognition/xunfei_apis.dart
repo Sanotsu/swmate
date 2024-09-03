@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
@@ -7,13 +5,13 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../models/voice_recognition/xunfei_voice_dictation.dart';
-import '../_self_keys.dart';
 import '../gen_access_token/xfyun_signature.dart';
 import '../get_app_key_helper.dart';
+import '../platform_keys.dart';
 
 const voiceRegUrl = "wss://iat-api.xfyun.cn/v2/iat";
 
-Future<String> sendAudioToServer(String audioPath) async {
+Future<String> getTextFromAudioFromXFYun(String audioPath) async {
   // 生成鉴权url
   var authUrl = genXfyunAssembleAuthUrl(
     voiceRegUrl,
@@ -30,8 +28,6 @@ Future<String> sendAudioToServer(String audioPath) async {
   // 建立WebSocket连接
   final channel = WebSocketChannel.connect(Uri.parse(authUrl));
 
-  print("channel--${channel.protocol}");
-
   String transcription = '';
   final completer = Completer<String>();
 
@@ -40,13 +36,12 @@ Future<String> sendAudioToServer(String audioPath) async {
 
     await channel.ready;
   } catch (e) {
-    print("channel.ready error: $e");
+    // print("channel.ready error: $e");
+    rethrow;
   }
 
   channel.stream.listen(
     (message) {
-      print("这里是 message--$message");
-
       ///？？？ 2024-08-03 保存的时候类型就是 String而不是Map<String, dynamic>
       if (message.runtimeType == String) {
         message = json.decode(message);
@@ -54,14 +49,10 @@ Future<String> sendAudioToServer(String audioPath) async {
 
       var data = XunfeiVoiceDictation.fromJson(message);
 
-      print(jsonEncode(data));
-
       transcription = data.data?.result?.ws
               ?.map((e) => e.cw?.map((e) => e.w).join())
               .join() ??
           "";
-
-      print("这里是 transcription--$transcription");
 
       // 2024-08-17？？具体哪里释放还拿不准
       EasyLoading.dismiss();
@@ -69,13 +60,12 @@ Future<String> sendAudioToServer(String audioPath) async {
       completer.complete(transcription);
     },
     onDone: () {
-      print("这里是onDone--transcription$transcription");
       if (!completer.isCompleted) {
         completer.complete(transcription);
       }
     },
     onError: (error) {
-      print('WebSocket error: ${error.toString()}');
+      // print('WebSocket error: ${error.toString()}');
       completer.completeError(error);
 
       EasyLoading.dismiss();

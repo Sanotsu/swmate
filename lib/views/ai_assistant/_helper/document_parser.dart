@@ -1,9 +1,8 @@
-// ignore_for_file: avoid_print
-
 import 'dart:io';
 
 import 'package:docx_to_text/docx_to_text.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_charset_detector/flutter_charset_detector.dart';
 import 'package:logger/logger.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -55,8 +54,8 @@ Future<String?> readFileContent(PlatformFile file) async {
         // 3 使用第三方库来自动识别和转换
         var bytes = File(file.path!).readAsBytesSync();
         DecodingResult result = await CharsetDetector.autoDecode(bytes);
-        print(result.charset); // => e.g. 'SHIFT_JIS'
-        print(result.string); // => e.g. '日本語'
+        debugPrint(result.charset); // => e.g. 'SHIFT_JIS'
+        debugPrint(result.string); // => e.g. '日本語'
 
         return result.string;
 

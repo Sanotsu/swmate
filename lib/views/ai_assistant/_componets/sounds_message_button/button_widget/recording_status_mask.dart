@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 part of 'sounds_message_button.dart';
 
 /// 聚合数据，用于整个UI的配置数据流通
@@ -102,8 +100,6 @@ class RecordingStatusMaskView extends StatelessWidget {
                       data: data,
                       onTap: onTextSend,
                       onLoading: () async {
-                        print("在这里进行语言转文字？？？？？？？？？？？？？？");
-
                         // 2024-08-07 这里的一切都是按照正常成功的逻辑来写的；
                         // 如果发生了异常(比如网络不通什么的)，就没有处理
 
@@ -118,9 +114,7 @@ class RecordingStatusMaskView extends StatelessWidget {
                         );
 
                         var transcription =
-                            await sendAudioToServer("$tempPath.pcm");
-
-                        print("识别---的结果====--$transcription");
+                            await getTextFromAudioFromXFYun("$tempPath.pcm");
 
                         // 更新完文字之后，转换标志就为true了
                         polymerData.controller

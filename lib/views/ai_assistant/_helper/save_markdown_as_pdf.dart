@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:io';
 
 import 'package:flutter/services.dart' show rootBundle;
@@ -23,8 +21,6 @@ import '../../../common/utils/tools.dart';
 ///
 
 Future<void> saveMarkdownAsPdf(String mdString, File imageFile) async {
-  // print("传入pdf的markdown文本 --$mdString");
-
   final pdfDoc = pdf.Document(
     pageMode: PdfPageMode.fullscreen,
     theme: pdf.ThemeData.withFont(
@@ -43,7 +39,6 @@ Future<void> saveMarkdownAsPdf(String mdString, File imageFile) async {
   // ??? 2024-07-18 实测这里没法正确处理多级列表，会把下一级的合到第一级去
   final List<md.Node> nodes = md.Document().parse(mdString);
   final List<pdf.Widget> widgets = nodes.map((node) {
-    // print("node--$node  --${(node as md.Element).tag} --${node.textContent}");
     return _buildPdfWidget(node);
   }).toList();
 

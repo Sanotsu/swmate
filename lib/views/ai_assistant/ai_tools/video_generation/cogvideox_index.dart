@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -71,6 +69,7 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
 
   // 最后生成的视频封面图地址
   List<String> rstCoverImageUrls = [
+    "https://sfile.chatglm.cn/testpath/video_cover/ac03bd1c-f930-57b0-9e9d-ddbd3fe104ef_cover_0.png",
     "https://sfile.chatglm.cn/testpath/video_cover/7d315e9c-e007-5633-b14e-25e210529eac_cover_0.png",
     "https://sfile.chatglm.cn/testpath/video_cover/94e91976-69c9-5a7f-bb93-63a933511024_cover_0.png",
     "https://sfile.chatglm.cn/testpath/video_cover/ea028c01-b8bf-5225-befb-7facd41f0a44_cover_0.png",
@@ -79,6 +78,7 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
   ];
   // 最后生成的视频地址
   List<String> rstVideoUrls = [
+    "https://sfile.chatglm.cn/testpath/video/ac03bd1c-f930-57b0-9e9d-ddbd3fe104ef_0.mp4",
     "https://sfile.chatglm.cn/testpath/video/7d315e9c-e007-5633-b14e-25e210529eac_0.mp4",
     "https://sfile.chatglm.cn/testpath/video/94e91976-69c9-5a7f-bb93-63a933511024_0.mp4",
     "https://sfile.chatglm.cn/testpath/video/ea028c01-b8bf-5225-befb-7facd41f0a44_0.mp4",
@@ -133,10 +133,10 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
       );
     });
 
-    print("选择的平台 $selectedPlatform");
-    print("选择的模型 ${selectedModelSpec.toRawJson()}");
-    print("正向词 $prompt");
-    print("选择的图片地址 $prompt");
+    debugPrint("选择的平台 $selectedPlatform");
+    debugPrint("选择的模型 ${selectedModelSpec.toRawJson()}");
+    debugPrint("正向词 $prompt");
+    debugPrint("选择的图片地址 $selectedImage");
 
     // 请求得到的封面图片和视频结果地址
     List<String> imageUrls = [];
@@ -149,9 +149,6 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
       prompt: prompt,
       imageUrl: imageBase64String,
     );
-
-    // print(param.toRawJson());
-    // return;
 
     var jobResp = await commitZhipuCogVideoXTask(param);
 
@@ -287,8 +284,6 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
           imageSelectedHandle: (ImageSource source) async {
             final picker = ImagePicker();
             final pickedFile = await picker.pickImage(source: source);
-
-            print("选中的图片---------$pickedFile");
 
             if (pickedFile != null) {
               setState(() {

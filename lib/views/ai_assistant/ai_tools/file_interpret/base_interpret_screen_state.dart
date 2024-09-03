@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -332,7 +330,6 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
               CusToggleButtonSelector<CusSysRoleSpec>(
                 items: sysRoleList,
                 onItemSelected: (item) {
-                  print('Selected item: ${item.label}');
                   setState(() {
                     setSelectedASysRole(item);
                   });
@@ -419,7 +416,8 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
                   path.basenameWithoutExtension(content),
                 );
 
-                var transcription = await sendAudioToServer("$tempPath.pcm");
+                var transcription =
+                    await getTextFromAudioFromXFYun("$tempPath.pcm");
                 userSendMessage(
                   transcription,
                   contentVoicePath: "$tempPath.m4a",

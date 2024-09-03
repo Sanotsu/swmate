@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print,
-
 import 'dart:async';
 import 'dart:math';
 
@@ -270,7 +268,6 @@ class _ChatBotState extends State<ChatBot> {
         );
       },
       onDone: () {
-        print("文本对话 监听的【onDone】触发了");
         // 如果是流式响应，最后一条会带有[DNOE]关键字，所以在上面处理最后响应结束的操作
         // 如果不是流式，响应流就只有1条数据，那么就只有在这里才能得到流结束了，所以需要在这里完成后的操作
         // 但是如果是流式，还在这里处理结束操作的话会出问题(实测在数据还在推送的时候，这个ondone就触发了)
@@ -537,8 +534,6 @@ class _ChatBotState extends State<ChatBot> {
               },
               // 点击了语音发送，可能是文件，也可能是语音转的文字
               onSendSounds: (type, content) async {
-                print("语音发送的玩意儿 $type $content");
-
                 if (type == SendContentType.text) {
                   _userSendMessage(content);
                 } else if (type == SendContentType.voice) {
@@ -551,7 +546,8 @@ class _ChatBotState extends State<ChatBot> {
                     path.basenameWithoutExtension(content),
                   );
 
-                  var transcription = await sendAudioToServer("$tempPath.pcm");
+                  var transcription =
+                      await getTextFromAudioFromXFYun("$tempPath.pcm");
                   // 注意：语言转换文本必须pcm格式，但是需要点击播放的语音则需要原本的m4a格式
                   // 都在同一个目录下同一路径不同扩展名
                   _userSendMessage(

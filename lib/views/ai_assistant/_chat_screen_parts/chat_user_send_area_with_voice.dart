@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,7 +9,6 @@ import '../_componets/sounds_message_button/utils/sounds_recorder_controller.dar
 
 ///
 /// 用户发送区域
-/// aggregate_search 和 chat_bot 都可以用
 ///
 class ChatUserVoiceSendArea extends StatefulWidget {
   final TextEditingController controller;

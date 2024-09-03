@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:async';
 import 'dart:io';
 
@@ -74,7 +72,7 @@ class _UserAndSettingsState extends State<UserAndSettings> {
         kToolbarHeight -
         kBottomNavigationBarHeight;
 
-    print("screenBodyHeight--------$screenBodyHeight");
+    debugPrint("screenBodyHeight--------$screenBodyHeight");
 
     return Scaffold(
       appBar: AppBar(

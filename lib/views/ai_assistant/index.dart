@@ -2,10 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../apis/_self_model_list/index.dart';
+import '../../apis/_default_free_model_list/index.dart';
 import '../../common/components/tool_widget.dart';
 import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
@@ -56,6 +55,9 @@ class _AIToolIndexState extends State<AIToolIndex> {
     initModelAndSysRole();
 
     super.initState();
+
+    // 获取缓存中的正文文本缩放比例
+    _textScaleFactor = MyGetStorage().getChatListAreaScale();
   }
 
   // 初始化模型和系统角色信息到数据库
@@ -83,6 +85,69 @@ class _AIToolIndexState extends State<AIToolIndex> {
     setState(() {
       cusModelList = afterList;
     });
+  }
+
+  // 调整对话列表中显示的文本大小
+  void _adjustTextScale() async {
+    var tempScaleFactor = _textScaleFactor;
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            '调整对话列表中文字大小',
+            style: TextStyle(fontSize: 18.sp),
+          ),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Slider(
+                    value: tempScaleFactor,
+                    min: 0.6,
+                    max: 2.0,
+                    divisions: 14,
+                    label: tempScaleFactor.toStringAsFixed(1),
+                    onChanged: (value) {
+                      setState(() {
+                        tempScaleFactor = value;
+                      });
+                    },
+                  ),
+                  Text(
+                    '当前文字比例: ${tempScaleFactor.toStringAsFixed(1)}',
+                    textScaler: TextScaler.linear(tempScaleFactor),
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              child: const Text('取消'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('确定'),
+              onPressed: () async {
+                // 点击确定时，才把缩放比例存入缓存，并更新当前比例值
+                setState(() {
+                  _textScaleFactor = tempScaleFactor;
+                });
+                await MyGetStorage().setChatListAreaScale(
+                  _textScaleFactor,
+                );
+                if (!context.mounted) return;
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -128,31 +193,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
             icon: const Icon(Icons.list_alt),
           ),
           IconButton(
-            onPressed: () async {
-              if (!mounted) return;
-              setState(() {
-                if (_textScaleFactor < 2.2) {
-                  _textScaleFactor += 0.2;
-                } else if (_textScaleFactor == 2.2) {
-                  _textScaleFactor = 0.6; // 循环回最小值
-                } else if (_textScaleFactor < 0.6) {
-                  _textScaleFactor = 0.6; // 如果不小心越界，纠正回最小值
-                }
-
-                // 使用了数学取余运算 (remainder) 来确保 _textScaleFactor 总是在 [0.6 ,2.2) 的范围(闭开区间)内循环，
-                // 即使在多次连续点击的情况下也能保持正确的值。
-                _textScaleFactor =
-                    (_textScaleFactor - 0.6).remainder(1.6) + 0.6;
-
-                EasyLoading.showInfo(
-                  "对话文字缩放 ${_textScaleFactor.toStringAsFixed(1)} 倍",
-                );
-              });
-              // 缩放比例存入缓存
-              await MyGetStorage().setChatListAreaScale(
-                _textScaleFactor,
-              );
-            },
+            onPressed: _adjustTextScale,
             icon: const Icon(Icons.format_size_outlined),
           ),
         ],

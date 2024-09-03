@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print,
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path/path.dart' as path;
@@ -174,7 +172,6 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
 
   /// 保存对话到数据库
   _saveToDb() async {
-    print("保存到数据库前---${chatHistory?.toRawJson()}");
     // 如果插入时只有一条，那就是用户首次输入，截取部分内容和生成对话记录的uuid
     // 2024-08-23 如果对话中只有1个user或者1个user和1个system(即两条信息)，则表明是新建对话
     if (messages.isNotEmpty &&
@@ -325,7 +322,6 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
         );
       },
       onDone: () {
-        print("文本对话 监听的【onDone】触发了");
         // 如果是流式响应，最后一条会带有[DNOE]关键字，所以在上面处理最后响应结束的操作
         // 如果不是流式，响应流就只有1条数据，那么就只有在这里才能得到流结束了，所以需要在这里完成后的操作
         // 但是如果是流式，还在这里处理结束操作的话会出问题(实测在数据还在推送的时候，这个ondone就触发了)
@@ -343,8 +339,6 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
         commonExceptionDialog(context, "异常提示", error.toString());
       },
     );
-
-    print("separatelyHandleMessage---$model");
   }
 
   @override
@@ -402,7 +396,6 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
                   });
                   unfocusHandle();
 
-                  print("xxxxxxxxxxxx");
                   Scaffold.of(context).openEndDrawer();
                 },
               );
@@ -603,8 +596,6 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
 
               // 点击了语音发送，可能是文件，也可能是语音转的文字
               onSendSounds: (type, content) async {
-                print("语音发送的玩意儿 $type $content");
-
                 if (type == SendContentType.text) {
                   _userSendMessage(content);
                 } else if (type == SendContentType.voice) {
@@ -617,7 +608,8 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
                     path.basenameWithoutExtension(content),
                   );
 
-                  var transcription = await sendAudioToServer("$tempPath.pcm");
+                  var transcription =
+                      await getTextFromAudioFromXFYun("$tempPath.pcm");
                   _userSendMessage(
                     transcription,
                     contentVoicePath: "$tempPath.m4a",

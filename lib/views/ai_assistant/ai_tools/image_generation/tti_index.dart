@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -165,7 +163,6 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
       }
     } else if (selectedPlatform == ApiPlatform.xfyun) {
       var result = await getXfyunTtiResp(selectedSize, prompt);
-      print(result.toRawJson());
 
       if (!mounted) return null;
       if (result.header?.code != null && result.header?.code != 0) {
@@ -178,7 +175,6 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
         var cont = result.payload?.choices?.text?.first.content;
         if (cont != null) {
           var file = await saveTtiBase64ImageToLocal(cont, prefix: "xfyun_");
-          print(file);
           imageUrls.add(file.path);
         } else {
           EasyLoading.showError("图片数据为空:\n${result.header?.message}");
@@ -197,7 +193,6 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
       );
 
       var result = await getZhipuTtiResp(a);
-      print(result.toRawJson());
 
       if (!mounted) return null;
       if (result.error?.code != null) {
@@ -212,8 +207,6 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
             ? result.data?.first.url
             : null;
         if (cont != null) {
-          print("xxxxxxxxxxxxxxxxxxxxxxxxx$cont");
-
           imageUrls.add(cont);
         } else {
           EasyLoading.showError("图片数据为空:\n${result.error?.message}");

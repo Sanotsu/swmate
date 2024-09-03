@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -205,8 +203,6 @@ class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
               )
             : null,
       );
-
-      print("百家姓的input ${input.toRawJson()}");
 
       parameters = AliyunTtiParameter.wordArtSurnames(
         n: selectedNum,

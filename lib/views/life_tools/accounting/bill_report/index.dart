@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_date_pickers/flutter_date_pickers.dart' as dp;
@@ -246,13 +244,13 @@ class _BillReportIndexState extends State<BillReportIndex>
   _handleTabSelection() {
     // tab is animating. from active (getting the index) to inactive(getting the index)
     if (_tabController.indexIsChanging) {
-      print("点击切换了tab--${_tabController.index}");
+      debugPrint("点击切换了tab--${_tabController.index}");
       // if (_tabController.index == 1) {
       //   // 如果是切换了月度统计和年度统计，重新查询
-      //   print("isYearLoading--------$isYearLoading");
+      //   debugPrint("isYearLoading--------$isYearLoading");
       //   _handleSelectedMonthChange();
       // } else {
-      //   print("isMonthLoading--------$isMonthLoading");
+      //   debugPrint("isMonthLoading--------$isMonthLoading");
       //   _handleSelectedYearChange();
       // }
     } else {
@@ -280,7 +278,7 @@ class _BillReportIndexState extends State<BillReportIndex>
             // overlayColor: WidgetStateProperty.all(Colors.lightGreen),
             controller: _tabController,
             // onTap: (int i) {
-            //   print("当前index${_tabController.index}-------点击的index$i");
+            //   debugPrint("当前index${_tabController.index}-------点击的index$i");
             //   // 这里没法获取到前一个index是哪一个，
             //   if (i == 1) {
             //     _handleSelectedYearChange();
@@ -378,7 +376,6 @@ class _BillReportIndexState extends State<BillReportIndex>
                         ).then((date) {
                           if (date != null) {
                             setState(() {
-                              print(date);
                               selectedMonth =
                                   DateFormat(constMonthFormat).format(date);
                               handleSelectedMonthChange();
@@ -560,7 +557,6 @@ class _BillReportIndexState extends State<BillReportIndex>
                   ).then((date) {
                     if (date != null) {
                       setState(() {
-                        print(date);
                         if (isMonth) {
                           selectedMonth =
                               DateFormat(constMonthFormat).format(date);
@@ -664,7 +660,6 @@ class _BillReportIndexState extends State<BillReportIndex>
     getTotal(List<BillPeriodCount> counts, String date, bool isExpend) {
       if (counts.isEmpty) return "";
 
-      print("getTotal-----------$counts $date");
       // 2024-06-03 统计记录可能没有对应月份的数据。
       //  比如6月1日查看统计，还没有账单项次记录，最新的只有5月份的
       var temp = counts.where((e) => e.period == date).toList();

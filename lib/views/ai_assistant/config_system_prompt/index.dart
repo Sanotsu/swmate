@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../common/components/tool_widget.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
+import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/db_tools/db_helper.dart';
 import 'import_json.dart';
 import 'system_prompt_detail.dart';
@@ -18,6 +20,9 @@ class _SystemPromptIndexState extends State<SystemPromptIndex> {
 
   List<CusSysRoleSpec> sysRoleSpecs = [];
 
+  // 系统角色分类查询显示
+  LLModelType? selectedType;
+
   @override
   void initState() {
     getSystemPromptSpecs();
@@ -25,7 +30,9 @@ class _SystemPromptIndexState extends State<SystemPromptIndex> {
   }
 
   getSystemPromptSpecs() async {
-    var sysroleLl = await _dbHelper.queryCusSysRoleSpecList();
+    var sysroleLl = await _dbHelper.queryCusSysRoleSpecList(
+      sysRoleType: selectedType,
+    );
     setState(() {
       // 2024-08-26 目前系统角色中，文档解读和翻译解读预设的6个有name，过滤不显示(因为这6个和代码逻辑相关，不能被删除)，
       // 其他是没有的，用户新增删除可以自行管理
@@ -95,12 +102,52 @@ class _SystemPromptIndexState extends State<SystemPromptIndex> {
                     ],
                   ),
                   Text(
-                    """内部预设一些系统角色，用户可以自行创建、导入、删除。\n系统角色需要指定不同使用场景，但不是所有模型都适配。\n(cc: 智能对话; tti: 文本生图; iti: 图片生图)。""",
+                    """内部预设一些系统角色，用户可以自行创建、导入、删除。\n系统角色需要指定不同使用场景，但不是所有模型都适配。\n点击项次查看详情，长按删除。""",
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 12.sp),
                   ),
                   Divider(height: 10.sp, thickness: 1.sp),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 5.sp),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Text("下拉筛选："),
+                  SizedBox(
+                    width: 160.sp,
+                    child: buildDropdownButton2<LLModelType?>(
+                      value: selectedType,
+                      itemMaxHeight: 320.sp,
+                      items: LLModelType.values,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() {
+                            selectedType = val;
+                          });
+                          getSystemPromptSpecs();
+                        }
+                      },
+                      alignment: AlignmentDirectional.centerStart,
+                      itemToString: (e) =>
+                          "${MT_NAME_MAP[e]}: ${(e as LLModelType).name}",
+                    ),
+                  ),
+                  SizedBox(
+                    width: 100.sp,
+                    child: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          selectedType = null;
+                        });
+                        getSystemPromptSpecs();
+                      },
+                      child: const Text("显示全部"),
+                    ),
+                  ),
                 ],
               ),
             ),

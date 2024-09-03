@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -116,7 +114,7 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source);
 
-    print("选中的图片---------$pickedFile");
+    debugPrint("选中的图片---------$pickedFile");
 
     if (pickedFile != null) {
       setState(() {

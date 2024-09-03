@@ -1,6 +1,8 @@
-// ignore_for_file: avoid_print
+import 'dart:convert';
+import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -14,7 +16,6 @@ import '../../../common/utils/db_tools/db_helper.dart';
 import '../../../models/base_model/brief_accounting_state.dart';
 import 'bill_item_modify/index.dart';
 import 'bill_report/index.dart';
-import 'mock_data/index.dart';
 
 /// 2024-05-28
 /// 账单列表，按月查看
@@ -96,9 +97,6 @@ class _BillItemIndexState extends State<BillItemIndex> {
   // 选中查询的类型，默认是全部，可切换到“支出|收入|全部”
   String selectedType = "全部账单";
 
-  // 2024-06-26 是否显示，我自己要用的从json文件导入账单列表数据的按钮
-  bool isShowMock = false;
-
   @override
   void initState() {
     super.initState();
@@ -106,8 +104,6 @@ class _BillItemIndexState extends State<BillItemIndex> {
     // 2024-05-25 初始化查询时就更新已查询的最大日期和最小日期为当天所在月份的1号(后续用到的地方也只关心年月)
     maxQueryedDate = DateTime.tryParse("$selectedMonth-01") ?? DateTime.now();
     minQueryedDate = DateTime.tryParse("$selectedMonth-01") ?? DateTime.now();
-
-    print("初始化时的最大最小查询日期-------------$maxQueryedDate $minQueryedDate");
 
     getBillPeriod();
     loadBillItemsByMonth();
@@ -170,6 +166,9 @@ class _BillItemIndexState extends State<BillItemIndex> {
       // 按照每天进行项次分组，方便后续计算每日的总支出/收入
       billItemGroupByDayMap = groupBy(billItems, (item) => item.date);
 
+      // 数据加载成功也更新账单中有的时间范围
+      getBillPeriod();
+
       isLoading = false;
     });
   }
@@ -182,7 +181,7 @@ class _BillItemIndexState extends State<BillItemIndex> {
         endDate: "$selectedMonth-31",
       );
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
       return null;
     }
   }
@@ -231,8 +230,6 @@ class _BillItemIndexState extends State<BillItemIndex> {
     final atEdge = scrollController.position.atEdge;
     // 是否超出滚动范围
     final outOfRange = scrollController.position.outOfRange;
-
-    // print("offset---$offset,currentPosition-$currentPosition");
 
     // 根据已经滚动的高度和提前存好账单列表组件的累积高度计算出当前展示的项次是哪个月份的
     String currentMonth = _getCurrentMonth(currentPosition);
@@ -395,14 +392,53 @@ class _BillItemIndexState extends State<BillItemIndex> {
         monthHegth -= 402;
       }
 
-      // print(
-      //     "$tempMonth---原数量${tempMonthItems.length}- 额外数量 $extraItemsLength 累加高度$monthHegth");
-
       // 注意，这里存的是每个月的累加高度
       monthlyWidgetHeights.add({tempMonth: monthHegth});
     }
+  }
 
-    // print("每月组件的高度----$monthlyWidgetHeights");
+  /// 单纯导入账单列表json文件
+  Future<void> loadBillIeamFromJson() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowMultiple: false,
+      allowedExtensions: ["json", "JSON"],
+    );
+
+    if (result != null) {
+      try {
+        // 不允许多选，理论就是第一个文件，且不为空
+        File file = File(result.files.first.path!);
+
+        // 如果是json文件
+        String jsonData = await file.readAsString();
+        // 默认json文件存的是列表
+        List jsonList = json.decode(jsonData);
+
+        // 保存到db
+        // 先判断是否存在必要栏位
+        bool flag = jsonList.every((e) =>
+            e['item_type'] != null &&
+            e['date'] != null &&
+            e['item'] != null &&
+            e['value'] != null);
+
+        if (!mounted) return;
+        if (!flag) {
+          return commonExceptionDialog(context, "导入失败", "json文件结构栏位不正确");
+        }
+
+        // 使用工厂方法创建 BillItem 实例
+        List<BillItem> temp =
+            jsonList.map((e) => BillItem.fromJson(e)).toList();
+
+        // 导入前，先删除所有旧的，因为json文件中没有id不好修改
+        await _dbHelper.clearBillItems();
+        await _dbHelper.insertBillItemList(temp);
+      } catch (e) {
+        rethrow;
+      }
+    }
   }
 
   @override
@@ -412,50 +448,36 @@ class _BillItemIndexState extends State<BillItemIndex> {
       resizeToAvoidBottomInset: false,
       // 这里也可以不用appbar？？？
       appBar: AppBar(
-        title: GestureDetector(
-          onLongPress: () async {
-            // 长按之后，先改变是否使用作者应用的标志
-            // 异步执行结果，如果没挂载了，就不管了
-            if (!mounted) return;
-            setState(() {
-              isShowMock = !isShowMock;
-            });
-          },
-          child: const Text("极简记账"),
-        ),
+        title: const Text("极简记账"),
         // 明确说明不要返回箭头，避免其他地方使用push之后会自动带上返回箭头
         // leading: const Icon(Icons.arrow_back),
         backgroundColor: Colors.lightGreen,
         actions: [
-          if (isShowMock)
-            TextButton(
-              onPressed: () async {
-                setState(() {
-                  billItems.clear();
-                  scollDirection == "none";
-                  isLoading = true;
-                });
+          IconButton(
+            onPressed: () async {
+              setState(() {
+                billItems.clear();
+                scollDirection == "none";
+                isLoading = true;
+              });
 
-                var importRst = await loadBillIeamFromAssets();
+              await loadBillIeamFromJson();
 
-                // 异步执行结果，如果没挂载了，就不管了
-                if (!mounted) return;
-                setState(() {
-                  isLoading = false;
-                });
-                loadBillItemsByMonth();
+              if (!context.mounted) return;
+              setState(() {
+                isLoading = false;
+              });
 
-                if (!importRst) {
-                  // ignore: use_build_context_synchronously
-                  commonExceptionDialog(context, "导入失败", "选中的json文件格式不正确");
-                }
-              },
-              child: const Text("Mock"),
+              await loadBillItemsByMonth();
+
+              if (!context.mounted) return;
+              commonHintDialog(context, "导入成功", "已导入选中的账单数据");
+            },
+            icon: Icon(
+              Icons.file_upload,
+              color: Theme.of(context).primaryColor,
             ),
-          // ElevatedButton(
-          //   onPressed: showBottomSheet,
-          //   child: const Text('demo'),
-          // ),
+          ),
           IconButton(
             onPressed: () {
               Navigator.push(
@@ -465,7 +487,6 @@ class _BillItemIndexState extends State<BillItemIndex> {
                 ),
               ).then((value) {
                 // 如果有新增成功，则重新查询当前月份数据
-                print("新增billitem的返回值---$value");
                 if (value != null && value) {
                   setState(() {
                     // 注意，这里返回后，默认查询的是当前选中的月份
@@ -621,7 +642,6 @@ class _BillItemIndexState extends State<BillItemIndex> {
             ).then((date) {
               if (date != null) {
                 setState(() {
-                  print(date);
                   selectedMonth = DateFormat(constMonthFormat).format(date);
                   maxQueryedDate =
                       DateTime.tryParse("$selectedMonth-01") ?? DateTime.now();
@@ -808,7 +828,6 @@ class _BillItemIndexState extends State<BillItemIndex> {
           ),
         ).then((value) {
           // 如果有修改成功，则重新查询当前月份数据
-          print("x修改------billitem的返回值---$value");
           if (value != null && value) {
             setState(() {
               handleSearch();

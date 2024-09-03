@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:io';
 
 import 'package:doc_text/doc_text.dart';
@@ -244,7 +242,7 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
           case 'doc':
             text = await DocText().extractTextFromDoc(file.path!) ?? "";
           default:
-            print("默认的,暂时啥都不做");
+            debugPrint("默认的,暂时啥都不做");
         }
 
         if (!mounted) return;

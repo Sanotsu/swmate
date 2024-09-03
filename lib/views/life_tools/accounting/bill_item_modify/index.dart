@@ -314,7 +314,8 @@ class _BillEditPageState extends State<BillEditPage> {
                   validator: FormBuilderValidators.compose([
                     FormBuilderValidators.required(),
                   ]),
-                  keyboardType: TextInputType.multiline,
+                  enableSuggestions: true,
+                  keyboardType: TextInputType.text,
                   textInputAction: TextInputAction.done,
                 ),
                 FormBuilderChoiceChip<String>(
