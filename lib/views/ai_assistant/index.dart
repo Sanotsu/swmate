@@ -1,10 +1,8 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../apis/_default_free_model_list/index.dart';
+import '../../apis/_default_model_list/index.dart';
+import '../../apis/_default_system_role_list/default_file_interpret_role_list.dart';
 import '../../common/components/tool_widget.dart';
 import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
@@ -37,17 +35,11 @@ class AIToolIndex extends StatefulWidget {
 class _AIToolIndexState extends State<AIToolIndex> {
   final DBHelper dbHelper = DBHelper();
 
-  // 部分花费大的工具，默认先不开启了
-  bool isEnableMyCose = false;
-
-  // 2024-07-26
   // 默认的页面主体的缩放比例(对话太小了就可以等比放大)
-  // 暂时就在“你问我答”页面测试，且只缩放问答列表(因为其他布局放大可能会有溢出问题)
-  // ？？？后续可能作为配置，直接全局缓存，所有使用ChatListArea的地方都改了(现在不是所有地方都用的这个部件)
+  // 直接全局缓存，所有使用ChatListArea的地方都改了
   double _textScaleFactor = 1.0;
 
-  // db中是否存在模型列表
-
+  // db中是否存在模型列表，不存在则自动导入免费的模型列表，已存在则忽略
   List cusModelList = [];
 
   @override
@@ -73,11 +65,8 @@ class _AIToolIndexState extends State<AIToolIndex> {
       return;
     }
 
-    ///
-    /// 初始化模型信息和系统角色
-    /// (后续默认可能是从asset中导入一次json文件，但可以在配置中导入支持的平台支持的模型)
-    /// 要考虑万一用户导入收费模型使用，顶不顶得住
-    ///
+    // 初始化模型信息和系统角色
+    // 要考虑万一用户导入收费模型使用，顶不顶得住
     await testInitModelAndSysRole(FREE_all_MODELS);
 
     var afterList = await dbHelper.queryCusLLMSpecList();
@@ -202,13 +191,14 @@ class _AIToolIndexState extends State<AIToolIndex> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          /// 免责说明
           Text(
             "服务生成的所有内容均由人工智能模型生成，无法确保内容的真实性、准确性和完整性，仅供参考，且不代表开发者的态度或观点。",
             style: TextStyle(fontSize: 12.sp, color: Colors.grey),
           ),
           SizedBox(height: 10.sp),
-          // 入口按钮
 
+          /// 入口按钮
           if (cusModelList.isNotEmpty)
             SizedBox(
               height: screenBodyHeight - 50.sp,
@@ -218,7 +208,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
                 crossAxisSpacing: 5,
                 mainAxisSpacing: 5,
                 crossAxisCount: 2,
-                childAspectRatio: 2 / 1,
+                childAspectRatio: 3 / 2,
                 children: <Widget>[
                   CustomEntranceCard(
                     title: '智能对话',
@@ -264,6 +254,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
                           llmSpecList: llmSpecList,
                           cusSysRoleSpecs: cusSysRoleSpecs,
                         ),
+                        isDocInterpret: true,
                       );
                     },
                   ),
@@ -280,6 +271,7 @@ class _AIToolIndexState extends State<AIToolIndex> {
                           llmSpecList: llmSpecList,
                           cusSysRoleSpecs: cusSysRoleSpecs,
                         ),
+                        isImageInterpret: true,
                       );
                     },
                   ),
@@ -353,15 +345,10 @@ class _AIToolIndexState extends State<AIToolIndex> {
                   ),
 
                   // buildToolEntrance(
-                  //   "[全部]",
+                  //   "[测试]",
                   //   icon: const Icon(Icons.chat_outlined),
                   //   color: Colors.blue[100],
                   //   onTap: () async {},
-                  // ),
-
-                  // buildAIToolEntrance(
-                  //   "功能\n占位(TODO)",
-                  //   icon: const Icon(Icons.search),
                   // ),
                 ],
               ),
@@ -372,31 +359,6 @@ class _AIToolIndexState extends State<AIToolIndex> {
   }
 }
 
-void writeListToJsonFile(List<CusLLMSpec> list, String filePath) {
-  final jsonList = list.map((spec) => spec.toMap()).toList();
-  final jsonString = jsonEncode(jsonList);
-  File(filePath).writeAsStringSync(jsonString);
-}
-
-Future<List<CusLLMSpec>> readListFromJsonFile(String filePath) async {
-  final jsonString = await File(filePath).readAsString();
-  final jsonList = jsonDecode(jsonString) as List;
-  return jsonList.map((map) => CusLLMSpec.fromMap(map)).toList();
-}
-
-void writeSysRoleListToJsonFile(List<CusSysRoleSpec> list, String filePath) {
-  final jsonList = list.map((spec) => spec.toMap()).toList();
-  final jsonString = jsonEncode(jsonList);
-  File(filePath).writeAsStringSync(jsonString);
-}
-
-Future<List<CusSysRoleSpec>> readSysRoleListFromJsonFile(
-    String filePath) async {
-  final jsonString = await File(filePath).readAsString();
-  final jsonList = jsonDecode(jsonString) as List;
-  return jsonList.map((map) => CusSysRoleSpec.fromMap(map)).toList();
-}
-
 ///
 /// 点击智能助手的入口，跳转到子页面
 ///
@@ -405,6 +367,10 @@ Future<void> navigateToToolScreen(
   LLModelType modelType,
   Widget Function(List<CusLLMSpec>, List<CusSysRoleSpec>) pageBuilder, {
   LLModelType? roleType,
+  // 文档解读和图片解读就只用内部预设的角色列表(翻译、总结、分析)，不用用户自己的
+  // 调用时，这两个不能同时存在
+  bool? isDocInterpret,
+  bool? isImageInterpret,
 }) async {
   // 获取对话的模型列表(具体逻辑看函数内部)
   List<CusLLMSpec> llmSpecList = await fetchCusLLMSpecList(modelType);
@@ -412,6 +378,18 @@ Future<void> navigateToToolScreen(
   // 获取系统角色列表
   List<CusSysRoleSpec> cusSysRoleSpecs =
       await fetchCusSysRoleSpecList(roleType);
+
+  if (isImageInterpret == true && isDocInterpret == true) {
+    throw Exception("文档解读和图片解读不能同时指定");
+  }
+
+  // 如果是文档解读和图片解读，只用预设的翻译、总结、分析就好了，不要用户自定义
+  if (isDocInterpret == true) {
+    cusSysRoleSpecs = Doc_SysRole_List;
+  }
+  if (isImageInterpret == true) {
+    cusSysRoleSpecs = Img_SysRole_List;
+  }
 
   if (!context.mounted) return;
   if (llmSpecList.isEmpty) {

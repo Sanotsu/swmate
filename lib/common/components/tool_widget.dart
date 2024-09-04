@@ -135,15 +135,17 @@ commonMarkdwonHintDialog(
     builder: (context) {
       return AlertDialog(
         title: Text(title),
-        content: MarkdownBody(
-          data: message,
-          selectable: true,
-          // 设置Markdown文本全局样式
-          styleSheet: MarkdownStyleSheet(
-            // 普通段落文本颜色(假定用户输入就是普通段落文本)
-            p: const TextStyle(color: Colors.black),
-            // ... 其他级别的标题样式
-            // 可以继续添加更多Markdown元素的样式
+        content: SingleChildScrollView(
+          child: MarkdownBody(
+            data: message,
+            selectable: true,
+            // 设置Markdown文本全局样式
+            styleSheet: MarkdownStyleSheet(
+              // 普通段落文本颜色(假定用户输入就是普通段落文本)
+              p: TextStyle(fontSize: msgFontSize, color: Colors.black),
+              // ... 其他级别的标题样式
+              // 可以继续添加更多Markdown元素的样式
+            ),
           ),
         ),
         actions: [
@@ -154,6 +156,71 @@ commonMarkdwonHintDialog(
             child: const Text("确定"),
           ),
         ],
+      );
+    },
+  );
+}
+
+/// 通用的底部信息弹窗
+commonMDHintModalBottomSheet(
+  BuildContext context,
+  String title,
+  String message, {
+  double? msgFontSize,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    builder: (BuildContext context) {
+      return Container(
+        // height: MediaQuery.of(context).size.height / 4 * 3,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(15.sp),
+            topRight: Radius.circular(15.sp),
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.sp),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(title, style: TextStyle(fontSize: 18.sp)),
+                  TextButton(
+                    child: const Text('关闭'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      unfocusHandle();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 2.sp, thickness: 2.sp),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.all(10.sp),
+                  child: MarkdownBody(
+                    data: message,
+                    selectable: true,
+                    // 设置Markdown文本全局样式
+                    styleSheet: MarkdownStyleSheet(
+                      // 普通段落文本颜色(假定用户输入就是普通段落文本)
+                      p: TextStyle(fontSize: msgFontSize, color: Colors.black),
+                      // ... 其他级别的标题样式
+                      // 可以继续添加更多Markdown元素的样式
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     },
   );
@@ -276,7 +343,7 @@ Widget buildImageView(
     return Center(
       child: Text(
         imagePlaceholder,
-        style: const TextStyle(color: Colors.grey),
+        // style: const TextStyle(color: Colors.grey),
       ),
     );
   }
@@ -928,6 +995,28 @@ Widget buildDropdownButton2<T>({
         height: 48.sp, // 方便超过1行的模型名显示，所有设置高点
         padding: EdgeInsets.symmetric(horizontal: 5.sp),
       ),
+    ),
+  );
+}
+
+/// 构建弹出菜单按钮的条目
+buildCusPopupMenuItem(
+  BuildContext context,
+  String value, // 用于判断的值
+  String label, // 用于显示的标签文字
+  IconData icon, // 图标数据
+) {
+  return PopupMenuItem(
+    value: value,
+    child: Row(
+      children: [
+        Icon(icon, color: Theme.of(context).primaryColor),
+        SizedBox(width: 5.sp),
+        Text(
+          label,
+          style: TextStyle(color: Theme.of(context).primaryColor),
+        ),
+      ],
     ),
   );
 }

@@ -57,6 +57,7 @@ Future<String> getTextFromAudioFromXFYun(String audioPath) async {
       // 2024-08-17？？具体哪里释放还拿不准
       EasyLoading.dismiss();
 
+      // 2024-09-03 这里语言转文字时可能有报错 Bad state: Future already completed
       completer.complete(transcription);
     },
     onDone: () {

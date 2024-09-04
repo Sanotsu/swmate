@@ -40,27 +40,48 @@ class _SystemPromptIndexState extends State<SystemPromptIndex> {
     });
   }
 
+  Widget _buildPopupMenuButton() {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert),
+      // 调整弹出按钮的位置
+      position: PopupMenuPosition.under,
+      // 弹出按钮的偏移
+      // offset: Offset(-25.sp, 0),
+      onSelected: (String value) async {
+        // 处理选中的菜单项
+        if (value == 'import') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SystemPromptJsonImport(),
+            ),
+          ).then((value) {
+            getSystemPromptSpecs();
+          });
+        } else if (value == 'info') {
+          commonMDHintModalBottomSheet(
+            context,
+            "系统角色说明",
+            """1. 预设了一些系统角色，也可自行创建、导入、删除。
+2. 系统角色需指定使用场景(比如对话、文生图、图生图等)，且不是对所有的模型都有效。
+3. 点击系统角色项次查看详情，长按项次进行删除。""",
+            msgFontSize: 15.sp,
+          );
+        }
+      },
+      itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
+        buildCusPopupMenuItem(context, "import", "导入", Icons.file_upload),
+        buildCusPopupMenuItem(context, "info", "说明", Icons.info_outline),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "系统角色列表",
-        ),
+        title: const Text("系统角色"),
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SystemPromptJsonImport(),
-                ),
-              ).then((value) {
-                getSystemPromptSpecs();
-              });
-            },
-            icon: const Icon(Icons.upload_file),
-          ),
           IconButton(
             onPressed: () {
               Navigator.push(
@@ -74,6 +95,7 @@ class _SystemPromptIndexState extends State<SystemPromptIndex> {
             },
             icon: const Icon(Icons.add),
           ),
+          _buildPopupMenuButton(),
         ],
       ),
       body: Container(
@@ -87,30 +109,6 @@ class _SystemPromptIndexState extends State<SystemPromptIndex> {
         ),
         child: Column(
           children: [
-            Container(
-              height: 100.sp,
-              margin: EdgeInsets.fromLTRB(20, 0, 10.sp, 0.sp),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text("说明：", style: TextStyle(fontSize: 15.sp)),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    """内部预设一些系统角色，用户可以自行创建、导入、删除。\n系统角色需要指定不同使用场景，但不是所有模型都适配。\n点击项次查看详情，长按删除。""",
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12.sp),
-                  ),
-                  Divider(height: 10.sp, thickness: 1.sp),
-                ],
-              ),
-            ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 5.sp),
               child: Row(
@@ -165,7 +163,9 @@ class _SystemPromptIndexState extends State<SystemPromptIndex> {
 
                   return Card(
                     child: ListTile(
-                      title: Text("[${a.sysRoleType?.name}]__${a.label}"),
+                      title: Text(
+                        "${index + 1}_${MT_NAME_MAP[a.sysRoleType]}_${a.label}",
+                      ),
                       subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
                       dense: true,
                       // 点击进入详情页(详情页中可以修改？？)

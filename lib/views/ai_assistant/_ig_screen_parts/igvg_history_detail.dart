@@ -45,6 +45,15 @@ class _IGVGHistoryDetailState extends State<IGVGHistoryDetail> {
   }
 
   getIGVGData() async {
+    // CogVideoXResp? result = await timedVideoGenerationTaskStatus(
+    //   "168017208620522638991735689073393514",
+    //   () => setState(() {
+    //     LoadingOverlay.hide();
+    //   }),
+    // );
+
+    // print(result?.toRawJson());
+
     // 将传入的数据赋值
     currentIgvg = widget.igvg;
 
@@ -183,17 +192,9 @@ class _IGVGHistoryDetailState extends State<IGVGHistoryDetail> {
             children: buildImageResult(
               context,
               currentIgvg.imageUrls!,
-              "${currentIgvg.llmSpec?.platform.name}_${currentIgvg.llmSpec?.cusLlm.name}",
+              "${currentIgvg.llmSpec?.platform.name}_${currentIgvg.llmSpec?.name}",
             ),
           ),
-        // Wrap(
-        //   children: buildImageList(
-        //     context,
-        //     currentIgvg.imageUrls!,
-        //     prefix:
-        //         "${currentIgvg.llmSpec?.platform.name}_${currentIgvg.llmSpec?.cusLlm.name}",
-        //   ),
-        // ),
         if (currentIgvg.modelType == LLModelType.ttv &&
             currentIgvg.videoCoverImageUrls != null &&
             currentIgvg.videoCoverImageUrls!.isNotEmpty &&

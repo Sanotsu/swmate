@@ -7,7 +7,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_view/photo_view.dart';
 
-import '../../apis/_self_model_list/index.dart';
+import '../../apis/_default_model_list/index.dart';
+import '../../common/components/tool_widget.dart';
 import '../../common/constants.dart';
 import '../../common/utils/db_tools/db_helper.dart';
 import '../../services/cus_get_storage.dart';
@@ -227,9 +228,13 @@ class _UserAndSettingsState extends State<UserAndSettings> {
                   context: context,
                   applicationName: 'SWMate',
                   children: [
-                    const Text("author: SanotSu"),
-                    const Text("wechat: SanotSu"),
-                    const Text("github: https://github.com/Sanotsu/swmate"),
+                    const Center(child: Text("author & wechat: SanotSu")),
+                    TextButton(
+                      onPressed: () {
+                        launchStringUrl("https://github.com/Sanotsu/swmate");
+                      },
+                      child: const Text("Github: Sanotsu/swmate"),
+                    ),
                   ],
                 );
               },

@@ -72,10 +72,10 @@ class ChatHistoryItem extends StatelessWidget {
                       "上次对话: $gmtModified",
                       style: TextStyle(fontSize: 12.sp),
                     ),
-                    Text(
-                      "创建时间: $gmtCreate",
-                      style: TextStyle(fontSize: 12.sp),
-                    ),
+                    // Text(
+                    //   "创建时间: $gmtCreate",
+                    //   style: TextStyle(fontSize: 12.sp),
+                    // ),
                   ],
                 ),
               ),

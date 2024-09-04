@@ -9,8 +9,9 @@ import '../../../common/llm_spec/cus_llm_model.dart';
 void showCusSysRoleList(
   BuildContext context,
   List<CusSysRoleSpec> ccSysRoleList,
-  Function(CusSysRoleSpec) onRoleSelected,
-) {
+  Function(CusSysRoleSpec) onRoleSelected, {
+  String? title,
+}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -18,6 +19,7 @@ void showCusSysRoleList(
       return CusSysRoleListModal(
         ccSysRoleList: ccSysRoleList,
         onRoleSelected: onRoleSelected,
+        title: title,
       );
     },
   ).then((value) {
@@ -30,11 +32,13 @@ void showCusSysRoleList(
 class CusSysRoleListModal extends StatelessWidget {
   final List<CusSysRoleSpec> ccSysRoleList;
   final Function(CusSysRoleSpec) onRoleSelected;
+  final String? title;
 
   const CusSysRoleListModal({
     super.key,
     required this.ccSysRoleList,
     required this.onRoleSelected,
+    this.title,
   });
 
   @override
@@ -61,7 +65,7 @@ class CusSysRoleListModal extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        "预设系统角色说明",
+                        "预设${title ?? '系统角色'}说明",
                         style: TextStyle(fontSize: 18.sp),
                       ),
                     ),
@@ -72,11 +76,19 @@ class CusSysRoleListModal extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  """不是所有模型都支持，不是所有预设角色都能按预期执行。\n先选择好平台和模型，再选择预设角色，角色才会生效。
-                            """,
-                  maxLines: 2,
+                  "不是所有模型都支持，不是所有${title ?? '角色'}都能按预期执行。",
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 12.sp),
+                ),
+                Text(
+                  "先选好平台和模型，再选择${title ?? '角色'}，${title ?? '角色'}才会生效。",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Divider(height: 10.sp, thickness: 1.sp),
               ],

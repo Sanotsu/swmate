@@ -3,6 +3,11 @@
 import '../../common/llm_spec/cus_llm_model.dart';
 
 var IG_List = [
+  CusSysRoleSpec.iti(
+    label: "【英文】靓女走在沙滩上",
+    systemPrompt: """A young and beautiful woman with snow-white skin, 
+walking on the beach.""",
+  ),
   CusSysRoleSpec.tti(
     label: "【英文】未来感摩天大楼",
     systemPrompt: """A futuristic cityscape with towering skyscrapers 

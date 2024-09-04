@@ -43,15 +43,8 @@ class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
     super.initState();
 
     setState(() {
-      selectedSize = WordArt_outputImageRatioList.first;
       selectedFontName = getInitialFontName();
     });
-  }
-
-  /// 锦书创意文字支持的尺寸
-  @override
-  List<String> getSizeList() {
-    return WordArt_outputImageRatioList;
   }
 
   /// 锦书创意文字支持的自定义字体名称列表
@@ -132,6 +125,10 @@ class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
     // 文字变形默认prompt必传的
     return prompt.isNotEmpty;
   }
+
+  // 创意文字不需要高级选项
+  @override
+  bool isShowAdvancedOptions() => false;
 
   /// 锦书创意文字支持的模型类型
   @override
@@ -234,9 +231,32 @@ class _AliyunWordArtScreenState extends BaseIGScreenState<AliyunWordArtScreen> {
 
   /// 构建配置区域
   @override
-  List<Widget> buildConfigArea({bool? isOnlySize}) {
+  List<Widget> buildConfigArea() {
     return [
       ...super.buildConfigArea(),
+
+      /// 2024-09-04
+      /// 图片纹理和百家姓生成都没有指定的尺寸，就文字变形可选{"1280x720", "720x1280", "1024x1024"}
+      /// 所以锦书就不显示尺寸下拉框，只显示张数张数选择
+      SizedBox(
+        height: 32.sp,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            SizedBox(width: 5.sp),
+            Expanded(
+              child: SizeAndNumSelector(
+                label: "数量",
+                selectedValue: selectedNum,
+                items: ImageNumList,
+                onChanged: (val) => setState(() => selectedNum = val),
+                itemToString: (item) => item.toString(),
+              ),
+            ),
+            SizedBox(width: 5.sp),
+          ],
+        ),
+      ),
 
       Container(
         height: 32.sp,

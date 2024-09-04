@@ -26,17 +26,6 @@ import '../../_componets/sounds_message_button/utils/sounds_recorder_controller.
 import '../../_helper/handle_cc_response.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
 
-/// 2024-07-16
-/// 这个应该会复用，后续抽出chatbatindex出来
-/// 2024-07-23
-/// 页面中各个布局的部件已经抽出来了，放在lib/views/ai_assistant/_chat_screen_parts
-///   目前已经重构的页面：
-///     lib/views/ai_assistant/ai_tools/chat_bot/index.dart
-///     lib/views/ai_assistant/ai_tools/aggregate_search/index.dart
-///
-/// 2024-08-11 把http请求等待响应的加载圈放在拦截器里面，这里的对话列表中就不再需要占位的消息了
-///
-///
 class ChatBot extends StatefulWidget {
   // 可供挑选的模型列表
   final List<CusLLMSpec> llmSpecList;
@@ -142,13 +131,16 @@ class _ChatBotState extends State<ChatBot> {
 
   //获取指定分类的历史对话
   Future<List<ChatHistory>> getHistoryChats() async {
-    return await _dbHelper.queryChatList(chatType: "cc");
+    return await _dbHelper.queryChatList(chatType: LLModelType.cc.name);
   }
 
   /// 获取指定对话列表
   _getChatInfo(String chatId) async {
     // 默认查询到所有的历史对话(这里有uuid了，应该就只有1条存在才对)
-    var list = await _dbHelper.queryChatList(uuid: chatId, chatType: "cc");
+    var list = await _dbHelper.queryChatList(
+      uuid: chatId,
+      chatType: LLModelType.cc.name,
+    );
 
     if (list.isNotEmpty) {
       if (!mounted) return;
@@ -192,7 +184,7 @@ class _ChatBotState extends State<ChatBot> {
       messages.add(
         ChatMessage(
           messageId: const Uuid().v4(),
-          role: "user",
+          role: CusRole.user.name,
           content: text,
           // 没有录音文件就存空字符串，避免内部转化为“null”字符串
           contentVoicePath: contentVoicePath ?? "",
@@ -293,10 +285,11 @@ class _ChatBotState extends State<ChatBot> {
     // 2024-08-23 如果对话中只有1个user或者1个user和1个system(即两条信息)，则表明是新建对话
     if (messages.isNotEmpty &&
             (messages.length == 1 &&
-                messages.where((e) => e.role == "user").length == 1) ||
+                messages.where((e) => e.role == CusRole.user.name).length ==
+                    1) ||
         (messages.length == 2 &&
-            messages.where((e) => e.role == "user").length == 1 &&
-            messages.where((e) => e.role == "system").length == 1)) {
+            messages.where((e) => e.role == CusRole.user.name).length == 1 &&
+            messages.where((e) => e.role == CusRole.system.name).length == 1)) {
       // 如果没有对话记录(即上层没有传入，且当前时用户第一次输入文字还没有创建对话记录)，则新建对话记录
       chatHistory ??= ChatHistory(
         uuid: const Uuid().v4(),
@@ -310,7 +303,7 @@ class _ChatBotState extends State<ChatBot> {
         llmName: selectedModelSpec.name,
         cloudPlatformName: selectedPlatform.name,
         // 2026-06-06 对话历史默认带上类别
-        chatType: "cc",
+        chatType: LLModelType.cc.name,
       );
 
       await _dbHelper.insertChatList([chatHistory!]);
@@ -364,7 +357,7 @@ class _ChatBotState extends State<ChatBot> {
       messages.add(
         ChatMessage(
           messageId: const Uuid().v4(),
-          role: "system",
+          role: CusRole.system.name,
           content: role.systemPrompt,
           contentVoicePath: "",
           dateTime: DateTime.now(),
@@ -377,7 +370,7 @@ class _ChatBotState extends State<ChatBot> {
     // selectedRole = role;
     // messages.add(ChatMessage(
     //   messageId: const Uuid().v4(),
-    //   role: "system",
+    //   role: CusRole.system.name,
     //   content: role.systemPrompt,
     //   contentVoicePath: "",
     //   dateTime: DateTime.now(),
@@ -462,9 +455,14 @@ class _ChatBotState extends State<ChatBot> {
               ),
             // 预设的问题列表
             if (messages.isEmpty)
-              ChatDefaultQuestionArea(
-                defaultQuestions: defaultQuestions,
-                onQuestionTap: _userSendMessage,
+              Expanded(
+                // ??? 其他组件有扩展??? 原来是之前的消息列表
+                // 理论上这两个不会同时存在，所以这个设为多大都无所谓
+                flex: 3,
+                child: ChatDefaultQuestionArea(
+                  defaultQuestions: defaultQuestions,
+                  onQuestionTap: _userSendMessage,
+                ),
               ),
 
             /// 如果有选择了预设角色，则显示改角色
@@ -501,11 +499,11 @@ class _ChatBotState extends State<ChatBot> {
             /// 标题和对话正文的分割线
             if (chatHistory != null) Divider(height: 3.sp, thickness: 1.sp),
 
-            /// 显示对话消息主体
+            /// 显示对话消息主体(因为绑定了滚动控制器，所以一开始就要在)
             ChatListArea(
               messages: messages,
               // 如果不想显示system信息，这里可以移除掉(但不能修改原消息列表)
-              // messages: messages.where((e) => e.role != "system").toList(),
+              // messages: messages.where((e) => e.role != CusRole.system.name).toList(),
               scrollController: _scrollController,
               isBotThinking: isBotThinking,
               regenerateLatestQuestion: regenerateLatestQuestion,

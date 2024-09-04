@@ -55,7 +55,7 @@ class SizeAndNumArea extends StatelessWidget {
                 itemToString: (item) => item.toString(),
               ),
             ),
-          SizedBox(width: 5.sp),
+          if (isOnlySize == false) SizedBox(width: 5.sp),
         ],
       ),
     );

@@ -45,6 +45,8 @@ class CogVideoXScreen extends StatefulWidget {
 
 class _CogVideoXScreenState extends State<CogVideoXScreen>
     with WidgetsBindingObserver {
+  final DBHelper dbHelper = DBHelper();
+
   // 所有支持文生图的模型列表(用于下拉的平台和该平台拥有的模型列表也从这里来)
   late List<CusLLMSpec> llmSpecList;
 
@@ -64,11 +66,12 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
   // 选择的参考图片文件
   File? selectedImage;
 
-  // 是否正在生成图片
-  bool isGenImage = false;
+  // 是否正在生成视频
+  bool isGenVideo = false;
 
   // 最后生成的视频封面图地址
   List<String> rstCoverImageUrls = [
+    "https://sfile.chatglm.cn/testpath/video_cover/73709046-0255-508c-a1f8-927ec431e1c6_cover_0.png",
     "https://sfile.chatglm.cn/testpath/video_cover/ac03bd1c-f930-57b0-9e9d-ddbd3fe104ef_cover_0.png",
     "https://sfile.chatglm.cn/testpath/video_cover/7d315e9c-e007-5633-b14e-25e210529eac_cover_0.png",
     "https://sfile.chatglm.cn/testpath/video_cover/94e91976-69c9-5a7f-bb93-63a933511024_cover_0.png",
@@ -78,6 +81,7 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
   ];
   // 最后生成的视频地址
   List<String> rstVideoUrls = [
+    "https://sfile.chatglm.cn/testpath/video/73709046-0255-508c-a1f8-927ec431e1c6_0.mp4",
     "https://sfile.chatglm.cn/testpath/video/ac03bd1c-f930-57b0-9e9d-ddbd3fe104ef_0.mp4",
     "https://sfile.chatglm.cn/testpath/video/7d315e9c-e007-5633-b14e-25e210529eac_0.mp4",
     "https://sfile.chatglm.cn/testpath/video/94e91976-69c9-5a7f-bb93-63a933511024_0.mp4",
@@ -85,8 +89,6 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
     "https://sfile.chatglm.cn/testpath/video/cbaeecd4-9a73-5661-8510-659b10473fc9_0.mp4",
     "https://sfile.chatglm.cn/testpath/video/0280ab33-90b6-55d5-97c7-3d060a352912_0.mp4",
   ];
-
-  final DBHelper dbHelper = DBHelper();
 
   @override
   void initState() {
@@ -120,16 +122,16 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
 
   /// 获取文生图的数据
   Future<void> getVideoGenerationData() async {
-    if (isGenImage) {
+    if (isGenVideo) {
       return;
     }
 
     setState(() {
-      isGenImage = true;
-      // 开始获取图片后，添加遮罩
+      isGenVideo = true;
+      // 开始获取视频后，添加遮罩
       LoadingOverlay.show(
         context,
-        onCancel: () => setState(() => isGenImage = false),
+        onCancel: () => setState(() => isGenVideo = false),
       );
     });
 
@@ -155,7 +157,7 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
     if (!mounted) return;
     if (jobResp.error?.code != null) {
       setState(() {
-        isGenImage = false;
+        isGenVideo = false;
         LoadingOverlay.hide();
       });
       return commonExceptionDialog(
@@ -189,7 +191,7 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
     CogVideoXResp? result = await timedVideoGenerationTaskStatus(
       taskId,
       () => setState(() {
-        isGenImage = false;
+        isGenVideo = false;
         LoadingOverlay.hide();
       }),
     );
@@ -197,7 +199,7 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
     if (!mounted) return;
     if (result?.error?.code != null) {
       setState(() {
-        isGenImage = false;
+        isGenVideo = false;
         LoadingOverlay.hide();
       });
 
@@ -228,7 +230,7 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
       setState(() {
         rstCoverImageUrls = imageUrls;
         rstVideoUrls = videoUrls;
-        isGenImage = false;
+        isGenVideo = false;
         LoadingOverlay.hide();
       });
     }
@@ -265,7 +267,7 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
         children: [
           PromptInput(
             label: "正向提示词",
-            hintText: '描述画面的提示词信息。不超过500个字符\n(部分模型只支持英文)。\n比如：“一只展翅翱翔的狸花猫”',
+            hintText: '视频的文本描述、最大支持500Tokens输入。\n比如：“一只展翅翱翔的狸花猫”',
             controller: promptController,
             onChanged: (text) {
               setState(() {
@@ -353,7 +355,7 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
                   await getVideoGenerationData();
                 } catch (e) {
                   setState(() {
-                    isGenImage = false;
+                    isGenVideo = false;
                     LoadingOverlay.hide();
                     EasyLoading.showError(
                       e.toString(),
@@ -389,7 +391,7 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
   }
 }
 
-/// 构建生成的图片区域
+/// 构建生成的视频区域
 /// 历史记录详情中也会用到
 List<Widget> buildVideoResult(List<String> videoUrls, List<String> coverUrls) {
   return [
@@ -402,9 +404,9 @@ List<Widget> buildVideoResult(List<String> videoUrls, List<String> coverUrls) {
       ),
     ),
 
-    /// 图片放一行，最多只有4张
+    /// 视频封面放一行，最多只有4张
     SizedBox(
-      // 最多4张图片，放在一排就好(高度即四分之一的宽度左右)。在最下面留点空即可
+      // 最多4张封面图，放在一排就好(高度即四分之一的宽度左右)。在最下面留点空即可
       height: 0.25.sw + 5.sp,
       child: SingleChildScrollView(
         child: GridView.builder(
@@ -441,7 +443,7 @@ List<Widget> buildVideoResult(List<String> videoUrls, List<String> coverUrls) {
                 // );
               },
               onLongPress: () {
-                savevgVideoToLocal(videoUrls[index]);
+                savevgVideoToLocal(videoUrls[index], prefix: "cogvideox");
               },
               child: Image.network(
                 coverUrls[index],

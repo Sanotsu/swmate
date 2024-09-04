@@ -36,10 +36,10 @@ class _VoiceWaveBubbleState extends State<VoiceWaveBubble> {
   // 语音时长，单位秒，也用于构建组件长度
   int voiceDuration = 0;
 
-  final playerWaveStyle = const PlayerWaveStyle(
+  final playerWaveStyle = PlayerWaveStyle(
     fixedWaveColor: Colors.white54,
     liveWaveColor: Colors.white,
-    spacing: 5,
+    spacing: 5.sp,
   );
 
   @override
@@ -64,7 +64,9 @@ class _VoiceWaveBubbleState extends State<VoiceWaveBubble> {
 
     if (!mounted) return;
     setState(() {
-      voiceDuration = controller.maxDuration ~/ 1000;
+      // voiceDuration = (controller.maxDuration ~/ 1000);
+      // 不丢弃小数，而是向上取整
+      voiceDuration = (controller.maxDuration / 1000).ceil();
     });
   }
 

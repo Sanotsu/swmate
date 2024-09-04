@@ -32,50 +32,50 @@ class _DishJsonImportState extends State<DishJsonImport> {
 
   // 用户可以选择多个json文件
   Future<void> _openJsonFiles() async {
-    FilePickerResult? result =
-        await FilePicker.platform.pickFiles(allowMultiple: true);
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.custom,
+      allowedExtensions: ["json", "JSON"],
+    );
     if (result != null) {
       setState(() {
         isLoading = true;
       });
 
       for (File file in result.files.map((file) => File(file.path!))) {
-        if (file.path.toLowerCase().endsWith('.json')) {
-          try {
-            String jsonData = await file.readAsString();
+        try {
+          String jsonData = await file.readAsString();
 
-            // 如果一个json文件只是一个动作，那就加上中括号；如果本身就是带了中括号的多个，就不再加
-            List dishMapList =
-                jsonData.trim().startsWith("[") && jsonData.trim().endsWith("]")
-                    ? json.decode(jsonData)
-                    : json.decode("[$jsonData]");
+          // 如果一个json文件只是一个动作，那就加上中括号；如果本身就是带了中括号的多个，就不再加
+          List dishMapList =
+              jsonData.trim().startsWith("[") && jsonData.trim().endsWith("]")
+                  ? json.decode(jsonData)
+                  : json.decode("[$jsonData]");
 
-            var temp =
-                dishMapList.map((e) => JsonFileDish.fromJson(e)).toList();
+          var temp = dishMapList.map((e) => JsonFileDish.fromJson(e)).toList();
 
-            setState(() {
-              dishes.addAll(temp);
-              // 更新需要构建的表格的长度和每条数据的可选中状态
-              dishItemsNum = dishes.length;
-              dishSelectedList =
-                  List<bool>.generate(dishItemsNum, (int index) => false);
-            });
-          } catch (e) {
-            // 弹出报错提示框
-            if (!mounted) return;
+          setState(() {
+            dishes.addAll(temp);
+            // 更新需要构建的表格的长度和每条数据的可选中状态
+            dishItemsNum = dishes.length;
+            dishSelectedList =
+                List<bool>.generate(dishItemsNum, (int index) => false);
+          });
+        } catch (e) {
+          // 弹出报错提示框
+          if (!mounted) return;
 
-            commonExceptionDialog(
-              context,
-              "导入json文件错误",
-              "错误文件${file.path},\n 错误信息${e.toString}",
-            );
+          commonExceptionDialog(
+            context,
+            "导入json文件错误",
+            "错误文件${file.path},\n 错误信息${e.toString}",
+          );
 
-            setState(() {
-              isLoading = false;
-            });
-            // 中止操作
-            return;
-          }
+          setState(() {
+            isLoading = false;
+          });
+          // 中止操作
+          return;
         }
       }
       setState(() {
@@ -166,6 +166,46 @@ class _DishJsonImportState extends State<DishJsonImport> {
           style: TextStyle(fontSize: 20.sp),
         ),
         actions: [
+          IconButton(
+            onPressed: () {
+              commonMDHintModalBottomSheet(
+                context,
+                "json文件结构",
+                """
+```
+[
+  {
+    "dish_name": "回锅肉",
+    "description": "此菜色味俱佳，肉鲜而香……",
+    "tags": "川菜,家常菜,肉菜,麻辣鲜香",
+    "meal_categories": "午餐,晚餐,夜宵",
+    "images": [
+      "https://www.xxx.jpg",
+      "https://www.xxxx.jpg"
+    ],
+    "videos": ["https://……/video/"],
+    "recipe": [
+      "原料："
+      "猪肉500克，蒜苗150克，化猪油40克，……",
+      "作法："
+      "1. 把带皮的肥瘦相连的猪肉洗干净。",
+      "2. 锅内放开水置旺火上，下猪肉和葱、姜、……",
+      "附 注：",
+      "1.在肉汤中加适量新……",
+      "2.根据爱好，菜内可加豆豉炒……",
+    ],
+    // 菜谱只支持单张图片
+    "recipe_picture": "https://xxxx.com" 
+  },
+  { …… }
+]
+```
+""",
+                msgFontSize: 15.sp,
+              );
+            },
+            icon: const Icon(Icons.info_outline),
+          ),
           IconButton(
             onPressed: dishes.isNotEmpty ? _saveToDb : null,
             icon: Icon(

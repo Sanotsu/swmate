@@ -107,11 +107,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
     });
 
     setState(() {
-      sysRoleList = (widget.cusSysRoleSpecs as List<CusSysRoleSpec>)
-          .where((spec) =>
-              spec.name?.name.toLowerCase().startsWith(roleName) ?? false)
-          .toList();
-
+      sysRoleList = (widget.cusSysRoleSpecs as List<CusSysRoleSpec>);
       selectSysRole = sysRoleList.first;
       renewSystemAndMessages();
     });
@@ -128,7 +124,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
       messages.add(
         ChatMessage(
           messageId: const Uuid().v4(),
-          role: "system",
+          role: CusRole.system.name,
           content: getSystemPrompt(),
           dateTime: DateTime.now(),
         ),
@@ -159,7 +155,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
       messages.add(
         ChatMessage(
           messageId: const Uuid().v4(),
-          role: "user",
+          role: CusRole.user.name,
           content: text,
           contentVoicePath: contentVoicePath ?? "",
           dateTime: DateTime.now(),
@@ -199,7 +195,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
 
       tempStream = await baiduCCRespWithCancel(
         [],
-        prompt: messages.where((e) => e.role == "user").last.content,
+        prompt: messages.where((e) => e.role == CusRole.user.name).last.content,
         image: base64Encode((await getSelectedImage()!.readAsBytes())),
         model: selectedModelSpec.model,
         stream: isStream,
@@ -248,10 +244,18 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
               isBotThinking = false;
             });
 
+            var msgContent = messages
+                .map((e) => e.role == CusRole.assistant.name
+                    ? "【输出】 ${e.content}"
+                    : "【输入】 ${e.content}")
+                .toList()
+                .join("\n\n");
+
             if (getDocContent().isNotEmpty) {
               saveMarkdownAsTxt(
                 // widget.messages.last.content,
-                "【文档】\n\n${getDocContent()}\n\n【问答】\n\n${messages.map((e) => e.role == "assistant" ? "【输出】 ${e.content}" : "【输入】 ${e.content}").toList().join("\n\n")}",
+                "【文档】\n\n${getDocContent()}\n\n【问答】\n\n$msgContent",
+                fileTitle: "文档解读",
               );
             }
 
@@ -259,12 +263,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
               // saveMarkdownHtmlAsPdf
               saveMarkdownAsPdf(
                 // widget.messages.last.content,
-                messages
-                    .map((e) => e.role == "assistant"
-                        ? "【输出】 ${e.content}"
-                        : "【输入】 ${e.content}")
-                    .toList()
-                    .join("\n\n"),
+                msgContent,
                 getSelectedImage()!,
               );
             }
@@ -305,7 +304,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
   ///
 
   // 预设功能列表切换时要更新当前选中的角色信息
-  void setSelectedASysRole(CusSysRoleSpec item);
+  void setSelectedSysRole(CusSysRoleSpec item);
   // 当前选中的提示词角色名称
   CusSysRole getSelectedSysRoleName();
 
@@ -331,7 +330,7 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
                 items: sysRoleList,
                 onItemSelected: (item) {
                   setState(() {
-                    setSelectedASysRole(item);
+                    setSelectedSysRole(item);
                   });
                   renewSystemAndMessages();
                 },
@@ -378,7 +377,8 @@ abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
         ChatListArea(
           /// 如果不想显示system信息，这里可以移除掉(但不能修改原消息列表)
           // messages: messages,
-          messages: messages.where((e) => e.role != "system").toList(),
+          messages:
+              messages.where((e) => e.role != CusRole.system.name).toList(),
           scrollController: scrollController,
           isBotThinking: isBotThinking,
           isAvatarTop: true,

@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../apis/image_to_image/silicon_flow_iti_apis.dart';
+import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/utils/tools.dart';
@@ -189,12 +189,16 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
         await getSFImageToImageResp(a, selectedModelSpec.model);
 
     if (!mounted) return null;
-    if (result.error != null) {
-      EasyLoading.showError("服务器报错:\n${result.error!}");
+    if (result.error != null || result.code != null) {
       setState(() {
         isGenImage = false;
         LoadingOverlay.hide();
       });
+      commonHintDialog(
+        context,
+        "错误提醒",
+        "API调用报错:\n${result.error ?? result.message}",
+      );
     } else {
       if (result.images != null) {
         for (var e in result.images!) {
@@ -211,16 +215,32 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
   @override
   List<Widget> buildConfigArea({bool? isOnlySize}) {
     return [
-      // 平台模型选中和尺寸张数选择结构大体一样的，放在基类
-      // 2024-09-01 但智谱传数量没有意义，其他的之前没处理好暂时不管
-      if (selectedPlatform == ApiPlatform.zhipu)
-        ...super.buildConfigArea(isOnlySize: true),
-      if (selectedPlatform != ApiPlatform.zhipu) ...super.buildConfigArea(),
+      ...super.buildConfigArea(),
+
+      /// 尺寸、张数选择
+      /// 如果是 InstantID，尺寸和张数都没用
+      if (selectedModelSpec.cusLlm != CusLLM.siliconCloud_InstantID_ITI)
+        SizeAndNumArea(
+          selectedSize: selectedSize,
+          selectedNum: selectedNum,
+          sizeList: getSizeList(),
+          numList: ImageNumList,
+          onSizeChanged: (val) => setState(() => selectedSize = val),
+          onNumChanged: (val) => setState(() => selectedNum = val),
+        ),
 
       if ((selectedModelSpec.cusLlm == CusLLM.siliconCloud_PhotoMaker_ITI ||
           selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI))
         Container(
-          margin: EdgeInsets.fromLTRB(5.sp, 5.sp, 5.sp, 0),
+          margin: EdgeInsets.fromLTRB(
+            5.sp,
+            // 如果是InstantID，就完全没有尺寸和张数组件，上方空白就不留了
+            (selectedModelSpec.cusLlm != CusLLM.siliconCloud_InstantID_ITI)
+                ? 5.sp
+                : 0.sp,
+            5.sp,
+            0,
+          ),
           height: 32.sp,
           child: Row(
             children: [

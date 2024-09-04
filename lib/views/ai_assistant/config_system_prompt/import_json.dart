@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../common/components/tool_widget.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
+import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/db_tools/db_helper.dart';
 
 class SystemPromptJsonImport extends StatefulWidget {
@@ -26,10 +27,9 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
   // 上传的json文件列表
   List<File> jsons = [];
 
-  // 构建json文件加载成功后的锻炼数据表格要用到
-  // 待上传的动作数量已经每个动作的选中状态
-  int exerciseItemsNum = 0;
-  List<bool> exerciseSelectedList = [false];
+  // 系统角色的数量和表格中选中状态
+  int sysRoleCount = 0;
+  List<bool> sysRoleSelectedList = [false];
 
   // 用户可以选择多个json文件
   Future<void> _openJsonFiles() async {
@@ -44,44 +44,42 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
       });
 
       for (File file in result.files.map((file) => File(file.path!))) {
-        if (file.path.toLowerCase().endsWith('.json')) {
-          try {
-            String jsonData = await file.readAsString();
+        try {
+          String jsonData = await file.readAsString();
 
-            // 如果一个json文件只是一个动作，那就加上中括号；如果本身就是带了中括号的多个，就不再加
-            List cusRoleMaps =
-                jsonData.trim().startsWith("[") && jsonData.trim().endsWith("]")
-                    ? json.decode(jsonData)
-                    : json.decode("[$jsonData]");
+          // 如果一个json文件只是一个，那就加上中括号；如果本身就是带了中括号的多个，就不再加
+          List cusRoleMaps =
+              jsonData.trim().startsWith("[") && jsonData.trim().endsWith("]")
+                  ? json.decode(jsonData)
+                  : json.decode("[$jsonData]");
 
-            var temp =
-                cusRoleMaps.map((e) => CusSysRoleSpec.fromJson(e)).toList();
+          var temp =
+              cusRoleMaps.map((e) => CusSysRoleSpec.fromJson(e)).toList();
 
-            setState(() {
-              sysRoleSpecs.addAll(temp);
-              // 更新需要构建的表格的长度和每条数据的可选中状态
-              exerciseItemsNum = sysRoleSpecs.length;
-              exerciseSelectedList =
-                  List<bool>.generate(exerciseItemsNum, (int index) => false);
-            });
-          } catch (e) {
-            // 弹出报错提示框
-            if (!mounted) return;
+          setState(() {
+            sysRoleSpecs.addAll(temp);
+            // 更新需要构建的表格的长度和每条数据的可选中状态
+            sysRoleCount = sysRoleSpecs.length;
+            sysRoleSelectedList =
+                List<bool>.generate(sysRoleCount, (int index) => false);
+          });
+        } catch (e) {
+          // 弹出报错提示框
+          if (!mounted) return;
 
-            commonExceptionDialog(
-              context,
-              "json导入失败",
-              "json解析失败:${file.path},\n${e.toString}",
-            );
+          commonExceptionDialog(
+            context,
+            "json导入失败",
+            "json解析失败:${file.path},\n${e.toString}",
+          );
 
-            setState(() {
-              isLoading = false;
-            });
+          setState(() {
+            isLoading = false;
+          });
 
-            rethrow;
-            // 中止操作
-            // return;
-          }
+          rethrow;
+          // 中止操作
+          // return;
         }
       }
       setState(() {
@@ -131,8 +129,8 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
         jsons = [];
         sysRoleSpecs = [];
         // 更新需要构建的表格的长度和每条数据的可选中状态
-        exerciseItemsNum = 0;
-        exerciseSelectedList = [false];
+        sysRoleCount = 0;
+        sysRoleSelectedList = [false];
 
         isLoading = false;
       });
@@ -163,9 +161,37 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "系统角色JSON导入",
+          "系统角色导入",
         ),
         actions: [
+          IconButton(
+            onPressed: () {
+              commonMDHintModalBottomSheet(
+                context,
+                "json文件结构",
+                """```json
+[
+  {
+    "label": "【中文】红衣女和小黑猫",
+    "subtitle": "通义万相，二次元",
+    "systemPrompt": "a woman in a red ……",
+    "negativePrompt": "低分辨率、低质量……",
+    // sysRoleType可选列表:
+    //  cc: '文本对话',
+    //  vision: '图片解读',
+    //  tti: '文本生图',
+    //  iti: '图片生图',
+    //  ttv: '文生视频',
+    "sysRoleType": "tti"
+  },
+  { /*……*/ }
+]
+```""",
+                msgFontSize: 15.sp,
+              );
+            },
+            icon: const Icon(Icons.info_outline),
+          ),
           IconButton(
             onPressed: sysRoleSpecs.isNotEmpty ? _saveToDb : null,
             icon: Icon(
@@ -223,8 +249,8 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
                   jsons = [];
                   sysRoleSpecs = [];
                   // 更新需要构建的表格的长度和每条数据的可选中状态
-                  exerciseItemsNum = 0;
-                  exerciseSelectedList = [false];
+                  sysRoleCount = 0;
+                  sysRoleSelectedList = [false];
                 });
               },
               child: Text(
@@ -236,16 +262,13 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
           Expanded(
             child: TextButton(
               // 如果选中为空，则禁用点击
-              onPressed: exerciseSelectedList
-                      .where((e) => e)
-                      .toList()
-                      .isNotEmpty
+              onPressed: sysRoleSelectedList.where((e) => e).toList().isNotEmpty
                   ? () {
                       setState(() {
                         // 先找到被选中的索引
                         List<int> trueIndices = List.generate(
-                                exerciseSelectedList.length, (index) => index)
-                            .where((i) => exerciseSelectedList[i])
+                                sysRoleSelectedList.length, (index) => index)
+                            .where((i) => sysRoleSelectedList[i])
                             .toList();
 
                         // 从列表中移除
@@ -254,9 +277,9 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
                           sysRoleSpecs.removeAt(trueIndices[i]);
                         }
                         // 更新需要构建的表格的长度和每条数据的可选中状态
-                        exerciseItemsNum = sysRoleSpecs.length;
-                        exerciseSelectedList = List<bool>.generate(
-                          exerciseItemsNum,
+                        sysRoleCount = sysRoleSpecs.length;
+                        sysRoleSelectedList = List<bool>.generate(
+                          sysRoleCount,
                           (int index) => false,
                         );
                       });
@@ -371,7 +394,7 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "上传条数 ${sysRoleSpecs.length}",
+              "待上传条数 ${sysRoleSpecs.length}",
               style: TextStyle(fontSize: 15.sp),
               textAlign: TextAlign.start,
             ),
@@ -388,11 +411,11 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
             columnSpacing: 5.sp, // 设置列间距
             columns: const <DataColumn>[
               DataColumn(label: Text("序号")),
-              DataColumn(label: Text("名称")),
               DataColumn(label: Text("分类")),
+              DataColumn(label: Text("名称")),
             ],
             rows: List<DataRow>.generate(
-              exerciseItemsNum,
+              sysRoleCount,
               (int index) => DataRow(
                 color: WidgetStateProperty.resolveWith<Color?>(
                     (Set<WidgetState> states) {
@@ -420,25 +443,25 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
                     ),
                   ),
                   DataCell(
+                    SizedBox(
+                      width: 50.sp,
+                      child: Text(
+                        '${MT_NAME_MAP[sysRoleSpecs[index].sysRoleType]}',
+                        style: TextStyle(fontSize: 12.sp),
+                      ),
+                    ),
+                  ),
+                  DataCell(
                     Text(
                       sysRoleSpecs[index].label,
                       style: TextStyle(fontSize: 12.sp),
                     ),
                   ),
-                  DataCell(
-                    SizedBox(
-                      width: 120.sp,
-                      child: Text(
-                        '${sysRoleSpecs[index].sysRoleType}',
-                        style: TextStyle(fontSize: 12.sp),
-                      ),
-                    ),
-                  ),
                 ],
-                selected: exerciseSelectedList[index],
+                selected: sysRoleSelectedList[index],
                 onSelectChanged: (bool? value) {
                   setState(() {
-                    exerciseSelectedList[index] = value!;
+                    sysRoleSelectedList[index] = value!;
                   });
                 },
               ),

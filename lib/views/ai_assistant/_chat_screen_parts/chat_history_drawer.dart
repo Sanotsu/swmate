@@ -26,6 +26,10 @@ class ChatHistoryDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      // 取消圆角
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+      ),
       child: ListView(
         children: <Widget>[
           SizedBox(

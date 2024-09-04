@@ -251,7 +251,32 @@ class AliyunTtiParameter {
   factory AliyunTtiParameter.fromJson(Map<String, dynamic> srcJson) =>
       _$AliyunTtiParameterFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$AliyunTtiParameterToJson(this);
+  Map<String, dynamic> toFullJson() => _$AliyunTtiParameterToJson(this);
+
+  // 自定义tojson方法，参数为null的就不加到json中
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> json = {};
+
+    if (style != null) json['style'] = style;
+    if (size != null) json['size'] = size;
+    if (n != null) json['n'] = n;
+    if (seed != null) json['seed'] = seed;
+    if (strength != null) json['strength'] = strength;
+    if (refMode != null) json['ref_mode'] = refMode;
+    if (steps != null) json['steps'] = steps;
+    if (guidance != null) json['guidance'] = guidance;
+    if (imageShortSize != null) {
+      json['image_short_size'] = imageShortSize;
+    }
+    if (alphaChannel != null) json['alpha_channel'] = alphaChannel;
+    if (fontName != null) json['font_name'] = fontName;
+    if (ttfUrl != null) json['ttf_url'] = ttfUrl;
+    if (outputImageRatio != null) {
+      json['output_image_ratio'] = outputImageRatio;
+    }
+
+    return json;
+  }
 }
 
 /// 阿里云锦书艺术文字可传参考图片

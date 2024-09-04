@@ -19,7 +19,6 @@ import '../../_helper/tools.dart';
 import '../../_ig_screen_parts/ig_button_row_area.dart';
 import '../../_helper/constants.dart';
 import '../../_componets/loading_overlay.dart';
-import '../../_ig_screen_parts/size_and_num_selector.dart';
 import '../../_ig_screen_parts/igvg_history_screen.dart';
 
 ///
@@ -184,7 +183,9 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
   }
 
   /// 各个平台图片生成支持的尺寸列表
-  List<String> getSizeList();
+  // 阿里云的锦书创意文字除了变形，其他没有指定的尺寸列表，所以全部取消了，
+  // 所以为了子类没必要重新，这里就返一个值数组，避免取first出错
+  List<String> getSizeList() => ["1024*1024"];
 
   /// 各个平台图片生成支持的样式列表
   List<String> getStyleList();
@@ -243,6 +244,10 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
   bool isCanGenerate() {
     return prompt.isNotEmpty && isGenImage == false;
   }
+
+  // 是否显示文生图的高级选项(seed、step、guidance等)
+  // 默认是需要显示的，但创意文字、部分平台的文生图没有这些参数，所以需要重载为false
+  bool isShowAdvancedOptions() => true;
 
   ///
   /// 获取文生图数据，阿里云的是提交job、查询job状态
@@ -499,16 +504,41 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
         title: Text(getAppBarTitle()),
         actions: [
           if (selectedModelSpec.modelType != LLModelType.tti_word)
-            TextButton(
+            // TextButton(
+            //   onPressed: () {
+            //     showCusSysRoleList(
+            //       context,
+            //       sysRoleList,
+            //       onRoleSelected,
+            //     );
+            //   },
+            //   child: const Text("提示词"),
+            // ),
+            // 预设的纯对话角色(就是一堆预设的system prompt)
+            IconButton(
               onPressed: () {
                 showCusSysRoleList(
                   context,
                   sysRoleList,
                   onRoleSelected,
+                  title: "提示词",
                 );
               },
-              child: const Text("预设提示词"),
+              icon: const Icon(Icons.face),
             ),
+          IconButton(
+            onPressed: () {
+              commonMDHintModalBottomSheet(
+                context,
+                '温馨提示',
+                """1. 选中的分辨率越高、批量生成的数量越大，则耗费费的时间越久，部分模型收费也越高;
+2. 阿里云平台的各项文生图在取消绘制后可以在查看历史记录时继续获取，其他平台不支持。
+3. 图片生成图片时，注意两者比例要一致，否则会有意想不到的结果。""",
+                msgFontSize: 15.sp,
+              );
+            },
+            icon: const Icon(Icons.info_outline),
+          ),
           IconButton(
             onPressed: () {
               Navigator.push(
@@ -567,7 +597,7 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
                     ...buildConfigArea(),
 
                     // 2024-09-01 之前的其他不知道，但智谱的文生图这个肯定没用
-                    if (selectedPlatform != ApiPlatform.zhipu) _buildPanel(),
+                    if (isShowAdvancedOptions()) _buildPanel(),
 
                     /// 文生图的结果
                     if (rstImageUrls.isNotEmpty)
@@ -592,7 +622,7 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
 
   /// 构建文生图的配置区域
   /// 这两个是都用的，其他不同的子类去重载
-  List<Widget> buildConfigArea({bool? isOnlySize}) {
+  List<Widget> buildConfigArea() {
     return [
       /// 平台和模型选择
       CusPlatformAndLlmRow(
@@ -603,18 +633,6 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
         showToggleSwitch: false,
         onPlatformOrModelChanged: cpModelChangedCB,
       ),
-
-      /// 尺寸、张数选择
-
-      if (isOnlySize != false)
-        SizeAndNumArea(
-          selectedSize: selectedSize,
-          selectedNum: selectedNum,
-          sizeList: getSizeList(),
-          numList: ImageNumList,
-          onSizeChanged: (val) => setState(() => selectedSize = val),
-          onNumChanged: (val) => setState(() => selectedNum = val),
-        ),
     ];
   }
 }

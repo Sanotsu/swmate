@@ -10,10 +10,13 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../apis/chat_completion/common_cc_apis.dart';
+import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../models/chat_competion/com_cc_resp.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
 
+// 调用对话模型时，可能是处理单纯的聊天、文档解读、图片解读
+// 不同的内容通用处理有一些差别
 enum CC_SWC_TYPE {
   chat,
   doc,
@@ -91,14 +94,14 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
       var tempBase64Str = base64Encode((await selectedImage!.readAsBytes()));
       String? imageBase64String = "data:image/jpeg;base64,$tempBase64Str";
 
-      messages.firstWhere((e) => e.role == "user");
+      messages.firstWhere((e) => e.role == CusRole.user.name);
 
       // 遍历消息，把第一个user信息替换成图片结构，后面的保留原本输入字符
       for (int i = 0; i < msgs.length; i++) {
         var e = msgs[i];
 
         // 找到并替换第一个满足条件的对象
-        if (e.role == "user") {
+        if (e.role == CusRole.user.name) {
           e.content = [
             {
               "type": "image_url",
@@ -113,14 +116,14 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
 
     // 如果图片解析，要对传入的对话参数做一些调整
     if (useType == CC_SWC_TYPE.doc) {
-      messages.firstWhere((e) => e.role == "user");
+      messages.firstWhere((e) => e.role == CusRole.user.name);
 
       // 遍历消息，把第一个user信息替换成图片结构，后面的保留原本输入字符
       for (int i = 0; i < msgs.length; i++) {
         var e = msgs[i];
 
         // 找到并替换第一个满足条件的对象(文档内容+用户输入)
-        if (e.role == "user") {
+        if (e.role == CusRole.user.name) {
           e.content = docContent! + e.content;
           break;
         }
@@ -137,10 +140,10 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
     } else if (selectedPlatform == ApiPlatform.baidu) {
       // 如果是百度的，system是不能放在对话中，需要单独配置，所以对消息列表还要处理
       // 理论上应该只有一个的
-      var systemMsg = msgs.where((e) => e.role == "system").toList();
+      var systemMsg = msgs.where((e) => e.role == CusRole.system.name).toList();
       if (systemMsg.isNotEmpty) {
         tempStream = await baiduCCRespWithCancel(
-          msgs.where((e) => e.role != "system").toList(),
+          msgs.where((e) => e.role != CusRole.system.name).toList(),
           model: selectedModel,
           stream: isStream,
           system: systemMsg.first.content,
@@ -279,7 +282,7 @@ void commonOnDataHandler({
 ChatMessage buildEmptyAssistantChatMessage({String? modelLabel}) {
   return ChatMessage(
     messageId: const Uuid().v4(),
-    role: "assistant",
+    role: CusRole.assistant.name,
     content: "",
     contentVoicePath: "",
     dateTime: DateTime.now(),

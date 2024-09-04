@@ -32,6 +32,12 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
   // 选择的图片文件
   File? selectedImage;
 
+  var imgHintInfo = """1. 点击图片可预览、缩放
+2. 支持 JPEG/PNG 格式
+3. 图片最大支持 2048*1080
+4. base64编码后大小不超过4M
+5. 图片越大，处理耗时越久.""";
+
   @override
   void initState() {
     super.initState();
@@ -59,7 +65,7 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
   /// 构建页面需要的几个函数
   ///
   @override
-  void setSelectedASysRole(CusSysRoleSpec item) {
+  void setSelectedSysRole(CusSysRoleSpec item) {
     selectSysRole = item;
   }
 
@@ -88,14 +94,14 @@ class _ImageInterpretState extends BaseInterpretState<ImageInterpret> {
         actions: [
           IconButton(
             onPressed: () {
-              commonMarkdwonHintDialog(
+              commonMDHintModalBottomSheet(
                 context,
                 '温馨提示',
-                selectSysRole.hintInfo ?? "",
+                imgHintInfo,
                 msgFontSize: 15.sp,
               );
             },
-            icon: const Icon(Icons.help),
+            icon: const Icon(Icons.info_outline),
           ),
         ],
       ),

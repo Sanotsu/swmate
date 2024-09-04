@@ -7,6 +7,8 @@ const constDatetimeFormat = "yyyy-MM-dd HH:mm:ss";
 const constDateFormat = "yyyy-MM-dd";
 const constMonthFormat = "yyyy-MM";
 const constTimeFormat = "HH:mm:ss";
+// 文件名后缀等
+const constDatetimeSuffix = "yyyyMMdd_HHmmss";
 // 未知的时间字符串
 const unknownDateTimeString = '1970-01-01 00:00:00';
 const unknownDateString = '1970-01-01';
@@ -125,23 +127,18 @@ List<String> chatQuestionSamples = [
   "2024年巴黎奥运会金牌榜",
 ];
 
-/// 保存图片解读结果的目录
-final SAVE_IMAGE_INTERPRET_DIR =
-    Directory('/storage/emulated/0/swmate/image_interpret');
+/// 保存文档解读、图片解读结果的目录
+final FILE_INTERPRET_DIR =
+    Directory('/storage/emulated/0/SWMate/file_interpret');
 
-/// 智能群聊的对话内容保存为json(本来应该存数据库的太麻烦了，这里保存文件意思一下)
-final SAVE_MODEL_BATTLE_DIR =
-    Directory('/storage/emulated/0/swmate/chat_records');
+/// 智能对话和多聊中对话语音文件目录
+final CHAT_AUDIO_DIR = Directory('/storage/emulated/0/SWMate/chat_audio');
 
-/// 智能群聊的对话语音文件目录
-final CHAT_AUDIO_DIR = Directory('/storage/emulated/0/swmate/chat_audio');
-
-/// 讯飞文生图返回的是base64,先直接保存为文件，这是文件地址
-/// 所有的文生图都保存在同一个位置吧
-final LLM_TTI_DIR = Directory('/storage/emulated/0/swmate/tti');
+/// 所有的文生图、图生图都保存在同一个位置
+final LLM_IG_DIR = Directory('/storage/emulated/0/SWMate/image_generation');
 
 /// 所有的文生视频都保存在同一个位置
-final LLM_VG_DIR = Directory('/storage/emulated/0/swmate/vg');
+final LLM_VG_DIR = Directory('/storage/emulated/0/SWMate/video_generation');
 
 // 可供翻译的目标语言
 enum TargetLanguage {
@@ -174,3 +171,10 @@ Map<TargetLanguage, String> LangLabelMap = {
   TargetLanguage.vietnamese: "越南语",
   TargetLanguage.arabic: "阿拉伯语",
 };
+
+// 大模型对话的角色枚举
+enum CusRole {
+  system,
+  user,
+  assistant,
+}

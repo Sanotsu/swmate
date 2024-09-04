@@ -39,13 +39,13 @@ class ChatAppBarArea extends StatelessWidget implements PreferredSizeWidget {
       title: title != null ? Text(title!) : null,
       actions: [
         // 预设的纯对话角色(就是一堆预设的system prompt)
-        TextButton(
+        IconButton(
           onPressed: () {
             if (onCusSysRolePressed != null) {
               onCusSysRolePressed!();
             }
           },
-          child: const Text("预设角色"),
+          icon: const Icon(Icons.face),
         ),
         if (showZoomOutButton)
           IconButton(

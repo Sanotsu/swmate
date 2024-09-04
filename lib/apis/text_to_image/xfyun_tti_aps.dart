@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../common/constants.dart';
 import '../../common/utils/dio_client/cus_http_client.dart';
 import '../../common/utils/dio_client/cus_http_request.dart';
 import '../../common/utils/dio_client/interceptor_error.dart';
@@ -35,7 +36,7 @@ Future<XfyunTtiResp> getXfyunTtiResp(
   var payload = XfyunTtiReqPayload(
     message: XfyunTtiReqMessage(
       // 固定角色，没有反向提示词
-      text: [XfyunTtiReqText(role: "user", content: prompt)],
+      text: [XfyunTtiReqText(role: CusRole.user.name, content: prompt)],
     ),
   );
 

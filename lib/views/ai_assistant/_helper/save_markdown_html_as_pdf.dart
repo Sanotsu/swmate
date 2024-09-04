@@ -16,8 +16,11 @@ import '../../../common/utils/tools.dart';
 ///   由于本地缓存的图片，在html字符串中直接加<img>标签无效，所以图片添加和之前一样
 /// 这个方法多级列表不会被合到一起去
 ///
-
-Future<void> saveMarkdownHtmlAsPdf(String mdString, File imageFile) async {
+Future<void> saveMarkdownHtmlAsPdf(
+  String mdString,
+  File imageFile, {
+  String? fileTitle,
+}) async {
   var mdHtml = md.markdownToHtml(mdString);
 
   /// 这个直接下载到设备指定文件夹
@@ -28,12 +31,12 @@ Future<void> saveMarkdownHtmlAsPdf(String mdString, File imageFile) async {
     }
 
     // 翻译保存的文本，放到设备外部存储固定位置，不存在文件夹则先创建
-    if (!await SAVE_IMAGE_INTERPRET_DIR.exists()) {
-      await SAVE_IMAGE_INTERPRET_DIR.create(recursive: true);
+    if (!await FILE_INTERPRET_DIR.exists()) {
+      await FILE_INTERPRET_DIR.create(recursive: true);
     }
     // 将字符串直接保存为指定路径文件
     final file = File(
-      '${SAVE_IMAGE_INTERPRET_DIR.path}/保存图片解读文档-${DateTime.now().microsecondsSinceEpoch}.pdf',
+      '${FILE_INTERPRET_DIR.path}/${fileTitle ?? '图片解读'}-${DateFormat(constDatetimeSuffix).format(DateTime.now())}.pdf',
     );
 
     final newpdf = htp.Document(
@@ -75,7 +78,7 @@ Future<void> saveMarkdownHtmlAsPdf(String mdString, File imageFile) async {
             child: htp.Row(
               mainAxisAlignment: htp.MainAxisAlignment.spaceBetween,
               children: [
-                htp.Text('本文件由<swmate>自动生成'),
+                htp.Text('本文件由<SWMate>自动生成'),
                 htp.Text(DateFormat.yMMMEd().format(DateTime.now())),
               ],
             ),

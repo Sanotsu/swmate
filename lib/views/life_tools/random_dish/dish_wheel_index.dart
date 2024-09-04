@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../common/utils/db_tools/db_helper.dart';
 import '../../../common/utils/tools.dart';
@@ -208,77 +209,16 @@ class _DishWheelIndexState extends State<DishWheelIndex>
         onPressed: isWheelSpin
             ? null
             : () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text("使用说明"),
-                      content: RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: "点击转盘即可开始旋转",
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            TextSpan(
-                              text: "\n\n点击【餐次下拉选择框】可选择指定餐次；再点击【随机10款菜品】更新预选列表",
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: Colors.black,
-                              ),
-                            ),
-                            TextSpan(
-                              text: "\n\n点击【随机10款菜品】按钮可更新预选列表，不足10个就全部显示",
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: Colors.black,
-                              ),
-                            ),
-                            TextSpan(
-                              text: "\n\n点击下方随机结果的菜品名称可跳转到该菜品详情页",
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: Colors.black,
-                              ),
-                            ),
-                            TextSpan(
-                              text: "\n\n顶部【刷新】图标按钮会根据当前系统时间获取并显示餐次标签",
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: Colors.black,
-                              ),
-                            ),
-                            TextSpan(
-                              text: "\n\n顶部【菜单】图标按钮可以进入菜品列表管理页面",
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: Colors.black,
-                              ),
-                            ),
-                            TextSpan(
-                              text: "\n\n虽然“菜品列表”中网络图片会进行缓存，但也注意流量消耗。",
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context, true);
-                          },
-                          child: const Text("确认"),
-                        ),
-                      ],
-                    );
-                  },
+                commonMDHintModalBottomSheet(
+                  context,
+                  "使用说明",
+                  """**点击转盘即可开始旋转**
+\n点击【餐次下拉选择框】可选择指定餐次，再点击【随机10款菜品】更新预选列表;
+\n点击【随机10款菜品】按钮可更新预选列表，不足10个就全部显示;
+\n点击下方随机结果的菜品名称可跳转到该菜品详情页;
+\n顶部【刷新】图标按钮会根据当前系统时间获取并显示餐次标签;
+\n顶部【菜单】图标按钮可以进入菜品列表管理页面;
+\n**虽然“菜品列表”中网络图片会进行缓存，但也注意流量消耗。**""",
                 );
               },
         icon: const Icon(Icons.info_outlined),

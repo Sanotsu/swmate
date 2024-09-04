@@ -51,7 +51,7 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
               crossAxisSpacing: 5,
               mainAxisSpacing: 5,
               crossAxisCount: 2,
-              childAspectRatio: 2 / 1,
+              childAspectRatio: 3 / 2,
               children: const <Widget>[
                 CustomEntranceCard(
                   title: '极简记账',

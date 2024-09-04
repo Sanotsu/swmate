@@ -153,6 +153,10 @@ dart run build_runner build --delete-conflicting-outputs
 
 - feat:添加了免费模型列表和预设系统角色列表,系统角色可以分类筛选; perf: 清除大量无意义的打印;fix:调整对话文本显示字体的实现,以及一些细节和 bug。
 
+#### 2024-09-04
+
+- fix: 逐个页面逐个功能调试检查，完善细节和修复 bug。
+
 ### todo:
 
 - （done）得到流式响应的数据的处理都非常相似，可以抽出来公共函数

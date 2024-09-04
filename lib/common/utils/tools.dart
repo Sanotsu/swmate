@@ -7,9 +7,11 @@ import 'dart:math';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../constants.dart';
+import '../llm_spec/cus_llm_model.dart';
 
 /// 请求各种权限
 /// 目前存储类的权限要分安卓版本，所以单独处理
@@ -228,11 +230,11 @@ Future<File> saveTtiBase64ImageToLocal(
 }) async {
   final bytes = base64Decode(base64Image);
 
-  if (!await LLM_TTI_DIR.exists()) {
-    await LLM_TTI_DIR.create(recursive: true);
+  if (!await LLM_IG_DIR.exists()) {
+    await LLM_IG_DIR.create(recursive: true);
   }
   final file = File(
-    '${LLM_TTI_DIR.path}/${prefix ?? ""}${DateTime.now().microsecondsSinceEpoch}.png',
+    '${LLM_IG_DIR.path}/${prefix ?? ""}${DateFormat(constDatetimeSuffix).format(DateTime.now())}.png',
   );
 
   await file.writeAsBytes(bytes);
@@ -247,14 +249,23 @@ saveTtiImageToLocal(String netImageUrl, {String? prefix}) async {
     return EasyLoading.showError("未授权访问设备外部存储，无法保存图片");
   }
 
+  // print("原图片地址---$netImageUrl");
+
+  // 2024-09-04 文生图片一般有一个随机的名称，就只使用它就好(可以避免同一个保存了多份)
+  // 注意，像阿里云这种地址会带上过期日期token信息等参数内容，所以下载保存的文件名要过滤掉，只保留图片地址信息
+  // 目前硅基流动、智谱等没有额外信息，问号分割后也不影响
+  var saveImageUrl = netImageUrl.split("?").first.split('/').last;
+
+  // print("新获取的图片地址---$saveImageUrl");
+
   try {
     // 2024-08-17 直接保存文件到指定位置
-    if (!await LLM_TTI_DIR.exists()) {
-      await LLM_TTI_DIR.create(recursive: true);
+    if (!await LLM_IG_DIR.exists()) {
+      await LLM_IG_DIR.create(recursive: true);
     }
-    final file = File(
-      '${LLM_TTI_DIR.path}/${prefix ?? ""}${DateTime.now().microsecondsSinceEpoch}.png',
-    );
+
+    // 传入的前缀有强制带上下划线
+    final file = File('${LLM_IG_DIR.path}/${prefix ?? ""}$saveImageUrl');
 
     EasyLoading.show(status: '【图片保存中...】');
     var response = await Dio().get(
@@ -263,7 +274,8 @@ saveTtiImageToLocal(String netImageUrl, {String? prefix}) async {
     );
 
     await file.writeAsBytes(response.data);
-    EasyLoading.showToast("图片已保存${file.path}");
+
+    EasyLoading.showToast("图片已保存在手机下/${file.path.split("/0/").last}");
   } finally {
     EasyLoading.dismiss();
   }
@@ -291,17 +303,15 @@ savevgVideoToLocal(String netVideoUrl, {String? prefix}) async {
     if (!await LLM_VG_DIR.exists()) {
       await LLM_VG_DIR.create(recursive: true);
     }
+    // 2024-09-04 智谱文生视频有一个随机的名称，就只使用它就好(可以避免同一个视频保存了多个)
     final filePath =
-        '${LLM_VG_DIR.path}/${prefix ?? ""}${DateTime.now().microsecondsSinceEpoch}_${netVideoUrl.split('/').last}';
+        '${LLM_VG_DIR.path}/${prefix ?? ""}_${netVideoUrl.split('/').last}';
 
     EasyLoading.show(status: '【视频保存中...】');
-    await Dio().download(
-      netVideoUrl,
-      filePath,
-      // options: Options(responseType: ResponseType.bytes),
-    );
+    await Dio().download(netVideoUrl, filePath);
 
-    EasyLoading.showToast("视频已保存在$filePath");
+    // 保存的地址在 /storage/emulated/0/SWMate/…… 前面一节就不显示了
+    EasyLoading.showToast("视频已保存在手机下/${filePath.split("/0/").last}");
   } finally {
     EasyLoading.dismiss();
   }
@@ -322,4 +332,33 @@ Future<String?> getImageBase64String(File? image) async {
   if (image == null) return null;
   var tempStr = base64Encode(await image.readAsBytes());
   return "data:image/png;base64,$tempStr";
+}
+
+///
+/// 将自定义模型系统角色数据导出为指定路径的json文件，
+/// 和把指定路径的json文件导入为自定义模型和角色列表
+///
+void writeListToJsonFile(List<CusLLMSpec> list, String filePath) {
+  final jsonList = list.map((spec) => spec.toMap()).toList();
+  final jsonString = jsonEncode(jsonList);
+  File(filePath).writeAsStringSync(jsonString);
+}
+
+Future<List<CusLLMSpec>> readListFromJsonFile(String filePath) async {
+  final jsonString = await File(filePath).readAsString();
+  final jsonList = jsonDecode(jsonString) as List;
+  return jsonList.map((map) => CusLLMSpec.fromMap(map)).toList();
+}
+
+void writeSysRoleListToJsonFile(List<CusSysRoleSpec> list, String filePath) {
+  final jsonList = list.map((spec) => spec.toMap()).toList();
+  final jsonString = jsonEncode(jsonList);
+  File(filePath).writeAsStringSync(jsonString);
+}
+
+Future<List<CusSysRoleSpec>> readSysRoleListFromJsonFile(
+    String filePath) async {
+  final jsonString = await File(filePath).readAsString();
+  final jsonList = jsonDecode(jsonString) as List;
+  return jsonList.map((map) => CusSysRoleSpec.fromMap(map)).toList();
 }

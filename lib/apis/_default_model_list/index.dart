@@ -2,6 +2,7 @@
 
 import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
+import '_self_model_list/index.dart' as self;
 
 /// 全部免费的模型(默认app导入的)
 var FREE_all_MODELS = FREE_baidu_MODELS +
@@ -9,6 +10,14 @@ var FREE_all_MODELS = FREE_baidu_MODELS +
     FREE_tencent_MODELS +
     FREE_xfyun_MODELS +
     FREE_zhipuAI_MODELS;
+
+///
+/// 包含这三个值的_self_model_list/index.dart'文件没有上传，其实结构和免费的一样
+/// 区别在于默认只显示了免费的，付费的、全部的、自用的没给出来
+///
+List<CusLLMSpec> PRICING_all_MODELS = self.PRICING_all_MODELS;
+List<CusLLMSpec> ALL_MODELS = self.ALL_MODELS;
+List<CusLLMSpec> SELF_MODELS = self.SELF_MODELS;
 
 final List<CusLLMSpec> FREE_baidu_MODELS = [
   /// 下面是官方免费的

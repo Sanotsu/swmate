@@ -176,10 +176,11 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
     // 2024-08-23 如果对话中只有1个user或者1个user和1个system(即两条信息)，则表明是新建对话
     if (messages.isNotEmpty &&
             (messages.length == 1 &&
-                messages.where((e) => e.role == "user").length == 1) ||
+                messages.where((e) => e.role == CusRole.user.name).length ==
+                    1) ||
         (messages.length == 2 &&
-            messages.where((e) => e.role == "user").length == 1 &&
-            messages.where((e) => e.role == "system").length == 1)) {
+            messages.where((e) => e.role == CusRole.user.name).length == 1 &&
+            messages.where((e) => e.role == CusRole.system.name).length == 1)) {
       // 如果没有对话记录(即上层没有传入，且当前时用户第一次输入文字还没有创建对话记录)，则新建对话记录
       chatHistory ??= GroupChatHistory(
         uuid: const Uuid().v4(),
@@ -215,7 +216,7 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
     // 用户发送了消息，只需要加入一次
     var temp = ChatMessage(
       messageId: const Uuid().v4(),
-      role: "user",
+      role: CusRole.user.name,
       content: text,
       // 没有录音文件就存空字符串，避免内部转化为“null”字符串
       contentVoicePath: contentVoicePath ?? "",
@@ -345,7 +346,7 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('智能群聊'),
+        title: const Text('智能多聊'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -377,6 +378,7 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
                   setState(() {
                     _selectedItems = selectedItems;
                     // 重新选择了模型列表，则重新开始对话
+                    chatHistory = null;
                     messages.clear();
                     msgMap.clear();
                   });
@@ -444,46 +446,50 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
               ),
             ),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                SizedBox(width: 20.sp),
-                Expanded(
-                  child: Text(
-                    "可横向滚动查看选中模型",
-                    style: TextStyle(fontSize: 13.sp),
-                  ),
-                ),
-                // 只有选中的模型仅2个时才支持对战模式
-                if (_selectedItems.length == 2)
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.sp),
-                    child: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          isBattleMode = !isBattleMode;
-                        });
-                      },
-                      icon: Icon(
-                        Icons.compare,
-                        // 如果已经是对战模式，则为蓝色；如果不是对战模式，用默认颜色，表示可以开启对战模式
-                        color: isBattleMode ? Colors.blue : null,
-                      ),
+            SizedBox(
+              // 因为 Row中组件高度不一样，模型2个选中和多个选中时高度不一致，所以固定row的高度
+              height: 40.sp,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  SizedBox(width: 20.sp),
+                  Expanded(
+                    child: Text(
+                      "可横向滚动查看选中模型",
+                      style: TextStyle(fontSize: 13.sp),
                     ),
                   ),
-                ToggleSwitch(
-                  minHeight: 30.sp,
-                  minWidth: 48.sp,
-                  fontSize: 13.sp,
-                  cornerRadius: 5.sp,
-                  initialLabelIndex: isStream == true ? 0 : 1,
-                  totalSwitches: 2,
-                  labels: const ['分段', '直出'],
-                  onToggle: (index) =>
-                      setState(() => isStream = index == 0 ? true : false),
-                ),
-                SizedBox(width: 5.sp),
-              ],
+                  // 只有选中的模型仅2个时才支持对战模式
+                  if (_selectedItems.length == 2)
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.sp),
+                      child: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            isBattleMode = !isBattleMode;
+                          });
+                        },
+                        icon: Icon(
+                          Icons.compare,
+                          // 如果已经是对战模式，则为蓝色；如果不是对战模式，用默认颜色，表示可以开启对战模式
+                          color: isBattleMode ? Colors.blue : null,
+                        ),
+                      ),
+                    ),
+                  ToggleSwitch(
+                    minHeight: 30.sp,
+                    minWidth: 48.sp,
+                    fontSize: 13.sp,
+                    cornerRadius: 5.sp,
+                    initialLabelIndex: isStream == true ? 0 : 1,
+                    totalSwitches: 2,
+                    labels: const ['分段', '直出'],
+                    onToggle: (index) =>
+                        setState(() => isStream = index == 0 ? true : false),
+                  ),
+                  SizedBox(width: 5.sp),
+                ],
+              ),
             ),
 
             Divider(height: 1.sp),
@@ -498,9 +504,11 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
 
             // 预设的问题列表
             if (msgMap.values.isEmpty)
-              ChatDefaultQuestionArea(
-                defaultQuestions: defaultQuestions,
-                onQuestionTap: _userSendMessage,
+              Expanded(
+                child: ChatDefaultQuestionArea(
+                  defaultQuestions: defaultQuestions,
+                  onQuestionTap: _userSendMessage,
+                ),
               ),
 
             /// 对话的标题区域(因为暂时没有保存，所以就显示用户第一次输入的前20个字符就好了)

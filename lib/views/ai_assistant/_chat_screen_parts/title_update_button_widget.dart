@@ -50,7 +50,7 @@ class _TitleUpdateButtonState extends State<TitleUpdateButton> {
                       border: OutlineInputBorder(),
                     ),
                     controller: _titleController,
-                    maxLines: 3,
+                    maxLines: 2,
                   ),
                   actions: [
                     TextButton(

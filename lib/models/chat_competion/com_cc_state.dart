@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../common/constants.dart';
 import 'com_cc_resp.dart';
 
 part 'com_cc_state.g.dart';
@@ -137,23 +138,25 @@ class ChatMessage {
 ///
 List<ChatMessage> filterAlternatingRoles(List<ChatMessage> messages) {
   List<ChatMessage> filteredMessages = [];
-  String expectedRole = "user"; // 开始时期望的角色
+  String expectedRole = CusRole.user.name; // 开始时期望的角色
 
   for (ChatMessage message in messages) {
     if (message.role == expectedRole) {
       // 如果是保存的占位回复，则直接显示重试
-      if (expectedRole == "assistant") {
+      if (expectedRole == CusRole.assistant.name) {
         filteredMessages.add(ChatMessage(
           messageId: "retry",
           dateTime: DateTime.now(),
-          role: "assistant",
+          role: CusRole.assistant.name,
           content: "问题回答已遗失，请重新提问",
         ));
       } else {
         filteredMessages.add(message);
       }
       // 切换期望角色
-      expectedRole = expectedRole == "user" ? "assistant" : "user";
+      expectedRole = expectedRole == CusRole.user.name
+          ? CusRole.assistant.name
+          : CusRole.user.name;
     } else {
       // 如果角色不匹配，则停止处理并返回已过滤的消息列表
       break;

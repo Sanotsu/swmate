@@ -435,10 +435,69 @@ class _BillItemIndexState extends State<BillItemIndex> {
         // 导入前，先删除所有旧的，因为json文件中没有id不好修改
         await _dbHelper.clearBillItems();
         await _dbHelper.insertBillItemList(temp);
+
+        if (!mounted) return;
+        commonHintDialog(context, "导入成功", "已导入选中的账单数据");
       } catch (e) {
         rethrow;
       }
     }
+  }
+
+  Widget _buildPopupMenuButton() {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert_outlined),
+      // 调整弹出按钮的位置
+      position: PopupMenuPosition.under,
+      // 弹出按钮的偏移
+      // offset: Offset(-25.sp, 0),
+      onSelected: (String value) async {
+        // 处理选中的菜单项
+        if (value == 'info') {
+          commonMDHintModalBottomSheet(
+            context,
+            "使用说明",
+            """1. 长按账单条目可以进行删除;
+2. 双击账单条目可以进行修改;
+3. 支持指定结构的json文件导入，会覆盖已有数据;
+```
+[
+  {
+    // 0 收入,1 支出
+    "item_type": 0, 
+    "category": "工资",
+    "item": "工资",
+    "value": 2874.0
+    "date": "2016-07-01",
+  },
+  //...
+]
+```
+""",
+            msgFontSize: 15.sp,
+          );
+        } else if (value == 'import') {
+          setState(() {
+            billItems.clear();
+            scollDirection == "none";
+            isLoading = true;
+          });
+
+          await loadBillIeamFromJson();
+
+          if (!context.mounted) return;
+          setState(() {
+            isLoading = false;
+          });
+
+          await loadBillItemsByMonth();
+        }
+      },
+      itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
+        buildCusPopupMenuItem(context, "import", "导入账单", Icons.file_upload),
+        buildCusPopupMenuItem(context, "info", "使用说明", Icons.info_outline),
+      ],
+    );
   }
 
   @override
@@ -446,38 +505,12 @@ class _BillItemIndexState extends State<BillItemIndex> {
     return Scaffold(
       // 避免搜索时弹出键盘，让底部的minibar位置移动到tab顶部导致溢出的问题
       resizeToAvoidBottomInset: false,
-      // 这里也可以不用appbar？？？
       appBar: AppBar(
         title: const Text("极简记账"),
         // 明确说明不要返回箭头，避免其他地方使用push之后会自动带上返回箭头
         // leading: const Icon(Icons.arrow_back),
         backgroundColor: Colors.lightGreen,
         actions: [
-          IconButton(
-            onPressed: () async {
-              setState(() {
-                billItems.clear();
-                scollDirection == "none";
-                isLoading = true;
-              });
-
-              await loadBillIeamFromJson();
-
-              if (!context.mounted) return;
-              setState(() {
-                isLoading = false;
-              });
-
-              await loadBillItemsByMonth();
-
-              if (!context.mounted) return;
-              commonHintDialog(context, "导入成功", "已导入选中的账单数据");
-            },
-            icon: Icon(
-              Icons.file_upload,
-              color: Theme.of(context).primaryColor,
-            ),
-          ),
           IconButton(
             onPressed: () {
               Navigator.push(
@@ -515,19 +548,7 @@ class _BillItemIndexState extends State<BillItemIndex> {
               color: Theme.of(context).primaryColor,
             ),
           ),
-          // TextButton.icon(
-          //   onPressed: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(
-          //         builder: (context) => const BillReportIndex(),
-          //       ),
-          //     );
-          //   },
-          //   label: const Text('统计'),
-          //   icon: Icon(Icons.arrow_forward_ios, size: 12.sp),
-          //   iconAlignment: IconAlignment.end,
-          // ),
+          _buildPopupMenuButton(),
         ],
       ),
 
@@ -861,7 +882,7 @@ class _BillItemIndexState extends State<BillItemIndex> {
                 ),
               ),
               actions: [
-                ElevatedButton(
+                TextButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },

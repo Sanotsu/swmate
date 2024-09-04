@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart'; // 确保你已经导入了flutter_easyloading包
 import 'package:flutter/services.dart';
 
+import '../../../common/constants.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
 
 import '../../../services/cus_get_storage.dart';
@@ -91,7 +92,8 @@ class _ChatListAreaState extends State<ChatListArea> {
                   ),
 
                   /// 如果是大模型回复\且已经回复完了，可以有一些功能按钮
-                  if (msg.role == 'assistant' && widget.isBotThinking != true)
+                  if (msg.role == CusRole.assistant.name &&
+                      widget.isBotThinking != true)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -145,7 +147,7 @@ class _ChatListAreaState extends State<ChatListArea> {
     );
   }
 
-  // 保存最后一条对话和图片(2024-08-13 目前就图片解读会用到)
+  // 保存图片解读的对话和图片(2024-08-13 目前就图片解读会用到)
   buildDLPopupMenuButton() {
     return PopupMenuButton<String>(
       icon: Icon(Icons.download_outlined, size: 20.sp),
@@ -159,7 +161,7 @@ class _ChatListAreaState extends State<ChatListArea> {
           saveMarkdownAsTxt(
             // widget.messages.last.content,
             widget.messages
-                .map((e) => e.role == "assistant"
+                .map((e) => e.role == CusRole.assistant.name
                     ? "【输出】 ${e.content}"
                     : "【输入】 ${e.content}")
                 .toList()
@@ -169,7 +171,7 @@ class _ChatListAreaState extends State<ChatListArea> {
           saveMarkdownHtmlAsPdf(
             // widget.messages.last.content,
             widget.messages
-                .map((e) => e.role == "assistant"
+                .map((e) => e.role == CusRole.assistant.name
                     ? "【输出】 ${e.content}"
                     : "【输入】 ${e.content}")
                 .toList()
@@ -177,18 +179,9 @@ class _ChatListAreaState extends State<ChatListArea> {
             widget.selectedImage!,
           );
         } else {
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) => SaveMarkdownToPdf(
-          //       messages.last.content,
-          //       imageFile: _selectedImage!,
-          //     ),
-          //   ),
-          // );
           saveMarkdownAsPdf(
             widget.messages
-                .map((e) => e.role == "assistant"
+                .map((e) => e.role == CusRole.assistant.name
                     ? "【输出】 ${e.content}"
                     : "【输入】 ${e.content}")
                 .toList()

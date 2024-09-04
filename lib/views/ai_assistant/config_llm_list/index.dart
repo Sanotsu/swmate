@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:swmate/common/components/tool_widget.dart';
 
 import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/utils/db_tools/db_helper.dart';
-import '../../../apis/_default_free_model_list/index.dart';
-import '../../../apis/_self_model_list/index.dart';
+import '../../../apis/_default_model_list/index.dart';
+import '../../../common/components/tool_widget.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../_helper/tools.dart';
 import 'api_key_config/index.dart';
@@ -84,17 +83,19 @@ class _ModelListIndexState extends State<ModelListIndex> {
       appBar: AppBar(
         title: const Text("模型列表"),
         actions: [
-          TextButton(
-            onPressed: () => commonMarkdwonHintDialog(
-              context,
-              "模型使用说明",
-              '''1. 默认会加载所有作者能找到且支持的免费模型。
+          IconButton(
+            onPressed: () {
+              commonMDHintModalBottomSheet(
+                context,
+                "模型使用说明",
+                '''1. 默认会加载所有作者能找到且支持的免费模型。
 2. 可以加载已支持的平台**付费模型**，但**需要添加了自己的私钥才能正常使用**(点击右侧钥匙图标配置)。
 3. **平台私钥只会放在用户自己设备的缓存中**。除了调用各个平台的大模型API、和加载网络图片，没有联网操作。
-4. 加载了模型，但没有配置自己的私钥也无法使用(因为作者也没所有平台都充钱，用不了作者的私钥)
-''',
-            ),
-            child: const Text("说明"),
+4. 加载了模型，但没有配置自己的私钥也无法使用(因为作者也没所有平台都充钱，不便用作者的私钥)''',
+                msgFontSize: 15.sp,
+              );
+            },
+            icon: const Icon(Icons.info_outline),
           ),
           IconButton(
             onPressed: () => Navigator.push(
@@ -168,7 +169,7 @@ class _ModelListIndexState extends State<ModelListIndex> {
 
   Widget _buildPopupMenuButton() {
     return PopupMenuButton<String>(
-      icon: const Icon(Icons.menu),
+      icon: const Icon(Icons.more_vert),
       // 调整弹出按钮的位置
       position: PopupMenuPosition.under,
       // 弹出按钮的偏移
@@ -186,28 +187,11 @@ class _ModelListIndexState extends State<ModelListIndex> {
         await getCusLLMSpecs();
       },
       itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
-        PopupMenuItem(
-          value: 'onlyFree',
-          child: Text(
-            '仅加载免费模型',
-            style: TextStyle(color: Theme.of(context).primaryColor),
-          ),
-        ),
-        PopupMenuItem(
-          value: 'onlyPricing',
-          child: Text(
-            '仅加载付费模型',
-            style: TextStyle(color: Theme.of(context).primaryColor),
-            textAlign: TextAlign.end,
-          ),
-        ),
-        PopupMenuItem(
-          value: 'all',
-          child: Text(
-            '加载全部模型',
-            style: TextStyle(color: Theme.of(context).primaryColor),
-          ),
-        ),
+        buildCusPopupMenuItem(
+            context, "onlyFree", "仅加载免费模型", Icons.import_export),
+        buildCusPopupMenuItem(
+            context, "onlyPricing", "仅加载付费模型", Icons.import_export),
+        buildCusPopupMenuItem(context, "all", "加载全部模型", Icons.import_export),
       ],
     );
   }

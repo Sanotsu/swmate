@@ -173,7 +173,7 @@ class DBHelper {
       batch.insert(SWMateDdl.tableNameOfBillItem, item.toMap());
     }
 
-    print("新增账单条目了$billItems");
+    // print("新增账单条目了$billItems");
     return await batch.commit();
   }
 

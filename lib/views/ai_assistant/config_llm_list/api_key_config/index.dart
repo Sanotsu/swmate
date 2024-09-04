@@ -24,9 +24,6 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
   // 密钥是否是隐藏状态(就不每个都弄，所有密钥单独一个就好了)
   bool _obscureText = true;
 
-  // 是否在导入密钥中
-  bool isLoading = true;
-
   // 表单初始值为空
   Map<String, dynamic> initData = {};
 
@@ -51,8 +48,6 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
     );
 
     if (result != null) {
-      setState(() => isLoading = true);
-
       File file = File(result.files.single.path!);
 
       try {
@@ -89,7 +84,7 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
             formState.reset();
           }
           // 再更新表单的值
-          _formKey.currentState?.patchValue(MyGetStorage().getUserAKMap());
+          formState?.patchValue(MyGetStorage().getUserAKMap());
         });
       } catch (e) {
         // 弹出报错提示框
@@ -100,11 +95,8 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           "json解析失败:${file.path},\n${e.toString}",
         );
 
-        setState(() => isLoading = false);
         rethrow;
       }
-
-      setState(() => isLoading = false);
     } else {
       // User canceled the picker
       return;
@@ -113,10 +105,30 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
 
   clearUserAK() async {
     await MyGetStorage().setUserAKMap(null);
+
     setState(() {
-      initData = {};
       _formKey.currentState?.reset();
-      _formKey.currentState?.patchValue(MyGetStorage().getUserAKMap());
+      // _formKey.currentState?.patchValue({});
+      // debugPrint(" ${_formKey.currentState?.fields["aliyunAppId"]?.value}");
+      // initData = {};
+
+      // ？？？ 2024-09-02 上面reset等等操作之后取值依旧存在，直接patchValue({})没有作用，只能这样手动全部置为空
+      _formKey.currentState?.patchValue({
+        SKN.baiduApiKey.name: "",
+        SKN.baiduSecretKey.name: "",
+        SKN.tencentSecretId.name: "",
+        SKN.tencentSecretKey.name: "",
+        SKN.aliyunAppId.name: "",
+        SKN.aliyunApiKey.name: "",
+        SKN.xfyunAppId.name: "",
+        SKN.xfyunApiSecret.name: "",
+        SKN.xfyunApiKey.name: "",
+        SKN.xfyunSparkLiteApiPassword.name: "",
+        SKN.xfyunSparkProApiPassword.name: "",
+        SKN.siliconFlowAK.name: "",
+        SKN.lingyiwanwuAK.name: "",
+        SKN.zhipuAK.name: "",
+      });
     });
   }
 
@@ -177,50 +189,71 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
     });
   }
 
+  Widget _buildPopupMenuButton() {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert),
+      // 调整弹出按钮的位置
+      position: PopupMenuPosition.under,
+      // 弹出按钮的偏移
+      // offset: Offset(-25.sp, 0),
+      onSelected: (String value) async {
+        // 处理选中的菜单项
+        if (value == 'uploadKeys') {
+          _openJsonFiles();
+        } else if (value == 'clearKeys') {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text("清空确认"),
+                content: const Text("确认清空缓存的密钥？"),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text("取消"),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await clearUserAK();
+                      if (mounted) {
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop(true);
+                      }
+                    },
+                    child: const Text("确定"),
+                  ),
+                ],
+              );
+            },
+          );
+        } else if (value == 'info') {
+          commonMDHintModalBottomSheet(
+            context,
+            "使用密钥说明",
+            """可以自行配置本应用支持的平台中自己的密钥;
+\n有密钥可以方便使用该平台上的付费模型;
+\n**密钥仅缓存在设备本地，无其他用途**;
+\n不必所有平台都申请，无密钥的平台中，即便加载了付费模型，各个功能模块中也不可选择;""",
+            msgFontSize: 15.sp,
+          );
+        }
+      },
+      itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
+        buildCusPopupMenuItem(context, "uploadKeys", "导入密钥", Icons.file_upload),
+        buildCusPopupMenuItem(context, "clearKeys", "清空密钥", Icons.clear_all),
+        buildCusPopupMenuItem(context, "info", "使用说明", Icons.info_outline),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('平台密钥'),
         actions: [
-          if (!_isEditing)
-            IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text("清空确认"),
-                      content: const Text("确认清空缓存的密钥？"),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Text("取消"),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            await clearUserAK();
-                            if (mounted) {
-                              if (!context.mounted) return;
-                              Navigator.of(context).pop(true);
-                            }
-                          },
-                          child: const Text("确定"),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-              icon: const Icon(Icons.clear_all),
-            ),
-          if (!_isEditing)
-            IconButton(
-              onPressed: _openJsonFiles,
-              icon: const Icon(Icons.upload_file),
-            ),
           if (_isEditing)
             IconButton(
               icon: const Icon(Icons.close),
@@ -244,32 +277,17 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
               });
             },
           ),
+          IconButton(
+            icon: Icon(
+              _obscureText ? Icons.visibility_off : Icons.visibility,
+            ),
+            onPressed: _toggle,
+          ),
+          _buildPopupMenuButton(),
         ],
       ),
       body: Column(
         children: [
-          Container(
-            height: 60.sp,
-            margin: EdgeInsets.fromLTRB(20, 0, 0.sp, 0.sp),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  """配置了本应用支持平台中自己的密钥，\n可以使用一些该平台上的付费的模型。\n密钥仅在设备本地缓存，确保值可用。""",
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 14.sp),
-                ),
-                IconButton(
-                  icon: Icon(
-                    _obscureText ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: _toggle,
-                ),
-              ],
-            ),
-          ),
           Expanded(
             child: ListView(
               children: [

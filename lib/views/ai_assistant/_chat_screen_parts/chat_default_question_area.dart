@@ -15,26 +15,23 @@ class ChatDefaultQuestionArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      flex: 2,
-      child: ListView.builder(
-        itemCount: defaultQuestions.length,
-        itemBuilder: (context, index) {
-          return Card(
-            elevation: 2,
-            child: ListTile(
-              title: Text(
-                defaultQuestions[index],
-                style: const TextStyle(color: Colors.blue),
-              ),
-              trailing: const Icon(Icons.touch_app, color: Colors.blue),
-              onTap: () {
-                onQuestionTap(defaultQuestions[index]);
-              },
+    return ListView.builder(
+      itemCount: defaultQuestions.length,
+      itemBuilder: (context, index) {
+        return Card(
+          elevation: 2,
+          child: ListTile(
+            title: Text(
+              defaultQuestions[index],
+              style: const TextStyle(color: Colors.blue),
             ),
-          );
-        },
-      ),
+            trailing: const Icon(Icons.touch_app, color: Colors.blue),
+            onTap: () {
+              onQuestionTap(defaultQuestions[index]);
+            },
+          ),
+        );
+      },
     );
   }
 }

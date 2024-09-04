@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_charset_detector/flutter_charset_detector.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:swmate/views/ai_assistant/_helper/handle_cc_response.dart';
 
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
@@ -17,6 +16,7 @@ import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/utils/tools.dart';
 import '../../_helper/constants.dart';
 import '../../_helper/document_parser.dart';
+import '../../_helper/handle_cc_response.dart';
 import 'base_interpret_screen_state.dart';
 
 class DocumentInterpret extends StatefulWidget {
@@ -42,6 +42,11 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
   bool isLoadingDocument = false;
   // 解析后的文件内容
   String fileContent = '';
+
+  var docHintInfo = """1. 目前仅支持上传单个文档文件;
+2. 上传文档目前仅支持 pdf、txt、docx、doc 格式;
+3. 上传的文档和手动输入的文档总内容不超过8000字符;
+4. 如有上传文件, 点击 [文档解析完成] 蓝字, 可以预览解析后的文档.""";
 
   @override
   void initState() {
@@ -69,9 +74,8 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
   ///
   /// 构建页面需要的几个函数
   ///
-
   @override
-  void setSelectedASysRole(CusSysRoleSpec item) {
+  void setSelectedSysRole(CusSysRoleSpec item) {
     selectSysRole = item;
   }
 
@@ -90,19 +94,20 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text("文档解读"),
         actions: [
           IconButton(
             onPressed: () {
-              commonMarkdwonHintDialog(
+              commonMDHintModalBottomSheet(
                 context,
                 '温馨提示',
-                selectSysRole.hintInfo ?? "",
+                docHintInfo,
                 msgFontSize: 15.sp,
               );
             },
-            icon: const Icon(Icons.help),
+            icon: const Icon(Icons.info_outline),
           ),
         ],
       ),
@@ -192,7 +197,12 @@ class _DocumentInterpretState extends BaseInterpretState<DocumentInterpret> {
                     ],
                   ),
                 )
-              : Text(isLoadingDocument ? "文档解析中..." : "可点击左侧按钮上传文件"),
+              : Center(
+                  child: Text(
+                    isLoadingDocument ? "文档解析中..." : "可点击左侧按钮上传文件",
+                    // style: const TextStyle(color: Colors.grey),
+                  ),
+                ),
         ),
         if (selectedDoc != null)
           SizedBox(

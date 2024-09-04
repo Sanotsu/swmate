@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:swmate/apis/text_to_image/zhipuai_tti_apis.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../apis/text_to_image/aliyun_tti_apis.dart';
 import '../../../../apis/text_to_image/silicon_flow_tti_apis.dart';
 import '../../../../apis/text_to_image/xfyun_tti_aps.dart';
+import '../../../../apis/text_to_image/zhipuai_tti_apis.dart';
+import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/utils/tools.dart';
@@ -19,6 +20,7 @@ import '../../../../services/cus_get_storage.dart';
 import '../../_componets/loading_overlay.dart';
 import '../../_componets/prompt_input.dart';
 import '../../_helper/constants.dart';
+import '../../_ig_screen_parts/size_and_num_selector.dart';
 import '../../_ig_screen_parts/style_grid_selector.dart';
 import 'base_ig_screen_state.dart';
 
@@ -43,22 +45,39 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
   @override
   List<String> getSizeList() {
     if (selectedPlatform == ApiPlatform.siliconCloud) {
-      return SF_ImageSizeList;
+      // return SF_Flux_ImageSizeList;
+
+      // 虽然文档里面模型不同尺寸列表不一样，但有些还是可以通用
+      // 这里就放在一起来，如果报错了让用户自己选其他尺寸
+      return (SF_SD3_XL_ImageSizeList +
+              SF_Flux_ImageSizeList +
+              SF_SD2p1_ImageSizeList)
+          .toSet()
+          .toList();
     }
 
     if (selectedPlatform == ApiPlatform.xfyun) {
       return XFYUN_ImageSizeList;
     }
 
+    // 阿里云平台支持的图片支持（目前只有万相和flux）
     if (selectedPlatform == ApiPlatform.aliyun) {
-      return ALIYUN_ImageSizeList;
+      if (selectedModelSpec.cusLlm == CusLLM.aliyun_Wanx_v1_TTI) {
+        return ALIYUN_WANX_ImageSizeList;
+      } else {
+        return ALIYUN_FLUX_ImageSizeList;
+      }
     }
     if (selectedPlatform == ApiPlatform.zhipu) {
-      return ZHIPU_CogViewSizeList;
+      if (selectedModelSpec.cusLlm == CusLLM.zhipu_CogView3_TTI) {
+        return ["1024*1024"];
+      } else {
+        return ZHIPU_CogViewSizeList;
+      }
     }
 
     // 没有匹配上的，都返回siliconCloud的配置
-    return SF_ImageSizeList;
+    return SF_Flux_ImageSizeList;
   }
 
   /// 不同模型有的可能有默认的样式
@@ -96,6 +115,12 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
     return '文本生图';
   }
 
+  // 智谱、讯飞的文生图不需要高级选项
+  @override
+  bool isShowAdvancedOptions() =>
+      selectedPlatform != ApiPlatform.zhipu &&
+      selectedPlatform != ApiPlatform.xfyun;
+
   /// (阿里云平台)提交文生图任务
   @override
   Future<AliyunTtiResp?> commitImageGenerationJob() async {
@@ -105,7 +130,7 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
         negativePrompt: negativePrompt,
       );
 
-      // 2024-08-28 除了万相，其他也行？？？
+      // 2024-08-28 实测除了万相，flux也行
       var parameters = AliyunTtiParameter(
         style: "<${WANX_StyleMap[selectedStyle]}>",
         size: selectedSize,
@@ -147,12 +172,16 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
       SiliconFlowIGResp result = await getSFTtiResp(a, selectedModelSpec.model);
 
       if (!mounted) return null;
-      if (result.error != null) {
-        EasyLoading.showError("服务器报错:\n${result.error!}");
+      if (result.error != null || result.code != null) {
         setState(() {
           isGenImage = false;
           LoadingOverlay.hide();
         });
+        commonHintDialog(
+          context,
+          "错误提醒",
+          "API调用报错:\n${result.error ?? result.message}",
+        );
       } else {
         if (result.images != null) {
           for (var e in result.images!) {
@@ -166,15 +195,24 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
 
       if (!mounted) return null;
       if (result.header?.code != null && result.header?.code != 0) {
-        EasyLoading.showError("服务器报错:\n${result.header?.message}");
         setState(() {
           isGenImage = false;
           LoadingOverlay.hide();
         });
+        commonHintDialog(
+          context,
+          "错误提醒",
+          "API调用报错:\n${result.header?.message}",
+        );
       } else {
         var cont = result.payload?.choices?.text?.first.content;
         if (cont != null) {
-          var file = await saveTtiBase64ImageToLocal(cont, prefix: "xfyun_");
+          // 讯飞返回的直接是base64图片数据，所以要先保存，然后存本地地址
+          // 后续再长按保存，因为已经是本地地址了，就不会再保存了
+          var file = await saveTtiBase64ImageToLocal(
+            cont,
+            prefix: "xfyun_【收费】图片生成_",
+          );
           imageUrls.add(file.path);
         } else {
           EasyLoading.showError("图片数据为空:\n${result.header?.message}");
@@ -196,11 +234,15 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
 
       if (!mounted) return null;
       if (result.error?.code != null) {
-        EasyLoading.showError("服务器报错:\n${result.error?.message}");
         setState(() {
           isGenImage = false;
           LoadingOverlay.hide();
         });
+        commonHintDialog(
+          context,
+          "错误提醒",
+          "API调用报错:\n${result.error?.message}",
+        );
       } else {
         // 目前数组中只包含一张图片。
         var cont = (result.data != null && result.data!.isNotEmpty)
@@ -220,12 +262,41 @@ class _CommonTTIScreenState extends BaseIGScreenState<CommonTTIScreen> {
     return imageUrls;
   }
 
+  // 部分平台和模型不支持一次性生成多张图片，所以就不必显示数量下拉框
+  isShowNum() {
+    // 2024-09-01 但智谱传数量没有意义，它智能输入一个，其他的也不一定需要
+    var a = selectedPlatform == ApiPlatform.zhipu;
+
+    // 阿里云的flux也只能输出一张
+    var b = selectedPlatform == ApiPlatform.aliyun &&
+        selectedModelSpec.cusLlm != CusLLM.aliyun_Wanx_v1_TTI;
+
+    // 讯飞tti也只能输出一张
+    var c = selectedPlatform == ApiPlatform.xfyun;
+
+    // SF的 flux也只能输出一张
+    var d = selectedModelSpec.cusLlm == CusLLM.siliconCloud_Flux1_Schnell_TTI;
+
+    return a || b || c || d;
+  }
+
   /// 构建配置区域
   @override
   List<Widget> buildConfigArea({bool? isOnlySize}) {
     return [
-      // 平台模型选中和尺寸张数选择结构大体一样的，放在基类
+      /// 平台模型选中放在基类
       ...super.buildConfigArea(),
+
+      /// 尺寸、张数选择
+      SizeAndNumArea(
+        selectedSize: selectedSize,
+        selectedNum: selectedNum,
+        sizeList: getSizeList(),
+        numList: ImageNumList,
+        onSizeChanged: (val) => setState(() => selectedSize = val),
+        onNumChanged: (val) => setState(() => selectedNum = val),
+        isOnlySize: isShowNum(),
+      ),
 
       /// 画风选择
       if (selectedModelSpec.cusLlm == CusLLM.aliyun_Wanx_v1_TTI)

@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_date_pickers/flutter_date_pickers.dart' as dp;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
@@ -339,185 +338,6 @@ class _BillReportIndexState extends State<BillReportIndex>
 
   /// 年度月度日期选择行
   /// 按月显示收支列表详情的月度切换按钮和月度收支总计的行
-  buildChangeRowOld(String billType) {
-    bool isMonth = billType == "month";
-    return Container(
-      height: 36.sp,
-      color: Colors.lightGreen, // 显示占位用
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: SizedBox(
-              width: 100.sp,
-              child: TextButton.icon(
-                // 按钮带标签默认icon在前面
-                iconAlignment: IconAlignment.end,
-                onPressed: () {
-                  isMonth
-                      ? showMonthPicker(
-                          context: context,
-                          firstDate: billPeriod.minDate,
-                          lastDate: billPeriod.maxDate,
-                          initialDate: DateTime.tryParse("$selectedMonth-01"),
-                          monthPickerDialogSettings: MonthPickerDialogSettings(
-                            dialogSettings: PickerDialogSettings(
-                              // 不缩放默认title会溢出// 但这个比例不同设备怎么控制？？？
-                              textScaleFactor: 0.9,
-                              // 一定要先选择年
-                              yearFirst: true,
-                              // 弹窗自定义宽度(毕竟是弹窗，无法100%)
-                              customWidth: 1.sw,
-                            ),
-                          ),
-
-                          // 不显示标头，只能滚动选择
-                          // hideHeaderRow: true,
-                        ).then((date) {
-                          if (date != null) {
-                            setState(() {
-                              selectedMonth =
-                                  DateFormat(constMonthFormat).format(date);
-                              handleSelectedMonthChange();
-                            });
-                          }
-                        })
-                      : showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text("选择年份"),
-                              // content: SizedBox(
-                              //   // 需要显示弹窗正文的大小(直接设宽度没什么用，但高度有效)
-                              //   height: 300.sp,
-                              //   child: YearPicker(
-                              //     firstDate: billPeriod.minDate,
-                              //     lastDate: billPeriod.maxDate,
-                              //     selectedDate:
-                              //         DateTime.tryParse("$selectedYear-01-01"),
-                              //     onChanged: (DateTime dateTime) {
-                              //       // 选中年份之后关闭弹窗，并开始查询年度数据
-                              //       Navigator.pop(context);
-                              //       setState(() {
-                              //         selectedYear = dateTime.year.toString();
-                              //         handleSelectedYearChange();
-                              //       });
-                              //     },
-                              //   ),
-                              // ),
-                              content: SizedBox(
-                                // 需要显示弹窗正文的大小(直接设宽度没什么用，但高度有效)
-                                height: 300.sp,
-                                child: Expanded(
-                                  child: dp.YearPicker.single(
-                                    selectedDate: DateTime.tryParse(
-                                            "$selectedYear-01-01") ??
-                                        DateTime.now(),
-                                    onChanged: (DateTime dateTime) {
-                                      // 选中年份之后关闭弹窗，并开始查询年度数据
-                                      Navigator.pop(context);
-                                      setState(() {
-                                        selectedYear = dateTime.year.toString();
-                                        handleSelectedYearChange();
-                                      });
-                                    },
-                                    firstDate: billPeriod.minDate,
-                                    lastDate: billPeriod.maxDate,
-                                    // datePickerStyles: dp.DatePickerStyles(
-                                    //   selectedDateStyle: Theme.of(context)
-                                    //       .textTheme
-                                    //       .bodyLarge
-                                    //       ?.copyWith(color: Colors.blue),
-                                    //   selectedSingleDateDecoration:
-                                    //       const BoxDecoration(
-                                    //     color: Colors.red,
-                                    //     shape: BoxShape.circle,
-                                    //   ),
-                                    // ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                },
-                icon: const Icon(
-                  Icons.keyboard_arrow_down,
-                  color: Colors.white,
-                ),
-                label: Text(
-                  isMonth ? selectedMonth : selectedYear,
-                  style: TextStyle(fontSize: 15.sp, color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 50.sp,
-            height: 20.sp,
-            child: ElevatedButton(
-              // 取掉按钮内边距，或者改到自己想要的大小
-              style: ElevatedButton.styleFrom(
-                // minimumSize: Size.zero,
-                padding: EdgeInsets.symmetric(horizontal: 5.sp),
-                // tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                // backgroundColor: Colors.lightGreen,
-              ),
-              onPressed: isMonth
-                  ? (isMonthExpendClick
-                      ? null
-                      : () {
-                          setState(() {
-                            isMonthExpendClick = !isMonthExpendClick;
-                          });
-                        })
-                  : (isYearExpendClick
-                      ? null
-                      : () {
-                          setState(() {
-                            isYearExpendClick = !isYearExpendClick;
-                          });
-                        }),
-              autofocus: true,
-              child: const Text("支出"),
-            ),
-          ),
-          SizedBox(width: 10.sp),
-          SizedBox(
-            width: 50.sp,
-            height: 20.sp,
-            child: ElevatedButton(
-              // 取掉按钮内边距，或者改到自己想要的大小
-              style: ElevatedButton.styleFrom(
-                // minimumSize: Size.zero,
-                padding: EdgeInsets.symmetric(horizontal: 5.sp),
-                // tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                // backgroundColor: Colors.lightGreen,
-              ),
-              onPressed: isMonth
-                  ? (!isMonthExpendClick
-                      ? null
-                      : () {
-                          setState(() {
-                            isMonthExpendClick = !isMonthExpendClick;
-                          });
-                        })
-                  : (!isYearExpendClick
-                      ? null
-                      : () {
-                          setState(() {
-                            isYearExpendClick = !isYearExpendClick;
-                          });
-                        }),
-              child: const Text("收入"),
-            ),
-          ),
-          SizedBox(width: 10.sp),
-        ],
-      ),
-    );
-  }
-
   buildChangeRow(String billType) {
     bool isMonth = billType == "month";
     return Container(
@@ -537,7 +357,9 @@ class _BillReportIndexState extends State<BillReportIndex>
                     context: context,
                     firstDate: billPeriod.minDate,
                     lastDate: billPeriod.maxDate,
-                    initialDate: DateTime.tryParse("$selectedMonth-01"),
+                    initialDate: isMonth
+                        ? DateTime.tryParse("$selectedMonth-01")
+                        : DateTime.tryParse("$selectedYear-01-01"),
                     onlyYear: isMonth ? false : true,
                     monthPickerDialogSettings: MonthPickerDialogSettings(
                       headerSettings: PickerHeaderSettings(

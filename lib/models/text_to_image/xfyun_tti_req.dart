@@ -24,7 +24,7 @@ part 'xfyun_tti_req.g.dart';
   "payload": {
     "message": {
       "text": [{
-        "role": "user",
+        "role": CusRole.user.name,
         "content": "帮我画一座山"
         }]
     }

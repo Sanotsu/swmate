@@ -186,14 +186,14 @@ class _BillEditPageState extends State<BillEditPage> {
       appBar: AppBar(
         title: Text("${widget.billItem != null ? '修改' : '新增'}账单项目"),
         actions: [
-          ElevatedButton(
+          IconButton(
             onPressed: () async {
               if (_formKey.currentState!.saveAndValidate()) {
                 // 处理表单数据，如保存到数据库等
                 saveBillItem();
               }
             },
-            child: const Text('保存'),
+            icon: const Icon(Icons.save),
           ),
         ],
       ),

@@ -139,15 +139,20 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(5.sp, 1.sp, 5.sp, 1.sp),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          buildPlatRow(),
-          buildModelRow(),
-        ],
-      ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // 这个需要左右边距和其他模块对齐
+        Padding(
+          padding: EdgeInsets.fromLTRB(5.sp, 1.sp, 5.sp, 1.sp),
+          child: buildPlatRow(),
+        ),
+        // 这里需要help图标和appbar上的图标对齐，所以没有右边的边距
+        Padding(
+          padding: EdgeInsets.fromLTRB(5.sp, 1.sp, 0.sp, 1.sp),
+          child: buildModelRow(),
+        ),
+      ],
     );
   }
 
@@ -209,7 +214,7 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
               context,
               "模型说明",
               selectedModelSpec?.feature ?? selectedModelSpec?.useCase ?? '',
-              msgFontSize: 15.sp,
+              msgFontSize: 13.sp,
             );
           },
           icon: Icon(Icons.help_outline, color: Theme.of(context).primaryColor),

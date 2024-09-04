@@ -20,6 +20,7 @@ class ChatHistoryDeleteButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 40.sp,
+      height: 40.sp,
       child: IconButton(
         onPressed: () {
           showDialog(
@@ -51,11 +52,9 @@ class ChatHistoryDeleteButton extends StatelessWidget {
             }
           });
         },
-        icon: Icon(
-          Icons.delete,
-          color: Theme.of(context).primaryColor,
-        ),
-        padding: EdgeInsets.all(0.sp),
+        icon: Icon(Icons.delete, color: Theme.of(context).primaryColor),
+        iconSize: 20.sp,
+        // padding: EdgeInsets.all(0.sp),
       ),
     );
   }
@@ -90,6 +89,7 @@ class _ChatHistoryUpdateButtonState extends State<ChatHistoryUpdateButton> {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 40.sp,
+      height: 40.sp,
       child: IconButton(
         onPressed: () {
           setState(() {
@@ -134,10 +134,8 @@ class _ChatHistoryUpdateButtonState extends State<ChatHistoryUpdateButton> {
             }
           });
         },
-        icon: Icon(
-          Icons.edit,
-          color: Theme.of(context).primaryColor,
-        ),
+        icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
+        iconSize: 20.sp,
       ),
     );
   }

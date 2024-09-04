@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -10,7 +9,6 @@ import '../../../apis/get_app_key_helper.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/db_tools/db_helper.dart';
-import '../index.dart';
 
 final DBHelper _dbHelper = DBHelper();
 
@@ -48,16 +46,17 @@ Future<List<CusLLMSpec>> fetchCusLLMSpecList(LLModelType targetType) async {
         tempList.where((s) => s.platform == ApiPlatform.tencent && !s.isFree));
   }
   // 2024-09-02 讯飞每个模型的API密钥还不一样
-
-  // if (getUserKey(SKN.xfyunSparkLiteApiPassword.name) != null) {
   // lite 已经在免费的时候加过了，有密钥也不做什么
-  // llmSpecList.removeWhere((s) => s.cusLlm == CusLLM.xfyun_Spark_Lite);
-  // llmSpecList
-  //     .addAll(tempList.where((s) => s.cusLlm == CusLLM.xfyun_Spark_Lite));
-  // }
+  // 加载spark-pro
   if (getUserKey(SKN.xfyunSparkProApiPassword.name) != null) {
     llmSpecList
         .addAll(tempList.where((s) => s.cusLlm == CusLLM.xfyun_Spark_Pro));
+  }
+  // 加载讯飞tti，需要appid，APIKey， APISecret
+  if (getUserKey(SKN.xfyunAppId.name) != null &&
+      getUserKey(SKN.xfyunApiKey.name) != null &&
+      getUserKey(SKN.xfyunApiSecret.name) != null) {
+    llmSpecList.addAll(tempList.where((s) => s.cusLlm == CusLLM.xfyun_TTI));
   }
   if (getUserKey(SKN.siliconFlowAK.name) != null) {
     llmSpecList.addAll(tempList
@@ -99,89 +98,26 @@ final DBHelper dbHelper = DBHelper();
 
 /// 将预设的大模型数据导入数据库
 Future testInitModelAndSysRole(List<CusLLMSpec> cslist) async {
-  // dbHelper.clearCusLLMSpecs();
+  dbHelper.clearCusLLMSpecs();
 
-  // // 列表中没有uuid和创建时间
-  // cslist = cslist.map((e) {
-  //   e.cusLlmSpecId = const Uuid().v4();
-  //   e.gmtCreate = DateTime.now();
-  //   return e;
-  // }).toList();
-
-  // await dbHelper.insertCusLLMSpecList(cslist);
-
-  // dbHelper.clearCusSysRoleSpecs();
-
-  // // 预设角色不用传，就默认的，反正都不花钱
-  // // 列表中没有uuid和创建时间
-  // var sysroleList = DEFAULT_SysRole_Prompt_LIST.map((e) {
-  //   e.cusSysRoleSpecId = const Uuid().v4();
-  //   e.gmtCreate = DateTime.now();
-  //   return e;
-  // }).toList();
-  // await dbHelper.insertCusSysRoleSpecList(sysroleList);
-
-  ///
-  /// 下面是将列表转为json，再转为列表，再存入数据库的测试。
-  /// 实际发布时不必，直接存入数据库即可，列表文件不上传就好。
-  ///
-  final tempDir = Directory('/storage/emulated/0/swmate/jsons');
-
-  ///
-  /// 初始化模型信息
-  ///
-
-  // 定义文件路径
-  const String filePath = 'cusllm_spec_list.json';
-
-  if (!await tempDir.exists()) {
-    await tempDir.create(recursive: true);
-  }
-  final file = File('${tempDir.path}/$filePath');
-
-  // 将列表转换为 JSON 并写入文件
-  writeListToJsonFile(cslist, file.path);
-
-  /// 后续没有上面转的这一步，直接从这里开始从文件读取
-  // 从文件中读取存入数据库
-  var list = await readListFromJsonFile(file.path);
-  list = list.map((e) {
+  // 列表中没有uuid和创建时间
+  cslist = cslist.map((e) {
     e.cusLlmSpecId = const Uuid().v4();
     e.gmtCreate = DateTime.now();
     return e;
   }).toList();
 
-  dbHelper.clearCusLLMSpecs();
+  await dbHelper.insertCusLLMSpecList(cslist);
 
-  await dbHelper.insertCusLLMSpecList(list);
+  dbHelper.clearCusSysRoleSpecs();
 
-  ///
-  /// 初始化系统角色
-  ///
-
-  // 定义文件路径
-  const String sysroleFilePath = 'sysrole_spec_list.json';
-
-  if (!await tempDir.exists()) {
-    await tempDir.create(recursive: true);
-  }
-  final sysroleFile = File('${tempDir.path}/$sysroleFilePath');
-
-  // 将列表转换为 JSON 并写入文件
-  writeSysRoleListToJsonFile(DEFAULT_SysRole_Prompt_LIST, sysroleFile.path);
-
-  ///
-  /// 后续没有上面转的这一步，直接从这里开始从文件读取
-  // 从文件中读取存入数据库
-  var sysroleList = await readSysRoleListFromJsonFile(sysroleFile.path);
-
-  sysroleList = sysroleList.map((e) {
+  // 预设角色不用传，就默认的，反正都不花钱
+  // 列表中没有uuid和创建时间
+  var sysroleList = DEFAULT_SysRole_Prompt_LIST.map((e) {
     e.cusSysRoleSpecId = const Uuid().v4();
     e.gmtCreate = DateTime.now();
     return e;
   }).toList();
-
-  dbHelper.clearCusSysRoleSpecs();
   await dbHelper.insertCusSysRoleSpecList(sysroleList);
 }
 

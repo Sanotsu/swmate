@@ -32,14 +32,19 @@ class MessageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 根据是否是用户输入跳转文本内容布局
-    bool isFromUser = message.role == "user" || message.role == "system";
+    bool isFromUser = message.role == CusRole.user.name ||
+        message.role == CusRole.system.name;
 
     // 如果是用户输入，头像显示在右边
     CrossAxisAlignment crossAlignment =
         isFromUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
 
-    // 所有的文字颜色，暂定用户蓝色AI黑色
-    Color textColor = isFromUser ? Colors.blue : Colors.black;
+    // 所有的文字颜色，暂定用户蓝色AI黑色(系统角色为绿色)
+    Color textColor = message.role == CusRole.user.name
+        ? Colors.blue
+        : message.role == CusRole.system.name
+            ? Colors.green
+            : Colors.black;
 
     /// 这里暂时不考虑外边框的距离，使用时在外面加padding之类的
     /// 如果头像在上方，那么头像和正文是两行放在一个column中
@@ -75,7 +80,7 @@ class MessageItem extends StatelessWidget {
                   crossAxisAlignment: crossAlignment,
                   children: [
                     /// 模型名
-                    if (isShowModelLable && message.role != 'user')
+                    if (isShowModelLable && message.role != CusRole.user.name)
                       _buildModelLabel(context),
 
                     /// 时间戳
@@ -117,7 +122,7 @@ class MessageItem extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (isShowModelLable && message.role != 'user')
+                  if (isShowModelLable && message.role != CusRole.user.name)
                     Text(
                       message.modelLabel ?? "<无模型名称>",
                       style: const TextStyle(
@@ -191,7 +196,7 @@ class MessageItem extends StatelessWidget {
                 ),
               ),
               // 如果是流式加载中，显示一个加载圈
-              if (message.role != "user" && isBotThinking == true)
+              if (message.role != CusRole.user.name && isBotThinking == true)
                 SizedBox(
                   width: 16.sp,
                   height: 16.sp,
