@@ -13,7 +13,7 @@
     <!-- =语音录制 -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <application
-        android:label="swmate"
+        android:label="思文智能助手"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

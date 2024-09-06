@@ -16,4 +16,32 @@ class MyGetStorage {
   }
 
   double getChatListAreaScale() => box.read("chat_list_area_scale") ?? 1.0;
+
+  // 百度的token(每次获取有效期是30天，每次申请后都保存最新的，避免重复类)
+  Future<void> setBaiduTokenInfo(Map<String, String>? info) async {
+    await box.write("baidu_token_info", info);
+  }
+
+  Map<String, String> getBaiduTokenInfo() =>
+      Map<String, String>.from(box.read("baidu_token_info") ?? {});
+
+// 文本生图，临时保存每次生成的图片地址
+  Future<void> setImageGenerationUrl(String url) async {
+    List<String> list = List<String>.from(box.read("text_to_image_urls") ?? []);
+    list.add(url);
+    await box.write("image_generation_urls", list);
+  }
+
+  List<String> getImageGenerationUrl() {
+    List<dynamic> list = box.read("image_generation_urls") ?? [];
+    return List<String>.from(list);
+  }
+
+  /// 如果用户有输入自己的API KEY的话，就存入缓存中
+  Future<void> setUserAKMap(Map<String, String>? info) async {
+    await box.write("user_ak_map", info);
+  }
+
+  Map<String, String> getUserAKMap() =>
+      Map<String, String>.from(box.read("user_ak_map") ?? {});
 }

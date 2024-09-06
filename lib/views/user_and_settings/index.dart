@@ -1,15 +1,22 @@
-// ignore_for_file: avoid_print
-
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_view/photo_view.dart';
 
+import '../../apis/_default_model_list/index.dart';
+import '../../common/components/tool_widget.dart';
 import '../../common/constants.dart';
+import '../../common/utils/db_tools/db_helper.dart';
 import '../../services/cus_get_storage.dart';
+import '../ai_assistant/_helper/tools.dart';
 import '../home.dart';
+import 'backup_and_restore/index.dart';
+
+final DBHelper dbHelper = DBHelper();
 
 class UserAndSettings extends StatefulWidget {
   const UserAndSettings({super.key});
@@ -35,6 +42,22 @@ class _UserAndSettingsState extends State<UserAndSettings> {
     }
   }
 
+  // 长按5秒启动作者测试的模型(但是付费的还是用不了，没有加载作者的密钥)
+  Timer? _timer;
+  void _startTimer() {
+    _timer = Timer(const Duration(seconds: 3), () async {
+      await testInitModelAndSysRole(SELF_MODELS);
+      EasyLoading.showInfo("已启用作者的测试模型列表");
+    });
+  }
+
+  void _cancelTimer() {
+    if (_timer != null) {
+      _timer!.cancel();
+      _timer = null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // 计算屏幕剩余的高度
@@ -50,11 +73,15 @@ class _UserAndSettingsState extends State<UserAndSettings> {
         kToolbarHeight -
         kBottomNavigationBarHeight;
 
-    print("screenBodyHeight--------$screenBodyHeight");
+    debugPrint("screenBodyHeight--------$screenBodyHeight");
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("用户设置"),
+        title: GestureDetector(
+          onLongPressStart: (_) => _startTimer(),
+          onLongPressEnd: (_) => _cancelTimer(),
+          child: const Text('用户设置'),
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -98,7 +125,8 @@ class _UserAndSettingsState extends State<UserAndSettings> {
           SizedBox(height: 50.sp),
           // 备份还原和更多设置
           SizedBox(
-            height: (screenBodyHeight - 250 - 20),
+            // height: (screenBodyHeight - 250 - 20),
+            height: 160.sp,
             child: Center(child: _buildBakAndRestoreAndMoreSettingRow()),
           ),
         ],
@@ -118,7 +146,7 @@ class _UserAndSettingsState extends State<UserAndSettings> {
             CircleAvatar(
               maxRadius: 60.sp,
               backgroundColor: Colors.transparent,
-              backgroundImage: const AssetImage(placeholderImageUrl),
+              backgroundImage: const AssetImage(brandImageUrl),
               // y圆形头像的边框线
               child: Container(
                 decoration: BoxDecoration(
@@ -173,27 +201,40 @@ class _UserAndSettingsState extends State<UserAndSettings> {
       children: [
         Expanded(
           child: SizedBox(
-            height: 100.sp,
+            height: 80.sp,
             child: NewCusSettingCard(
               leadingIcon: Icons.backup_outlined,
               title: "备份恢复",
-              onTap: () {},
+              onTap: () {
+                // 处理相应的点击事件
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BackupAndRestore(),
+                  ),
+                );
+              },
             ),
           ),
         ),
         Expanded(
           child: SizedBox(
-            height: 100.sp,
+            height: 80.sp,
             child: NewCusSettingCard(
               leadingIcon: Icons.question_mark,
               title: '常见问题(TBD)',
               onTap: () {
                 showAboutDialog(
                   context: context,
-                  applicationName: 'swmate',
+                  applicationName: 'SWMate',
                   children: [
-                    const Text("author: SanotSu"),
-                    const Text("phone: 13113155009"),
+                    const Center(child: Text("author & wechat: SanotSu")),
+                    TextButton(
+                      onPressed: () {
+                        launchStringUrl("https://github.com/Sanotsu/swmate");
+                      },
+                      child: const Text("Github: Sanotsu/swmate"),
+                    ),
                   ],
                 );
               },

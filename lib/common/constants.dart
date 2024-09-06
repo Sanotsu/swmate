@@ -7,11 +7,14 @@ const constDatetimeFormat = "yyyy-MM-dd HH:mm:ss";
 const constDateFormat = "yyyy-MM-dd";
 const constMonthFormat = "yyyy-MM";
 const constTimeFormat = "HH:mm:ss";
+// 文件名后缀等
+const constDatetimeSuffix = "yyyyMMdd_HHmmss";
 // 未知的时间字符串
 const unknownDateTimeString = '1970-01-01 00:00:00';
 const unknownDateString = '1970-01-01';
 
 const String placeholderImageUrl = 'assets/images/no_image.jpg';
+const String brandImageUrl = 'assets/brand.png';
 
 // 数据库分页查询数据的时候，还需要带上一个该表的总数量
 // 还可以按需补入其他属性
@@ -36,6 +39,15 @@ class CusLabel {
     required this.cnLabel,
     required this.value,
   });
+
+  @override
+  String toString() {
+    return '''
+    CusLabel{
+      enLabel: $enLabel, cnLabel: $cnLabel, value:$value
+    }
+    ''';
+  }
 }
 
 // 菜品的分类和标签都用预设的
@@ -112,15 +124,57 @@ List<String> chatQuestionSamples = [
   "你好，介绍一下你自己。",
   "如何制作鱼香肉丝。",
   "苏东坡是谁？详细介绍一下。",
+  "2024年巴黎奥运会金牌榜",
 ];
 
-/// 保存翻译结果的目录
-final SAVE_TRANSLATION_DIR =
-    Directory('/storage/emulated/0/AILightLife/translations');
+/// 保存文档解读、图片解读结果的目录
+final FILE_INTERPRET_DIR =
+    Directory('/storage/emulated/0/SWMate/file_interpret');
 
-/// 智能群聊的对话内容保存为json(本来应该存数据库的太麻烦了，这里保存文件意思一下)
-final SAVE_MODEL_BATTLE_DIR =
-    Directory('/storage/emulated/0/AILightLife/chat_records');
+/// 智能对话和多聊中对话语音文件目录
+final CHAT_AUDIO_DIR = Directory('/storage/emulated/0/SWMate/chat_audio');
 
-/// 智能群聊的对话语音文件目录
-final CHAT_AUDIO_DIR = Directory('/storage/emulated/0/AILightLife/chat_audio');
+/// 所有的文生图、图生图都保存在同一个位置
+final LLM_IG_DIR = Directory('/storage/emulated/0/SWMate/image_generation');
+
+/// 所有的文生视频都保存在同一个位置
+final LLM_VG_DIR = Directory('/storage/emulated/0/SWMate/video_generation');
+
+// 可供翻译的目标语言
+enum TargetLanguage {
+  simplifiedChinese, // 中文(简体)
+  traditionalChinese, // 中文(繁体)
+  english, // 英语
+  japanese, // 日语
+  french, // 法语
+  russian, // 俄语
+  korean, // 韩语
+  spanish, // 西班牙语
+  portuguese, // 葡萄牙语
+  german, // 德语
+  vietnamese, // 越南语
+  arabic, // 阿拉伯语
+}
+
+// 语言标签
+Map<TargetLanguage, String> LangLabelMap = {
+  TargetLanguage.simplifiedChinese: "中文(简体)",
+  TargetLanguage.traditionalChinese: "中文(繁体)",
+  TargetLanguage.english: "英语",
+  TargetLanguage.japanese: "日语",
+  TargetLanguage.french: "法语",
+  TargetLanguage.russian: "俄语",
+  TargetLanguage.korean: "韩语",
+  TargetLanguage.spanish: "西班牙语",
+  TargetLanguage.portuguese: "葡萄牙语",
+  TargetLanguage.german: "德语",
+  TargetLanguage.vietnamese: "越南语",
+  TargetLanguage.arabic: "阿拉伯语",
+};
+
+// 大模型对话的角色枚举
+enum CusRole {
+  system,
+  user,
+  assistant,
+}
