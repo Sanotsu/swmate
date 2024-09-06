@@ -70,25 +70,9 @@ class _CogVideoXScreenState extends State<CogVideoXScreen>
   bool isGenVideo = false;
 
   // 最后生成的视频封面图地址
-  List<String> rstCoverImageUrls = [
-    "https://sfile.chatglm.cn/testpath/video_cover/73709046-0255-508c-a1f8-927ec431e1c6_cover_0.png",
-    "https://sfile.chatglm.cn/testpath/video_cover/ac03bd1c-f930-57b0-9e9d-ddbd3fe104ef_cover_0.png",
-    "https://sfile.chatglm.cn/testpath/video_cover/7d315e9c-e007-5633-b14e-25e210529eac_cover_0.png",
-    "https://sfile.chatglm.cn/testpath/video_cover/94e91976-69c9-5a7f-bb93-63a933511024_cover_0.png",
-    "https://sfile.chatglm.cn/testpath/video_cover/ea028c01-b8bf-5225-befb-7facd41f0a44_cover_0.png",
-    "https://sfile.chatglm.cn/testpath/video_cover/cbaeecd4-9a73-5661-8510-659b10473fc9_cover_0.png",
-    "https://sfile.chatglm.cn/testpath/video_cover/0280ab33-90b6-55d5-97c7-3d060a352912_cover_0.png",
-  ];
+  List<String> rstCoverImageUrls = [];
   // 最后生成的视频地址
-  List<String> rstVideoUrls = [
-    "https://sfile.chatglm.cn/testpath/video/73709046-0255-508c-a1f8-927ec431e1c6_0.mp4",
-    "https://sfile.chatglm.cn/testpath/video/ac03bd1c-f930-57b0-9e9d-ddbd3fe104ef_0.mp4",
-    "https://sfile.chatglm.cn/testpath/video/7d315e9c-e007-5633-b14e-25e210529eac_0.mp4",
-    "https://sfile.chatglm.cn/testpath/video/94e91976-69c9-5a7f-bb93-63a933511024_0.mp4",
-    "https://sfile.chatglm.cn/testpath/video/ea028c01-b8bf-5225-befb-7facd41f0a44_0.mp4",
-    "https://sfile.chatglm.cn/testpath/video/cbaeecd4-9a73-5661-8510-659b10473fc9_0.mp4",
-    "https://sfile.chatglm.cn/testpath/video/0280ab33-90b6-55d5-97c7-3d060a352912_0.mp4",
-  ];
+  List<String> rstVideoUrls = [];
 
   @override
   void initState() {
