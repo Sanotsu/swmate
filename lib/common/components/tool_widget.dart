@@ -591,9 +591,10 @@ Widget buildSmallButtonTag(
   String labelText, {
   Color? bgColor,
   double? labelTextSize,
+  void Function()? onPressed,
 }) {
   return RawMaterialButton(
-    onPressed: () {},
+    onPressed: onPressed,
     constraints: const BoxConstraints(),
     padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
     shape: RoundedRectangleBorder(

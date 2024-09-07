@@ -239,7 +239,8 @@ class _ChatBotState extends State<ChatBot> {
       onData: (crb) {
         commonOnDataHandler(
           crb: crb,
-          csMsg: csMsg!,
+          // ？？？2024-09-07 在使用无问芯穹处理报错响应时，csMsg!会报错，其他没有
+          csMsg: csMsg ?? buildEmptyAssistantChatMessage(),
           // 流式响应结束了，就保存数据到db，并重置流式变量和aip响应标志
           onStreamDone: () {
             if (!mounted) return;

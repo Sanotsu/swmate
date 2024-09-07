@@ -107,7 +107,9 @@ class ComCCResp {
 
   // 错误描述信息，帮助理解和解决发生的错误
   // @JsonKey(name: 'error_msg')
-  @JsonKey(readValue: readJsonValue)
+  // @JsonKey(readValue: readJsonValue)
+  // 错误消息不同平台命名可能不一样
+  @JsonKey(readValue: readErrorMsgValue)
   String? errorMsg;
 
   /// 讯飞云的错误码等稍微不同(可能是String，可能是int)

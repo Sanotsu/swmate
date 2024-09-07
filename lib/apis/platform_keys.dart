@@ -31,5 +31,8 @@
 // // 智谱AI的ak
 // var ZHIPU_AK = "xxx";
 
+// 无问芯穹 genStudio 的ak
+// var INFINI_GEN_STUDIO_AK = "sk-xxx";
+
 // 使用的密钥的命名如上即可，这里只是使用了作者的密钥
 part '_self_keys.dart';

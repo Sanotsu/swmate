@@ -96,7 +96,11 @@ class _ChatBotGroupState extends State<ChatBotGroup> {
 
     setState(() {
       _allItems = specs
-          .map((e) => CusLabel(cnLabel: e.name, enLabel: e.model, value: e))
+          .map((e) => CusLabel(
+                cnLabel: "${CP_NAME_MAP[e.platform]}_${e.name}",
+                enLabel: e.model,
+                value: e,
+              ))
           .toList();
 
       _selectedItems = [

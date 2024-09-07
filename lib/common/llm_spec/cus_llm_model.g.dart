@@ -52,6 +52,7 @@ const _$ApiPlatformEnumMap = {
   ApiPlatform.lingyiwanwu: 'lingyiwanwu',
   ApiPlatform.xfyun: 'xfyun',
   ApiPlatform.zhipu: 'zhipu',
+  ApiPlatform.infini: 'infini',
 };
 
 const _$CusLLMEnumMap = {
@@ -163,6 +164,21 @@ const _$CusLLMEnumMap = {
   CusLLM.zhipu_CogView3_Plus_TTI: 'zhipu_CogView3_Plus_TTI',
   CusLLM.zhipu_CogView3_TTI: 'zhipu_CogView3_TTI',
   CusLLM.zhipu_CogVideoX_TTV: 'zhipu_CogVideoX_TTV',
+  CusLLM.infini_Yi_34B_Chat: 'infini_Yi_34B_Chat',
+  CusLLM.infini_Baichuan2_7B_Chat: 'infini_Baichuan2_7B_Chat',
+  CusLLM.infini_Baichuan2_13B_Chat: 'infini_Baichuan2_13B_Chat',
+  CusLLM.infini_Baichuan2_13B_Base: 'infini_Baichuan2_13B_Base',
+  CusLLM.infini_GLM4_9B_Chat: 'infini_GLM4_9B_Chat',
+  CusLLM.infini_ChatGLM3: 'infini_ChatGLM3',
+  CusLLM.infini_ChatGLM3_6B: 'infini_ChatGLM3_6B',
+  CusLLM.infini_ChatGLM3_6B_32K: 'infini_ChatGLM3_6B_32K',
+  CusLLM.infini_MtInfini_3B: 'infini_MtInfini_3B',
+  CusLLM.infini_Qwen_72B_Chat: 'infini_Qwen_72B_Chat',
+  CusLLM.infini_Qwen1p5_14B_Chat: 'infini_Qwen1p5_14B_Chat',
+  CusLLM.infini_Qwen1p5_32B_Chat: 'infini_Qwen1p5_32B_Chat',
+  CusLLM.infini_Qwen1p5_72B_Chat: 'infini_Qwen1p5_72B_Chat',
+  CusLLM.infini_Qwen2_7B_Instruct: 'infini_Qwen2_7B_Instruct',
+  CusLLM.infini_Qwen2_72B_Instruct: 'infini_Qwen2_72B_Instruct',
 };
 
 const _$LLModelTypeEnumMap = {

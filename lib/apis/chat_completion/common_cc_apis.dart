@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -50,6 +48,13 @@ const Map<PlatUrl, String> platUrls = {
   PlatUrl.xfyunCCUrl: "https://spark-api-open.xf-yun.com/v1/chat/completions",
   PlatUrl.zhipuCCUrl: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
 };
+
+/// https://cloud.infini-ai.com/maas/{model}/{chiptype}
+/// nvidia 属于一个chiptype 参数，默认是nvidia
+///   允许的值有: nvidia、amd、chip1、chip2、chip3、chip4、chip5
+///   但chip3、chip4、chip5 流式响应模式下有不兼容，所以暂时默认nvidia
+String infiniCCUrl(String model) =>
+    "https://cloud.infini-ai.com/maas/$model/nvidia/chat/completions";
 
 ///
 /// dio 中处理SSE的解析器
@@ -576,6 +581,36 @@ Future<StreamWithCancel<ComCCResp>> aliyunCCRespWithCancel(
 
   return getSseCcResponse(
     platUrls[PlatUrl.aliyunCompatibleCCUrl]!,
+    header,
+    body.toJson(),
+    stream: stream,
+  );
+}
+
+/// 无问芯穹的请求方法
+Future<StreamWithCancel<ComCCResp>> infiniCCRespWithCancel(
+  List<CCMessage> messages, {
+  String? model,
+  bool stream = false,
+}) async {
+  var specs = await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.infini);
+
+  model = model ??
+      specs
+          .firstWhere((e) => e.cusLlm == CusLLM.infini_Qwen2_72B_Instruct)
+          .model;
+
+  // 请求路径有model，参数也得有
+  var body = ComCCReq(model: model, messages: messages, stream: stream);
+
+  var header = {
+    "Content-Type": "application/json",
+    "Authorization":
+        "Bearer ${getStoredUserKey(SKN.infiniAK.name, INFINI_GEN_STUDIO_AK)}",
+  };
+
+  return getSseCcResponse(
+    infiniCCUrl(model),
     header,
     body.toJson(),
     stream: stream,

@@ -70,6 +70,10 @@ Future<List<CusLLMSpec>> fetchCusLLMSpecList(LLModelType targetType) async {
     llmSpecList.addAll(
         tempList.where((s) => s.platform == ApiPlatform.zhipu && !s.isFree));
   }
+  if (getUserKey(SKN.infiniAK.name) != null) {
+    llmSpecList.addAll(
+        tempList.where((s) => s.platform == ApiPlatform.infini && !s.isFree));
+  }
 
   // 固定平台排序后模型名排序
   llmSpecList.sort((a, b) {

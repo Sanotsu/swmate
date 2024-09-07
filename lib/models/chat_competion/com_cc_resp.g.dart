@@ -27,7 +27,7 @@ ComCCResp _$ComCCRespFromJson(Map<String, dynamic> json) => ComCCResp(
       needClearHistory: readJsonValue(json, 'needClearHistory') as bool?,
       banRound: (readJsonValue(json, 'banRound') as num?)?.toInt(),
       errorCode: (readJsonValue(json, 'errorCode') as num?)?.toInt(),
-      errorMsg: readJsonValue(json, 'errorMsg') as String?,
+      errorMsg: readErrorMsgValue(json, 'errorMsg') as String?,
       code: json['code'],
       message: json['message'] as String?,
       sid: json['sid'] as String?,
