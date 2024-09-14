@@ -14,7 +14,7 @@ const String dogCeoBase = "https://dog.ceo/api";
 ///
 /// 查询狗品种信息
 ///
-String dogCeoGetBreedList({
+String _genDogCeoBreedUrl({
   bool isAll = true, // 是否是主品种带子品种
   bool isMasterBreed = true, // 是否是主品种
   String? breed, // 品种名称（仅在查询子品种时使用,查询子品种需要品种信息）
@@ -52,7 +52,7 @@ String dogCeoGetBreedInfo(String breed, {String? subBreed}) {
 ///
 /// 通用的构造获取图片URL的函数
 ///
-String dogCeoGetImageList({
+String _genDogCeoImageUrl({
   bool isRandom = false, // 是否随机
   int? number, // 随机数量
   String? breed, // 主品种名称
@@ -88,7 +88,7 @@ String dogCeoGetImageList({
 ///
 /// 获取品种信息
 ///
-Future<DogCeoResp> getDogSpecResp({
+Future<DogCeoResp> getDogCeoBreeds({
   bool isAll = true, // 是否是主品种带子品种
   bool isMasterBreed = true, // 是否是主品种
   String? breed, // 品种名称（仅在查询子品种时使用,查询子品种需要品种信息）
@@ -100,7 +100,7 @@ Future<DogCeoResp> getDogSpecResp({
 // 如果传了breed和subBreed，则是查询单个子品种信息
 
   try {
-    var url = dogCeoGetBreedList(
+    var url = _genDogCeoBreedUrl(
       isAll: isAll,
       isMasterBreed: isMasterBreed,
       breed: breed,
@@ -108,7 +108,6 @@ Future<DogCeoResp> getDogSpecResp({
       number: number,
     );
 
-    print("dog ceo 的品种请求地址 $url");
     var respData = await HttpUtils.get(
       path: url,
       headers: {"Content-Type": "application/json"},
@@ -130,7 +129,7 @@ Future<DogCeoResp> getDogSpecResp({
 ///
 /// 获取图片信息
 ///
-Future<DogCeoResp> getDogImageResp({
+Future<DogCeoResp> getDogCeoImages({
   bool isRandom = false, // 是否随机
   int? number, // 随机数量
   String? breed, // 主品种名称
@@ -141,14 +140,13 @@ Future<DogCeoResp> getDogImageResp({
 // 如果传了breed和subBreed，则是查询单个子品种信息
 
   try {
-    var url = dogCeoGetImageList(
+    var url = _genDogCeoImageUrl(
       isRandom: isRandom,
       number: number,
       breed: breed,
       subBreed: subBreed,
     );
 
-    print("dog ceo 的图片请求地址 $url");
     var respData = await HttpUtils.get(path: url);
 
     /// 2024-06-06 注意，这里报错的时候，响应的是String，而正常获取回复响应是_Map<String, dynamic>

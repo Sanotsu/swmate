@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../../models/base_model/animal_lover/the_dog_cat_api_breed.dart';
 import '../../../models/base_model/brief_accounting_state.dart';
 import '../../../models/base_model/dish_state.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
@@ -68,6 +69,7 @@ class DBHelper {
       txn.execute(SWMateDdl.ddlForCusSySroleSpec);
       txn.execute(SWMateDdl.ddlForBillItem);
       txn.execute(SWMateDdl.ddlForDish);
+      txn.execute(SWMateDdl.ddlForAnimalBreed);
     });
   }
 
@@ -891,6 +893,78 @@ class DBHelper {
     for (var item in rsts) {
       batch.insert(
         SWMateDdl.tableNameOfCusSysRoleSpec,
+        item.toMap(),
+      );
+    }
+    return await batch.commit();
+  }
+
+  ///***********************************************/
+  /// 动物品种管理，公共api用来获取图片
+  /// 2024-09-14 暂时没用到
+  ///
+
+  // 查询所有系统角色信息
+  Future<List<Breed>> queryAnimalBreedList({
+    String? id, // 编号
+    String? breedKeyword, // 名称关键字
+  }) async {
+    Database db = await database;
+
+    final where = <String>[];
+    final whereArgs = <dynamic>[];
+
+    if (id != null) {
+      where.add('id = ?');
+      whereArgs.add(id);
+    }
+
+    if (breedKeyword != null) {
+      where.add('breed LIKE ? OR subBreed LIKE ?');
+      whereArgs.add(["%$breedKeyword%", "%$breedKeyword%"]);
+    }
+
+    print("where $where");
+    print("whereArgs $whereArgs");
+
+    final rows = await db.query(
+      SWMateDdl.tableNameOfAnimalBreed,
+      where: where.isNotEmpty ? where.join(' AND ') : null,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
+      orderBy: "breed ASC",
+    );
+
+    return rows.map((row) => Breed.fromMap(row)).toList();
+  }
+
+  // 删除单条
+  Future<int> deleteAnimalBreedById(String id) async => (await database).delete(
+        SWMateDdl.tableNameOfAnimalBreed,
+        where: "id = ?",
+        whereArgs: [id],
+      );
+
+  // 清空所有
+  Future<int> clearAnimalBreeds() async => (await database).delete(
+        SWMateDdl.tableNameOfAnimalBreed,
+        where: "id != ?",
+        whereArgs: ["id"],
+      );
+
+  // 修改单条
+  Future<int> updateAnimalBreed(Breed breed) async => (await database).update(
+        SWMateDdl.tableNameOfAnimalBreed,
+        breed.toMap(),
+        where: 'id = ?',
+        whereArgs: [breed.id],
+      );
+
+  // 新增(只有单个的时候就一个值的数组，理论上不会批量插入)
+  Future<List<Object?>> insertAnimalBreedList(List<Breed> rsts) async {
+    var batch = (await database).batch();
+    for (var item in rsts) {
+      batch.insert(
+        SWMateDdl.tableNameOfAnimalBreed,
         item.toMap(),
       );
     }

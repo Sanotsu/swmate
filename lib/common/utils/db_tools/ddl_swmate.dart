@@ -163,4 +163,25 @@ class SWMateDdl {
       UNIQUE(label,sysRoleType,name)
     );
     """;
+
+  /// 动物的品种，简单保留品种和亚种即可(统一的话就一个品种信息，品种亚种都有则保留有更详细的)
+  /// 2024-09-14 暂时没用到
+  static const tableNameOfAnimalBreed = '${DB_TABLE_PREFIX}animal_breed';
+
+  static const String ddlForAnimalBreed = """
+    CREATE TABLE $tableNameOfAnimalBreed (
+      id                  TEXT    NOT NULL,
+      breed               TEXT    NOT NULL,
+      subBreed            TEXT,
+      temperament         TEXT,
+      origin              TEXT,
+      description         TEXT,
+      lifeSpan            TEXT,
+      altNames            TEXT,
+      wikipediaUrl        TEXT,
+      referenceImageUrl   TEXT,
+      dataSource          TEXT,
+      PRIMARY KEY(animalBreedId)
+    );
+    """;
 }

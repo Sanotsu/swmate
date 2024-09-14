@@ -1,41 +1,43 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../apis/animal_lover/thatapi_apis.dart';
 import '../../../apis/chat_completion/common_cc_apis.dart';
-import '../../../apis/dog_lover/index.dart';
+import '../../../apis/animal_lover/dogceo_apis.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../models/base_model/dog_lover/dog_ceo_resp.dart';
+import '../../../common/utils/db_tools/db_helper.dart';
 import '../../../models/chat_competion/com_cc_resp.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
 import '../../ai_assistant/_chat_screen_parts/chat_list_area.dart';
 import '../../ai_assistant/_helper/handle_cc_response.dart';
 import 'animal_system_prompt.dart';
 
-class DogLover extends StatefulWidget {
-  const DogLover({super.key});
+///
+/// 2024-09-14 注意，这个页面是针对
+/// https://portal.thatapicompany.com/
+/// https://dog.ceo/dog-api/documentation/
+/// 提供的API。
+///
+/// 用于获取其中cat和dog的分类和图片
+///
+class DogCatLover extends StatefulWidget {
+  const DogCatLover({super.key});
 
   @override
-  State<DogLover> createState() => _DogLoverState();
+  State<DogCatLover> createState() => _DogCatLoverState();
 }
 
-class _DogLoverState extends State<DogLover> {
+class _DogCatLoverState extends State<DogCatLover> {
   // 狗狗图片列表
   List<String> dogImages = [];
 
-  // 查询狗狗分类
-  late Future<DogCeoResp> _futureDogCeoResp;
-  Map<String, List<dynamic>> breeds = {};
-
   // 是否点击了分类查看(如果是，可以选择品种和亚品种，以及图片的数量)
   bool isCusFilter = false;
-
-  // 选中的品种和图片数量
-  String? selectedBreed;
-  String? selectedSubBreed;
-  int selectedNumber = 1;
 
   // 调用大模型查询品种信息
   bool isBotThinking = false;
@@ -54,11 +56,41 @@ class _DogLoverState extends State<DogLover> {
   // 人机对话消息滚动列表
   final ScrollController _scrollController = ScrollController();
 
+  final DBHelper dbHelper = DBHelper();
+
+  // 目前猫猫狗狗的来源： dogceo 和 thatapi
+  List<String> dataSourceList = ["dogceo", "thatapi"];
+
+  // 选中的来源(构建品种，如果是thatapi，还要结合猫或狗的选项)
+  String? selectedSource;
+
+  // 如果是thatapi，还可以选择猫或者狗
+  List<CusLabel> animalTypes = [
+    CusLabel(cnLabel: "猫", value: "cat"),
+    CusLabel(cnLabel: "狗", value: "dog"),
+  ];
+
+  // 这是thatapi中选中猫或者狗(用于查询品种，如果是dogceo就只有狗品种)
+  CusLabel? selectedType;
+
+  List<CusLabel> animalList = [];
+
+  // 选中的品种和图片数量
+  CusLabel? selectedBreed;
+
+  int selectedNumber = 1;
+
+  bool isLoading = false;
+
   @override
   void initState() {
     super.initState();
-    _futureDogCeoResp = getDogSpecResp();
-    getRandomDogImage();
+
+    selectedType = animalTypes.first;
+    selectedSource = dataSourceList.first;
+
+    getRandomImage();
+    getAnimalBreed();
   }
 
   @override
@@ -67,41 +99,134 @@ class _DogLoverState extends State<DogLover> {
     super.dispose();
   }
 
-  // 获取一张随机图片
-  getRandomDogImage() async {
-    var temp = await getDogImageResp(isRandom: true, number: 1);
-
-    print(temp.message);
+  // 获取猫猫狗狗的品种信息
+  getAnimalBreed() async {
+    if (isLoading) return;
 
     setState(() {
-      dogImages.clear();
-      dogImages.addAll(
-          (temp.message as List<dynamic>).map((e) => e.toString()).toList());
+      isLoading = true;
+    });
+
+    if (selectedSource == "dogceo") {
+      var resp = await getDogCeoBreeds();
+
+      // dogceo是有分品种和亚种的，结果是个对象，要拍平为数组
+      var nestedMap = Map<String, List<dynamic>>.from(resp.message);
+
+      if (nestedMap.isNotEmpty) {
+        if (!mounted) return;
+        setState(() {
+          final List<String> result = [];
+
+          nestedMap.forEach((key, value) {
+            if (value.isEmpty) {
+              result.add(key);
+            } else {
+              for (final subKey in value) {
+                // 有亚种的，直接品种 + 亚种 放一条，品种就不单列了
+                result.add('$key $subKey');
+              }
+            }
+          });
+
+          animalList = result
+              .map((e) => CusLabel(
+                    cnLabel: e,
+                    // 显示的时候品种亚种之间用空格，但查询图片时url需要用/区分品种和亚种
+                    value: e.replaceAll(RegExp(r' '), '/'),
+                  ))
+              .toSet()
+              .toList();
+        });
+      }
+    } else {
+      // 每次进来都调用API查询的方式
+      var list = await getThatApiBreeds(type: selectedType?.value);
+      if (list.isNotEmpty) {
+        if (!mounted) return;
+        setState(() {
+          animalList = list
+              .map((e) => CusLabel(
+                    // 显示用名称(实际是英文)
+                    cnLabel: e.name ?? e.breedGroup ?? "",
+                    // 分类查询用编号
+                    value: e.id,
+                    // 这个暂时用不到
+                    enLabel: e.dataSource,
+                  ))
+              .toSet()
+              .toList();
+        });
+      }
+    }
+
+    setState(() {
+      isLoading = false;
     });
   }
 
-  // 查询指定品种或者亚种的狗图片
-  // isAll 就查询指定品种、亚种的所有图片
-  // 指定了num，则随机指定数量的品种亚种图片
-  getBreedDogImages({bool isAll = false, int? num}) async {
-    var temp = isAll
-        ? await getDogImageResp(
-            breed: selectedBreed,
-            subBreed: selectedSubBreed,
-          )
-        : await getDogImageResp(
-            breed: selectedBreed,
-            subBreed: selectedSubBreed,
-            isRandom: true,
-            number: num ?? selectedNumber,
-          );
+  // 获取一张随机猫狗图片
+  getRandomImage() async {
+    // 随机生成一个数，判断是奇数还是偶数
+    // 如果是偶数就使用dog.ceo获取狗狗图片；如果是奇数,就从thecatapi/thedogapi中获取猫狗图片
+    // 后续来源更多时，可以直接随机来源列表的索引
+    bool isEven = Random().nextInt(101) % 2 == 0;
 
-    setState(() {
-      dogImages.clear();
-      dogImages.addAll(
-        (temp.message as List<dynamic>).map((e) => e.toString()).toList(),
+    if (isEven) {
+      // 从dog.ceo中获取随机图片
+      var temp = await getDogCeoImages(isRandom: true, number: 1);
+
+      setState(() {
+        dogImages.clear();
+        dogImages.addAll(
+            (temp.message as List<dynamic>).map((e) => e.toString()).toList());
+      });
+    } else {
+      // 从thecatapi中获取随机图片
+      // 随机的时候就猫狗 都有可能
+      final randomType = animalTypes[Random().nextInt(animalTypes.length)];
+
+      var temp = await getThatApiImages(
+        type: randomType.value,
+        isRandom: true,
+        number: 1,
       );
-    });
+
+      setState(() {
+        dogImages.clear();
+        dogImages.addAll(temp.map((e) => e.url).toList());
+      });
+    }
+  }
+
+  // 获取指定品种或的猫狗图片
+  // dogceo可以50张以内任意数量，thatapi免费用户只有1张
+  getBreedDogImages() async {
+    if (selectedSource == "dogceo") {
+      var temp = await getDogCeoImages(
+        breed: selectedBreed?.value,
+        isRandom: true,
+        number: selectedNumber,
+      );
+
+      setState(() {
+        dogImages.clear();
+        dogImages.addAll(
+          (temp.message as List<dynamic>).map((e) => e.toString()).toList(),
+        );
+      });
+    } else {
+      var temp = await getThatApiImages(
+        type: selectedType?.value,
+        breedIds: selectedBreed?.value,
+        number: selectedNumber,
+      );
+
+      setState(() {
+        dogImages.clear();
+        dogImages.addAll(temp.map((e) => e.url).toList());
+      });
+    }
   }
 
   // 获取大模型返回的品种分析(识图或者直接品种分析)
@@ -146,8 +271,11 @@ class _DogLoverState extends State<DogLover> {
       setState(() {
         isBotThinking = true;
 
-        var cc = (selectedBreed != null ? "犬科品种：$selectedBreed " : '') +
-            (selectedSubBreed != null ? "，犬科亚种：$selectedSubBreed " : '');
+        var cc = (selectedBreed != null
+            ? selectedType?.cnLabel == "猫"
+                ? "猫科品种：${selectedBreed?.cnLabel} "
+                : "犬科品种：${selectedBreed?.cnLabel} "
+            : '');
 
         messages.clear();
         messages.add(systemPrompt);
@@ -226,7 +354,7 @@ class _DogLoverState extends State<DogLover> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('爱狗之家')),
+      appBar: AppBar(title: const Text('猫狗之家')),
       body: Column(
         children: [
           if (!isCusFilter)
@@ -234,8 +362,8 @@ class _DogLoverState extends State<DogLover> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: getRandomDogImage,
-                    child: const Text('随机一张狗狗图片'),
+                    onPressed: getRandomImage,
+                    child: const Text('随机一张猫狗图片'),
                   ),
                 ),
                 ElevatedButton(
@@ -250,7 +378,7 @@ class _DogLoverState extends State<DogLover> {
 
           _buildSelectPanel(),
 
-          /// 图片放一行，最多只有4张
+          /// 图片放一行
           if (dogImages.isNotEmpty)
             Expanded(
               child: buildImageCarouselSlider(
@@ -278,28 +406,6 @@ class _DogLoverState extends State<DogLover> {
                   isShowModelLable: true,
                 )
               : Expanded(child: Container()),
-
-          // Expanded(
-          //   child: SingleChildScrollView(
-          //     child: Column(
-          //       children: [
-          //         Padding(
-          //           padding: EdgeInsets.symmetric(horizontal: 2.sp),
-          //           child: buildNetworkImageViewGrid(
-          //             context,
-          //             dogImages,
-          //             crossAxisCount:
-          //                 (dogImages.isNotEmpty && dogImages.length < 4)
-          //                     ? dogImages.length
-          //                     : 4,
-          //             // 模型名有空格或斜线，等后续更新spec，用name来
-          //             prefix: "",
-          //           ),
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ),
         ],
       ),
     );
@@ -322,40 +428,20 @@ class _DogLoverState extends State<DogLover> {
               dogImages.clear();
               messages.clear();
               selectedBreed = null;
-              selectedSubBreed = null;
               selectedNumber = 1;
             } else {
               // 如果是收起来了更多选项，则重新随机一张图片
-              getRandomDogImage();
+              getRandomImage();
               messages.clear();
               selectedBreed = null;
-              selectedSubBreed = null;
               selectedNumber = 1;
             }
           });
         },
         children: [
-          FutureBuilder<DogCeoResp>(
-            future: _futureDogCeoResp,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('[获取品种列表出错]: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data == null) {
-                return const Center(child: Text('无可用数据'));
-              } else {
-                DogCeoResp resp = snapshot.data!;
-                if (resp.message is Map<String, dynamic>) {
-                  breeds = Map<String, List<dynamic>>.from(resp.message);
-                }
-
-                return Padding(
-                  padding: EdgeInsets.all(5.sp),
-                  child: buildSelectArea(),
-                );
-              }
-            },
+          Padding(
+            padding: EdgeInsets.all(5.sp),
+            child: buildSelectArea(),
           ),
         ],
       ),
@@ -367,41 +453,71 @@ class _DogLoverState extends State<DogLover> {
       children: [
         Row(
           children: [
-            const Expanded(child: Text("品种")),
-            if (selectedBreed != null && breeds[selectedBreed!]!.isNotEmpty)
-              const Expanded(child: Text("亚种")),
+            const Expanded(flex: 2, child: Text("来源")),
+            if (selectedSource == "thatapi") const Expanded(child: Text("类型")),
+            const Expanded(flex: 4, child: Text("品种")),
           ],
         ),
         Row(
           children: [
             Expanded(
-              child: buildDropdownButton2<String?>(
-                value: selectedBreed,
-                items: breeds.keys.toList(),
-                hintLable: "选择品种",
+              flex: 2,
+              child: buildDropdownButton2<String>(
+                value: selectedSource,
+                items: dataSourceList,
+                hintLable: "选择来源",
                 onChanged: (value) {
                   setState(() {
-                    selectedBreed = value;
-                    selectedSubBreed = null; // 重置子品种选择
+                    // 选择了来源之后，要重置品种(不用重置类型，因为选中dogceo用不到类型，选中thatapi需要一个默认类型)
+                    selectedSource = value;
+                    selectedBreed = null;
+                    selectedNumber = 1;
+                    getAnimalBreed();
                   });
                 },
                 itemToString: (e) => e,
               ),
             ),
-            if (selectedBreed != null && breeds[selectedBreed!]!.isNotEmpty)
+            if (selectedSource == "thatapi")
               Expanded(
-                child: buildDropdownButton2<dynamic>(
-                  value: selectedSubBreed,
-                  items: breeds[selectedBreed!]!.toList(),
-                  hintLable: "选择亚种",
+                child: buildDropdownButton2<CusLabel?>(
+                  value: selectedType,
+                  items: animalTypes,
+                  hintLable: "选择类型",
                   onChanged: (value) {
                     setState(() {
-                      selectedSubBreed = value;
+                      selectedType = value;
+                      selectedBreed = null; // 重置品种选择
+                      selectedNumber = 1;
+                      getAnimalBreed();
                     });
                   },
-                  itemToString: (e) => e.toString(),
+                  itemToString: (e) => (e as CusLabel).cnLabel,
                 ),
               ),
+            Expanded(
+              flex: 4,
+              child: (!isLoading)
+                  ? buildDropdownButton2<CusLabel?>(
+                      value: selectedBreed,
+                      items: animalList,
+                      hintLable: "选择品种",
+                      onChanged: (value) {
+                        setState(() {
+                          selectedBreed = value;
+                          selectedNumber = 1;
+                        });
+                      },
+                      itemToString: (e) => (e as CusLabel).cnLabel,
+                    )
+                  : Center(
+                      child: SizedBox(
+                        width: 16.sp,
+                        height: 16.sp,
+                        child: CircularProgressIndicator(strokeWidth: 2.sp),
+                      ),
+                    ),
+            ),
           ],
         ),
         Row(
@@ -412,7 +528,7 @@ class _DogLoverState extends State<DogLover> {
               width: 60.sp,
               child: buildDropdownButton2<dynamic>(
                 value: selectedNumber,
-                items: [1, 5, 10, 20, 50],
+                items: selectedSource == "dogceo" ? [1, 5, 10] : [1],
                 onChanged: (value) {
                   setState(() {
                     selectedNumber = value;
@@ -423,20 +539,13 @@ class _DogLoverState extends State<DogLover> {
             ),
             SizedBox(width: 20.sp),
             TextButton(
-              onPressed: (selectedBreed != null || selectedBreed != null)
+              onPressed: (selectedBreed != null)
                   ? () async {
                       getBreedDogImages();
                     }
                   : null,
-              child: const Text('获取图片'),
+              child: const Text('查看图片'),
             ),
-            // /// 显示全部图片可能过多，考虑是否需要
-            // ElevatedButton(
-            //   onPressed: () async {
-            //     getBreedDogImages(isAll: true);
-            //   },
-            //   child: const Text('全部图片'),
-            // ),
             const Expanded(child: SizedBox()),
             ElevatedButton(
               style: buildFunctionButtonStyle(),
@@ -447,7 +556,7 @@ class _DogLoverState extends State<DogLover> {
 
                       //  因为可能切换了品种再查询品种说明，所以图片可能是之前的，
                       // 所以一定在点击“品种说明”时切换图片
-                      getBreedDogImages(num: selectedNumber);
+                      getBreedDogImages();
                     }
                   : null,
               child: const Text('品种说明'),
