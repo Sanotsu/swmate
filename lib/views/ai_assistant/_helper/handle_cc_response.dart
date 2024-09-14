@@ -273,8 +273,8 @@ void commonOnDataHandler({
 
     // 零一万物RAG 更新引用情况
     if (crb.choices != null &&
-        crb.choices?.first != null &&
-        crb.choices?.first.delta != null &&
+        crb.choices!.isNotEmpty &&
+        crb.choices!.first.delta != null &&
         crb.choices!.first.delta?.quote != null) {
       csMsg.quotes = crb.choices!.first.delta!.quote!;
     }

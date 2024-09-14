@@ -10,8 +10,8 @@ TheDogCatApiImage _$TheDogCatApiImageFromJson(Map<String, dynamic> json) =>
     TheDogCatApiImage(
       json['id'] as String,
       json['url'] as String,
-      (json['width'] as num).toInt(),
-      (json['height'] as num).toInt(),
+      width: (json['width'] as num?)?.toInt(),
+      height: (json['height'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$TheDogCatApiImageToJson(TheDogCatApiImage instance) =>

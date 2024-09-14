@@ -47,7 +47,7 @@ class _DogCatLoverState extends State<DogCatLover> {
   var systemPrompt = ChatMessage(
     messageId: const Uuid().v4(),
     role: CusRole.system.name,
-    content: getAnimalPrompt(),
+    content: getSimpleAnimalPrompt(),
     dateTime: DateTime.now(),
   );
 
@@ -82,6 +82,14 @@ class _DogCatLoverState extends State<DogCatLover> {
 
   bool isLoading = false;
 
+  String note = """
+【AI识别品种】功能是使用视觉大模型对图片中猫或狗进行识别，成功率和正确率与大模型能力相关，结果仅供参考。
+
+【AI识别品种】出现“请求语法错误”，可能是由于大模型API请求频率限制，稍后再试即可。
+
+指定品种后的【品种说明】是使用文本大模型对该指定品种的猫或狗进行讲解说明，虽然更加准确，但结果仍仅供参考。
+""";
+
   @override
   void initState() {
     super.initState();
@@ -96,6 +104,7 @@ class _DogCatLoverState extends State<DogCatLover> {
   @override
   void dispose() {
     _scrollController.dispose();
+    respStream.cancel();
     super.dispose();
   }
 
@@ -247,10 +256,19 @@ class _DogCatLoverState extends State<DogCatLover> {
         messages.add(ChatMessage(
           messageId: const Uuid().v4(),
           role: CusRole.user.name,
-          content: "识别出图片中犬类的品种和亚种，显示该品种和亚种的中文名称和英文名称，再进行详细介绍。",
+          content: "请识别出图片中的猫或狗的具体品种，并对识别到的物种提供详细的介绍。",
           dateTime: DateTime.now(),
         ));
       });
+
+      /// 2024-09-14 实测分析
+      /// 通义千问VL-Max版本识别率最佳，但偶尔返回400错误，多点几次就行,
+      /// VL-PLus效果也一般，和零一万物差不多，但输出也没有按照系统提示词的格式来
+      ///
+      /// 零一万物的Vision不一定能识别对，多问几次可能对的也改成错的了，但输出格式没问题
+      ///
+      /// 智谱AI的 glm-4v-plus 不一定识别的对，glm-4v 听不懂同样的识别指令，只是说“没有修改图片的能力”
+      ///   两者对指定的输出格式也基本没有遵守，而且识别正确率是最差的
       tempStream = await getCCResponseSWC(
         messages: messages,
         // 图像识别的时候，就是零一万物的调用
@@ -354,7 +372,22 @@ class _DogCatLoverState extends State<DogCatLover> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('猫狗之家')),
+      appBar: AppBar(
+        title: const Text('猫狗之家'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              commonMDHintModalBottomSheet(
+                context,
+                "模型使用说明",
+                note,
+                msgFontSize: 15.sp,
+              );
+            },
+            icon: const Icon(Icons.info_outline),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           if (!isCusFilter)
@@ -368,10 +401,12 @@ class _DogCatLoverState extends State<DogCatLover> {
                 ),
                 ElevatedButton(
                   style: buildFunctionButtonStyle(),
-                  onPressed: () async {
-                    await getProcessedResult(isImage: true);
-                  },
-                  child: const Text('品种分析'),
+                  onPressed: !isBotThinking
+                      ? () async {
+                          await getProcessedResult(isImage: true);
+                        }
+                      : null,
+                  child: const Text('AI识别品种'),
                 ),
               ],
             ),
@@ -388,6 +423,12 @@ class _DogCatLoverState extends State<DogCatLover> {
                 dlDir: DL_DIR,
               ),
             ),
+
+          // dogceo的图片路径可以看到品种，thatapi不行，所以这里如果是dogceo的展示品种(取4应该就对的)
+          // if (dogImages.isNotEmpty && dogImages.first.contains("dog.ceo"))
+          //   Center(child: Text(dogImages.first)),
+          if (dogImages.isNotEmpty && dogImages.first.contains("dog.ceo"))
+            Text(dogImages.first.split("/")[4]),
 
           /// 显示对话消息主体(因为绑定了滚动控制器，所以一开始就要在)
           (messages

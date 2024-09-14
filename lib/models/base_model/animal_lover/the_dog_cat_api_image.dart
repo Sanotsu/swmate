@@ -11,17 +11,17 @@ class TheDogCatApiImage {
   String url;
 
   @JsonKey(name: 'width')
-  int width;
+  int? width;
 
   @JsonKey(name: 'height')
-  int height;
+  int? height;
 
   TheDogCatApiImage(
     this.id,
-    this.url,
+    this.url, {
     this.width,
     this.height,
-  );
+  });
 
   factory TheDogCatApiImage.fromJson(Map<String, dynamic> srcJson) =>
       _$TheDogCatApiImageFromJson(srcJson);

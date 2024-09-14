@@ -571,7 +571,12 @@ Future<StreamWithCancel<ComCCResp>> aliyunCCRespWithCancel(
   model = model ??
       specs.firstWhere((e) => e.cusLlm == CusLLM.aliyun_Qwen_VL_Max_0809).model;
 
-  var body = ComCCReq(model: model, messages: messages, stream: stream);
+  var body = ComCCReq.aliyun(
+    model: model,
+    messages: messages,
+    stream: stream,
+    streamOptions: StreamOption(includeUsage: true),
+  );
 
   var header = {
     "Content-Type": "application/json",
