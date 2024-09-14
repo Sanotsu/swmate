@@ -314,7 +314,7 @@ buildImageList(
           }
 
           // 网络图片就保存都指定位置
-          await saveTtiImageToLocal(urls[index],
+          await saveImageToLocal(urls[index],
               prefix: prefix == null
                   ? null
                   : (prefix.endsWith("_") ? prefix : "${prefix}_"));
@@ -683,12 +683,14 @@ buildImageCarouselSlider(
   List<String> imageList, {
   bool isNoImage = false, // 是否不显示图片，默认就算无图片也显示占位图片
   int type = 3, // 轮播图是否可以点击预览图片，预设为3(具体类型参看下方实现方法)
+  double? aspectRatio,
+  Directory? dlDir, // 长按下载时的文件夹
 }) {
   return CarouselSlider(
     options: CarouselOptions(
       autoPlay: true, // 自动播放
       enlargeCenterPage: true, // 居中图片放大
-      aspectRatio: 16 / 9, // 图片宽高比
+      aspectRatio: aspectRatio ?? 16 / 9, // 图片宽高比
       viewportFraction: 1, // 图片占屏幕宽度的比例
       // 只有一张图片时不滚动
       enableInfiniteScroll: imageList.length > 1,
@@ -706,6 +708,7 @@ buildImageCarouselSlider(
                       context,
                       imageUrl,
                       imageList,
+                      dlDir: dlDir,
                     );
                   },
                 );
@@ -781,10 +784,24 @@ _buildImageCarouselSliderType(
   int type,
   BuildContext context,
   String imageUrl,
-  List<String> imageList,
-) {
-  buildCommonImageWidget(Function() onTap) =>
-      GestureDetector(onTap: onTap, child: buildNetworkOrFileImage(imageUrl));
+  List<String> imageList, {
+  Directory? dlDir,
+} // 长按下载时的文件夹
+    ) {
+  buildCommonImageWidget(Function() onTap) => GestureDetector(
+        onTap: onTap,
+        // 长按保存到相册
+        onLongPress: () async {
+          if (imageUrl.startsWith("/storage/")) {
+            EasyLoading.showToast("图片已保存到$imageUrl");
+            return;
+          }
+
+          // 网络图片就保存都指定位置
+          await saveImageToLocal(imageUrl, dlDir: dlDir);
+        },
+        child: buildNetworkOrFileImage(imageUrl),
+      );
 
   switch (type) {
     // 这个直接弹窗显示图片可以缩放
@@ -932,10 +949,13 @@ Widget buildDropdownButton2<T>({
   double? labelSize,
   // 标签对齐方式(默认居中，像模型列表靠左，方便对比)
   AlignmentGeometry? alignment,
+  String? hintLable,
 }) {
   return DropdownButtonHideUnderline(
     child: DropdownButton2<T>(
       isExpanded: true,
+      // 提示词
+      hint: Text(hintLable ?? '请选择', style: TextStyle(fontSize: 14.sp)),
       // 下拉选择
       items: items
           .map((e) => DropdownMenuItem<T>(
@@ -1019,5 +1039,18 @@ buildCusPopupMenuItem(
         ),
       ],
     ),
+  );
+}
+
+/// 一些功能按钮的样式统一一下
+ButtonStyle buildFunctionButtonStyle() {
+  return ElevatedButton.styleFrom(
+    minimumSize: Size(80.sp, 32.sp),
+    padding: EdgeInsets.symmetric(horizontal: 10.sp),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(15.sp),
+    ),
+    foregroundColor: Colors.white,
+    backgroundColor: Colors.blue,
   );
 }

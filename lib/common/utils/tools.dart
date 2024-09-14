@@ -223,7 +223,7 @@ bool isJsonString(String str) {
   }
 }
 
-// 文生图保存base64图片到本地(讯飞云返回的是base64,阿里云、、sf返回的是云盘上的地址)
+// 文生图保存base64图片到本地(讯飞云返回的是base64,阿里云、sf返回的是云盘上的地址)
 Future<File> saveTtiBase64ImageToLocal(
   String base64Image, {
   String? prefix, // 传前缀要全，比如带上底斜线_
@@ -243,7 +243,11 @@ Future<File> saveTtiBase64ImageToLocal(
 }
 
 // 保存文生图的图片到本地
-saveTtiImageToLocal(String netImageUrl, {String? prefix}) async {
+saveImageToLocal(
+  String netImageUrl, {
+  String? prefix,
+  Directory? dlDir,
+}) async {
 // 首先获取设备外部存储管理权限
   if (!(await requestStoragePermission())) {
     return EasyLoading.showError("未授权访问设备外部存储，无法保存图片");
@@ -259,13 +263,16 @@ saveTtiImageToLocal(String netImageUrl, {String? prefix}) async {
   // print("新获取的图片地址---$saveImageUrl");
 
   try {
+    // 2024-09-14 支持自定义下载的文件夹
+    var dir = dlDir ?? LLM_IG_DIR;
+
     // 2024-08-17 直接保存文件到指定位置
-    if (!await LLM_IG_DIR.exists()) {
-      await LLM_IG_DIR.create(recursive: true);
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
     }
 
     // 传入的前缀有强制带上下划线
-    final file = File('${LLM_IG_DIR.path}/${prefix ?? ""}$saveImageUrl');
+    final file = File('${dir.path}/${prefix ?? ""}$saveImageUrl');
 
     EasyLoading.show(status: '【图片保存中...】');
     var response = await Dio().get(

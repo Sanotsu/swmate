@@ -140,6 +140,9 @@ final LLM_IG_DIR = Directory('/storage/emulated/0/SWMate/image_generation');
 /// 所有的文生视频都保存在同一个位置
 final LLM_VG_DIR = Directory('/storage/emulated/0/SWMate/video_generation');
 
+/// 一般性质的文件下载的位置
+final DL_DIR = Directory('/storage/emulated/0/SWMate/download');
+
 // 可供翻译的目标语言
 enum TargetLanguage {
   simplifiedChinese, // 中文(简体)

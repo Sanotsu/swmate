@@ -840,7 +840,10 @@ class _BillReportIndexState extends State<BillReportIndex>
                   ),
                   SizedBox(width: 5.sp),
                   // 后续模拟支出收入分类的图标
-                  Icon(Icons.shopping_cart, color: Colors.orange[300]!),
+                  // 2024-09-12 flutter默认图标的rmb是一横，日语是两横
+                  // 但实际上两者应该是一样的，都是两横
+                  // currency_yuan、currency_yen
+                  Icon(Icons.currency_yen, color: Colors.orange[300]!),
                   SizedBox(width: 5.sp),
                   Expanded(
                     child: Column(

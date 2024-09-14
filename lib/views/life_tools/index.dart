@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../ai_assistant/_componets/custom_entrance_card.dart';
 import 'accounting/index.dart';
+import 'dog_lover/index.dart';
 import 'random_dish/dish_wheel_index.dart';
 
 ///
@@ -65,6 +67,13 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                   subtitle: "随机生成一道菜品",
                   icon: Icons.restaurant_menu,
                   targetPage: DishWheelIndex(),
+                ),
+
+                CustomEntranceCard(
+                  title: '爱狗之家',
+                  subtitle: "狗狗的图片和事实",
+                  icon: FontAwesomeIcons.dog,
+                  targetPage: DogLover(),
                 ),
 
                 // buildAIToolEntrance(

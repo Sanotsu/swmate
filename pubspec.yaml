@@ -87,6 +87,7 @@ dependencies:
   archive: ^3.6.1
   dropdown_button2: ^2.3.9
   video_player: ^2.9.1
+  font_awesome_flutter: ^10.7.0
 
 dev_dependencies:
   flutter_test:
