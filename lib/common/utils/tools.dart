@@ -8,6 +8,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../constants.dart';
@@ -296,6 +297,36 @@ saveImageToLocal(
 
   // await file.writeAsBytes(respData);
   // EasyLoading.showToast("图片已保存${file.path}");
+}
+
+/// 获取网络图片的base64字符串
+Future<String> getBase64FromNetworkImage(String imageUrl) async {
+  // 下载图片
+  var response = await Dio().get(
+    imageUrl,
+    options: Options(responseType: ResponseType.bytes),
+  );
+
+  if (response.statusCode == 200) {
+    // 获取应用的临时目录
+    final directory = await getTemporaryDirectory();
+    final filePath = '${directory.path}/temp_image.png';
+
+    // 将图片保存为文件
+    final file = File(filePath);
+    await file.writeAsBytes(response.data);
+
+    // 读取文件并转换为 Base64 字符串
+    final bytes = await file.readAsBytes();
+    final base64String = base64Encode(bytes);
+
+    // 删除临时文件
+    await file.delete();
+
+    return base64String;
+  } else {
+    throw Exception('加载图片失败');
+  }
 }
 
 // 保存文生视频的视频到本地

@@ -1043,7 +1043,7 @@ buildCusPopupMenuItem(
 }
 
 /// 一些功能按钮的样式统一一下
-ButtonStyle buildFunctionButtonStyle() {
+ButtonStyle buildFunctionButtonStyle({Color? backgroundColor}) {
   return ElevatedButton.styleFrom(
     minimumSize: Size(80.sp, 32.sp),
     padding: EdgeInsets.symmetric(horizontal: 10.sp),
@@ -1051,6 +1051,6 @@ ButtonStyle buildFunctionButtonStyle() {
       borderRadius: BorderRadius.circular(15.sp),
     ),
     foregroundColor: Colors.white,
-    backgroundColor: Colors.blue,
+    backgroundColor: backgroundColor ?? Colors.blue,
   );
 }

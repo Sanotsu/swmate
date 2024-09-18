@@ -575,7 +575,8 @@ Future<StreamWithCancel<ComCCResp>> aliyunCCRespWithCancel(
     model: model,
     messages: messages,
     stream: stream,
-    streamOptions: StreamOption(includeUsage: true),
+    // 非流式时传此参数会报错
+    streamOptions: stream ? StreamOption(includeUsage: true) : null,
   );
 
   var header = {

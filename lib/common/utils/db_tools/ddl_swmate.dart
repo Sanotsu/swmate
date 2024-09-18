@@ -181,7 +181,7 @@ class SWMateDdl {
       wikipediaUrl        TEXT,
       referenceImageUrl   TEXT,
       dataSource          TEXT,
-      PRIMARY KEY(animalBreedId)
+      PRIMARY KEY(id)
     );
     """;
 }

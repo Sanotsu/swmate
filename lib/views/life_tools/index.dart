@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../../common/llm_spec/cus_llm_spec.dart';
 import '../ai_assistant/_componets/custom_entrance_card.dart';
+import '../ai_assistant/index.dart';
 import 'accounting/index.dart';
 import 'animal_lover/dog_cat_index.dart';
 import 'random_dish/dish_wheel_index.dart';
@@ -54,15 +56,15 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
               mainAxisSpacing: 5,
               crossAxisCount: 2,
               childAspectRatio: 3 / 2,
-              children: const <Widget>[
-                CustomEntranceCard(
+              children: <Widget>[
+                const CustomEntranceCard(
                   title: '极简记账',
                   subtitle: "手动记账图表统计",
                   icon: Icons.receipt,
                   targetPage: BillItemIndex(),
                 ),
 
-                CustomEntranceCard(
+                const CustomEntranceCard(
                   title: '随机菜品',
                   subtitle: "随机生成一道菜品",
                   icon: Icons.restaurant_menu,
@@ -73,7 +75,17 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                   title: '猫狗之家',
                   subtitle: "猫狗的图片和事实",
                   icon: FontAwesomeIcons.dog,
-                  targetPage: DogCatLover(),
+                  onTap: () async {
+                    await navigateToToolScreen(
+                      context,
+                      LLModelType.vision,
+                      (llmSpecList, cusSysRoleSpecs) => DogCatLover(
+                        llmSpecList: llmSpecList,
+                      ),
+                      roleType: LLModelType.vision,
+                    );
+                  },
+                  // targetPage: DogCatLover(),
                 ),
 
                 // buildAIToolEntrance(

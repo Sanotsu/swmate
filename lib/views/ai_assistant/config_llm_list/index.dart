@@ -331,11 +331,12 @@ TPM  12000 1 分钟   所有预置模型
         headingTextStyle: const TextStyle(fontWeight: FontWeight.bold),
         columnSpacing: 5.sp, // 设置列间距
         columns: const [
+          DataColumn(label: Text("")),
           DataColumn(label: Text("序号")),
           DataColumn(label: Text("平台")),
+          DataColumn(label: Text("模型")),
           DataColumn(label: Text("输入(元)\n/M token")),
           DataColumn(label: Text("输出(元)\n/M token")),
-          DataColumn(label: Text("模型")),
         ],
         rows: List<DataRow>.generate(
           cusLlmSpecs.length,
@@ -355,6 +356,15 @@ TPM  12000 1 分钟   所有预置模型
             }),
             cells: <DataCell>[
               DataCell(
+                SizedBox(
+                  width: 30.sp,
+                  child: Checkbox(
+                    value: selectedRows[index],
+                    onChanged: (value) => toggleSelection(index),
+                  ),
+                ),
+              ),
+              DataCell(
                 SizedBox(width: 30.sp, child: Text('${index + 1}')),
               ),
               DataCell(
@@ -363,6 +373,12 @@ TPM  12000 1 分钟   所有预置模型
                   child: Text(
                     CP_NAME_MAP[cusLlmSpecs[index].platform] ?? "",
                   ),
+                ),
+              ),
+              DataCell(
+                Text(
+                  cusLlmSpecs[index].name,
+                  style: TextStyle(fontSize: 13.sp),
                 ),
               ),
               DataCell(
@@ -378,12 +394,6 @@ TPM  12000 1 分钟   所有预置模型
                   cusLlmSpecs[index].isFree
                       ? "0"
                       : "${cusLlmSpecs[index].outputPrice ?? '${cusLlmSpecs[index].costPer}/张(个)'}",
-                  style: TextStyle(fontSize: 13.sp),
-                ),
-              ),
-              DataCell(
-                Text(
-                  cusLlmSpecs[index].name,
                   style: TextStyle(fontSize: 13.sp),
                 ),
               ),
