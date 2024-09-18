@@ -7,10 +7,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../apis/animal_lover/random_fact_apis.dart';
 import '../../../apis/animal_lover/thatapi_apis.dart';
 import '../../../apis/chat_completion/common_cc_apis.dart';
 import '../../../apis/animal_lover/dogceo_apis.dart';
 import '../../../common/components/searchable_dropdown.dart';
+import '../../../common/components/simple_marquee_or_text.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
@@ -125,17 +127,28 @@ class _DogCatLoverState extends State<DogCatLover> {
 
 点击图片可缩放预览，长按图片可保存到本地。
 
+点击左侧 fact_check 图标可更新一条关于猫狗的小知识。
+
 图片数据来源:  
-[dog.ceo](https://dog.ceo/dog-api/documentation/)、
-[thecatapi.com](https://thecatapi.com/)、
-[thedogapi.com](https://thedogapi.com/)
+[dog.ceo](https://dog.ceo/dog-api/documentation/)  
+[thedogapi.com](https://thedogapi.com/)  
+[thecatapi.com](https://thecatapi.com/)
+
+猫狗小知识来源:  
+[wh-iterabb-it/meowfacts](https://meowfacts.herokuapp.com/?lang=zho)  
+[catfact.ninja](https://catfact.ninja/fact)  
+[dogapi.dog](https://dogapi.dog/api/v2/facts)  
 """;
+
+  String factStr = "";
 
   @override
   void initState() {
     super.initState();
 
     initPlatAndModel();
+
+    getRandomFact();
 
     selectedAnimalType = animalTypes.first;
     selectedSource = dataSourceList.first;
@@ -308,6 +321,15 @@ class _DogCatLoverState extends State<DogCatLover> {
         animalImages.addAll(temp.map((e) => e.url).toList());
       });
     }
+  }
+
+  // 随机获取一条猫狗小知识
+  getRandomFact() async {
+    var fact = await getAnimalFact();
+
+    setState(() {
+      factStr = fact;
+    });
   }
 
   // 获取大模型返回的品种分析(识图或者直接品种分析)
@@ -489,6 +511,10 @@ in the picture, and then provide a detailed introduction.""",
         title: const Text('猫狗之家'),
         actions: [
           IconButton(
+            onPressed: getRandomFact,
+            icon: const Icon(Icons.fact_check_outlined),
+          ),
+          IconButton(
             onPressed: () {
               commonMDHintModalBottomSheet(
                 context,
@@ -503,6 +529,13 @@ in the picture, and then provide a detailed introduction.""",
       ),
       body: Column(
         children: [
+          // 滚动显示一行有趣的猫狗小知识
+          SimpleMarqueeOrText(
+            data: factStr,
+            velocity: 30,
+            style: TextStyle(fontSize: 13.sp),
+          ),
+
           /// 如果没有指定品种，则是随机拉取一张图片或者用户上传图片
           if (!isCusFilter)
             // 构建可切换云平台和模型的行,用于选择图像识别的模型

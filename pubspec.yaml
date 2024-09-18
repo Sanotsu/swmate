@@ -88,6 +88,12 @@ dependencies:
   dropdown_button2: ^2.3.9
   video_player: ^2.9.1
   font_awesome_flutter: ^10.7.0
+  marquee: ^2.2.3
+
+# 2024-09-18 marquee 依赖的fading_edge_scrollview版本会报错，使用此覆盖
+# 参看 https://github.com/mponkin/fading_edge_scrollview/issues/29
+dependency_overrides: 
+   fading_edge_scrollview: ^4.1.1
 
 dev_dependencies:
   flutter_test:
