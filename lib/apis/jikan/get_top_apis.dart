@@ -34,7 +34,7 @@ Future<JikanTop> getJikanTop({
       respData = json.decode(respData);
     }
 
-    print("respData===========$respData");
+    // print("respData===========$respData");
 
     // 响应是json格式的列表 List<dynamic>
     return JikanTop.fromJson(respData);

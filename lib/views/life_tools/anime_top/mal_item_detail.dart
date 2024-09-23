@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../../apis/_default_system_role_list/inner_system_prompt.dart';
+import '../../../apis/chat_completion/common_cc_apis.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
+import '../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../models/chat_competion/com_cc_resp.dart';
+import '../../../models/chat_competion/com_cc_state.dart';
 import '../../../models/jikan/jikan_top.dart';
+import '../../ai_assistant/_helper/handle_cc_response.dart';
 import 'index.dart';
 
 class MALItemDetail extends StatefulWidget {
@@ -21,6 +28,162 @@ class MALItemDetail extends StatefulWidget {
 }
 
 class _MALItemDetailState extends State<MALItemDetail> {
+  bool isBotThinking = false;
+  bool isStream = false;
+  StreamWithCancel<ComCCResp> respStream = StreamWithCancel.empty();
+
+  late JKTopData jkdata;
+
+  // 用于显示简介和背景说明的文本，可以大模型进行翻译
+  String about = "";
+  String background = "";
+  // 避免追加时内容变化，用于确定翻译前后的内容
+  String transPattern = "\n\n【大模型翻译：】\n\n";
+
+  @override
+  void initState() {
+    super.initState();
+
+    jkdata = widget.item;
+    about = widget.item.synopsis ?? widget.item.about ?? "";
+    background = widget.item.background ?? "";
+  }
+
+  /// 简单测试的写法
+  Future<void> getTrans(String text) async {
+    List<CCMessage> msgs = [
+      CCMessage(content: getJsonTranslatorPrompt(), role: CusRole.system.name),
+      CCMessage(
+          // 避免重复翻译，都使用原始的文本+翻译后的文本
+          // 这样写没用，应该是改的引用，widget.item其实也改变了
+          content: text == "about"
+              ? about.split(transPattern).first
+              : background.split(transPattern).first,
+          role: CusRole.user.name),
+    ];
+
+    // 非流式的
+    (await zhipuCCRespWithCancel(msgs, model: "glm-4-flash", stream: false))
+        .stream
+        .listen(
+      (crb) {
+        // print(crb.cusText);
+
+        setState(() {
+          // 避免重复翻译，都使用原始的文本+翻译后的文本
+          if (text == "about") {
+            about =
+                "${about.split(transPattern).first}$transPattern${crb.cusText}";
+          } else {
+            background =
+                "${background.split(transPattern).first}$transPattern${crb.cusText}";
+          }
+        });
+      },
+      onDone: () {},
+    );
+  }
+
+  // 根据不同的平台、选中的不同模型，调用对应的接口，得到回复
+  // 虽然返回的响应通用了，但不同的平台和模型实际取值还是没有抽出来的
+  _getCCResponse(String text) async {
+    // 在调用前，不会设置响应状态
+    if (isBotThinking) return;
+    setState(() {
+      isBotThinking = true;
+    });
+
+    List<ChatMessage> messages = [
+      ChatMessage(
+        messageId: const Uuid().v4(),
+        role: CusRole.system.name,
+        content: getJsonTranslatorPrompt(),
+        dateTime: DateTime.now(),
+      ),
+      ChatMessage(
+        messageId: const Uuid().v4(),
+        role: CusRole.user.name,
+        // 避免重复翻译，都使用原始的文本+翻译后的文本（直接修改widget.item其实也行，因为引用改变了）
+        content: text == "about"
+            ? about.split(transPattern).first
+            : background.split(transPattern).first,
+        dateTime: DateTime.now(),
+      ),
+    ];
+
+    // 获取响应流
+    StreamWithCancel<ComCCResp> tempStream = await getCCResponseSWC(
+      messages: messages,
+      selectedPlatform: ApiPlatform.zhipu,
+      selectedModel: "glm-4-flash",
+      isStream: isStream,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      respStream = tempStream;
+    });
+
+    // 在得到响应后，就直接把响应的消息加入对话列表
+    // 又因为是流式的,初始时文本设为空，SSE有推送时，会更新相关栏位
+    // csMsg => currentStreamingMessage
+    ChatMessage? csMsg = buildEmptyAssistantChatMessage();
+
+    setState(() {
+      messages.add(csMsg!);
+    });
+
+    // 处理流式响应
+    handleCCResponseSWC(
+      swc: respStream,
+      onData: (crb) {
+        commonOnDataHandler(
+          crb: crb,
+          csMsg: csMsg ?? buildEmptyAssistantChatMessage(),
+          // 如果是流式响应，这里结束
+          onStreamDone: () {
+            if (!mounted) return;
+            setState(() {
+              csMsg = null;
+              isBotThinking = false;
+              translatorLastMessage(text, messages.last.content);
+            });
+          },
+          setIsResponsing: () {
+            setState(() {
+              isBotThinking = true;
+            });
+          },
+        );
+      },
+      onDone: () {
+        // 如果不是流式响应，这里结束
+        if (!isStream) {
+          if (!mounted) return;
+          setState(() {
+            csMsg = null;
+            isBotThinking = false;
+          });
+
+          translatorLastMessage(text, messages.last.content);
+        }
+      },
+      onError: (error) {
+        commonExceptionDialog(context, "异常提示", error.toString());
+      },
+    );
+  }
+
+  translatorLastMessage(String text, String cusText) {
+    // 避免重复翻译，都使用原始的文本+翻译后的文本
+    if (text == "about") {
+      about = "${about.split(transPattern).first}$transPattern$cusText";
+    } else {
+      background =
+          "${background.split(transPattern).first}$transPattern$cusText";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,15 +191,17 @@ class _MALItemDetailState extends State<MALItemDetail> {
       appBar: AppBar(
         title: Text("${widget.malType.cnLabel}详情"),
         actions: const [
-          IconButton(
-            onPressed: null,
-            icon: Icon(Icons.translate),
-          ),
+          // IconButton(
+          //   onPressed: () {
+          //     setState(() {});
+          //   },
+          //   icon: const Icon(Icons.translate),
+          // ),
         ],
       ),
       body: ListView(
         children: [
-          ...buildDetail(widget.item, (widget.malType.value as MALType)),
+          ...buildDetail(jkdata, (widget.malType.value as MALType)),
         ],
       ),
     );
@@ -137,13 +302,32 @@ class _MALItemDetailState extends State<MALItemDetail> {
       if (malType == MALType.people) ...buildPeopleNote(item),
 
       /// 简介和背景栏位
-      buildTitleText("简介"),
-      buildItemRow(null, item.synopsis ?? item.about ?? ""),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          buildTitleText("简介"),
+          IconButton(
+            onPressed: () => _getCCResponse("about"),
+            icon: Icon(Icons.translate, size: 20.sp),
+          ),
+        ],
+      ),
+      buildItemRow(null, about),
       // 角色和人物没有背景栏位
-      if (malType == MALType.anime || malType == MALType.manga) ...[
-        buildTitleText("背景"),
-        buildItemRow(null, item.background ?? ""),
-      ]
+      if (background.isNotEmpty) ...[
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            buildTitleText("背景"),
+            IconButton(
+              onPressed: () => _getCCResponse("background"),
+              icon: Icon(Icons.translate, size: 20.sp),
+            ),
+          ],
+        ),
+        buildItemRow(null, background),
+      ],
+      SizedBox(height: 20.sp),
     ];
   }
 
@@ -152,7 +336,7 @@ class _MALItemDetailState extends State<MALItemDetail> {
     return [
       buildItemRow(
         "人气",
-        "${item.popularity}",
+        "No.${item.popularity}",
         labelFontSize: 12.sp,
         valueFontSize: 12.sp,
       ),
@@ -195,7 +379,7 @@ class _MALItemDetailState extends State<MALItemDetail> {
     return [
       buildItemRow(
         "人气",
-        "${item.popularity}",
+        "No.${item.popularity}",
         labelFontSize: 12.sp,
         valueFontSize: 12.sp,
       ),
@@ -332,7 +516,7 @@ class _MALItemDetailState extends State<MALItemDetail> {
         (item.authors?.map((e) => e.name).toList() ?? []).join("/"),
       ),
       buildItemRow(
-        "连载期刊",
+        "期刊",
         (item.serializations?.map((e) => e.name).toList() ?? []).join("/"),
       ),
       buildItemRow(

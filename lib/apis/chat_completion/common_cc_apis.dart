@@ -198,7 +198,7 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
             // 处理每一行数据
             .listen((event) async {
           // print(
-          //   "Event: ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
+          //   "【Event】 ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
           // );
 
           // 如果流式响应其实在报错，则要单独
