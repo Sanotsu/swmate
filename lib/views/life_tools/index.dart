@@ -9,6 +9,7 @@ import 'accounting/index.dart';
 import 'animal_lover/dog_cat_index.dart';
 import 'anime_top/index.dart';
 import 'random_dish/dish_wheel_index.dart';
+import 'waifu_pics/index.dart';
 
 ///
 /// 常用的生活类工具
@@ -94,6 +95,13 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                   subtitle: "多平台动漫排行榜",
                   icon: Icons.leaderboard_outlined,
                   targetPage: MALAnimeTop(),
+                ),
+
+                const CustomEntranceCard(
+                  title: 'WAIFU图片',
+                  subtitle: "随机二次元WAIFU",
+                  icon: Icons.leaderboard_outlined,
+                  targetPage: WaifuPicIndex(),
                 ),
 
                 // buildAIToolEntrance(

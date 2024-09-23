@@ -248,6 +248,8 @@ buildNetworkImageViewGrid(
   List<String> urls, {
   int? crossAxisCount,
   String? prefix, // 如果有保存图片，这个可以是图片明前缀
+  Directory? dlDir, // 长按下载时的文件夹
+  BoxFit? fit,
 }) {
   return GridView.count(
     crossAxisCount: crossAxisCount ?? 2,
@@ -255,7 +257,13 @@ buildNetworkImageViewGrid(
     mainAxisSpacing: 5.sp,
     crossAxisSpacing: 5.sp,
     physics: const NeverScrollableScrollPhysics(),
-    children: buildImageList(context, urls, prefix: prefix),
+    children: buildImageList(
+      context,
+      urls,
+      prefix: prefix,
+      dlDir: dlDir,
+      fit: fit,
+    ),
   );
 }
 
@@ -290,6 +298,7 @@ buildImageList(
   BuildContext context,
   List<String> urls, {
   String? prefix,
+  Directory? dlDir, // 长按下载时的文件夹
   BoxFit? fit,
 }) {
   return List.generate(urls.length, (index) {
@@ -315,10 +324,13 @@ buildImageList(
           }
 
           // 网络图片就保存都指定位置
-          await saveImageToLocal(urls[index],
-              prefix: prefix == null
-                  ? null
-                  : (prefix.endsWith("_") ? prefix : "${prefix}_"));
+          await saveImageToLocal(
+            urls[index],
+            prefix: prefix == null
+                ? null
+                : (prefix.endsWith("_") ? prefix : "${prefix}_"),
+            dlDir: dlDir,
+          );
         },
         // 默认缓存展示
         child: SizedBox(
@@ -778,11 +790,14 @@ Widget buildNetworkOrFileImage(String imageUrl, {BoxFit? fit}) {
       /// placeholder 和 progressIndicatorBuilder 只能2选1
       placeholder: (context, url) => Center(
         child: SizedBox(
-          width: 50.sp,
-          height: 50.sp,
-          child: const CircularProgressIndicator(),
+          width: 36.sp,
+          height: 36.sp,
+          child: const CircularProgressIndicator(color: Colors.blue),
         ),
       ),
+
+      // placeholder: (context, url) => const CustomProgressIndicator(), // 自定义进度条
+
       errorWidget: (context, url, error) => Center(
         child: Icon(Icons.error, size: 36.sp),
       ),
@@ -1100,4 +1115,25 @@ ButtonStyle buildFunctionButtonStyle({Color? backgroundColor}) {
     foregroundColor: Colors.white,
     backgroundColor: backgroundColor ?? Colors.blue,
   );
+}
+
+class CustomProgressIndicator extends StatelessWidget {
+  const CustomProgressIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue), // 自定义颜色
+          ),
+          SizedBox(height: 10.0),
+          Text('Loading...', style: TextStyle(color: Colors.blue)),
+        ],
+      ),
+    );
+  }
 }
