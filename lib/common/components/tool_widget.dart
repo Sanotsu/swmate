@@ -290,6 +290,7 @@ buildImageList(
   BuildContext context,
   List<String> urls, {
   String? prefix,
+  BoxFit? fit,
 }) {
   return List.generate(urls.length, (index) {
     return GridTile(
@@ -322,11 +323,57 @@ buildImageList(
         // 默认缓存展示
         child: SizedBox(
           height: 0.2.sw,
-          child: buildNetworkOrFileImage(urls[index], fit: BoxFit.cover),
+          child: buildNetworkOrFileImage(urls[index], fit: fit ?? BoxFit.cover),
         ),
       ),
     );
   }).toList();
+}
+
+/// 上面那个是列表，这个是单个图片
+buildImageGridTile(
+  BuildContext context,
+  String url, {
+  String? prefix,
+  BoxFit? fit,
+}) {
+  return GridTile(
+    child: GestureDetector(
+      // 单击预览
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return Dialog(
+              backgroundColor: Colors.transparent, // 设置背景透明
+              child: _buildPhotoView(_getImageProvider(url)),
+            );
+          },
+        );
+      },
+      // 长按保存到相册
+      onLongPress: () async {
+        if (url.startsWith("/storage/")) {
+          EasyLoading.showToast("图片已保存到$url");
+          return;
+        }
+
+        // 网络图片就保存都指定位置
+        await saveImageToLocal(
+          url,
+          prefix: prefix == null
+              ? null
+              : (prefix.endsWith("_") ? prefix : "${prefix}_"),
+        );
+      },
+      // 默认缓存展示
+      child: buildNetworkOrFileImage(url, fit: fit ?? BoxFit.cover),
+      // child: SizedBox(
+      //   height: 0.2.sw,
+      //   child: buildNetworkOrFileImage(url, fit: fit ?? BoxFit.cover),
+      // ),
+    ),
+  );
 }
 
 /// 构建图片预览，可点击放大

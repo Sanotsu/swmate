@@ -7,6 +7,7 @@ import '../ai_assistant/_componets/custom_entrance_card.dart';
 import '../ai_assistant/index.dart';
 import 'accounting/index.dart';
 import 'animal_lover/dog_cat_index.dart';
+import 'anime_top/index.dart';
 import 'random_dish/dish_wheel_index.dart';
 
 ///
@@ -86,6 +87,13 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                     );
                   },
                   // targetPage: DogCatLover(),
+                ),
+
+                const CustomEntranceCard(
+                  title: '动漫排行',
+                  subtitle: "多平台动漫排行榜",
+                  icon: Icons.leaderboard_outlined,
+                  targetPage: MALAnimeTop(),
                 ),
 
                 // buildAIToolEntrance(
