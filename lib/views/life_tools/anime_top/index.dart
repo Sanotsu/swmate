@@ -66,14 +66,15 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
   }
 
   // 这个是初始化页面或者切换了类型时的首次查询
-  Future<void> _initFetchMALData({String? queryType = "top"}) async {
+  // 查询输入框有内容，就是条件查询；没有内容，就是排行榜查询(下同)
+  Future<void> _initFetchMALData() async {
     if (isLoading) return;
     setState(() {
       isLoading = true;
     });
 
     // 默认是top查询，也可能是关键字条件查询
-    var jkRst = queryType == "top"
+    var jkRst = query.isEmpty
         ? await getJikanTop(
             type: (selectedMalType.value as MALType),
             page: 1,
@@ -93,9 +94,9 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
 
   // 这个是上拉下拉加载更多
   // 和上者区分是因为加载圈位置不同，上者固定了首页码
-  Future<void> _refreshMALData({String? queryType = "top"}) async {
+  Future<void> _refreshMALData() async {
     // 默认是top查询，也可能是关键字条件查询
-    var jkRst = queryType == "top"
+    var jkRst = query.isEmpty
         ? await getJikanTop(
             type: (selectedMalType.value as MALType),
             page: _currentPage,
@@ -135,7 +136,7 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
     // 在当前上下文中查找最近的 FocusScope 并使其失去焦点，从而收起键盘。
     FocusScope.of(context).unfocus();
 
-    _initFetchMALData(queryType: "query");
+    _initFetchMALData();
   }
 
   @override
@@ -196,9 +197,7 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
                 setState(() {
                   selectedMalType = value!;
                 });
-                await _initFetchMALData(
-                  queryType: query.isEmpty ? "top" : "query",
-                );
+                await _initFetchMALData();
               },
               itemToString: (e) => (e as CusLabel).cnLabel,
             ),
@@ -260,9 +259,7 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
               footer: const ClassicFooter(),
               onRefresh: () async {
                 _currentPage = 1;
-                await _refreshMALData(
-                  queryType: query.isEmpty ? "top" : "query",
-                );
+                await _refreshMALData();
               },
               onLoad: _hasMore
                   ? () async {
@@ -271,16 +268,14 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
                           _isRefreshLoading = true;
                         });
                         _currentPage++;
-                        await _refreshMALData(
-                          queryType: query.isEmpty ? "top" : "query",
-                        );
+                        await _refreshMALData();
                       }
                     }
                   : null,
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 1,
-                  childAspectRatio: 3, // 调整子组件的宽高比
+                  childAspectRatio: 2.8, // 调整子组件的宽高比
                 ),
                 itemCount: rankList.length,
                 itemBuilder: (context, index) {
@@ -313,9 +308,7 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
               .first;
         });
 
-        await _initFetchMALData(
-          queryType: query.isEmpty ? "top" : "query",
-        );
+        await _initFetchMALData();
       },
       itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
         buildCusPopupMenuItem(context, "anime", "动漫排名", Icons.leaderboard),
@@ -394,11 +387,31 @@ Widget buildPostItem(
                 if (isAnimeOrManga) buildScoreArea(post, rank: post.rank),
                 if (!isAnimeOrManga) buildFavoritesArea(post, index: index),
                 const SizedBox(height: 5),
-                Text(
-                  (isAnimeOrManga ? post.synopsis : post.about) ?? "",
-                  maxLines: isAnimeOrManga ? 2 : 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                // 如果是人物或角色，使用about的前几行；
+                // 如果是动漫或者漫画，使用其他关键字(因为2行简介无实际作用)
+                // Text(
+                //   (isAnimeOrManga ? post.synopsis : post.about) ?? "",
+                //   maxLines: isAnimeOrManga ? 2 : 3,
+                //   overflow: TextOverflow.ellipsis,
+                // ),
+                if ((malType.value as MALType) == MALType.anime)
+                  Text(
+                    "类别: ${post.type}(${post.episodes}集)\n放送: ${post.aired?.from?.split("T").first} ~ ${post.aired?.to?.split("T").first ?? '至今'}\n成员: ${post.members}人 最爱: ${post.favorites}人",
+                    maxLines: 3,
+                    style: TextStyle(fontSize: 12.sp),
+                  ),
+                if ((malType.value as MALType) == MALType.manga)
+                  Text(
+                    "类别: ${post.type}(${post.volumes ?? 0}册单行本; ${post.chapters ?? 0}章)\n连载: ${post.published?.from?.split("T").first} ~ ${(post.published?.to?.split("T").first) ?? '至今'}\n成员: ${post.members}人 最爱: ${post.favorites}人",
+                    maxLines: 3,
+                    style: TextStyle(fontSize: 12.sp),
+                  ),
+                if (!isAnimeOrManga)
+                  Text(
+                    post.about ?? "",
+                    maxLines: 4,
+                    style: TextStyle(fontSize: 12.sp),
+                  ),
               ],
             ),
           ),

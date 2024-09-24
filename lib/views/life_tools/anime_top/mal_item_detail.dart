@@ -309,9 +309,9 @@ class _MALItemDetailState extends State<MALItemDetail> {
       ),
 
       SizedBox(
-        height: 150.sp,
+        height: 160.sp,
         child: Card(
-          margin: EdgeInsets.all(5.sp),
+          margin: EdgeInsets.only(left: 5.sp, right: 5.sp),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -408,9 +408,12 @@ class _MALItemDetailState extends State<MALItemDetail> {
           ),
           // 想看人数
           Divider(height: 5.sp),
-          Text(
-            "${statisticData?.watching ?? statisticData?.reading}正在看/${statisticData?.planToWatch ?? statisticData?.planToRead}想看/${statisticData?.completed}看过",
-            style: TextStyle(fontSize: 11.sp),
+          Expanded(
+            child: Text(
+              """${statisticData?.watching ?? statisticData?.reading}人正在看/${statisticData?.planToWatch ?? statisticData?.planToRead}人想看/${statisticData?.completed}人看过
+${statisticData?.onHold}人搁置/${statisticData?.dropped}人弃坑/${statisticData?.total}总人数""",
+              style: TextStyle(fontSize: 10.5.sp),
+            ),
           ),
         ]
       ],
@@ -486,7 +489,7 @@ class _MALItemDetailState extends State<MALItemDetail> {
       // ),
       buildItemRow(
         "放送",
-        "${item.aired?.from?.split("T").first} ~ ${item.aired?.to?.split("T").first}",
+        "${item.aired?.from?.split("T").first} ~ ${item.aired?.to?.split("T").first ?? 'now'}",
         labelFontSize: 12.sp,
         valueFontSize: 12.sp,
       ),
@@ -551,7 +554,7 @@ class _MALItemDetailState extends State<MALItemDetail> {
       buildItemRow("完播", item.airing == true ? '放映中' : '已完结'),
       buildItemRow(
         "放送",
-        "${item.aired?.from?.split("T").first} ~ ${item.aired?.to?.split("T").first}",
+        "${item.aired?.from?.split("T").first} ~ ${item.aired?.to?.split("T").first ?? 'now'}",
       ),
       buildItemRow("时长", "${item.duration}"),
       buildItemRow("分级", "${item.rating}"),

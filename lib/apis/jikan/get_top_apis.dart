@@ -170,8 +170,13 @@ Future<JikanTop> getJikanSearch({
     //     "https://api.jikan.moe/v4/${type.name}?q=$q&order_by=$orderBy&sort=$sort&page=$page&limit=$limit";
 
     // 简单点，只关键字搜索，其他默认
+    // 2024-09-24 people实测默认排序是name，https://api.jikan.moe/v4/people?q=one&order_by=name
+    // 但执行这个会报错，所以要改为mal_id
+    if (type == MALType.people) {
+      orderBy = "mal_id";
+    }
     var url =
-        "https://api.jikan.moe/v4/${type.name}?q=$q&page=$page&limit=$limit";
+        "https://api.jikan.moe/v4/${type.name}?q=$q&order_by=$orderBy&page=$page&limit=$limit";
 
     var respData = await HttpUtils.get(
       path: url,

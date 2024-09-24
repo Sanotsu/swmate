@@ -380,7 +380,9 @@ buildImageGridTile(
         );
       },
       // 默认缓存展示
-      child: buildNetworkOrFileImage(url, fit: fit ?? BoxFit.cover),
+      child: Center(
+        child: buildNetworkOrFileImage(url, fit: fit ?? BoxFit.cover),
+      ),
       // child: SizedBox(
       //   height: 0.2.sw,
       //   child: buildNetworkOrFileImage(url, fit: fit ?? BoxFit.cover),
