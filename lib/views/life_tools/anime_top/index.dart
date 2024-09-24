@@ -3,6 +3,7 @@ import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_rating_stars/flutter_rating_stars.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../apis/bangumi/bangumi_apis.dart';
 import '../../../apis/jikan/get_top_apis.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
@@ -145,6 +146,24 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
       appBar: AppBar(
         title: const Text('MAL排行'),
         actions: [
+          IconButton(
+            onPressed: () async {
+              // var b = BgmParam(
+              //   keyword: "超人",
+              //   filter: BGMFilter(tag: ["童年", "原创"]),
+              // );
+              // var a = await getBangumiSubject(b);
+              // print(a.runtimeType);
+
+              // await getBangumiSubjectById(2);
+              // var rr = await searchBangumiLargeSubjectByKeyword("");
+
+              var rr = await getBangumiCalendar();
+
+              print(rr.first.toRawJson());
+            },
+            icon: const Icon(Icons.info_outline),
+          ),
           IconButton(
             onPressed: () {
               commonMDHintModalBottomSheet(
