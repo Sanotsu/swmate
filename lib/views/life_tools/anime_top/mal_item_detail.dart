@@ -4,11 +4,14 @@ import 'package:uuid/uuid.dart';
 
 import '../../../apis/_default_system_role_list/inner_system_prompt.dart';
 import '../../../apis/chat_completion/common_cc_apis.dart';
+import '../../../apis/jikan/get_top_apis.dart';
+import '../../../common/components/bar_chart_widget.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../models/chat_competion/com_cc_resp.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
+import '../../../models/jikan/jikan_statistic.dart';
 import '../../../models/jikan/jikan_top.dart';
 import '../../ai_assistant/_helper/handle_cc_response.dart';
 import 'index.dart';
@@ -40,6 +43,17 @@ class _MALItemDetailState extends State<MALItemDetail> {
   // 避免追加时内容变化，用于确定翻译前后的内容
   String transPattern = "\n\n【大模型翻译：】\n\n";
 
+  // 是否加载评分统计中
+  bool isScoreLoading = false;
+  // 评分统计结果
+  JikanStatisticData? statisticData;
+  // 评分组成
+  List<List<ChartData>> malScoreList = [];
+
+  // 是否加载图片中
+  bool isPictureLoading = false;
+  List<JKImage> malPictureList = [];
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +61,74 @@ class _MALItemDetailState extends State<MALItemDetail> {
     jkdata = widget.item;
     about = widget.item.synopsis ?? widget.item.about ?? "";
     background = widget.item.background ?? "";
+
+    if ((widget.malType.value as MALType) == MALType.anime ||
+        (widget.malType.value as MALType) == MALType.manga) {
+      queryMALStatistic();
+    }
+
+    queryMALPicture();
+  }
+
+  // 查询当前mal条目的评分统计
+  queryMALStatistic() async {
+    if (isScoreLoading) return;
+
+    setState(() {
+      isScoreLoading = true;
+    });
+
+    var stat = await getAMStatistics(
+      jkdata.malId,
+      type: (widget.malType.value as MALType),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      statisticData = stat.data;
+
+      // 先清空
+      malScoreList.clear();
+      var tempList = stat.data.scores ?? [];
+
+      List<ChartData> tempScores = [];
+      for (var e in tempList) {
+        tempScores.add(ChartData("${e.score}星", e.percentage));
+      }
+
+      // 从左往右日期逐渐变大，所以数据要翻转
+      malScoreList.addAll([
+        tempScores.reversed.toList(),
+      ]);
+    });
+
+    setState(() {
+      isScoreLoading = false;
+    });
+  }
+
+  // 查询图片
+  queryMALPicture() async {
+    if (isPictureLoading) return;
+
+    setState(() {
+      isPictureLoading = true;
+    });
+
+    var pics = await getJikanPictures(
+      jkdata.malId,
+      type: (widget.malType.value as MALType),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      // 添加图片
+      malPictureList = pics;
+    });
+
+    setState(() {
+      isPictureLoading = false;
+    });
   }
 
   /// 简单测试的写法
@@ -54,12 +136,13 @@ class _MALItemDetailState extends State<MALItemDetail> {
     List<CCMessage> msgs = [
       CCMessage(content: getJsonTranslatorPrompt(), role: CusRole.system.name),
       CCMessage(
-          // 避免重复翻译，都使用原始的文本+翻译后的文本
-          // 这样写没用，应该是改的引用，widget.item其实也改变了
-          content: text == "about"
-              ? about.split(transPattern).first
-              : background.split(transPattern).first,
-          role: CusRole.user.name),
+        // 避免重复翻译，都使用原始的文本+翻译后的文本
+        // 这样写没用，应该是改的引用，widget.item其实也改变了
+        content: text == "about"
+            ? about.split(transPattern).first
+            : background.split(transPattern).first,
+        role: CusRole.user.name,
+      ),
     ];
 
     // 非流式的
@@ -251,42 +334,7 @@ class _MALItemDetailState extends State<MALItemDetail> {
                 flex: 3,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (malType == MALType.anime ||
-                        malType == MALType.manga) ...[
-                      // 注意，这里排名要-1,因为该组件中用的索引
-                      buildScoreArea(
-                        item,
-                        index: item.rank != null ? item.rank! - 1 : null,
-                      ),
-                    ],
-                    if (malType == MALType.characters ||
-                        malType == MALType.people)
-                      buildFavoritesArea(
-                        item,
-                        index: item.rank != null ? item.rank! - 1 : null,
-                      ),
-                    if (malType == MALType.anime) ...buildAnimeBrief(item),
-                    if (malType == MALType.manga) ...buildMangaBrief(item),
-                    if (malType == MALType.characters) ...[
-                      buildItemRow(
-                        "日文",
-                        "${item.nameKanji}",
-                        maxLines: 1,
-                        labelFontSize: 12.sp,
-                        valueFontSize: 12.sp,
-                      ),
-                      buildItemRow(
-                        "简介",
-                        "${item.about}",
-                        maxLines: 6,
-                        labelFontSize: 12.sp,
-                        valueFontSize: 12.sp,
-                      ),
-                    ],
-                    if (malType == MALType.people)
-                      ...buildPeopleNote(item, isSmall: true),
-                  ],
+                  children: _buildSubRatingChildren(item, malType),
                 ),
               ),
             ],
@@ -300,6 +348,12 @@ class _MALItemDetailState extends State<MALItemDetail> {
       if (malType == MALType.manga) ...buildMangaNote(item),
       if (malType == MALType.characters) ...buildCharactersNote(item),
       if (malType == MALType.people) ...buildPeopleNote(item),
+
+      /// 图片
+      if (!isPictureLoading) ...[
+        buildTitleText("图片"),
+        buildPictureArea(),
+      ],
 
       /// 简介和背景栏位
       Row(
@@ -329,6 +383,77 @@ class _MALItemDetailState extends State<MALItemDetail> {
       ],
       SizedBox(height: 20.sp),
     ];
+  }
+
+  // 构建上分右侧评分和概述区域内容children
+  List<Widget> _buildSubRatingChildren(JKTopData item, MALType malType) {
+    return [
+      // 漫画或动漫分类时
+      if (malType == MALType.anime || malType == MALType.manga) ...[
+        /// 漫画动漫的星级评分，人物角色最爱人数
+        buildScoreArea(item, rank: item.rank),
+
+        // if (malType == MALType.anime) ...buildAnimeBrief(item),
+        // if (malType == MALType.manga) ...buildMangaBrief(item),
+
+        /// 评分人数分布
+        if (!isScoreLoading) ...[
+          SizedBox(
+            height: 80.sp,
+            child: BarChartWidget(
+              seriesData: malScoreList,
+              seriesColors: const [Colors.orange],
+              seriesNames: const ["MAL评分"],
+            ),
+          ),
+          // 想看人数
+          Divider(height: 5.sp),
+          Text(
+            "${statisticData?.watching ?? statisticData?.reading}正在看/${statisticData?.planToWatch ?? statisticData?.planToRead}想看/${statisticData?.completed}看过",
+            style: TextStyle(fontSize: 11.sp),
+          ),
+        ]
+      ],
+
+      // 人物角色分类时
+      if (malType == MALType.characters || malType == MALType.people)
+        // 注意，这里排名要-1,因为该组件中用的索引
+        // 实际上角色和人物没有排名
+        ...[
+        buildFavoritesArea(item),
+        if (malType == MALType.characters) ...[
+          buildItemRow("日文", "${item.nameKanji}",
+              maxLines: 1, labelFontSize: 12.sp, valueFontSize: 12.sp),
+          buildItemRow("简介", "${item.about}",
+              maxLines: 6, labelFontSize: 12.sp, valueFontSize: 12.sp),
+        ],
+        if (malType == MALType.people) ...buildPeopleNote(item, isSmall: true),
+      ]
+    ];
+  }
+
+  /// 动漫的图片
+  buildPictureArea() {
+    /// 图片只放一行，可以横向滚动显示
+    return SizedBox(
+      height: 100.sp,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 5.sp),
+        child: GridView.count(
+          scrollDirection: Axis.horizontal, // 设置为横向滚动
+          crossAxisCount: 1, // 每行显示 1 张图片
+          mainAxisSpacing: 2.0, // 主轴方向的间距
+          crossAxisSpacing: 2.0, // 交叉轴方向的间距
+          childAspectRatio: 5 / 4, // 横向，高宽比
+          children: buildImageList(
+            context,
+            malPictureList.map((e) => e.jpg?.imageUrl ?? "").toSet().toList(),
+            prefix: "mal_",
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+    );
   }
 
   /// 概要也只少数几个栏位，不同分类栏位不一样(字体要小些)

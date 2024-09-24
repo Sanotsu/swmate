@@ -18,13 +18,6 @@ const CustomEntranceCard(
 ),
 */
 
-enum MALType {
-  anime,
-  manga,
-  characters,
-  people,
-}
-
 class MALAnimeTop extends StatefulWidget {
   const MALAnimeTop({super.key});
 
@@ -52,45 +45,70 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
   ];
   late CusLabel selectedMalType;
 
+  // 关键字查询
+  TextEditingController searchController = TextEditingController();
+  String query = '';
+
   @override
   void initState() {
     super.initState();
 
     selectedMalType = malTypes.first;
 
-    _fetchMALTopData();
+    // 默认进入是top数据
+    _initFetchMALData();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   // 这个是初始化页面或者切换了类型时的首次查询
-  Future<void> _fetchMALTopData() async {
+  Future<void> _initFetchMALData({String? queryType = "top"}) async {
     if (isLoading) return;
     setState(() {
       isLoading = true;
     });
 
-    var jkRst = await getJikanTop(
-      type: (selectedMalType.value as MALType).name,
-      page: 1,
-      limit: _pageSize,
-    );
+    // 默认是top查询，也可能是关键字条件查询
+    var jkRst = queryType == "top"
+        ? await getJikanTop(
+            type: (selectedMalType.value as MALType),
+            page: 1,
+            limit: _pageSize,
+          )
+        : await getJikanSearch(
+            q: query,
+            type: (selectedMalType.value as MALType),
+          );
 
     setState(() {
       rankList = jkRst.data;
-
-      _hasMore = jkRst.pagination.hasNextPage;
+      _hasMore = jkRst.pagination?.hasNextPage ?? false;
       isLoading = false;
     });
   }
 
   // 这个是上拉下拉加载更多
   // 和上者区分是因为加载圈位置不同，上者固定了首页码
-  Future<void> _refreshMALTopData() async {
-    var jkRst = await getJikanTop(
-      type: (selectedMalType.value as MALType).name,
-      page: _currentPage,
-      limit: _pageSize,
-    );
+  Future<void> _refreshMALData({String? queryType = "top"}) async {
+    // 默认是top查询，也可能是关键字条件查询
+    var jkRst = queryType == "top"
+        ? await getJikanTop(
+            type: (selectedMalType.value as MALType),
+            page: _currentPage,
+            limit: _pageSize,
+          )
+        : await getJikanSearch(
+            q: query,
+            type: (selectedMalType.value as MALType),
+            page: _currentPage,
+            limit: _pageSize,
+          );
 
+    if (!mounted) return;
     setState(() {
       if (_currentPage == 1) {
         rankList = jkRst.data;
@@ -98,7 +116,7 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
         rankList.addAll(jkRst.data);
       }
       _isRefreshLoading = false;
-      _hasMore = jkRst.pagination.hasNextPage;
+      _hasMore = jkRst.pagination?.hasNextPage ?? false;
     });
   }
 
@@ -107,100 +125,176 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
         (selectedMalType.value as MALType).name,
       );
 
+  // 关键字查询
+  void _handleSearch() {
+    setState(() {
+      rankList.clear();
+      _currentPage = 1;
+      query = searchController.text;
+    });
+    // 在当前上下文中查找最近的 FocusScope 并使其失去焦点，从而收起键盘。
+    FocusScope.of(context).unfocus();
+
+    _initFetchMALData(queryType: "query");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('MAL排行'),
-          actions: [
-            IconButton(
-              onPressed: () {
-                commonMDHintModalBottomSheet(
-                  context,
-                  "说明",
-                  "数据来源[myanimelist](https://myanimelist.net/)",
-                  msgFontSize: 15.sp,
+      appBar: AppBar(
+        title: const Text('MAL排行'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              commonMDHintModalBottomSheet(
+                context,
+                "说明",
+                "数据来源[myanimelist](https://myanimelist.net/)",
+                msgFontSize: 15.sp,
+              );
+            },
+            icon: const Icon(Icons.info_outline),
+          ),
+          buildPopupMenuButton(),
+        ],
+      ),
+      body: Column(
+        children: [
+          /// 分类下拉框
+          buildTypeDropdown(),
+
+          /// 关键字输入框
+          buildKeywordInputArea(),
+
+          Divider(height: 5.sp),
+
+          /// 主列表，可上拉下拉刷新
+          buildRefreshList(),
+        ],
+      ),
+    );
+  }
+
+  /// 分类下拉框
+  buildTypeDropdown() {
+    return Padding(
+      padding: EdgeInsets.all(5.sp),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Text(
+            "排行榜分类: ",
+            style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(
+            width: 80.sp,
+            child: buildDropdownButton2<CusLabel>(
+              value: selectedMalType,
+              items: malTypes,
+              hintLable: "选择分类",
+              onChanged: (value) async {
+                setState(() {
+                  selectedMalType = value!;
+                });
+                await _initFetchMALData(
+                  queryType: query.isEmpty ? "top" : "query",
                 );
               },
-              icon: const Icon(Icons.info_outline),
+              itemToString: (e) => (e as CusLabel).cnLabel,
             ),
-            buildPopupMenuButton(),
-          ],
-        ),
-        body: Column(
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 关键字输入框
+  buildKeywordInputArea() {
+    return SizedBox(
+      height: 32.sp,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 5.sp),
+        child: Row(
           children: [
-            Padding(
-              padding: EdgeInsets.all(5.sp),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    "排行榜分类: ",
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
+            Expanded(
+              child: TextField(
+                controller: searchController,
+                decoration: InputDecoration(
+                  hintText: "输入关键字进行查询",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0), // 边框圆角
+                    borderSide: const BorderSide(
+                      color: Colors.blue, // 边框颜色
+                      width: 2.0, // 边框宽度
                     ),
                   ),
-                  SizedBox(
-                    width: 100.sp,
-                    child: buildDropdownButton2<CusLabel>(
-                      value: selectedMalType,
-                      items: malTypes,
-                      hintLable: "选择分类",
-                      onChanged: (value) async {
-                        setState(() {
-                          selectedMalType = value!;
-                        });
-                        await _fetchMALTopData();
-                      },
-                      itemToString: (e) => (e as CusLabel).cnLabel,
-                    ),
-                  ),
-                ],
+                  contentPadding: EdgeInsets.only(left: 10.sp),
+                  // 设置透明底色
+                  filled: true,
+                  fillColor: Colors.transparent,
+                ),
               ),
             ),
-            Expanded(
-              child: isLoading
-                  ? buildLoader(isLoading)
-                  : EasyRefresh(
-                      header: const ClassicHeader(),
-                      footer: const ClassicFooter(),
-                      onRefresh: () async {
-                        _currentPage = 1;
-                        await _refreshMALTopData();
-                      },
-                      onLoad: _hasMore
-                          ? () async {
-                              if (!_isRefreshLoading) {
-                                setState(() {
-                                  _isRefreshLoading = true;
-                                });
-                                _currentPage++;
-                                await _refreshMALTopData();
-                              }
-                            }
-                          : null,
-                      child: GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 1,
-                          childAspectRatio: 3, // 调整子组件的宽高比
-                        ),
-                        itemCount: rankList.length,
-                        itemBuilder: (context, index) {
-                          return buildPostItem(
-                            context,
-                            rankList[index],
-                            index,
-                            isAnimeOrManga(),
-                            selectedMalType,
-                          );
-                        },
-                      ),
-                    ),
+            SizedBox(width: 10.sp),
+            SizedBox(
+              width: 80.sp,
+              child: ElevatedButton(
+                style: buildFunctionButtonStyle(),
+                onPressed: _handleSearch,
+                child: const Text("搜索"),
+              ),
             ),
           ],
-        ));
+        ),
+      ),
+    );
+  }
+
+  /// 主列表，可上拉下拉刷新
+  buildRefreshList() {
+    return Expanded(
+      child: isLoading
+          ? buildLoader(isLoading)
+          : EasyRefresh(
+              header: const ClassicHeader(),
+              footer: const ClassicFooter(),
+              onRefresh: () async {
+                _currentPage = 1;
+                await _refreshMALData(
+                  queryType: query.isEmpty ? "top" : "query",
+                );
+              },
+              onLoad: _hasMore
+                  ? () async {
+                      if (!_isRefreshLoading) {
+                        setState(() {
+                          _isRefreshLoading = true;
+                        });
+                        _currentPage++;
+                        await _refreshMALData(
+                          queryType: query.isEmpty ? "top" : "query",
+                        );
+                      }
+                    }
+                  : null,
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 1,
+                  childAspectRatio: 3, // 调整子组件的宽高比
+                ),
+                itemCount: rankList.length,
+                itemBuilder: (context, index) {
+                  return buildPostItem(
+                    context,
+                    rankList[index],
+                    query.isEmpty ? index : null,
+                    isAnimeOrManga(),
+                    selectedMalType,
+                  );
+                },
+              ),
+            ),
+    );
   }
 
   Widget buildPopupMenuButton() {
@@ -219,7 +313,9 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
               .first;
         });
 
-        await _fetchMALTopData();
+        await _initFetchMALData(
+          queryType: query.isEmpty ? "top" : "query",
+        );
       },
       itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
         buildCusPopupMenuItem(context, "anime", "动漫排名", Icons.leaderboard),
@@ -235,7 +331,7 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
 Widget buildPostItem(
   BuildContext context,
   JKTopData post,
-  int index,
+  int? index,
   bool isAnimeOrManga,
   CusLabel malType,
 ) {
@@ -245,10 +341,7 @@ Widget buildPostItem(
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => MALItemDetail(
-            item: post,
-            malType: malType,
-          ),
+          builder: (context) => MALItemDetail(item: post, malType: malType),
         ),
       );
     },
@@ -298,7 +391,7 @@ Widget buildPostItem(
                     textAlign: TextAlign.start,
                   ),
                 ),
-                if (isAnimeOrManga) buildScoreArea(post, index: index),
+                if (isAnimeOrManga) buildScoreArea(post, rank: post.rank),
                 if (!isAnimeOrManga) buildFavoritesArea(post, index: index),
                 const SizedBox(height: 5),
                 Text(
@@ -318,7 +411,7 @@ Widget buildPostItem(
 // MAL的动漫和漫画的排名是用户评分
 Widget buildScoreArea(
   JKTopData post, {
-  int? index,
+  int? rank,
   dynamic Function(double)? onValueChanged,
 }) {
   return Row(
@@ -371,7 +464,7 @@ Widget buildScoreArea(
           ),
         ],
       ),
-      index != null
+      rank != null
           ? Container(
               width: 90.sp,
               padding: EdgeInsets.all(2.sp),
@@ -380,7 +473,7 @@ Widget buildScoreArea(
                 color: Colors.amber[200],
               ),
               child: Text(
-                "Top No.${index + 1}",
+                "Top No.$rank",
                 style: TextStyle(fontSize: 12.sp),
                 textAlign: TextAlign.center,
               ),

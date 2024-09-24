@@ -7,14 +7,16 @@ part of 'jikan_top.dart';
 // **************************************************************************
 
 JikanTop _$JikanTopFromJson(Map<String, dynamic> json) => JikanTop(
-      JKPagination.fromJson(json['pagination'] as Map<String, dynamic>),
       (json['data'] as List<dynamic>)
           .map((e) => JKTopData.fromJson(e as Map<String, dynamic>))
           .toList(),
+      pagination: json['pagination'] == null
+          ? null
+          : JKPagination.fromJson(json['pagination'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$JikanTopToJson(JikanTop instance) => <String, dynamic>{
-      'pagination': instance.pagination.toJson(),
+      'pagination': instance.pagination?.toJson(),
       'data': instance.data.map((e) => e.toJson()).toList(),
     };
 
@@ -92,11 +94,25 @@ JKTopData _$JKTopDataFromJson(Map<String, dynamic> json) => JKTopData(
       producers: (json['producers'] as List<dynamic>?)
           ?.map((e) => JKCusItem.fromJson(e as Map<String, dynamic>))
           .toList(),
-      licensors: json['licensors'] as List<dynamic>?,
+      licensors: (json['licensors'] as List<dynamic>?)
+          ?.map((e) => JKCusItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
       studios: (json['studios'] as List<dynamic>?)
           ?.map((e) => JKCusItem.fromJson(e as Map<String, dynamic>))
           .toList(),
       demographics: (json['demographics'] as List<dynamic>?)
+          ?.map((e) => JKCusItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      relations: (json['relations'] as List<dynamic>?)
+          ?.map((e) => JKRelation.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      theme: json['theme'] == null
+          ? null
+          : JKTheme.fromJson(json['theme'] as Map<String, dynamic>),
+      external: (json['external'] as List<dynamic>?)
+          ?.map((e) => JKCusItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      streaming: (json['streaming'] as List<dynamic>?)
           ?.map((e) => JKCusItem.fromJson(e as Map<String, dynamic>))
           .toList(),
       publishing: json['publishing'] as bool?,
@@ -129,7 +145,16 @@ JKTopData _$JKTopDataFromJson(Map<String, dynamic> json) => JKTopData(
           ?.map((e) => e as String)
           .toList(),
       birthday: json['birthday'] as String?,
-    );
+    )
+      ..anime = (json['anime'] as List<dynamic>?)
+          ?.map((e) => JKOuterAnime.fromJson(e as Map<String, dynamic>))
+          .toList()
+      ..manga = (json['manga'] as List<dynamic>?)
+          ?.map((e) => JKOuterAnime.fromJson(e as Map<String, dynamic>))
+          .toList()
+      ..voices = (json['voices'] as List<dynamic>?)
+          ?.map((e) => JKOuterVoice.fromJson(e as Map<String, dynamic>))
+          .toList();
 
 Map<String, dynamic> _$JKTopDataToJson(JKTopData instance) => <String, dynamic>{
       'mal_id': instance.malId,
@@ -164,9 +189,13 @@ Map<String, dynamic> _$JKTopDataToJson(JKTopData instance) => <String, dynamic>{
       'year': instance.year,
       'broadcast': instance.broadcast?.toJson(),
       'producers': instance.producers?.map((e) => e.toJson()).toList(),
-      'licensors': instance.licensors,
+      'licensors': instance.licensors?.map((e) => e.toJson()).toList(),
       'studios': instance.studios?.map((e) => e.toJson()).toList(),
       'demographics': instance.demographics?.map((e) => e.toJson()).toList(),
+      'relations': instance.relations?.map((e) => e.toJson()).toList(),
+      'theme': instance.theme?.toJson(),
+      'external': instance.external?.map((e) => e.toJson()).toList(),
+      'streaming': instance.streaming?.map((e) => e.toJson()).toList(),
       'publishing': instance.publishing,
       'published': instance.published?.toJson(),
       'scored': instance.scored,
@@ -180,6 +209,9 @@ Map<String, dynamic> _$JKTopDataToJson(JKTopData instance) => <String, dynamic>{
       'name_kanji': instance.nameKanji,
       'nicknames': instance.nicknames,
       'about': instance.about,
+      'anime': instance.anime?.map((e) => e.toJson()).toList(),
+      'manga': instance.manga?.map((e) => e.toJson()).toList(),
+      'voices': instance.voices?.map((e) => e.toJson()).toList(),
       'given_name': instance.givenName,
       'family_name': instance.familyName,
       'alternate_names': instance.alternateNames,
@@ -354,4 +386,87 @@ Map<String, dynamic> _$JKPublishedToJson(JKPublished instance) =>
       'to': instance.to,
       'prop': instance.prop?.toJson(),
       'string': instance.string,
+    };
+
+JKRelation _$JKRelationFromJson(Map<String, dynamic> json) => JKRelation(
+      json['relation'] as String,
+      (json['entry'] as List<dynamic>)
+          .map((e) => JKCusItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$JKRelationToJson(JKRelation instance) =>
+    <String, dynamic>{
+      'relation': instance.relation,
+      'entry': instance.entry.map((e) => e.toJson()).toList(),
+    };
+
+JKTheme _$JKThemeFromJson(Map<String, dynamic> json) => JKTheme(
+      openings: (json['openings'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      endings:
+          (json['endings'] as List<dynamic>?)?.map((e) => e as String).toList(),
+    );
+
+Map<String, dynamic> _$JKThemeToJson(JKTheme instance) => <String, dynamic>{
+      'openings': instance.openings,
+      'endings': instance.endings,
+    };
+
+JKOuterAnime _$JKOuterAnimeFromJson(Map<String, dynamic> json) => JKOuterAnime(
+      role: json['role'] as String?,
+      position: json['position'] as String?,
+      anime: json['anime'] == null
+          ? null
+          : JKInnerItem.fromJson(json['anime'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$JKOuterAnimeToJson(JKOuterAnime instance) =>
+    <String, dynamic>{
+      'role': instance.role,
+      'position': instance.position,
+      'anime': instance.anime?.toJson(),
+    };
+
+JKOuterVoice _$JKOuterVoiceFromJson(Map<String, dynamic> json) => JKOuterVoice(
+      language: json['language'] as String?,
+      person: json['person'] == null
+          ? null
+          : JKInnerItem.fromJson(json['person'] as Map<String, dynamic>),
+      role: json['role'] as String?,
+      anime: json['anime'] == null
+          ? null
+          : JKInnerItem.fromJson(json['anime'] as Map<String, dynamic>),
+      character: json['character'] == null
+          ? null
+          : JKInnerItem.fromJson(json['character'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$JKOuterVoiceToJson(JKOuterVoice instance) =>
+    <String, dynamic>{
+      'language': instance.language,
+      'person': instance.person?.toJson(),
+      'role': instance.role,
+      'anime': instance.anime?.toJson(),
+      'character': instance.character?.toJson(),
+    };
+
+JKInnerItem _$JKInnerItemFromJson(Map<String, dynamic> json) => JKInnerItem(
+      malId: (json['mal_id'] as num?)?.toInt(),
+      url: json['url'] as String?,
+      images: json['images'] == null
+          ? null
+          : JKImage.fromJson(json['images'] as Map<String, dynamic>),
+      title: json['title'] as String?,
+      name: json['name'] as String?,
+    );
+
+Map<String, dynamic> _$JKInnerItemToJson(JKInnerItem instance) =>
+    <String, dynamic>{
+      'mal_id': instance.malId,
+      'url': instance.url,
+      'images': instance.images?.toJson(),
+      'title': instance.title,
+      'name': instance.name,
     };

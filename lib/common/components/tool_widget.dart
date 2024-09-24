@@ -332,11 +332,12 @@ buildImageList(
             dlDir: dlDir,
           );
         },
+        child: buildNetworkOrFileImage(urls[index], fit: fit ?? BoxFit.cover),
         // 默认缓存展示
-        child: SizedBox(
-          height: 0.2.sw,
-          child: buildNetworkOrFileImage(urls[index], fit: fit ?? BoxFit.cover),
-        ),
+        // child: SizedBox(
+        //   height: 0.2.sw,
+        //   child: buildNetworkOrFileImage(urls[index], fit: fit ?? BoxFit.cover),
+        // ),
       ),
     );
   }).toList();

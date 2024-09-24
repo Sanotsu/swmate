@@ -16,16 +16,17 @@ part 'jikan_top.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class JikanTop {
+  // 查询full的时候就没有分页信息
   @JsonKey(name: 'pagination')
-  JKPagination pagination;
+  JKPagination? pagination;
 
   @JsonKey(name: 'data')
   List<JKTopData> data;
 
   JikanTop(
+    this.data, {
     this.pagination,
-    this.data,
-  );
+  });
 
   // 从字符串转
   factory JikanTop.fromRawJson(String str) =>
@@ -101,6 +102,12 @@ class JKPaginationItem {
   Map<String, dynamic> toJson() => _$JKPaginationItemToJson(this);
 }
 
+/// 这个jktopdata其实就是动漫、漫画、角色、人物中所有栏位的并集
+/// 注意，是top接口的合集，如果是指定某个id然后full的查询，还有更多栏位
+/// 指定动漫详情 https://api.jikan.moe/v4/anime/{id}/full （有额外栏位）
+/// 指定角色详情 https://api.jikan.moe/v4/characters/{id}/full （有额外栏位）
+/// 条件查询动漫 https://api.jikan.moe/v4/anime?q=xxx&type=xxx&……（结构和top一样）
+/// 条件查询角色 https://api.jikan.moe/v4/characters?q=xxx&type=xxx&……（结构和top一样）
 @JsonSerializable(explicitToJson: true)
 class JKTopData {
   @JsonKey(name: 'mal_id')
@@ -202,13 +209,28 @@ class JKTopData {
   List<JKCusItem>? producers;
 
   @JsonKey(name: 'licensors')
-  List<dynamic>? licensors;
+  List<JKCusItem>? licensors;
 
   @JsonKey(name: 'studios')
   List<JKCusItem>? studios;
 
   @JsonKey(name: 'demographics')
   List<JKCusItem>? demographics;
+
+  /// 下面几个是指定编号用full查询时的栏位
+  /// 查询动漫时 relations、theme、external、streaming
+  /// 查询漫画时 relations、external
+  @JsonKey(name: 'relations')
+  List<JKRelation>? relations;
+
+  @JsonKey(name: 'theme')
+  JKTheme? theme;
+
+  @JsonKey(name: 'external')
+  List<JKCusItem>? external;
+
+  @JsonKey(name: 'streaming')
+  List<JKCusItem>? streaming;
 
   @JsonKey(name: 'publishing')
   bool? publishing;
@@ -245,6 +267,18 @@ class JKTopData {
 
   @JsonKey(name: 'about')
   String? about;
+
+  /// 以下下几个是指定角色full的额外栏位
+  /// anime、manga、voices
+  @JsonKey(name: 'anime')
+  List<JKOuterAnime>? anime;
+
+  // manga 和 anime 结构一样，栏位名称不一样而已
+  @JsonKey(name: 'manga')
+  List<JKOuterAnime>? manga;
+
+  @JsonKey(name: 'voices')
+  List<JKOuterVoice>? voices;
 
   @JsonKey(name: 'given_name')
   String? givenName;
@@ -294,6 +328,10 @@ class JKTopData {
     this.licensors,
     this.studios,
     this.demographics,
+    this.relations,
+    this.theme,
+    this.external,
+    this.streaming,
     this.publishing,
     this.published,
     this.scored,
@@ -675,4 +713,167 @@ class JKPublished {
       _$JKPublishedFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$JKPublishedToJson(this);
+}
+
+// 动漫关联内容
+@JsonSerializable(explicitToJson: true)
+class JKRelation {
+  @JsonKey(name: 'relation')
+  String relation;
+
+  @JsonKey(name: 'entry')
+  List<JKCusItem> entry;
+
+  JKRelation(
+    this.relation,
+    this.entry,
+  );
+
+  // 从字符串转
+  factory JKRelation.fromRawJson(String str) =>
+      JKRelation.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory JKRelation.fromJson(Map<String, dynamic> srcJson) =>
+      _$JKRelationFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$JKRelationToJson(this);
+}
+
+/// 主题曲和片尾曲
+@JsonSerializable(explicitToJson: true)
+class JKTheme {
+  @JsonKey(name: 'openings')
+  List<String>? openings;
+
+  @JsonKey(name: 'endings')
+  List<String>? endings;
+
+  JKTheme({
+    this.openings,
+    this.endings,
+  });
+
+  // 从字符串转
+  factory JKTheme.fromRawJson(String str) => JKTheme.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory JKTheme.fromJson(Map<String, dynamic> srcJson) =>
+      _$JKThemeFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$JKThemeToJson(this);
+}
+
+/// 这两个在查询 characters/{id}/full 或 people/{id}/full 的时候，
+/// 额外栏位 anime 有用到， anime 里面还有 anime
+/// 额外栏位 manga 里面还有 manga，但结构和 anime 一样的
+@JsonSerializable(explicitToJson: true)
+class JKOuterAnime {
+  // 角色时是role，人物时是position
+  @JsonKey(name: 'role')
+  String? role;
+
+  @JsonKey(name: 'position')
+  String? position;
+
+  @JsonKey(name: 'anime')
+  JKInnerItem? anime;
+
+  JKOuterAnime({
+    this.role,
+    this.position,
+    this.anime,
+  });
+
+  // 从字符串转
+  factory JKOuterAnime.fromRawJson(String str) =>
+      JKOuterAnime.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory JKOuterAnime.fromJson(Map<String, dynamic> srcJson) =>
+      _$JKOuterAnimeFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$JKOuterAnimeToJson(this);
+}
+
+/// 这在查询 characters/{id}/full 和 people/{id}/full 的时候额外 voices 栏位
+/// 前者 language、person
+/// 后者 role、anime、character
+@JsonSerializable(explicitToJson: true)
+class JKOuterVoice {
+  @JsonKey(name: 'language')
+  String? language;
+
+  @JsonKey(name: 'person')
+  JKInnerItem? person;
+
+  @JsonKey(name: 'role')
+  String? role;
+
+  @JsonKey(name: 'anime')
+  JKInnerItem? anime;
+
+  @JsonKey(name: 'character')
+  JKInnerItem? character;
+
+  JKOuterVoice({
+    this.language,
+    this.person,
+    this.role,
+    this.anime,
+    this.character,
+  });
+
+  // 从字符串转
+  factory JKOuterVoice.fromRawJson(String str) =>
+      JKOuterVoice.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory JKOuterVoice.fromJson(Map<String, dynamic> srcJson) =>
+      _$JKOuterVoiceFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$JKOuterVoiceToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true)
+class JKInnerItem {
+  @JsonKey(name: 'mal_id')
+  int? malId;
+
+  @JsonKey(name: 'url')
+  String? url;
+
+  @JsonKey(name: 'images')
+  JKImage? images;
+
+  @JsonKey(name: 'title')
+  String? title;
+
+  // characters/{id}/full 额外栏位的anime manga 内部有上面个
+  // 但voices栏位内部的person是title 变 name
+  @JsonKey(name: 'name')
+  String? name;
+
+  JKInnerItem({
+    this.malId,
+    this.url,
+    this.images,
+    this.title,
+    this.name,
+  });
+
+  // 从字符串转
+  factory JKInnerItem.fromRawJson(String str) =>
+      JKInnerItem.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory JKInnerItem.fromJson(Map<String, dynamic> srcJson) =>
+      _$JKInnerItemFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$JKInnerItemToJson(this);
 }
