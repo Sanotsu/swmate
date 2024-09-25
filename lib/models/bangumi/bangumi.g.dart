@@ -97,7 +97,7 @@ BGMSubject _$BGMSubjectFromJson(Map<String, dynamic> json) => BGMSubject(
       airWeekday: (json['air_weekday'] as num?)?.toInt(),
       images: json['images'] == null
           ? null
-          : BGMLargeImage.fromJson(json['images'] as Map<String, dynamic>),
+          : BGMImage.fromJson(json['images'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$BGMSubjectToJson(BGMSubject instance) =>
@@ -151,10 +151,10 @@ BGMSubjectRelation _$BGMSubjectRelationFromJson(Map<String, dynamic> json) =>
       career:
           (json['career'] as List<dynamic>?)?.map((e) => e as String).toList(),
       eps: json['eps'] as String?,
-      actors:
-          (json['actors'] as List<dynamic>?)?.map((e) => e as String).toList(),
-      nameCn:
-          (json['name_cn'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      actors: (json['actors'] as List<dynamic>?)
+          ?.map((e) => BGMActor.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      nameCn: json['name_cn'] as String?,
     );
 
 Map<String, dynamic> _$BGMSubjectRelationToJson(BGMSubjectRelation instance) =>
@@ -166,8 +166,31 @@ Map<String, dynamic> _$BGMSubjectRelationToJson(BGMSubjectRelation instance) =>
       'id': instance.id,
       'career': instance.career,
       'eps': instance.eps,
-      'actors': instance.actors,
+      'actors': instance.actors?.map((e) => e.toJson()).toList(),
       'name_cn': instance.nameCn,
+    };
+
+BGMActor _$BGMActorFromJson(Map<String, dynamic> json) => BGMActor(
+      images: json['images'] == null
+          ? null
+          : BGMImage.fromJson(json['images'] as Map<String, dynamic>),
+      name: json['name'] as String?,
+      shortSummary: json['short_summary'] as String?,
+      career:
+          (json['career'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      id: (json['id'] as num?)?.toInt(),
+      type: (json['type'] as num?)?.toInt(),
+      locked: json['locked'] as bool?,
+    );
+
+Map<String, dynamic> _$BGMActorToJson(BGMActor instance) => <String, dynamic>{
+      'images': instance.images?.toJson(),
+      'name': instance.name,
+      'short_summary': instance.shortSummary,
+      'career': instance.career,
+      'id': instance.id,
+      'type': instance.type,
+      'locked': instance.locked,
     };
 
 BGMCharacter _$BGMCharacterFromJson(Map<String, dynamic> json) => BGMCharacter(
@@ -209,20 +232,6 @@ Map<String, dynamic> _$BGMCharacterToJson(BGMCharacter instance) =>
       'locked': instance.locked,
       'type': instance.type,
       'nsfw': instance.nsfw,
-    };
-
-BGMImage _$BGMImageFromJson(Map<String, dynamic> json) => BGMImage(
-      small: json['small'] as String?,
-      grid: json['grid'] as String?,
-      large: json['large'] as String?,
-      medium: json['medium'] as String?,
-    );
-
-Map<String, dynamic> _$BGMImageToJson(BGMImage instance) => <String, dynamic>{
-      'small': instance.small,
-      'grid': instance.grid,
-      'large': instance.large,
-      'medium': instance.medium,
     };
 
 BGMInfobox _$BGMInfoboxFromJson(Map<String, dynamic> json) => BGMInfobox(
@@ -374,8 +383,7 @@ Map<String, dynamic> _$BGMLargeRatingToJson(BGMLargeRating instance) =>
       'score': instance.score,
     };
 
-BGMLargeImage _$BGMLargeImageFromJson(Map<String, dynamic> json) =>
-    BGMLargeImage(
+BGMImage _$BGMImageFromJson(Map<String, dynamic> json) => BGMImage(
       large: json['large'] as String?,
       common: json['common'] as String?,
       medium: json['medium'] as String?,
@@ -383,8 +391,7 @@ BGMLargeImage _$BGMLargeImageFromJson(Map<String, dynamic> json) =>
       grid: json['grid'] as String?,
     );
 
-Map<String, dynamic> _$BGMLargeImageToJson(BGMLargeImage instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$BGMImageToJson(BGMImage instance) => <String, dynamic>{
       'large': instance.large,
       'common': instance.common,
       'medium': instance.medium,
@@ -440,4 +447,55 @@ Map<String, dynamic> _$BGMLargeWeekdayToJson(BGMLargeWeekday instance) =>
       'cn': instance.cn,
       'ja': instance.ja,
       'id': instance.id,
+    };
+
+BGMEpisodeResp _$BGMEpisodeRespFromJson(Map<String, dynamic> json) =>
+    BGMEpisodeResp(
+      data: (json['data'] as List<dynamic>?)
+          ?.map((e) => BGMEpisode.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      total: (json['total'] as num?)?.toInt(),
+      limit: (json['limit'] as num?)?.toInt(),
+      offset: (json['offset'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$BGMEpisodeRespToJson(BGMEpisodeResp instance) =>
+    <String, dynamic>{
+      'data': instance.data?.map((e) => e.toJson()).toList(),
+      'total': instance.total,
+      'limit': instance.limit,
+      'offset': instance.offset,
+    };
+
+BGMEpisode _$BGMEpisodeFromJson(Map<String, dynamic> json) => BGMEpisode(
+      airdate: json['airdate'] as String?,
+      name: json['name'] as String?,
+      nameCn: json['name_cn'] as String?,
+      duration: json['duration'] as String?,
+      desc: json['desc'] as String?,
+      ep: (json['ep'] as num?)?.toInt(),
+      sort: (json['sort'] as num?)?.toInt(),
+      id: (json['id'] as num?)?.toInt(),
+      subjectId: (json['subject_id'] as num?)?.toInt(),
+      comment: (json['comment'] as num?)?.toInt(),
+      type: (json['type'] as num?)?.toInt(),
+      disc: (json['disc'] as num?)?.toInt(),
+      durationSeconds: (json['duration_seconds'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$BGMEpisodeToJson(BGMEpisode instance) =>
+    <String, dynamic>{
+      'airdate': instance.airdate,
+      'name': instance.name,
+      'name_cn': instance.nameCn,
+      'duration': instance.duration,
+      'desc': instance.desc,
+      'ep': instance.ep,
+      'sort': instance.sort,
+      'id': instance.id,
+      'subject_id': instance.subjectId,
+      'comment': instance.comment,
+      'type': instance.type,
+      'disc': instance.disc,
+      'duration_seconds': instance.durationSeconds,
     };

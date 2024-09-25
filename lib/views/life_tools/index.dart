@@ -92,24 +92,24 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                 ),
 
                 const CustomEntranceCard(
-                  title: '动漫排行',
-                  subtitle: "多平台动漫排行榜",
+                  title: 'WAIFU图片',
+                  subtitle: "随机二次元WAIFU",
+                  icon: Icons.leaderboard_outlined,
+                  targetPage: WaifuPicIndex(),
+                ),
+
+                const CustomEntranceCard(
+                  title: 'MAL动漫排行',
+                  subtitle: "MyAnimeList排行榜",
                   icon: Icons.leaderboard_outlined,
                   targetPage: MALAnimeTop(),
                 ),
 
                 const CustomEntranceCard(
-                  title: '动漫日历',
-                  subtitle: "多平台动漫排行榜",
+                  title: 'BGM动漫资讯',
+                  subtitle: "Bangumi番组计划",
                   icon: Icons.leaderboard_outlined,
                   targetPage: BangumiCalendar(),
-                ),
-
-                const CustomEntranceCard(
-                  title: 'WAIFU图片',
-                  subtitle: "随机二次元WAIFU",
-                  icon: Icons.leaderboard_outlined,
-                  targetPage: WaifuPicIndex(),
                 ),
 
                 // buildAIToolEntrance(

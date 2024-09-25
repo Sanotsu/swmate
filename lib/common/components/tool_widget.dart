@@ -349,45 +349,49 @@ buildImageGridTile(
   String url, {
   String? prefix,
   BoxFit? fit,
+  // 2024-09-25 不想启用长按保存和点击预览
+  bool? isClickable = true,
 }) {
   return GridTile(
-    child: GestureDetector(
-      // 单击预览
-      onTap: () {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return Dialog(
-              backgroundColor: Colors.transparent, // 设置背景透明
-              child: _buildPhotoView(_getImageProvider(url)),
-            );
-          },
-        );
-      },
-      // 长按保存到相册
-      onLongPress: () async {
-        if (url.startsWith("/storage/")) {
-          EasyLoading.showToast("图片已保存到$url");
-          return;
-        }
+    child: isClickable == true
+        ? GestureDetector(
+            // 单击预览
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return Dialog(
+                    backgroundColor: Colors.transparent, // 设置背景透明
+                    child: _buildPhotoView(_getImageProvider(url)),
+                  );
+                },
+              );
+            },
+            // 长按保存到相册
+            onLongPress: () async {
+              if (url.startsWith("/storage/")) {
+                EasyLoading.showToast("图片已保存到$url");
+                return;
+              }
 
-        // 网络图片就保存都指定位置
-        await saveImageToLocal(
-          url,
-          prefix: prefix == null
-              ? null
-              : (prefix.endsWith("_") ? prefix : "${prefix}_"),
-        );
-      },
-      // 默认缓存展示
-      child: Center(
-        child: buildNetworkOrFileImage(url, fit: fit ?? BoxFit.cover),
-      ),
-      // child: SizedBox(
-      //   height: 0.2.sw,
-      //   child: buildNetworkOrFileImage(url, fit: fit ?? BoxFit.cover),
-      // ),
-    ),
+              // 网络图片就保存都指定位置
+              await saveImageToLocal(
+                url,
+                prefix: prefix == null
+                    ? null
+                    : (prefix.endsWith("_") ? prefix : "${prefix}_"),
+              );
+            },
+            // 默认缓存展示
+            child: Center(
+              child: buildNetworkOrFileImage(url, fit: fit ?? BoxFit.cover),
+            ),
+            // child: SizedBox(
+            //   height: 0.2.sw,
+            //   child: buildNetworkOrFileImage(url, fit: fit ?? BoxFit.cover),
+            // ),
+          )
+        : Center(child: buildNetworkOrFileImage(url, fit: fit ?? BoxFit.cover)),
   );
 }
 

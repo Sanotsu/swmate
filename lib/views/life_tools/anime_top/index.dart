@@ -3,7 +3,6 @@ import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_rating_stars/flutter_rating_stars.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../apis/bangumi/bangumi_apis.dart';
 import '../../../apis/jikan/get_top_apis.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
@@ -147,29 +146,11 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
         title: const Text('MAL排行'),
         actions: [
           IconButton(
-            onPressed: () async {
-              // var b = BgmParam(
-              //   keyword: "超人",
-              //   filter: BGMFilter(tag: ["童年", "原创"]),
-              // );
-              // var a = await getBangumiSubject(b);
-              // print(a.runtimeType);
-
-              // await getBangumiSubjectById(2);
-              // var rr = await searchBangumiLargeSubjectByKeyword("");
-
-              var rr = await getBangumiCalendar();
-
-              print(rr.first.toRawJson());
-            },
-            icon: const Icon(Icons.info_outline),
-          ),
-          IconButton(
             onPressed: () {
               commonMDHintModalBottomSheet(
                 context,
                 "说明",
-                "数据来源[myanimelist](https://myanimelist.net/)",
+                "数据来源: [myanimelist](https://myanimelist.net/)",
                 msgFontSize: 15.sp,
               );
             },
@@ -181,12 +162,13 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
       body: Column(
         children: [
           /// 分类下拉框
+          /// 左边加个按钮获取推荐番剧？？
           buildTypeDropdown(),
 
           /// 关键字输入框
           buildKeywordInputArea(),
 
-          Divider(height: 5.sp),
+          Divider(height: 20.sp),
 
           /// 主列表，可上拉下拉刷新
           buildRefreshList(),

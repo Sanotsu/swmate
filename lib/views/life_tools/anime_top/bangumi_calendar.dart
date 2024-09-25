@@ -131,7 +131,7 @@ class _BangumiCalendarState extends State<BangumiCalendar> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bangumi放映'),
+        title: const Text('Bangumi番组计划'),
         actions: [
           IconButton(
             onPressed: () async {
@@ -145,18 +145,19 @@ class _BangumiCalendarState extends State<BangumiCalendar> {
               // await getBangumiSubjectById(2);
               // var rr = await searchBangumiLargeSubjectByKeyword("");
 
-              var rr = await getBangumiCalendar();
+              // var rr = await getBangumiCalendar();
+              // print(rr.first.toRawJson());
 
-              print(rr.first.toRawJson());
+              await getBangumiEpisodesById(470874);
             },
-            icon: const Icon(Icons.info_outline),
+            icon: const Icon(Icons.icecream),
           ),
           IconButton(
             onPressed: () {
               commonMDHintModalBottomSheet(
                 context,
                 "说明",
-                "数据来源[bangumi](https://bangumi.tv/)",
+                "数据来源: [https://bangumi.tv](https://bangumi.tv/)",
                 msgFontSize: 15.sp,
               );
             },
@@ -172,7 +173,7 @@ class _BangumiCalendarState extends State<BangumiCalendar> {
           /// 关键字输入框
           buildKeywordInputArea(),
 
-          Divider(height: 5.sp),
+          Divider(height: 20.sp),
 
           /// 主列表，可上拉下拉刷新
           buildRefreshList(),
@@ -378,7 +379,7 @@ Widget buildTileCard(
         MaterialPageRoute(
           builder: (context) => BangumiItemDetail(
             id: subject.id!,
-            type: type,
+            subType: type.cnLabel,
           ),
         ),
       );
@@ -397,6 +398,7 @@ Widget buildTileCard(
                 subject.images?.medium ?? "",
                 prefix: "bangumi",
                 fit: BoxFit.cover,
+                isClickable: false,
               ),
             ),
           ),
@@ -456,7 +458,9 @@ Widget buildTileCard(
 
                 /// 标题
                 Text(
-                  subject.nameCn ?? "",
+                  (subject.nameCn != null && subject.nameCn!.isNotEmpty)
+                      ? subject.nameCn!
+                      : subject.name ?? "",
                   // 大部分的标题2行可以显示，查看完整的还是进入详情页面吧
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -490,7 +494,7 @@ Widget buildItemCard(
         MaterialPageRoute(
           builder: (context) => BangumiItemDetail(
             id: subject.id!,
-            type: type,
+            subType: type.cnLabel,
           ),
         ),
       );
@@ -509,6 +513,7 @@ Widget buildItemCard(
                 subject.images?.medium ?? "",
                 prefix: "bangumi",
                 fit: BoxFit.scaleDown,
+                isClickable: false,
               ),
             ),
           ),
@@ -520,7 +525,9 @@ Widget buildItemCard(
               children: [
                 Expanded(
                   child: Text(
-                    subject.nameCn ?? "",
+                    (subject.nameCn != null && subject.nameCn!.isNotEmpty)
+                        ? subject.nameCn!
+                        : subject.name ?? "",
                     // 大部分的标题1行可以显示，查看完整的还是进入详情页面吧
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -580,7 +587,7 @@ Widget buildBgmScoreArea(double score, {int? total, int? rank}) {
           ),
         ],
       ),
-      if (rank != null)
+      if (rank != null && rank != 0)
         Container(
           width: 90.sp,
           padding: EdgeInsets.all(2.sp),

@@ -197,7 +197,7 @@ class BGMSubject {
   BGMLargeCollection? collection;
 
   @JsonKey(name: 'images')
-  BGMLargeImage? images;
+  BGMImage? images;
 
   @JsonKey(name: 'rating')
   BGMLargeRating? rating;
@@ -323,11 +323,11 @@ class BGMSubjectRelation {
 
   // 这几个条目中的角色单独
   @JsonKey(name: 'actors')
-  List<String>? actors;
+  List<BGMActor>? actors;
 
   // 这几个条目中的条目单独
   @JsonKey(name: 'name_cn')
-  List<String>? nameCn;
+  String? nameCn;
 
   BGMSubjectRelation({
     this.images,
@@ -351,6 +351,51 @@ class BGMSubjectRelation {
       _$BGMSubjectRelationFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$BGMSubjectRelationToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true)
+class BGMActor {
+  @JsonKey(name: 'images')
+  BGMImage? images;
+
+  @JsonKey(name: 'name')
+  String? name;
+
+  @JsonKey(name: 'short_summary')
+  String? shortSummary;
+
+  @JsonKey(name: 'career')
+  List<String>? career;
+
+  @JsonKey(name: 'id')
+  int? id;
+
+  @JsonKey(name: 'type')
+  int? type;
+
+  @JsonKey(name: 'locked')
+  bool? locked;
+
+  BGMActor({
+    this.images,
+    this.name,
+    this.shortSummary,
+    this.career,
+    this.id,
+    this.type,
+    this.locked,
+  });
+
+  // 从字符串转
+  factory BGMActor.fromRawJson(String str) =>
+      BGMActor.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory BGMActor.fromJson(Map<String, dynamic> srcJson) =>
+      _$BGMActorFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$BGMActorToJson(this);
 }
 
 ///
@@ -427,39 +472,6 @@ class BGMCharacter {
       _$BGMCharacterFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$BGMCharacterToJson(this);
-}
-
-@JsonSerializable(explicitToJson: true)
-class BGMImage {
-  @JsonKey(name: 'small')
-  String? small;
-
-  @JsonKey(name: 'grid')
-  String? grid;
-
-  @JsonKey(name: 'large')
-  String? large;
-
-  @JsonKey(name: 'medium')
-  String? medium;
-
-  BGMImage({
-    this.small,
-    this.grid,
-    this.large,
-    this.medium,
-  });
-
-  // 从字符串转
-  factory BGMImage.fromRawJson(String str) =>
-      BGMImage.fromJson(json.decode(str));
-  // 转为字符串
-  String toRawJson() => json.encode(toJson());
-
-  factory BGMImage.fromJson(Map<String, dynamic> srcJson) =>
-      _$BGMImageFromJson(srcJson);
-
-  Map<String, dynamic> toJson() => _$BGMImageToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -775,7 +787,7 @@ class BGMLargeRating {
 }
 
 @JsonSerializable(explicitToJson: true)
-class BGMLargeImage {
+class BGMImage {
   @JsonKey(name: 'large')
   String? large;
 
@@ -791,7 +803,7 @@ class BGMLargeImage {
   @JsonKey(name: 'grid')
   String? grid;
 
-  BGMLargeImage({
+  BGMImage({
     this.large,
     this.common,
     this.medium,
@@ -800,15 +812,15 @@ class BGMLargeImage {
   });
 
   // 从字符串转
-  factory BGMLargeImage.fromRawJson(String str) =>
-      BGMLargeImage.fromJson(json.decode(str));
+  factory BGMImage.fromRawJson(String str) =>
+      BGMImage.fromJson(json.decode(str));
   // 转为字符串
   String toRawJson() => json.encode(toJson());
 
-  factory BGMLargeImage.fromJson(Map<String, dynamic> srcJson) =>
-      _$BGMLargeImageFromJson(srcJson);
+  factory BGMImage.fromJson(Map<String, dynamic> srcJson) =>
+      _$BGMImageFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$BGMLargeImageToJson(this);
+  Map<String, dynamic> toJson() => _$BGMImageToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -908,4 +920,100 @@ class BGMLargeWeekday {
       _$BGMLargeWeekdayFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$BGMLargeWeekdayToJson(this);
+}
+
+///
+/// 查询分集信息
+/// https://api.bgm.tv/v0/episodes?subject_id=470874&type=0&limit=100&offset=0
+///
+
+@JsonSerializable(explicitToJson: true)
+class BGMEpisodeResp {
+  @JsonKey(name: 'data')
+  List<BGMEpisode>? data;
+
+  @JsonKey(name: 'total')
+  int? total;
+
+  @JsonKey(name: 'limit')
+  int? limit;
+
+  @JsonKey(name: 'offset')
+  int? offset;
+
+  BGMEpisodeResp({
+    this.data,
+    this.total,
+    this.limit,
+    this.offset,
+  });
+
+  factory BGMEpisodeResp.fromJson(Map<String, dynamic> srcJson) =>
+      _$BGMEpisodeRespFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$BGMEpisodeRespToJson(this);
+}
+
+/// 分集介绍的详情
+@JsonSerializable(explicitToJson: true)
+class BGMEpisode {
+  @JsonKey(name: 'airdate')
+  String? airdate;
+
+  @JsonKey(name: 'name')
+  String? name;
+
+  @JsonKey(name: 'name_cn')
+  String? nameCn;
+
+  @JsonKey(name: 'duration')
+  String? duration;
+
+  @JsonKey(name: 'desc')
+  String? desc;
+
+  @JsonKey(name: 'ep')
+  int? ep;
+
+  @JsonKey(name: 'sort')
+  int? sort;
+
+  @JsonKey(name: 'id')
+  int? id;
+
+  @JsonKey(name: 'subject_id')
+  int? subjectId;
+
+  @JsonKey(name: 'comment')
+  int? comment;
+
+  @JsonKey(name: 'type')
+  int? type;
+
+  @JsonKey(name: 'disc')
+  int? disc;
+
+  @JsonKey(name: 'duration_seconds')
+  int? durationSeconds;
+
+  BGMEpisode({
+    this.airdate,
+    this.name,
+    this.nameCn,
+    this.duration,
+    this.desc,
+    this.ep,
+    this.sort,
+    this.id,
+    this.subjectId,
+    this.comment,
+    this.type,
+    this.disc,
+    this.durationSeconds,
+  });
+
+  factory BGMEpisode.fromJson(Map<String, dynamic> srcJson) =>
+      _$BGMEpisodeFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$BGMEpisodeToJson(this);
 }

@@ -19,6 +19,8 @@ import '../../models/bangumi/bangumi.dart';
 const bgmBase = "https://api.bgm.tv";
 
 // v0 实验版本条件查询
+// 2024-09-25 因为文档说可能会变：实验性 API， 本 schema 和实际的 API 行为都可能随时发生改动
+// 所以暂时不用 https://bangumi.github.io/api/#/
 Future<List<BGMSubject>> getBangumiSubject(
   BgmParam params, {
   int? page = 1,
@@ -86,6 +88,29 @@ Future<BGMSubject> getBangumiSubjectById(int id) async {
   }
 }
 
+// 查询条目关联的人物(演职表)
+Future<List<BGMSubjectRelation>> getBangumiSubjectRelated(
+  int id, {
+  String? type = "persons", // persons | characters | subjects
+}) async {
+  try {
+    var url = "$bgmBase/v0/subjects/$id/$type";
+
+    List respData = await HttpUtils.get(
+      path: url,
+      // 因为上拉下拉有加载圈，就不显示请求的加载了
+      showLoading: false,
+    );
+
+    print("getBangumiSubjectRelatedPersons===========$respData");
+
+    return respData.map((e) => BGMSubjectRelation.fromJson(e)).toList();
+  } catch (e) {
+    // API请求报错，显示报错信息
+    rethrow;
+  }
+}
+
 // 没有v0前缀的查询(栏位可能够用了)
 Future<BGMLargeSubjectResp> searchBangumiLargeSubjectByKeyword(
   // 查询条件不可为空
@@ -145,15 +170,39 @@ Future<List<BGMLargeCalendar>> getBangumiCalendar() async {
   }
 }
 
+/// 查询指定番剧的剧集简介信息
+Future<BGMEpisodeResp> getBangumiEpisodesById(
+  int id, {
+  // 章节类型： 0 = 本篇; 1 = 特别篇; 2 = OP; 3 = ED; 4 = 预告/宣传/广告; 5 = MAD; 6 = 其他
+  int? type = 0,
+  int? limit = 100,
+  int offset = 0,
+}) async {
+  try {
+    // var url =
+    //     "$bgmBase/v0/episodes?subject_id=$id&type=$type&limit=$limit&offset=$offset";
 
+    var url = "$bgmBase/v0/episodes";
+    var respData = await HttpUtils.get(
+        path: url,
+        // 因为上拉下拉有加载圈，就不显示请求的加载了
+        showLoading: false,
+        queryParameters: {
+          "subject_id": id,
+          "type": type,
+          "limit": limit,
+          "offset": offset,
+        });
 
-/*
-curl -X 'POST' \
-  'https://api.bgm.tv/v0/search/subjects?limit=10&offset=1000' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "sort": "score"
+    if (respData.runtimeType == String) {
+      respData = json.decode(respData);
+    }
+
+    print("getBangumiEpisodes===========$respData");
+
+    return BGMEpisodeResp.fromJson(respData);
+  } catch (e) {
+    // API请求报错，显示报错信息
+    rethrow;
   }
-}'
-*/
+}

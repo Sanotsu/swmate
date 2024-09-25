@@ -4,19 +4,20 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../apis/bangumi/bangumi_apis.dart';
 import '../../../common/components/bar_chart_widget.dart';
 import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
 import '../../../models/bangumi/bangumi.dart';
 import 'bangumi_calendar.dart';
+import 'bangumi_item_episode_detail.dart';
 
 class BangumiItemDetail extends StatefulWidget {
   // 因为放送日历和查询结果的类型不一样，所以只需要传入编号和类型
   final int id;
-  final CusLabel type;
+  // 这里只用于显示标题，所以传入字符串即可
+  final String subType;
 
   const BangumiItemDetail({
     super.key,
     required this.id,
-    required this.type,
+    required this.subType,
   });
 
   @override
@@ -33,6 +34,11 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
   // 当前的条目
   late BGMSubject bgmSub;
 
+  // 当前条目关联的人物、角色、条目
+  List<BGMSubjectRelation> personList = [];
+  late List<BGMSubjectRelation> characterList = [];
+  late List<BGMSubjectRelation> subjectList = [];
+
   @override
   void initState() {
     super.initState();
@@ -48,11 +54,34 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
       isLoading = true;
     });
 
+    // 查询指定条目详情
     var stat = await getBangumiSubjectById(widget.id);
+
+    // 查询指定条目的演职表
+    var persons = await getBangumiSubjectRelated(
+      widget.id,
+      type: "persons",
+    );
+
+    // 查询指定条目的角色
+    var characters = await getBangumiSubjectRelated(
+      widget.id,
+      type: "characters",
+    );
+
+    // 查询指定条目的关联条目
+    var subjects = await getBangumiSubjectRelated(
+      widget.id,
+      type: "subjects",
+    );
 
     if (!mounted) return;
     setState(() {
       bgmSub = stat;
+
+      personList = persons;
+      characterList = characters;
+      subjectList = subjects;
 
       /// 构建评分柱状图的数据。
       // 先清空，再构建
@@ -88,7 +117,7 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text("${widget.type.cnLabel}详情"),
+        title: Text("${widget.subType}详情"),
       ),
       body: isLoading
           ? buildLoader(isLoading)
@@ -100,9 +129,28 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
                 /// 预览图和评分区域
                 buildImageAndRatingArea(bgmSub),
 
-                /// 图片
-                buildTitleText("图片"),
-                buildPictureArea(),
+                // 跳转到分集简介按钮
+                // (2024-09-25 应该是只有动画才有意义)
+                if (bgmSub.type == 2) buildGotoEpisodesArea(),
+
+                /// 图片(没找到有意义的获取图片API)
+                // buildTitleText("图片"),
+                // buildPictureArea(),
+
+                if (characterList.isNotEmpty) ...[
+                  buildTitleText("角色表"),
+                  buildRelatedTileCard(context, characterList),
+                ],
+
+                if (personList.isNotEmpty) ...[
+                  buildTitleText("演职表"),
+                  buildRelatedTileCard(context, personList),
+                ],
+
+                if (subjectList.isNotEmpty) ...[
+                  buildTitleText("关联作品"),
+                  buildRelatedTileCard(context, subjectList),
+                ],
 
                 ///
                 /// 上面几个占位的高度是比较固定的，下面的都不怎么固定
@@ -124,16 +172,48 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
   Widget buildTitleArea() {
     return TextButton(
       onPressed: () {
-        launchStringUrl(bgmSub.url ?? "");
+        // launchStringUrl(bgmSub.url ?? "");
       },
       child: Text(
-        bgmSub.nameCn ?? "",
+        (bgmSub.nameCn != null && bgmSub.nameCn!.isNotEmpty)
+            ? bgmSub.nameCn!
+            : bgmSub.name ?? "",
         style: TextStyle(
           fontSize: 20.sp,
           fontWeight: FontWeight.bold,
           color: Theme.of(context).primaryColor,
         ),
         textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  /// 可跳转到源网页的标题
+  Widget buildGotoEpisodesArea() {
+    return TextButton.icon(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BangumiEpisodeDetail(
+              subjectId: bgmSub.id!,
+              subjectName: (bgmSub.nameCn != null && bgmSub.nameCn!.isNotEmpty)
+                  ? bgmSub.nameCn!
+                  : bgmSub.name ?? "",
+            ),
+          ),
+        );
+      },
+      icon: const Icon(Icons.arrow_right),
+      iconAlignment: IconAlignment.end,
+      label: Text(
+        "分集简介",
+        style: TextStyle(
+          fontSize: 20.sp,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).primaryColor,
+        ),
+        textAlign: TextAlign.end,
       ),
     );
   }
@@ -182,7 +262,7 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
       buildBgmScoreArea(
         item.rating?.score ?? 0,
         total: item.rating?.total ?? 0,
-        rank: item.rank,
+        rank: item.rank ?? item.rating?.rank,
       ),
 
       /// 评分人数分布
@@ -239,12 +319,12 @@ ${item.collection?.onHold}人搁置/${item.collection?.dropped}人弃坑""",
         padding: EdgeInsets.all(5.sp),
         child: Table(
           // 设置表格边框
-          // border: TableBorder.all(color: Theme.of(context).disabledColor),
+          border: TableBorder.all(color: Theme.of(context).disabledColor),
           // 隐藏边框
-          border: TableBorder.all(width: 0, color: Colors.transparent),
+          // border: TableBorder.all(width: 0, color: Colors.transparent),
           // 设置每列的宽度占比
           columnWidths: {
-            0: FixedColumnWidth(100.sp),
+            0: FixedColumnWidth(80.sp),
             1: const FlexColumnWidth(1),
           },
           defaultVerticalAlignment: TableCellVerticalAlignment.middle,
@@ -253,7 +333,7 @@ ${item.collection?.onHold}人搁置/${item.collection?.dropped}人弃坑""",
             buildTableRow("评分", "${item.rating?.score}"),
             buildTableRow("评分人数", "${item.rating?.total}"),
             buildTableRow("排名", "${item.rating?.rank ?? item.rank}"),
-            buildTableRow("类别", widget.type.cnLabel), // "${item.type}"
+            buildTableRow("类别", widget.subType), // "${item.type}"
             buildTableRow(
               "标签",
               (item.tags?.map((e) => "${e.name}(${e.count})").toList() ?? [])
@@ -298,6 +378,111 @@ ${item.collection?.onHold}人搁置/${item.collection?.dropped}人弃坑""",
       buildItemRow(null, bgmSub.summary ?? ""),
     ];
   }
+}
+
+/// 网格，预览图+名称，一排可以多个
+/// ??? 2024-09-25 暂时不做点击继续跳转到关联页面了，同样的tag等也不跳转了
+Widget buildRelatedTileCard(
+  BuildContext context,
+  List<BGMSubjectRelation> list,
+) {
+  Widget genCard(BGMSubjectRelation item) => GestureDetector(
+        // 单击预览
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BangumiItemDetail(
+                id: item.id!,
+                // // 这里应该是有的
+                // subType:
+                //     bgmTypes.where((e) => e.value == item.type).first.cnLabel,
+                // 2024-09-25 嵌套跳转的，直接传名字吧
+                subType: "[${item.name ?? item.nameCn}]",
+              ),
+            ),
+          );
+        },
+        child: Card(
+          shape: RoundedRectangleBorder(
+            // 减少圆角半径
+            borderRadius: BorderRadius.circular(0),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              /// 预览图片
+              SizedBox(
+                height: 110.sp,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 2.sp),
+                  child: buildImageGridTile(
+                    context,
+                    item.images?.medium ?? "",
+                    prefix: "bangumi",
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              // 简介
+              Flexible(
+                child: Column(
+                  children: [
+                    Text(
+                      "${item.name}",
+                      maxLines: 3,
+                      style: TextStyle(fontSize: 10.sp),
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                    Expanded(child: Container()),
+                    Text(
+                      "${item.relation}",
+                      maxLines: 1,
+                      style: TextStyle(fontSize: 10.sp),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (item.career != null)
+                      Text(
+                        "${item.career?.join(',')}",
+                        maxLines: 1,
+                        style: TextStyle(fontSize: 10.sp),
+                        textAlign: TextAlign.center,
+                      ),
+                    if (item.actors != null && item.actors!.isNotEmpty)
+                      Text(
+                        "cv: ${item.actors!.first.name}",
+                        maxLines: 1,
+                        style: TextStyle(fontSize: 10.sp),
+                        textAlign: TextAlign.center,
+                      ),
+                    SizedBox(height: 2.sp),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Wrap(
+      // direction: Axis.horizontal,
+      // alignment: WrapAlignment.spaceAround,
+      children: list.isNotEmpty
+          ? List.generate(
+              list.length,
+              // 这个尺寸和下面的图片要配合好
+              (index) => SizedBox(
+                height: 180.sp,
+                width: 110.sp,
+                child: genCard(list[index]),
+              ),
+            ).toList()
+          : [],
+    ),
+  );
 }
 
 // 标题文字
