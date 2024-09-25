@@ -145,11 +145,20 @@ class BGMSubjectResp {
 
 ///
 /// bgm 查询的条目的响应
+/// 指定id查询的结果
+/// https://api.bgm.tv/v0/subjects/{2}
+/// 把所有类型的条目栏位，都合并到这里来,包括calendar和旧的关键字查询
+/// POST https://api.bgm.tv/v0/search/subjects
+/// https://api.bgm.tv/calendar
+/// https://api.bgm.tv/search/subject/{keyword}?type=6&……
 ///
 @JsonSerializable(explicitToJson: true)
 class BGMSubject {
   @JsonKey(name: 'date')
   String? date;
+
+  @JsonKey(name: 'platform')
+  String? platform;
 
   @JsonKey(name: 'image')
   String? image;
@@ -181,8 +190,48 @@ class BGMSubject {
   @JsonKey(name: 'nsfw')
   bool? nsfw;
 
+  @JsonKey(name: 'infobox')
+  List<BGMInfobox>? infobox;
+
+  @JsonKey(name: 'collection')
+  BGMLargeCollection? collection;
+
+  @JsonKey(name: 'images')
+  BGMLargeImage? images;
+
+  @JsonKey(name: 'rating')
+  BGMLargeRating? rating;
+
+  @JsonKey(name: 'total_episodes')
+  int? totalEpisodes;
+
+  @JsonKey(name: 'eps')
+  int? eps;
+
+  @JsonKey(name: 'eps_count')
+  int? epsCount;
+
+  @JsonKey(name: 'air_date')
+  String? airDate;
+
+  @JsonKey(name: 'air_weekday')
+  int? airWeekday;
+
+  @JsonKey(name: 'volumes')
+  int? volumes;
+
+  @JsonKey(name: 'series')
+  bool? series;
+
+  @JsonKey(name: 'locked')
+  bool? locked;
+
+  @JsonKey(name: 'url')
+  String? url;
+
   BGMSubject({
     this.date,
+    this.platform,
     this.image,
     this.type,
     this.summary,
@@ -193,6 +242,19 @@ class BGMSubject {
     this.id,
     this.rank,
     this.nsfw,
+    this.infobox,
+    this.rating,
+    this.totalEpisodes,
+    this.eps,
+    this.volumes,
+    this.series,
+    this.locked,
+    this.collection,
+    this.url,
+    this.epsCount,
+    this.airDate,
+    this.airWeekday,
+    this.images,
   });
 
   // 从字符串转
@@ -660,7 +722,7 @@ class BGMLargeSubjectResp {
   int? results;
 
   @JsonKey(name: 'list')
-  List<BGMLargeSubject>? list;
+  List<BGMSubject>? list;
 
   BGMLargeSubjectResp({
     this.results,
@@ -680,91 +742,21 @@ class BGMLargeSubjectResp {
 }
 
 @JsonSerializable(explicitToJson: true)
-class BGMLargeSubject {
-  @JsonKey(name: 'id')
-  int? id;
-
-  @JsonKey(name: 'url')
-  String? url;
-
-  @JsonKey(name: 'type')
-  int? type;
-
-  @JsonKey(name: 'name')
-  String? name;
-
-  @JsonKey(name: 'name_cn')
-  String? nameCn;
-
-  @JsonKey(name: 'summary')
-  String? summary;
-
-  @JsonKey(name: 'eps')
-  int? eps;
-
-  @JsonKey(name: 'eps_count')
-  int? epsCount;
-
-  @JsonKey(name: 'air_date')
-  String? airDate;
-
-  @JsonKey(name: 'air_weekday')
-  int? airWeekday;
-
-  @JsonKey(name: 'rating')
-  BGMLargeRating? rating;
-
-  @JsonKey(name: 'images')
-  BGMLargeImage? images;
-
-  @JsonKey(name: 'collection')
-  BGMLargeCollection? collection;
-
-  // 条件查询中没有此栏位，但每日放送中有
+class BGMLargeRating {
   @JsonKey(name: 'rank')
   int? rank;
 
-  BGMLargeSubject({
-    this.id,
-    this.url,
-    this.type,
-    this.name,
-    this.nameCn,
-    this.summary,
-    this.eps,
-    this.epsCount,
-    this.airDate,
-    this.airWeekday,
-    this.rating,
-    this.images,
-    this.collection,
-    this.rank,
-  });
-
-  // 从字符串转
-  factory BGMLargeSubject.fromRawJson(String str) =>
-      BGMLargeSubject.fromJson(json.decode(str));
-  // 转为字符串
-  String toRawJson() => json.encode(toJson());
-
-  factory BGMLargeSubject.fromJson(Map<String, dynamic> srcJson) =>
-      _$BGMLargeSubjectFromJson(srcJson);
-
-  Map<String, dynamic> toJson() => _$BGMLargeSubjectToJson(this);
-}
-
-@JsonSerializable(explicitToJson: true)
-class BGMLargeRating {
   @JsonKey(name: 'total')
   int? total;
 
   @JsonKey(name: 'count')
-  BGMLargeCount? count;
+  Map<String, int>? count;
 
   @JsonKey(name: 'score')
   double? score;
 
   BGMLargeRating({
+    this.rank,
     this.total,
     this.count,
     this.score,
@@ -780,64 +772,6 @@ class BGMLargeRating {
       _$BGMLargeRatingFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$BGMLargeRatingToJson(this);
-}
-
-// 评分各个分数的占比
-@JsonSerializable(explicitToJson: true)
-class BGMLargeCount {
-  @JsonKey(name: '1')
-  int? s1;
-
-  @JsonKey(name: '2')
-  int? s2;
-
-  @JsonKey(name: '3')
-  int? s3;
-
-  @JsonKey(name: '4')
-  int? s4;
-
-  @JsonKey(name: '5')
-  int? s5;
-
-  @JsonKey(name: '6')
-  int? s6;
-
-  @JsonKey(name: '7')
-  int? s7;
-
-  @JsonKey(name: '8')
-  int? s8;
-
-  @JsonKey(name: '9')
-  int? s9;
-
-  @JsonKey(name: '10')
-  int? s10;
-
-  BGMLargeCount({
-    this.s1,
-    this.s2,
-    this.s3,
-    this.s4,
-    this.s5,
-    this.s6,
-    this.s7,
-    this.s8,
-    this.s9,
-    this.s10,
-  });
-
-  // 从字符串转
-  factory BGMLargeCount.fromRawJson(String str) =>
-      BGMLargeCount.fromJson(json.decode(str));
-  // 转为字符串
-  String toRawJson() => json.encode(toJson());
-
-  factory BGMLargeCount.fromJson(Map<String, dynamic> srcJson) =>
-      _$BGMLargeCountFromJson(srcJson);
-
-  Map<String, dynamic> toJson() => _$BGMLargeCountToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -924,7 +858,7 @@ class BGMLargeCalendar {
   BGMLargeWeekday? weekday;
 
   @JsonKey(name: 'items')
-  List<BGMLargeSubject>? items;
+  List<BGMSubject>? items;
 
   BGMLargeCalendar({
     this.weekday,

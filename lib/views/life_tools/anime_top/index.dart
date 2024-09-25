@@ -134,8 +134,8 @@ class _MALAnimeTopState extends State<MALAnimeTop> {
       _currentPage = 1;
       query = searchController.text;
     });
-    // 在当前上下文中查找最近的 FocusScope 并使其失去焦点，从而收起键盘。
-    FocusScope.of(context).unfocus();
+
+    unfocusHandle();
 
     _initFetchMALData();
   }

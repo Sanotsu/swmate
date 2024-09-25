@@ -63,6 +63,7 @@ Map<String, dynamic> _$BGMSubjectRespToJson(BGMSubjectResp instance) =>
 
 BGMSubject _$BGMSubjectFromJson(Map<String, dynamic> json) => BGMSubject(
       date: json['date'] as String?,
+      platform: json['platform'] as String?,
       image: json['image'] as String?,
       type: (json['type'] as num?)?.toInt(),
       summary: json['summary'] as String?,
@@ -75,11 +76,34 @@ BGMSubject _$BGMSubjectFromJson(Map<String, dynamic> json) => BGMSubject(
       id: (json['id'] as num?)?.toInt(),
       rank: (json['rank'] as num?)?.toInt(),
       nsfw: json['nsfw'] as bool?,
+      infobox: (json['infobox'] as List<dynamic>?)
+          ?.map((e) => BGMInfobox.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      rating: json['rating'] == null
+          ? null
+          : BGMLargeRating.fromJson(json['rating'] as Map<String, dynamic>),
+      totalEpisodes: (json['total_episodes'] as num?)?.toInt(),
+      eps: (json['eps'] as num?)?.toInt(),
+      volumes: (json['volumes'] as num?)?.toInt(),
+      series: json['series'] as bool?,
+      locked: json['locked'] as bool?,
+      collection: json['collection'] == null
+          ? null
+          : BGMLargeCollection.fromJson(
+              json['collection'] as Map<String, dynamic>),
+      url: json['url'] as String?,
+      epsCount: (json['eps_count'] as num?)?.toInt(),
+      airDate: json['air_date'] as String?,
+      airWeekday: (json['air_weekday'] as num?)?.toInt(),
+      images: json['images'] == null
+          ? null
+          : BGMLargeImage.fromJson(json['images'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$BGMSubjectToJson(BGMSubject instance) =>
     <String, dynamic>{
       'date': instance.date,
+      'platform': instance.platform,
       'image': instance.image,
       'type': instance.type,
       'summary': instance.summary,
@@ -90,6 +114,19 @@ Map<String, dynamic> _$BGMSubjectToJson(BGMSubject instance) =>
       'id': instance.id,
       'rank': instance.rank,
       'nsfw': instance.nsfw,
+      'infobox': instance.infobox?.map((e) => e.toJson()).toList(),
+      'collection': instance.collection?.toJson(),
+      'images': instance.images?.toJson(),
+      'rating': instance.rating?.toJson(),
+      'total_episodes': instance.totalEpisodes,
+      'eps': instance.eps,
+      'eps_count': instance.epsCount,
+      'air_date': instance.airDate,
+      'air_weekday': instance.airWeekday,
+      'volumes': instance.volumes,
+      'series': instance.series,
+      'locked': instance.locked,
+      'url': instance.url,
     };
 
 BGMTag _$BGMTagFromJson(Map<String, dynamic> json) => BGMTag(
@@ -308,7 +345,7 @@ BGMLargeSubjectResp _$BGMLargeSubjectRespFromJson(Map<String, dynamic> json) =>
     BGMLargeSubjectResp(
       results: (json['results'] as num?)?.toInt(),
       list: (json['list'] as List<dynamic>?)
-          ?.map((e) => BGMLargeSubject.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => BGMSubject.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
@@ -319,91 +356,22 @@ Map<String, dynamic> _$BGMLargeSubjectRespToJson(
       'list': instance.list?.map((e) => e.toJson()).toList(),
     };
 
-BGMLargeSubject _$BGMLargeSubjectFromJson(Map<String, dynamic> json) =>
-    BGMLargeSubject(
-      id: (json['id'] as num?)?.toInt(),
-      url: json['url'] as String?,
-      type: (json['type'] as num?)?.toInt(),
-      name: json['name'] as String?,
-      nameCn: json['name_cn'] as String?,
-      summary: json['summary'] as String?,
-      eps: (json['eps'] as num?)?.toInt(),
-      epsCount: (json['eps_count'] as num?)?.toInt(),
-      airDate: json['air_date'] as String?,
-      airWeekday: (json['air_weekday'] as num?)?.toInt(),
-      rating: json['rating'] == null
-          ? null
-          : BGMLargeRating.fromJson(json['rating'] as Map<String, dynamic>),
-      images: json['images'] == null
-          ? null
-          : BGMLargeImage.fromJson(json['images'] as Map<String, dynamic>),
-      collection: json['collection'] == null
-          ? null
-          : BGMLargeCollection.fromJson(
-              json['collection'] as Map<String, dynamic>),
-      rank: (json['rank'] as num?)?.toInt(),
-    );
-
-Map<String, dynamic> _$BGMLargeSubjectToJson(BGMLargeSubject instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'url': instance.url,
-      'type': instance.type,
-      'name': instance.name,
-      'name_cn': instance.nameCn,
-      'summary': instance.summary,
-      'eps': instance.eps,
-      'eps_count': instance.epsCount,
-      'air_date': instance.airDate,
-      'air_weekday': instance.airWeekday,
-      'rating': instance.rating?.toJson(),
-      'images': instance.images?.toJson(),
-      'collection': instance.collection?.toJson(),
-      'rank': instance.rank,
-    };
-
 BGMLargeRating _$BGMLargeRatingFromJson(Map<String, dynamic> json) =>
     BGMLargeRating(
+      rank: (json['rank'] as num?)?.toInt(),
       total: (json['total'] as num?)?.toInt(),
-      count: json['count'] == null
-          ? null
-          : BGMLargeCount.fromJson(json['count'] as Map<String, dynamic>),
+      count: (json['count'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, (e as num).toInt()),
+      ),
       score: (json['score'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$BGMLargeRatingToJson(BGMLargeRating instance) =>
     <String, dynamic>{
+      'rank': instance.rank,
       'total': instance.total,
-      'count': instance.count?.toJson(),
+      'count': instance.count,
       'score': instance.score,
-    };
-
-BGMLargeCount _$BGMLargeCountFromJson(Map<String, dynamic> json) =>
-    BGMLargeCount(
-      s1: (json['1'] as num?)?.toInt(),
-      s2: (json['2'] as num?)?.toInt(),
-      s3: (json['3'] as num?)?.toInt(),
-      s4: (json['4'] as num?)?.toInt(),
-      s5: (json['5'] as num?)?.toInt(),
-      s6: (json['6'] as num?)?.toInt(),
-      s7: (json['7'] as num?)?.toInt(),
-      s8: (json['8'] as num?)?.toInt(),
-      s9: (json['9'] as num?)?.toInt(),
-      s10: (json['10'] as num?)?.toInt(),
-    );
-
-Map<String, dynamic> _$BGMLargeCountToJson(BGMLargeCount instance) =>
-    <String, dynamic>{
-      '1': instance.s1,
-      '2': instance.s2,
-      '3': instance.s3,
-      '4': instance.s4,
-      '5': instance.s5,
-      '6': instance.s6,
-      '7': instance.s7,
-      '8': instance.s8,
-      '9': instance.s9,
-      '10': instance.s10,
     };
 
 BGMLargeImage _$BGMLargeImageFromJson(Map<String, dynamic> json) =>
@@ -448,7 +416,7 @@ BGMLargeCalendar _$BGMLargeCalendarFromJson(Map<String, dynamic> json) =>
           ? null
           : BGMLargeWeekday.fromJson(json['weekday'] as Map<String, dynamic>),
       items: (json['items'] as List<dynamic>?)
-          ?.map((e) => BGMLargeSubject.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => BGMSubject.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
