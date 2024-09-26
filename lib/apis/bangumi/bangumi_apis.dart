@@ -1,15 +1,3 @@
-/*
-  curl --request POST \
-  --url https://api.bgm.tv/v0/search/subjects \
-  --data '
-  {
-    "type": "1",
-    "limit":10,
-    "offset":1
-  }
-' 
-*/
-
 import 'dart:convert';
 
 import '../../common/utils/dio_client/cus_http_client.dart';
@@ -52,8 +40,6 @@ Future<List<BGMSubject>> getBangumiSubject(
       respData = json.decode(respData);
     }
 
-    print("getJikanSearch===========$respData");
-
     // 正常响应是取data属性了，不知道报错时怎样
     return (respData['data'] as List<dynamic>)
         .map((e) => BGMSubject.fromJson(e))
@@ -79,8 +65,6 @@ Future<BGMSubject> getBangumiSubjectById(int id) async {
       respData = json.decode(respData);
     }
 
-    print("getBangumiSubjectById===========$respData");
-
     return BGMSubject.fromJson(respData);
   } catch (e) {
     // API请求报错，显示报错信息
@@ -102,8 +86,6 @@ Future<List<BGMSubjectRelation>> getBangumiSubjectRelated(
       showLoading: false,
     );
 
-    print("getBangumiSubjectRelatedPersons===========$respData");
-
     return respData.map((e) => BGMSubjectRelation.fromJson(e)).toList();
   } catch (e) {
     // API请求报错，显示报错信息
@@ -124,25 +106,23 @@ Future<BGMLargeSubjectResp> searchBangumiLargeSubjectByKeyword(
     if (keyword.isEmpty) {
       throw Exception("关键字不可为空");
     }
-    // 页面要放在url，其他条件在data中
-    // limit: 取多少条
-    // offser: 从哪个偏移数开始(数据的索引从0开始)
-    var url =
-        "$bgmBase/search/subject/$keyword?type=$type&responseGroup=$responseGroup&start=$start&max_results=$maxResults";
 
     var respData = await HttpUtils.get(
-      path: url,
+      path: "$bgmBase/search/subject/$keyword",
       // 因为上拉下拉有加载圈，就不显示请求的加载了
       showLoading: false,
+      queryParameters: {
+        "type": type,
+        "responseGroup": responseGroup,
+        "start": start,
+        "max_results": maxResults,
+      },
     );
 
     if (respData.runtimeType == String) {
       respData = json.decode(respData);
     }
 
-    print("searchBangumiLargeSubjectByKeyword===========$respData");
-
-    // 正常响应是取data属性了，不知道报错时怎样
     return BGMLargeSubjectResp.fromJson(respData);
   } catch (e) {
     // API请求报错，显示报错信息
@@ -153,15 +133,11 @@ Future<BGMLargeSubjectResp> searchBangumiLargeSubjectByKeyword(
 // 查询每日放送,一个周的每日
 Future<List<BGMLargeCalendar>> getBangumiCalendar() async {
   try {
-    var url = "$bgmBase/calendar";
-
     List respData = await HttpUtils.get(
-      path: url,
+      path: "$bgmBase/calendar",
       // 因为上拉下拉有加载圈，就不显示请求的加载了
       showLoading: false,
     );
-
-    print("getBangumiCalendar===========$respData");
 
     return respData.map((e) => BGMLargeCalendar.fromJson(e)).toList();
   } catch (e) {
@@ -179,12 +155,8 @@ Future<BGMEpisodeResp> getBangumiEpisodesById(
   int offset = 0,
 }) async {
   try {
-    // var url =
-    //     "$bgmBase/v0/episodes?subject_id=$id&type=$type&limit=$limit&offset=$offset";
-
-    var url = "$bgmBase/v0/episodes";
     var respData = await HttpUtils.get(
-        path: url,
+        path: "$bgmBase/v0/episodes",
         // 因为上拉下拉有加载圈，就不显示请求的加载了
         showLoading: false,
         queryParameters: {
@@ -197,8 +169,6 @@ Future<BGMEpisodeResp> getBangumiEpisodesById(
     if (respData.runtimeType == String) {
       respData = json.decode(respData);
     }
-
-    print("getBangumiEpisodes===========$respData");
 
     return BGMEpisodeResp.fromJson(respData);
   } catch (e) {

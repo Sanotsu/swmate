@@ -93,8 +93,6 @@ Future<JikanResp> getJikanFull(
       respData = json.decode(respData);
     }
 
-    print("getJikanFull===========$respData");
-
     return JikanResp.fromJson(respData);
   } catch (e) {
     // API请求报错，显示报错信息
@@ -164,7 +162,6 @@ Future<JikanResp> getJikanSearch({
 
     var respData = await HttpUtils.get(
       path: url,
-      // 因为上拉下拉有加载圈，就不显示请求的加载了
       showLoading: false,
       queryParameters: {
         "q": q,
@@ -178,9 +175,6 @@ Future<JikanResp> getJikanSearch({
       respData = json.decode(respData);
     }
 
-    print("getJikanSearch===========$respData");
-
-    // 响应是json格式的列表 List<dynamic>
     return JikanResp.fromJson(respData);
   } catch (e) {
     // API请求报错，显示报错信息
@@ -217,7 +211,6 @@ Future<JikanResp> getJikanSchedules({
 
     var respData = await HttpUtils.get(
       path: url,
-      // 因为上拉下拉有加载圈，就不显示请求的加载了
       showLoading: false,
       queryParameters: map,
     );
@@ -226,9 +219,6 @@ Future<JikanResp> getJikanSchedules({
       respData = json.decode(respData);
     }
 
-    print("===========$respData");
-
-    // 响应是json格式的列表 List<dynamic>
     return JikanResp.fromJson(respData);
   } catch (e) {
     // API请求报错，显示报错信息
@@ -241,15 +231,12 @@ Future<JikanSeasonResp> getJikanSeasons() async {
   try {
     var respData = await HttpUtils.get(
       path: "$jikanBase/seasons",
-      // 因为上拉下拉有加载圈，就不显示请求的加载了
       showLoading: false,
     );
 
     if (respData.runtimeType == String) {
       respData = json.decode(respData);
     }
-
-    print("=getJikanSeasons==========$respData");
 
     return JikanSeasonResp.fromJson(respData);
   } catch (e) {
@@ -294,8 +281,6 @@ Future<JikanResp> getJikanSingleSeason({
     if (respData.runtimeType == String) {
       respData = json.decode(respData);
     }
-
-    print("getJikanSingleSeason===========$respData");
 
     return JikanResp.fromJson(respData);
   } catch (e) {

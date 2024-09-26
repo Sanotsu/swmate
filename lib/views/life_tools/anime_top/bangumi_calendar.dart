@@ -90,6 +90,7 @@ class _BangumiCalendarState extends State<BangumiCalendar> {
         maxResults: pageSize,
       );
 
+      if (!mounted) return;
       setState(() {
         if (currentPage == 1) {
           subjectList = jkRst.list ?? [];
@@ -259,11 +260,20 @@ class _BangumiCalendarState extends State<BangumiCalendar> {
       ),
       overviewList: [
         Text(
-          "类型22: ${bgmTypes.where((e) => e.value == subject.type).first.cnLabel}",
+          "类型: ${bgmTypes.where((e) => e.value == subject.type).first.cnLabel}",
+          style: TextStyle(fontSize: 12.sp),
           maxLines: 1,
         ),
-        Text("原名: ${subject.name}", maxLines: 1),
-        Text("首播: ${subject.airDate}", maxLines: 1),
+        Text(
+          "原名: ${subject.name}",
+          style: TextStyle(fontSize: 12.sp),
+          maxLines: 1,
+        ),
+        Text(
+          "首播: ${subject.airDate}",
+          style: TextStyle(fontSize: 12.sp),
+          maxLines: 1,
+        ),
       ],
     );
   }

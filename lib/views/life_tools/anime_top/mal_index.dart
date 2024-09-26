@@ -124,7 +124,6 @@ class _MALTopState extends State<MALTop> {
             context,
             "数据来源: [myanimelist](https://myanimelist.net/)",
           ),
-          buildPopupMenuButton(),
         ],
       ),
       body: Column(
@@ -214,7 +213,8 @@ class _MALTopState extends State<MALTop> {
       title: (isAnimeOrManga() ? item.title : item.name) ?? "",
       rankWidget: (isAnimeOrManga())
           ? buildBgmScoreArea(item.score, total: item.scoredBy, rank: item.rank)
-          : buildFavoritesArea(item.favorites, index: index),
+          : buildFavoritesArea(item.favorites,
+              index: query.isEmpty ? index : null),
       targetPage: MALItemDetail(item: item, malType: selectedMalType),
       overviewList: [
         if ((selectedMalType.value as MALType) == MALType.anime)
@@ -235,33 +235,6 @@ class _MALTopState extends State<MALTop> {
             maxLines: 4,
             style: TextStyle(fontSize: 12.sp),
           ),
-      ],
-    );
-  }
-
-  Widget buildPopupMenuButton() {
-    return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert),
-      // 调整弹出按钮的位置
-      position: PopupMenuPosition.under,
-      // 弹出按钮的偏移
-      // offset: Offset(-25.sp, 0),
-      onSelected: (String value) async {
-        setState(() {
-          // 理论上这里一定能找到，不然就有问题
-          selectedMalType = malTypes
-              .where((e) => (e.value as MALType).name == value)
-              .toList()
-              .first;
-        });
-
-        await fetchMALData();
-      },
-      itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
-        buildCusPopupMenuItem(context, "anime", "动漫排名", Icons.leaderboard),
-        buildCusPopupMenuItem(context, "manga", "漫画排名", Icons.leaderboard),
-        buildCusPopupMenuItem(context, "characters", "角色排名", Icons.leaderboard),
-        buildCusPopupMenuItem(context, "people", "人物排名", Icons.leaderboard),
       ],
     );
   }

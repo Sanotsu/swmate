@@ -502,7 +502,7 @@ Widget buildTitleText(
   TextAlign? textAlign = TextAlign.start,
 }) {
   return Padding(
-    padding: EdgeInsets.all(10.sp),
+    padding: EdgeInsets.all(5.sp),
     child: Text(
       title,
       style: TextStyle(

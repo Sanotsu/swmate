@@ -81,7 +81,7 @@ class _MALAnimeScheduleState extends State<MALAnimeSchedule> {
         ? await getJikanSingleSeason(
             year: selectedYear,
             season: (selectedSeasonFilter?.value as String?),
-            filter: (selectedWeekFilter?.value as String?),
+            filter: (selectedAnimeFilter?.value as String?),
             page: _currentPage,
             limit: _pageSize,
           )
@@ -91,6 +91,7 @@ class _MALAnimeScheduleState extends State<MALAnimeSchedule> {
             limit: _pageSize,
           );
 
+    if (!mounted) return;
     setState(() {
       if (_currentPage == 1) {
         subjectList = jkRst.data;
@@ -123,22 +124,11 @@ class _MALAnimeScheduleState extends State<MALAnimeSchedule> {
       appBar: AppBar(
         title: const Text('MAL番组计划'),
         actions: [
-          IconButton(
-            onPressed: () async {
-              await getJikanSingleSeason(year: 2025, season: "spring");
-            },
-            icon: const Icon(Icons.icecream),
-          ),
-          IconButton(
-            onPressed: () {
-              commonMDHintModalBottomSheet(
-                context,
-                "说明",
-                "数据来源: [https://bangumi.tv](https://bangumi.tv/)",
-                msgFontSize: 15.sp,
-              );
-            },
-            icon: const Icon(Icons.info_outline),
+          buildInfoButtonOnAction(
+            context,
+            """选择“历史分季”后星期筛选无效，星期筛选仅适用于“每周番组”。
+\n“历史分季”需要同时选中“年份”和“分季”，否则查询当前季度的动漫。       
+\n清空“历史分季”则查询当前季度的动漫。""",
           ),
         ],
       ),
@@ -162,20 +152,22 @@ class _MALAnimeScheduleState extends State<MALAnimeSchedule> {
   /// 分星期下拉框和查询按钮
   buildDropdownAndQueryButtonArea() {
     return SizedBox(
-      height: 42.sp,
+      height: 50.sp,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 5.sp),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              child: Text(
-                _isExpanded
-                    ? (selectedYear != null && selectedSeasonFilter != null
-                        ? "历史分季"
-                        : "当前季度")
-                    : "每周番组",
-                style: TextStyle(fontSize: 16.sp),
+              child: Center(
+                child: buildTitleText(
+                  _isExpanded
+                      ? (selectedYear != null && selectedSeasonFilter != null
+                          ? "历史分季"
+                          : "当前季度")
+                      : "每周番组",
+                  fontSize: 18.sp,
+                ),
               ),
             ),
             SizedBox(
@@ -184,12 +176,10 @@ class _MALAnimeScheduleState extends State<MALAnimeSchedule> {
                 value: selectedWeekFilter,
                 items: malWeekFilterTypes,
                 hintLabel: "选择分类",
-                onChanged: (value) async {
+                onChanged: (value) {
                   setState(() {
                     selectedWeekFilter = value!;
                   });
-                  // 因为查询必须输入关键字，所以切换时不用触发查询
-                  // _handleSearch();
                 },
                 itemToString: (e) => (e as CusLabel).cnLabel,
               ),
