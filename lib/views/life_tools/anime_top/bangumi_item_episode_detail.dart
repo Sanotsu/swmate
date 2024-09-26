@@ -6,17 +6,8 @@ import '../../../apis/bangumi/bangumi_apis.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../models/bangumi/bangumi.dart';
+import '_components.dart';
 import 'bangumi_item_detail.dart';
-
-List<CusLabel> bgmEpTypes = [
-  CusLabel(cnLabel: "本篇", value: 0),
-  CusLabel(cnLabel: "特别篇", value: 1),
-  CusLabel(cnLabel: "音乐OP", value: 2),
-  CusLabel(cnLabel: "ED", value: 3),
-  CusLabel(cnLabel: "预告/宣传/广告", value: 4),
-  CusLabel(cnLabel: "MAD", value: 5),
-  CusLabel(cnLabel: "其他", value: 6),
-];
 
 class BangumiEpisodeDetail extends StatefulWidget {
   final int subjectId;
@@ -55,12 +46,12 @@ class _BangumiEpisodeDetailState extends State<BangumiEpisodeDetail> {
     selectedBgmEpType = bgmEpTypes[0];
 
     // 默认进入是日历数据
-    fetchBgmData();
+    fetchBGMData();
   }
 
   // 查询输入框有内容，就是条件查询；没有内容，就是播放日历查询
   // 如果是上拉下拉刷新，使用的loading标志不一样
-  Future<void> fetchBgmData({bool isRefresh = false}) async {
+  Future<void> fetchBGMData({bool isRefresh = false}) async {
     if (isRefresh) {
       if (_isRefreshLoading) return;
       setState(() {
@@ -111,44 +102,25 @@ class _BangumiEpisodeDetailState extends State<BangumiEpisodeDetail> {
             color: Colors.black,
           ),
 
-          buildTypeDropdown(),
+          /// 分类下拉框
+          TypeDropdown(
+            selectedValue: selectedBgmEpType,
+            items: bgmEpTypes,
+            label: "分集类型: ",
+            width: 180.sp,
+            onChanged: (value) async {
+              setState(() {
+                selectedBgmEpType = value!;
+              });
+
+              fetchBGMData();
+            },
+          ),
 
           Divider(height: 10.sp),
 
           /// 主列表，可上拉下拉刷新
           buildRefreshList(),
-        ],
-      ),
-    );
-  }
-
-  /// 分类下拉框
-  buildTypeDropdown() {
-    return Padding(
-      padding: EdgeInsets.all(5.sp),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Text(
-            "分集类型: ",
-            style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(
-            width: 180.sp,
-            child: buildDropdownButton2<CusLabel>(
-              value: selectedBgmEpType,
-              items: bgmEpTypes,
-              hintLable: "选择分类",
-              onChanged: (value) async {
-                setState(() {
-                  selectedBgmEpType = value!;
-                });
-
-                fetchBgmData();
-              },
-              itemToString: (e) => (e as CusLabel).cnLabel,
-            ),
-          ),
         ],
       ),
     );
@@ -166,7 +138,7 @@ class _BangumiEpisodeDetailState extends State<BangumiEpisodeDetail> {
                 setState(() {
                   _currentPage = 1;
                 });
-                await fetchBgmData(isRefresh: true);
+                await fetchBGMData(isRefresh: true);
               },
               onLoad: _hasMore
                   ? () async {
@@ -174,7 +146,7 @@ class _BangumiEpisodeDetailState extends State<BangumiEpisodeDetail> {
                         setState(() {
                           _currentPage++;
                         });
-                        await fetchBgmData(isRefresh: true);
+                        await fetchBGMData(isRefresh: true);
                       }
                     }
                   : null,
@@ -182,7 +154,7 @@ class _BangumiEpisodeDetailState extends State<BangumiEpisodeDetail> {
               child: ListView.builder(
                 itemCount: subjectList.length,
                 itemBuilder: (context, index) {
-                  return buildItemCard(
+                  return buildEpDetailCard(
                     context,
                     subjectList[index],
                     selectedBgmEpType,
@@ -194,9 +166,8 @@ class _BangumiEpisodeDetailState extends State<BangumiEpisodeDetail> {
   }
 }
 
-/// 这些可能后续可以复用
-/// 列表，左侧图片，右侧简介，一般一排一个
-Widget buildItemCard(
+/// 分集剧情简介卡片
+Widget buildEpDetailCard(
   BuildContext context,
   BGMEpisode item,
   CusLabel type,

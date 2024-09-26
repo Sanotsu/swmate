@@ -5,7 +5,7 @@ import '../../../apis/bangumi/bangumi_apis.dart';
 import '../../../common/components/bar_chart_widget.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../models/bangumi/bangumi.dart';
-import 'bangumi_calendar.dart';
+import '_components.dart';
 import 'bangumi_item_episode_detail.dart';
 
 class BangumiItemDetail extends StatefulWidget {
@@ -131,7 +131,18 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
 
                 // 跳转到分集简介按钮
                 // (2024-09-25 应该是只有动画才有意义)
-                if (bgmSub.type == 2) buildGotoEpisodesArea(),
+                if (bgmSub.type == 2)
+                  buildGotoButton(
+                    context,
+                    "分集简介",
+                    BangumiEpisodeDetail(
+                      subjectId: bgmSub.id!,
+                      subjectName:
+                          (bgmSub.nameCn != null && bgmSub.nameCn!.isNotEmpty)
+                              ? bgmSub.nameCn!
+                              : bgmSub.name ?? "",
+                    ),
+                  ),
 
                 /// 图片(没找到有意义的获取图片API)
                 // buildTitleText("图片"),
@@ -184,36 +195,6 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
           color: Theme.of(context).primaryColor,
         ),
         textAlign: TextAlign.center,
-      ),
-    );
-  }
-
-  /// 可跳转到源网页的标题
-  Widget buildGotoEpisodesArea() {
-    return TextButton.icon(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BangumiEpisodeDetail(
-              subjectId: bgmSub.id!,
-              subjectName: (bgmSub.nameCn != null && bgmSub.nameCn!.isNotEmpty)
-                  ? bgmSub.nameCn!
-                  : bgmSub.name ?? "",
-            ),
-          ),
-        );
-      },
-      icon: const Icon(Icons.arrow_right),
-      iconAlignment: IconAlignment.end,
-      label: Text(
-        "分集简介",
-        style: TextStyle(
-          fontSize: 20.sp,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).primaryColor,
-        ),
-        textAlign: TextAlign.end,
       ),
     );
   }
@@ -354,28 +335,12 @@ ${item.collection?.onHold}人搁置/${item.collection?.dropped}人弃坑""",
         ),
       ),
 
-      // // 实测，上面的无边框表格显示更好看
-      // buildItemRow("编号", "${item.id}"),
-      // buildItemRow("评分", "${item.rating?.score}"),
-      // buildItemRow("评分人数", "${item.rating?.total}"),
-      // buildItemRow("排名", "${item.rating?.rank ?? item.rank}"),
-      // ...(item.infobox ?? []).map((e) => buildItemRow(
-      //       e.key,
-      //       e.value.toString(),
-      //     )),
-      // buildItemRow("类别", "${item.type}"),
-      // buildItemRow(
-      //   "标签",
-      //   (item.tags?.map((e) => "${e.name} ${e.count}").toList() ?? [])
-      //       .join("/"),
-      // ),
-
       /// 故事简介栏位
       Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [buildTitleText("简介")],
       ),
-      buildItemRow(null, bgmSub.summary ?? ""),
+      buildContentRow(null, bgmSub.summary ?? ""),
     ];
   }
 }
@@ -482,67 +447,6 @@ Widget buildRelatedTileCard(
             ).toList()
           : [],
     ),
-  );
-}
-
-// 标题文字
-Widget buildTitleText(
-  String title, {
-  double? fontSize = 16,
-  Color? color = Colors.black54,
-  TextAlign? textAlign = TextAlign.start,
-}) {
-  return Padding(
-    padding: EdgeInsets.all(10.sp),
-    child: Text(
-      title,
-      style: TextStyle(
-        fontSize: fontSize,
-        fontWeight: FontWeight.bold,
-        color: color,
-      ),
-      textAlign: textAlign,
-    ),
-  );
-}
-
-// 正文文字
-Widget buildItemRow(
-  String? label,
-  String value, {
-  double? labelFontSize,
-  double? valueFontSize,
-  int? maxLines,
-}) {
-  return Row(
-    children: [
-      if (label != null)
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 5.sp),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: labelFontSize ?? 14.sp,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      Expanded(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10.sp),
-          child: Text(
-            value,
-            style: TextStyle(
-              fontSize: valueFontSize ?? 14.sp,
-              color: Colors.black87,
-            ),
-            textAlign: TextAlign.left,
-            softWrap: true,
-            maxLines: maxLines,
-          ),
-        ),
-      ),
-    ],
   );
 }
 

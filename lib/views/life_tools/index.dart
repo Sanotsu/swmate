@@ -8,7 +8,7 @@ import '../ai_assistant/index.dart';
 import 'accounting/index.dart';
 import 'animal_lover/dog_cat_index.dart';
 import 'anime_top/bangumi_calendar.dart';
-import 'anime_top/index.dart';
+import 'anime_top/mal_index.dart';
 import 'random_dish/dish_wheel_index.dart';
 import 'waifu_pics/index.dart';
 
@@ -102,7 +102,7 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                   title: 'MAL动漫排行',
                   subtitle: "MyAnimeList排行榜",
                   icon: Icons.leaderboard_outlined,
-                  targetPage: MALAnimeTop(),
+                  targetPage: MALTop(),
                 ),
 
                 const CustomEntranceCard(

@@ -2,17 +2,13 @@ import 'dart:convert';
 
 import '../../common/utils/dio_client/cus_http_client.dart';
 import '../../models/jikan/jikan_statistic.dart';
-import '../../models/jikan/jikan_top.dart';
+import '../../models/jikan/jikan_data.dart';
+import '../../views/life_tools/anime_top/_components.dart';
 
-enum MALType {
-  anime,
-  manga,
-  characters,
-  people,
-}
+var jikanBase = "https://api.jikan.moe/v4";
 
 ///
-/// Jikn 是非官方的 MyAnimeList(MAL) API 动漫排行榜接口返回的数据结构
+/// Jika非官方的 MyAnimeList(MAL) API 动漫排行榜接口返回的数据结构
 /// https://docs.api.jikan.moe/
 ///
 /// 2024-09-19 暂时只关注这4个接口(MAL)y已经有很多第三方客户端了，我就只弄自己感兴趣的部分
@@ -23,29 +19,30 @@ enum MALType {
 ///
 /// 统一带上JK(Jikan)前缀
 ///
-/// type = anime | manga | characters | people
-///
-Future<JikanTop> getJikanTop({
+
+/// 查询top数据
+Future<JikanResp> getJikanTop({
   // anime | manga | characters | people
   MALType type = MALType.anime,
   int page = 1,
   int limit = 25,
 }) async {
   try {
-    var url =
-        "https://api.jikan.moe/v4/top/${type.name}?page=$page&limit=$limit";
-
     var respData = await HttpUtils.get(
-      path: url,
+      path: "$jikanBase/top/${type.name}",
       // 因为上拉下拉有加载圈，就不显示请求的加载了
       showLoading: false,
+      queryParameters: {
+        "page": page,
+        "limit": limit,
+      },
     );
 
     if (respData.runtimeType == String) {
       respData = json.decode(respData);
     }
 
-    return JikanTop.fromJson(respData);
+    return JikanResp.fromJson(respData);
   } catch (e) {
     // API请求报错，显示报错信息
     rethrow;
@@ -61,10 +58,8 @@ Future<JikanStatistic> getAMStatistics(
   MALType type = MALType.anime, // anime | manga
 }) async {
   try {
-    var url = "https://api.jikan.moe/v4/${type.name}/$id/statistics";
-
     var respData = await HttpUtils.get(
-      path: url,
+      path: "$jikanBase/${type.name}/$id/statistics",
       // 因为上拉下拉有加载圈，就不显示请求的加载了
       showLoading: false,
     );
@@ -84,16 +79,13 @@ Future<JikanStatistic> getAMStatistics(
 /// MAL 的 指定动漫漫画的详情栏位
 /// https://api.jikan.moe/v4/{type}/{id}/full
 ///
-Future<JikanTop> getJikanFull(
+Future<JikanResp> getJikanFull(
   int id, {
   MALType type = MALType.anime, // anime | manga | characters | people
 }) async {
   try {
-    var url = "https://api.jikan.moe/v4/${type.name}/$id/full";
-
     var respData = await HttpUtils.get(
-      path: url,
-      // 因为上拉下拉有加载圈，就不显示请求的加载了
+      path: "$jikanBase/${type.name}/$id/full",
       showLoading: false,
     );
 
@@ -103,8 +95,7 @@ Future<JikanTop> getJikanFull(
 
     print("getJikanFull===========$respData");
 
-    // 响应是json格式的列表 List<dynamic>
-    return JikanTop.fromJson(respData);
+    return JikanResp.fromJson(respData);
   } catch (e) {
     // API请求报错，显示报错信息
     rethrow;
@@ -120,11 +111,8 @@ Future<List<JKImage>> getJikanPictures(
   MALType type = MALType.anime, // anime | manga | characters | people
 }) async {
   try {
-    var url = "https://api.jikan.moe/v4/${type.name}/$id/pictures";
-
     var respData = await HttpUtils.get(
-      path: url,
-      // 因为上拉下拉有加载圈，就不显示请求的加载了
+      path: "$jikanBase/${type.name}/$id/pictures",
       showLoading: false,
     );
 
@@ -156,7 +144,7 @@ Future<List<JKImage>> getJikanPictures(
 /// page、limit
 /// https://api.jikan.moe/v4/{type}?q=xxx&order_by=xxx&page=xxx……
 ///
-Future<JikanTop> getJikanSearch({
+Future<JikanResp> getJikanSearch({
   // anime | manga | characters | people
   MALType type = MALType.anime,
   String q = '',
@@ -166,22 +154,24 @@ Future<JikanTop> getJikanSearch({
   int limit = 25,
 }) async {
   try {
-    // var url =
-    //     "https://api.jikan.moe/v4/${type.name}?q=$q&order_by=$orderBy&sort=$sort&page=$page&limit=$limit";
-
     // 简单点，只关键字搜索，其他默认
     // 2024-09-24 people实测默认排序是name，https://api.jikan.moe/v4/people?q=one&order_by=name
     // 但执行这个会报错，所以要改为mal_id
     if (type == MALType.people) {
       orderBy = "mal_id";
     }
-    var url =
-        "https://api.jikan.moe/v4/${type.name}?q=$q&order_by=$orderBy&page=$page&limit=$limit";
+    var url = "$jikanBase/${type.name}";
 
     var respData = await HttpUtils.get(
       path: url,
       // 因为上拉下拉有加载圈，就不显示请求的加载了
       showLoading: false,
+      queryParameters: {
+        "q": q,
+        "order_by": orderBy,
+        "page": page,
+        "limit": limit,
+      },
     );
 
     if (respData.runtimeType == String) {
@@ -191,7 +181,123 @@ Future<JikanTop> getJikanSearch({
     print("getJikanSearch===========$respData");
 
     // 响应是json格式的列表 List<dynamic>
-    return JikanTop.fromJson(respData);
+    return JikanResp.fromJson(respData);
+  } catch (e) {
+    // API请求报错，显示报错信息
+    rethrow;
+  }
+}
+
+///
+/// MAL 获取播放日期表
+Future<JikanResp> getJikanSchedules({
+  // Enum: "monday" "tuesday" "wednesday" "thursday"
+  // "friday" "saturday" "sunday" "unknown" "other"
+  String? filter,
+  // Enum: "true" "false"
+  bool? sfw,
+  // Enum: "true" "false"
+  bool? kids,
+  int page = 1,
+  int limit = 25,
+}) async {
+  try {
+    var url = "$jikanBase/schedules";
+
+    // 这样都是接口预设值
+    Map<String, dynamic> map = {
+      "page": page,
+      "limit": limit,
+    };
+
+    // 不传fillter则查询一周所有7天
+    if (filter != null) map.addAll({"filter": filter});
+    if (sfw != null) map.addAll({"sfw": sfw});
+    if (kids != null) map.addAll({"kids": kids});
+
+    var respData = await HttpUtils.get(
+      path: url,
+      // 因为上拉下拉有加载圈，就不显示请求的加载了
+      showLoading: false,
+      queryParameters: map,
+    );
+
+    if (respData.runtimeType == String) {
+      respData = json.decode(respData);
+    }
+
+    print("===========$respData");
+
+    // 响应是json格式的列表 List<dynamic>
+    return JikanResp.fromJson(respData);
+  } catch (e) {
+    // API请求报错，显示报错信息
+    rethrow;
+  }
+}
+
+/// MAL 获取数据库中播放季列表数据
+Future<JikanSeasonResp> getJikanSeasons() async {
+  try {
+    var respData = await HttpUtils.get(
+      path: "$jikanBase/seasons",
+      // 因为上拉下拉有加载圈，就不显示请求的加载了
+      showLoading: false,
+    );
+
+    if (respData.runtimeType == String) {
+      respData = json.decode(respData);
+    }
+
+    print("=getJikanSeasons==========$respData");
+
+    return JikanSeasonResp.fromJson(respData);
+  } catch (e) {
+    // API请求报错，显示报错信息
+    rethrow;
+  }
+}
+
+/// 获得当季播放信息
+/// 不传年份和季节就是当前季
+Future<JikanResp> getJikanSingleSeason({
+  int? year,
+  // Enum: "winter", "spring", "summer", "fall"
+  String? season,
+  // Enum: "tv" "movie" "ova" "special" "ona" "music"
+  String? filter,
+  // Enum: "true" "false"
+  bool sfw = false,
+  int page = 1,
+  int limit = 25,
+}) async {
+  try {
+    var url = "$jikanBase/seasons";
+    if (year != null && season != null) {
+      url = "$url/$year/$season";
+    } else {
+      url = "$url/now";
+    }
+
+    // 这样都是接口预设值
+    var map = {"sfw": sfw, "page": page, "limit": limit};
+
+    // 不传fillter则查询一周所有7天
+    if (filter != null) map.addAll({"filter": filter});
+
+    var respData = await HttpUtils.get(
+      path: url,
+      showLoading: false,
+      queryParameters: map,
+    );
+
+    if (respData.runtimeType == String) {
+      respData = json.decode(respData);
+    }
+
+    print("getJikanSingleSeason===========$respData");
+
+    return JikanResp.fromJson(respData);
   } catch (e) {
     // API请求报错，显示报错信息
     rethrow;

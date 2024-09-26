@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../apis/_default_system_role_list/inner_system_prompt.dart';
 import '../../../apis/chat_completion/common_cc_apis.dart';
-import '../../../apis/jikan/get_top_apis.dart';
+import '../../../apis/jikan/get_jikan_apis.dart';
 import '../../../common/components/bar_chart_widget.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
@@ -12,12 +12,12 @@ import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../models/chat_competion/com_cc_resp.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
 import '../../../models/jikan/jikan_statistic.dart';
-import '../../../models/jikan/jikan_top.dart';
+import '../../../models/jikan/jikan_data.dart';
 import '../../ai_assistant/_helper/handle_cc_response.dart';
-import 'index.dart';
+import '_components.dart';
 
 class MALItemDetail extends StatefulWidget {
-  final JKTopData item;
+  final JKData item;
   final CusLabel malType;
 
   const MALItemDetail({
@@ -35,7 +35,7 @@ class _MALItemDetailState extends State<MALItemDetail> {
   bool isStream = false;
   StreamWithCancel<ComCCResp> respStream = StreamWithCancel.empty();
 
-  late JKTopData jkdata;
+  late JKData jkdata;
 
   // 用于显示简介和背景说明的文本，可以大模型进行翻译
   String about = "";
@@ -273,14 +273,6 @@ class _MALItemDetailState extends State<MALItemDetail> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text("${widget.malType.cnLabel}详情"),
-        actions: const [
-          // IconButton(
-          //   onPressed: () {
-          //     setState(() {});
-          //   },
-          //   icon: const Icon(Icons.translate),
-          // ),
-        ],
       ),
       body: ListView(
         children: [
@@ -291,7 +283,7 @@ class _MALItemDetailState extends State<MALItemDetail> {
   }
 
   /// 构建详情页面主体内容
-  buildDetail(JKTopData item, MALType malType) {
+  buildDetail(JKData item, MALType malType) {
     return [
       TextButton(
         onPressed: () {
@@ -386,12 +378,12 @@ class _MALItemDetailState extends State<MALItemDetail> {
   }
 
   // 构建上分右侧评分和概述区域内容children
-  List<Widget> _buildSubRatingChildren(JKTopData item, MALType malType) {
+  List<Widget> _buildSubRatingChildren(JKData item, MALType malType) {
     return [
       // 漫画或动漫分类时
       if (malType == MALType.anime || malType == MALType.manga) ...[
         /// 漫画动漫的星级评分，人物角色最爱人数
-        buildScoreArea(item, rank: item.rank),
+        buildBgmScoreArea(item.score, total: item.scoredBy, rank: item.rank),
 
         // if (malType == MALType.anime) ...buildAnimeBrief(item),
         // if (malType == MALType.manga) ...buildMangaBrief(item),
@@ -423,7 +415,7 @@ ${statisticData?.onHold}人搁置/${statisticData?.dropped}人弃坑/${statistic
         // 注意，这里排名要-1,因为该组件中用的索引
         // 实际上角色和人物没有排名
         ...[
-        buildFavoritesArea(item),
+        buildFavoritesArea(item.favorites),
         if (malType == MALType.characters) ...[
           buildItemRow("日文", "${item.nameKanji}",
               maxLines: 1, labelFontSize: 12.sp, valueFontSize: 12.sp),
@@ -460,7 +452,7 @@ ${statisticData?.onHold}人搁置/${statisticData?.dropped}人弃坑/${statistic
   }
 
   /// 概要也只少数几个栏位，不同分类栏位不一样(字体要小些)
-  buildAnimeBrief(JKTopData item) {
+  buildAnimeBrief(JKData item) {
     return [
       buildItemRow(
         "人气",
@@ -503,7 +495,7 @@ ${statisticData?.onHold}人搁置/${statisticData?.dropped}人弃坑/${statistic
     ];
   }
 
-  buildMangaBrief(JKTopData item) {
+  buildMangaBrief(JKData item) {
     return [
       buildItemRow(
         "人气",
@@ -541,7 +533,7 @@ ${statisticData?.onHold}人搁置/${statisticData?.dropped}人弃坑/${statistic
   }
 
   /// 因为4种类型的栏位差距过大，所以各自单独处理，就算有重复的也无所谓了
-  buildAnmieNote(JKTopData item) {
+  buildAnmieNote(JKData item) {
     return [
       buildItemRow(
         "又名",
@@ -618,7 +610,7 @@ ${statisticData?.onHold}人搁置/${statisticData?.dropped}人弃坑/${statistic
     ];
   }
 
-  buildMangaNote(JKTopData item) {
+  buildMangaNote(JKData item) {
     return [
       buildItemRow(
         "又名",
@@ -662,7 +654,7 @@ ${statisticData?.onHold}人搁置/${statisticData?.dropped}人弃坑/${statistic
     ];
   }
 
-  buildCharactersNote(JKTopData item) {
+  buildCharactersNote(JKData item) {
     return [
       buildItemRow("姓名", "${item.name}"),
       buildItemRow("日文", "${item.nameKanji}"),
@@ -671,7 +663,7 @@ ${statisticData?.onHold}人搁置/${statisticData?.dropped}人弃坑/${statistic
     ];
   }
 
-  buildPeopleNote(JKTopData item, {bool? isSmall}) {
+  buildPeopleNote(JKData item, {bool? isSmall}) {
     return [
       buildItemRow(
         "姓名",

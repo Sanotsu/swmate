@@ -191,7 +191,7 @@ class _WaifuPicIndexState extends State<WaifuPicIndex> {
               child: buildDropdownButton2<String>(
                 value: selectedSource,
                 items: waifuSources,
-                hintLable: "选择来源",
+                hintLabel: "选择来源",
                 onChanged: (value) {
                   setState(() {
                     selectedSource = value;
@@ -208,7 +208,7 @@ class _WaifuPicIndexState extends State<WaifuPicIndex> {
               child: buildDropdownButton2<String>(
                 value: selectedType,
                 items: waifuTypeMap.keys.toList(),
-                hintLable: "选择类型",
+                hintLabel: "选择类型",
                 onChanged: (value) {
                   setState(() {
                     selectedType = value;
@@ -237,7 +237,7 @@ class _WaifuPicIndexState extends State<WaifuPicIndex> {
               child: buildDropdownButton2<int>(
                 value: selectedNum,
                 items: [1, 5, 10, 30],
-                hintLable: "选择数量",
+                hintLabel: "选择数量",
                 onChanged: (value) {
                   setState(() {
                     selectedNum = value ?? 1;

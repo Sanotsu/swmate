@@ -724,7 +724,7 @@ in the picture, and then provide a detailed introduction.""",
               child: buildDropdownButton2<String>(
                 value: selectedSource,
                 items: dataSourceList,
-                hintLable: "选择来源",
+                hintLabel: "选择来源",
                 onChanged: (value) {
                   setState(() {
                     // 选择了来源之后，要重置品种(不用重置类型，因为选中dogceo用不到类型，选中thatapi需要一个默认类型)
@@ -751,7 +751,7 @@ in the picture, and then provide a detailed introduction.""",
                 child: buildDropdownButton2<CusLabel?>(
                   value: selectedAnimalType,
                   items: animalTypes,
-                  hintLable: "选择类型",
+                  hintLabel: "选择类型",
                   onChanged: (value) {
                     setState(() {
                       selectedAnimalType = value;

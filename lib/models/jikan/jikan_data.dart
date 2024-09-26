@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
 
-part 'jikan_top.g.dart';
+part 'jikan_data.g.dart';
 
 ///
 /// 非官方的 MyAnimeList(MAL) API 动漫排行榜接口返回的数据结构
@@ -15,29 +15,29 @@ part 'jikan_top.g.dart';
 /// 统一带上JK(Jikan)前缀
 
 @JsonSerializable(explicitToJson: true)
-class JikanTop {
+class JikanResp {
   // 查询full的时候就没有分页信息
   @JsonKey(name: 'pagination')
   JKPagination? pagination;
 
   @JsonKey(name: 'data')
-  List<JKTopData> data;
+  List<JKData> data;
 
-  JikanTop(
+  JikanResp(
     this.data, {
     this.pagination,
   });
 
   // 从字符串转
-  factory JikanTop.fromRawJson(String str) =>
-      JikanTop.fromJson(json.decode(str));
+  factory JikanResp.fromRawJson(String str) =>
+      JikanResp.fromJson(json.decode(str));
   // 转为字符串
   String toRawJson() => json.encode(toJson());
 
-  factory JikanTop.fromJson(Map<String, dynamic> srcJson) =>
-      _$JikanTopFromJson(srcJson);
+  factory JikanResp.fromJson(Map<String, dynamic> srcJson) =>
+      _$JikanRespFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$JikanTopToJson(this);
+  Map<String, dynamic> toJson() => _$JikanRespToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -109,7 +109,7 @@ class JKPaginationItem {
 /// 条件查询动漫 https://api.jikan.moe/v4/anime?q=xxx&type=xxx&……（结构和top一样）
 /// 条件查询角色 https://api.jikan.moe/v4/characters?q=xxx&type=xxx&……（结构和top一样）
 @JsonSerializable(explicitToJson: true)
-class JKTopData {
+class JKData {
   @JsonKey(name: 'mal_id')
   int malId;
 
@@ -292,7 +292,7 @@ class JKTopData {
   @JsonKey(name: 'birthday')
   String? birthday;
 
-  JKTopData({
+  JKData({
     required this.malId,
     required this.url,
     required this.images,
@@ -351,15 +351,14 @@ class JKTopData {
   });
 
   // 从字符串转
-  factory JKTopData.fromRawJson(String str) =>
-      JKTopData.fromJson(json.decode(str));
+  factory JKData.fromRawJson(String str) => JKData.fromJson(json.decode(str));
   // 转为字符串
   String toRawJson() => json.encode(toJson());
 
-  factory JKTopData.fromJson(Map<String, dynamic> srcJson) =>
-      _$JKTopDataFromJson(srcJson);
+  factory JKData.fromJson(Map<String, dynamic> srcJson) =>
+      _$JKDataFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$JKTopDataToJson(this);
+  Map<String, dynamic> toJson() => _$JKDataToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -876,4 +875,84 @@ class JKInnerItem {
       _$JKInnerItemFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$JKInnerItemToJson(this);
+}
+
+///
+/// 查询season列表的响应
+/// https://api.jikan.moe/v4/seasons
+///
+@JsonSerializable(explicitToJson: true)
+class JikanSeasonResp {
+  @JsonKey(name: 'pagination')
+  JKSeasonPagination pagination;
+
+  @JsonKey(name: 'data')
+  List<JKSeason> data;
+
+  JikanSeasonResp(
+    this.pagination,
+    this.data,
+  );
+
+  // 从字符串转
+  factory JikanSeasonResp.fromRawJson(String str) =>
+      JikanSeasonResp.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory JikanSeasonResp.fromJson(Map<String, dynamic> srcJson) =>
+      _$JikanSeasonRespFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$JikanSeasonRespToJson(this);
+}
+
+/// 这个和 JKPagination 相比少很多栏位，斟酌之后决定不合并了
+@JsonSerializable(explicitToJson: true)
+class JKSeasonPagination {
+  @JsonKey(name: 'last_visible_page')
+  int? lastVisiblePage;
+
+  @JsonKey(name: 'has_next_page')
+  bool? hasNextPage;
+
+  JKSeasonPagination(
+    this.lastVisiblePage,
+    this.hasNextPage,
+  );
+
+  // 从字符串转
+  factory JKSeasonPagination.fromRawJson(String str) =>
+      JKSeasonPagination.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory JKSeasonPagination.fromJson(Map<String, dynamic> srcJson) =>
+      _$JKSeasonPaginationFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$JKSeasonPaginationToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true)
+class JKSeason {
+  @JsonKey(name: 'year')
+  int year;
+
+  @JsonKey(name: 'seasons')
+  List<String> seasons;
+
+  JKSeason(
+    this.year,
+    this.seasons,
+  );
+
+  // 从字符串转
+  factory JKSeason.fromRawJson(String str) =>
+      JKSeason.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory JKSeason.fromJson(Map<String, dynamic> srcJson) =>
+      _$JKSeasonFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$JKSeasonToJson(this);
 }

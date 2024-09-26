@@ -1,21 +1,21 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'jikan_top.dart';
+part of 'jikan_data.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-JikanTop _$JikanTopFromJson(Map<String, dynamic> json) => JikanTop(
+JikanResp _$JikanRespFromJson(Map<String, dynamic> json) => JikanResp(
       (json['data'] as List<dynamic>)
-          .map((e) => JKTopData.fromJson(e as Map<String, dynamic>))
+          .map((e) => JKData.fromJson(e as Map<String, dynamic>))
           .toList(),
       pagination: json['pagination'] == null
           ? null
           : JKPagination.fromJson(json['pagination'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$JikanTopToJson(JikanTop instance) => <String, dynamic>{
+Map<String, dynamic> _$JikanRespToJson(JikanResp instance) => <String, dynamic>{
       'pagination': instance.pagination?.toJson(),
       'data': instance.data.map((e) => e.toJson()).toList(),
     };
@@ -49,7 +49,7 @@ Map<String, dynamic> _$JKPaginationItemToJson(JKPaginationItem instance) =>
       'per_page': instance.perPage,
     };
 
-JKTopData _$JKTopDataFromJson(Map<String, dynamic> json) => JKTopData(
+JKData _$JKDataFromJson(Map<String, dynamic> json) => JKData(
       malId: (json['mal_id'] as num).toInt(),
       url: json['url'] as String,
       images: JKImage.fromJson(json['images'] as Map<String, dynamic>),
@@ -156,7 +156,7 @@ JKTopData _$JKTopDataFromJson(Map<String, dynamic> json) => JKTopData(
           ?.map((e) => JKOuterVoice.fromJson(e as Map<String, dynamic>))
           .toList();
 
-Map<String, dynamic> _$JKTopDataToJson(JKTopData instance) => <String, dynamic>{
+Map<String, dynamic> _$JKDataToJson(JKData instance) => <String, dynamic>{
       'mal_id': instance.malId,
       'url': instance.url,
       'images': instance.images.toJson(),
@@ -469,4 +469,40 @@ Map<String, dynamic> _$JKInnerItemToJson(JKInnerItem instance) =>
       'images': instance.images?.toJson(),
       'title': instance.title,
       'name': instance.name,
+    };
+
+JikanSeasonResp _$JikanSeasonRespFromJson(Map<String, dynamic> json) =>
+    JikanSeasonResp(
+      JKSeasonPagination.fromJson(json['pagination'] as Map<String, dynamic>),
+      (json['data'] as List<dynamic>)
+          .map((e) => JKSeason.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$JikanSeasonRespToJson(JikanSeasonResp instance) =>
+    <String, dynamic>{
+      'pagination': instance.pagination.toJson(),
+      'data': instance.data.map((e) => e.toJson()).toList(),
+    };
+
+JKSeasonPagination _$JKSeasonPaginationFromJson(Map<String, dynamic> json) =>
+    JKSeasonPagination(
+      (json['last_visible_page'] as num?)?.toInt(),
+      json['has_next_page'] as bool?,
+    );
+
+Map<String, dynamic> _$JKSeasonPaginationToJson(JKSeasonPagination instance) =>
+    <String, dynamic>{
+      'last_visible_page': instance.lastVisiblePage,
+      'has_next_page': instance.hasNextPage,
+    };
+
+JKSeason _$JKSeasonFromJson(Map<String, dynamic> json) => JKSeason(
+      (json['year'] as num).toInt(),
+      (json['seasons'] as List<dynamic>).map((e) => e as String).toList(),
+    );
+
+Map<String, dynamic> _$JKSeasonToJson(JKSeason instance) => <String, dynamic>{
+      'year': instance.year,
+      'seasons': instance.seasons,
     };

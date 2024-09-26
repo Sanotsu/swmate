@@ -1018,13 +1018,13 @@ Widget buildDropdownButton2<T>({
   double? labelSize,
   // 标签对齐方式(默认居中，像模型列表靠左，方便对比)
   AlignmentGeometry? alignment,
-  String? hintLable,
+  String? hintLabel,
 }) {
   return DropdownButtonHideUnderline(
     child: DropdownButton2<T>(
       isExpanded: true,
       // 提示词
-      hint: Text(hintLable ?? '请选择', style: TextStyle(fontSize: 14.sp)),
+      hint: Text(hintLabel ?? '请选择', style: TextStyle(fontSize: 14.sp)),
       // 下拉选择
       items: items
           .map((e) => DropdownMenuItem<T>(
