@@ -16,6 +16,7 @@ enum ApiPlatform {
   lingyiwanwu,
   xfyun, // 讯飞云，官网就是这样写的
   zhipu, // 智谱AI
+  infini, // 无问芯穹的genStudio
 }
 
 // 模型对应的中文名
@@ -27,6 +28,7 @@ final Map<ApiPlatform, String> CP_NAME_MAP = {
   ApiPlatform.lingyiwanwu: '零一万物',
   ApiPlatform.xfyun: '讯飞',
   ApiPlatform.zhipu: '智谱',
+  ApiPlatform.infini: '无问芯穹',
 };
 
 // 大模型的分类，在不同页面可以用作模型的筛选
@@ -151,9 +153,9 @@ enum CusLLM {
   lingyiwanwu_YiLargeTurbo,
 
   /// 硅动科技免费的对话模型
+  siliconCloud_Qwen2p5_7B_Instruct,
   siliconCloud_Qwen2_7B_Instruct,
   siliconCloud_Qwen2_1p5B_Instruct,
-  siliconCloud_Qwen1p5_7B_Chat,
   siliconCloud_GLM4_9B_Chat,
   siliconCloud_ChatGLM3_6B,
   siliconCloud_Yi1p5_9B_Chat_16K,
@@ -169,33 +171,29 @@ enum CusLLM {
   siliconCloud_StableDiffusion3_TTI,
   siliconCloud_StableDiffusionXL_TTI,
   siliconCloud_StableDiffusion2p1_TTI,
-  siliconCloud_StableDiffusion_Turbo_TTI,
-  siliconCloud_StableDiffusionXL_Turbo_TTI,
-  siliconCloud_StableDiffusionXL_Lighting_TTI,
-  // 图生图模型
-  siliconCloud_PhotoMaker_ITI,
-  siliconCloud_InstantID_ITI,
-  siliconCloud_StableDiffusionXL_ITI,
-  siliconCloud_StableDiffusion2p1_ITI,
-  siliconCloud_StableDiffusionXL_Lighting_ITI,
+
+// 限时免费也当作收费
+  siliconCloud_Qwen2p5_Coder_7B_Instruct,
+  siliconCloud_VendorA_Qwen2_72B_Instruct,
 
   /// 硅动科技收费的模型
-  siliconCloud_Qwen2_72B_Instruct,
+  siliconCloud_Qwen2p5_72B_Instruct,
+  siliconCloud_Qwen2p5_32B_Instruct,
+  siliconCloud_Qwen2p5_14B_Instruct,
+  siliconCloud_Qwen2p5_Math_72B_Instruct,
   siliconCloud_Qwen2_Math_72B_Instruct,
   siliconCloud_Qwen2_57B_A14B_Instruct,
-  siliconCloud_Qwen1p5_110B_Chat,
-  siliconCloud_Qwen1p5_32B_Chat,
-  siliconCloud_Qwen1p5_14B_Chat,
   siliconCloud_Yi1p5_34B_Chat_16K,
+  siliconCloud_DeepSeek_V2p5,
   siliconCloud_DeepSeek_Coder_V2_Instruct,
   siliconCloud_DeepSeek_V2_Chat,
-  siliconCloud_DeepSeek_LLM_67B_Chat,
   siliconCloud_internlm2p5_20B_Chat,
   siliconCloud_Llama3p1_405B_Instruct,
   siliconCloud_Llama3p1_70B_Instruct,
   siliconCloud_Llama3_70B_Instruct,
-  siliconCloud_Mixtral_8x7B_Instruct_v0p1,
   siliconCloud_gemma2_27B_Instruct,
+  siliconCloud_Pro_Flux1_Schnell_TTI,
+  siliconCloud_Pro_Flux1_Dev_TTI,
 
   /// 智谱AI相关收费模型
   // 对话
@@ -204,10 +202,48 @@ enum CusLLM {
   zhipu_GLM4_AirX,
   zhipu_GLM4_Air,
   zhipu_GLM4_Long,
+  zhipu_GLM4_FlashX,
   // 多模态
   zhipu_GLM4V_Plus,
   zhipu_GLM4V,
   zhipu_CogView3_Plus_TTI,
   zhipu_CogView3_TTI,
   zhipu_CogVideoX_TTV,
+
+  /// 无问芯穹的非企业用户可以限时限量的对话模型
+  /// 2024-09-07 限时免费，很多企业用户才有资格申请的模型未列示
+  // 单个 API Key 限制
+  // 限制类型	                限制数量	      频率刷新时间窗口	适用 API 服务
+  // 每分钟请求次数 (RPM)	      12	          1 分钟	        所有预置模型
+  // 每天请求次数 (RPD)	        3000	        24 小时	        所有预置模型
+  // 每分钟 Token 数量 (TPM)	  12000	        1 分钟	        所有预置模型
+  // 2024-09-07 实测，下列不需要申请的模型不可用了
+  // infini_ChatGLM2_6B, // 无权限
+  // infini_ChatGLM2_6B_32K, // 无权限
+  // infini_ChatGLM3_6B_Base, // 已关闭
+  // infini_InfiniMegrez_7B, // 无权限
+  // infini_Qwen_7B_Chat, // 无权限
+  // infini_Qwen_14B_Chat,  // 服务器已关闭
+  // infini_Qwen1p5_7B_Chat, // 无法连接到服务器
+  // infini_Qwen1p5_72B, // 模型广场没此模型
+  // infini_Qwen2_7B, // 服务器已关闭
+  infini_Yi1p5_34B_Chat,
+  infini_Baichuan2_7B_Chat,
+  infini_Baichuan2_13B_Chat,
+  infini_Baichuan2_13B_Base,
+  infini_GLM4_9B_Chat,
+  infini_ChatGLM3,
+  infini_ChatGLM3_6B,
+  infini_ChatGLM3_6B_32K,
+  infini_MtInfini_3B,
+  infini_Qwen2p5_7B_Instruct,
+  infini_Qwen2p5_14B_Instruct,
+  infini_Qwen2p5_32B_Instruct,
+  infini_Qwen2p5_72B_Instruct,
+  infini_Qwen_72B_Chat,
+  infini_Qwen1p5_14B_Chat,
+  infini_Qwen1p5_32B_Chat,
+  infini_Qwen1p5_72B_Chat,
+  infini_Qwen2_7B_Instruct,
+  infini_Qwen2_72B_Instruct,
 }

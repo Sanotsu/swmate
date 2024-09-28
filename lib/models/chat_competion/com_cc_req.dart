@@ -55,6 +55,19 @@ class ComCCReq {
   @JsonKey(name: 'stream')
   bool? stream;
 
+  // 2024-09-13 阿里云流式输出时，需要启用此栏位才能显示token消耗
+  @JsonKey(name: 'stream_options')
+  StreamOption? streamOptions;
+
+  // aliyun 生成时使用的随机数种子，用于控制模型生成内容的随机性。seed支持无符号64位整数。
+  @JsonKey(name: 'seed')
+  int? seed;
+
+  // 用户控制模型生成时整个序列中的重复度。
+  // 提高presence_penalty时可以降低模型生成的重复度，取值范围[-2.0, 2.0]。
+  @JsonKey(name: 'presence_penalty')
+  double? presencePenalty;
+
   /// siliconflow 有其他几个参数
   // 生成时返回的数量(可能是文生图之类的返回的数量？)
   int? n;
@@ -200,6 +213,19 @@ class ComCCReq {
     this.userId,
   });
 
+  ComCCReq.aliyun({
+    this.model,
+    this.messages,
+    this.topP,
+    this.maxTokens,
+    this.temperature,
+    this.presencePenalty,
+    this.seed,
+    this.stream = false,
+    this.stop,
+    this.streamOptions,
+  });
+
   // 从字符串转
   factory ComCCReq.fromRawJson(String str) =>
       ComCCReq.fromJson(json.decode(str));
@@ -241,6 +267,10 @@ class ComCCReq {
 
     if (requestId != null) json['request_id'] = requestId;
     if (doSample != null) json['do_sample'] = doSample;
+
+    if (presencePenalty != null) json['presence_penalty'] = presencePenalty;
+    if (seed != null) json['seed'] = seed;
+    if (streamOptions != null) json['stream_options'] = streamOptions;
 
     return json;
   }
@@ -403,4 +433,28 @@ class CCWebSearch {
       _$CCWebSearchFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$CCWebSearchToJson(this);
+}
+
+///
+///
+///  "stream_options":{"include_usage":true}
+@JsonSerializable(explicitToJson: true)
+class StreamOption {
+  @JsonKey(name: 'include_usage')
+  bool? includeUsage;
+
+  StreamOption({
+    this.includeUsage = true,
+  });
+
+  // 从字符串转
+  factory StreamOption.fromRawJson(String str) =>
+      StreamOption.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory StreamOption.fromJson(Map<String, dynamic> srcJson) =>
+      _$StreamOptionFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$StreamOptionToJson(this);
 }

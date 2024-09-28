@@ -20,6 +20,12 @@ ComCCReq _$ComCCReqFromJson(Map<String, dynamic> json) => ComCCReq(
           ?.map((e) => CCTool.fromJson(e as Map<String, dynamic>))
           .toList()
       ..toolChoice = json['tool_choice'] as String?
+      ..streamOptions = json['stream_options'] == null
+          ? null
+          : StreamOption.fromJson(
+              json['stream_options'] as Map<String, dynamic>)
+      ..seed = (json['seed'] as num?)?.toInt()
+      ..presencePenalty = (json['presence_penalty'] as num?)?.toDouble()
       ..n = (json['n'] as num?)?.toInt()
       ..topK = (json['top_k'] as num?)?.toDouble()
       ..frequencyPenalty = (json['frequency_penalty'] as num?)?.toDouble()
@@ -43,6 +49,9 @@ Map<String, dynamic> _$ComCCReqToJson(ComCCReq instance) => <String, dynamic>{
       'top_p': instance.topP,
       'temperature': instance.temperature,
       'stream': instance.stream,
+      'stream_options': instance.streamOptions?.toJson(),
+      'seed': instance.seed,
+      'presence_penalty': instance.presencePenalty,
       'n': instance.n,
       'top_k': instance.topK,
       'frequency_penalty': instance.frequencyPenalty,
@@ -112,4 +121,13 @@ Map<String, dynamic> _$CCWebSearchToJson(CCWebSearch instance) =>
       'enable': instance.enable,
       'search_query': instance.searchQuery,
       'search_result': instance.searchResult,
+    };
+
+StreamOption _$StreamOptionFromJson(Map<String, dynamic> json) => StreamOption(
+      includeUsage: json['include_usage'] as bool? ?? true,
+    );
+
+Map<String, dynamic> _$StreamOptionToJson(StreamOption instance) =>
+    <String, dynamic>{
+      'include_usage': instance.includeUsage,
     };

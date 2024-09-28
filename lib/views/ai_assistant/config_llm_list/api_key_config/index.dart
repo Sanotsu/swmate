@@ -75,6 +75,7 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           SKN.siliconFlowAK.name: jsonData[SKN.siliconFlowAK.name] ?? "",
           SKN.lingyiwanwuAK.name: jsonData[SKN.lingyiwanwuAK.name] ?? "",
           SKN.zhipuAK.name: jsonData[SKN.zhipuAK.name] ?? "",
+          SKN.infiniAK.name: jsonData[SKN.infiniAK.name] ?? "",
         });
 
         setState(() {
@@ -128,6 +129,7 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
         SKN.siliconFlowAK.name: "",
         SKN.lingyiwanwuAK.name: "",
         SKN.zhipuAK.name: "",
+        SKN.infiniAK.name: "",
       });
     });
   }
@@ -161,6 +163,7 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           SKN.siliconFlowAK.name: temp?[SKN.siliconFlowAK.name]?.value ?? "",
           SKN.lingyiwanwuAK.name: temp?[SKN.lingyiwanwuAK.name]?.value ?? "",
           SKN.zhipuAK.name: temp?[SKN.zhipuAK.name]?.value ?? "",
+          SKN.infiniAK.name: temp?[SKN.infiniAK.name]?.value ?? "",
         });
 
         setState(() {
@@ -368,6 +371,12 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           Card(
             child: Column(
               children: [buildField(SKN.zhipuAK.name, "智谱AI AK")],
+            ),
+          ),
+          SizedBox(height: 10.sp),
+          Card(
+            child: Column(
+              children: [buildField(SKN.infiniAK.name, "无问芯穹 AK")],
             ),
           ),
         ],

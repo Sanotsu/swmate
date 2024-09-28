@@ -38,6 +38,8 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
   /// 区分3者尽量简单一点:chat、doc、image
   CC_SWC_TYPE useType = CC_SWC_TYPE.chat,
   File? selectedImage,
+  // 2024-09-13 也考虑可能直接传网络图片地址
+  String? selectedImageUrl,
   // 图像理解但没图像的提示
   Function(String)? onNotImageHint,
   // 有图像但转base64报错
@@ -55,7 +57,9 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
       .toList();
 
   // 如果是图像理解、但没有传入图片，模拟模型返回异常信息
-  if (selectedImage == null && useType == CC_SWC_TYPE.image) {
+  if (selectedImage == null &&
+      selectedImageUrl == null &&
+      useType == CC_SWC_TYPE.image) {
     var hintInfo = "图像理解模式下，必须选择图片";
     if (onNotImageHint != null) {
       onNotImageHint(hintInfo);
@@ -91,8 +95,15 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
   try {
     // 如果图片解析，要对传入的对话参数做一些调整
     if (useType == CC_SWC_TYPE.image) {
-      var tempBase64Str = base64Encode((await selectedImage!.readAsBytes()));
-      String? imageBase64String = "data:image/jpeg;base64,$tempBase64Str";
+      String? imageString = "";
+      // 如果直接是图片文件，传base64
+      if (selectedImage != null) {
+        var tempBase64Str = base64Encode((await selectedImage.readAsBytes()));
+        imageString = "data:image/jpeg;base64,$tempBase64Str";
+      } else if (selectedImageUrl != null) {
+        // 如果是图片地址，直接传地址
+        imageString = selectedImageUrl;
+      }
 
       messages.firstWhere((e) => e.role == CusRole.user.name);
 
@@ -105,7 +116,7 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
           e.content = [
             {
               "type": "image_url",
-              "image_url": {"url": imageBase64String}
+              "image_url": {"url": imageString}
             },
             {"type": "text", "text": e.content},
           ];
@@ -179,6 +190,12 @@ Future<StreamWithCancel<ComCCResp>> getCCResponseSWC({
         model: selectedModel,
         stream: isStream,
       );
+    } else if (selectedPlatform == ApiPlatform.infini) {
+      tempStream = await infiniCCRespWithCancel(
+        msgs,
+        model: selectedModel,
+        stream: isStream,
+      );
     } else {
       tempStream = await siliconFlowCCRespWithCancel(
         msgs,
@@ -239,7 +256,7 @@ void commonOnDataHandler({
     setIsResponsing();
 
     // 更新响应文本
-    if (crb.errorCode != null || crb.tencentErrorMsg != null) {
+    if (crb.errorMsg != null || crb.tencentErrorMsg != null) {
       csMsg.content += """后台响应报错:
           \n\n错误代码: ${crb.errorCode ?? crb.tencentErrorMsg?.code}
           \n\n错误原因: ${crb.errorMsg ?? crb.tencentErrorMsg?.message}
@@ -256,8 +273,8 @@ void commonOnDataHandler({
 
     // 零一万物RAG 更新引用情况
     if (crb.choices != null &&
-        crb.choices?.first != null &&
-        crb.choices?.first.delta != null &&
+        crb.choices!.isNotEmpty &&
+        crb.choices!.first.delta != null &&
         crb.choices!.first.delta?.quote != null) {
       csMsg.quotes = crb.choices!.first.delta!.quote!;
     }

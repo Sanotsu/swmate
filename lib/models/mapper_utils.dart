@@ -51,3 +51,19 @@ List<String> generatePossibleKeys(String key) {
     key,
   ];
 }
+
+// 报错信息可是多种多样
+dynamic readErrorMsgValue(Map json, String key) {
+  // 尝试从多个可能的键中读取值
+  // 例如时error_msg,会匹配error_msg、ErrorMsg、errorMsg
+  var possibleKeys = generatePossibleKeys(key);
+
+  for (var possibleKey in possibleKeys) {
+    if (json.containsKey(possibleKey)) {
+      return json[possibleKey];
+    }
+  }
+
+  // 单独报错消息，还可以其他形状 ，比如讯飞的message、无问芯穹的msg
+  return json["message"] ?? json['Message'] ?? json["msg"] ?? json["Msg"];
+}

@@ -1,4 +1,5 @@
 - [SWMate](#swmate)
+- [版本更新](#%E7%89%88%E6%9C%AC%E6%9B%B4%E6%96%B0)
 - [功能介绍](#%E5%8A%9F%E8%83%BD%E4%BB%8B%E7%BB%8D)
   - [AI 智能助手](#ai-%E6%99%BA%E8%83%BD%E5%8A%A9%E6%89%8B)
     - [智能对话](#%E6%99%BA%E8%83%BD%E5%AF%B9%E8%AF%9D)
@@ -26,6 +27,10 @@ Smart Work&Life Mate
 - 包含极简的记账功能、幸运转盘随机菜品功能的“生活日常工具”。
 
 目前只调试了 Android 部分。
+
+# 版本更新
+
+[CHANGELOG](CHANGELOG.md)
 
 # 功能介绍
 

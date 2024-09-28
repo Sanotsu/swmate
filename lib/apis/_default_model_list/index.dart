@@ -4,6 +4,10 @@ import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
 import '_self_model_list/index.dart' as self;
 
+///
+/// 2024-09-28 更新
+///
+
 /// 全部免费的模型(默认app导入的)
 var FREE_all_MODELS = FREE_baidu_MODELS +
     FREE_SiliconFlow_MODELS +
@@ -143,7 +147,19 @@ final List<CusLLMSpec> FREE_zhipuAI_MODELS = [
 ];
 
 // 这个平台模型多，这里的顺序不一定和页面上一一对应，有更新时记得逐个看
+// 最近更新 2024-09-28
 final List<CusLLMSpec> FREE_SiliconFlow_MODELS = [
+  CusLLMSpec(
+    ApiPlatform.siliconCloud,
+    CusLLM.siliconCloud_Qwen2p5_7B_Instruct,
+    "Qwen/Qwen2.5-7B-Instruct",
+    'Qwen2.5-开源版7B-Instruct',
+    32 * 1000,
+    true,
+    0,
+    0,
+    feature: '通义千问2.5开源版7B_指令模型',
+  ),
   CusLLMSpec(
     ApiPlatform.siliconCloud,
     CusLLM.siliconCloud_Qwen2_7B_Instruct,
@@ -166,17 +182,7 @@ final List<CusLLMSpec> FREE_SiliconFlow_MODELS = [
     0,
     feature: '通义千问2开源版1.5B_指令模型',
   ),
-  CusLLMSpec(
-    ApiPlatform.siliconCloud,
-    CusLLM.siliconCloud_Qwen1p5_7B_Chat,
-    "Qwen/Qwen1.5-7B-Chat",
-    'Qwen1.5-开源版7B-Chat',
-    32 * 1000,
-    true,
-    0,
-    0,
-    feature: '通义千问1.5开源版7B_对话模型',
-  ),
+
   CusLLMSpec(
     ApiPlatform.siliconCloud,
     CusLLM.siliconCloud_GLM4_9B_Chat,

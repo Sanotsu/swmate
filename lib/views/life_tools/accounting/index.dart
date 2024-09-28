@@ -429,8 +429,11 @@ class _BillItemIndexState extends State<BillItemIndex> {
         }
 
         // 使用工厂方法创建 BillItem 实例
-        List<BillItem> temp =
-            jsonList.map((e) => BillItem.fromJson(e)).toList();
+        List<BillItem> temp = jsonList.map((e) {
+          // 忽略用户的编号，通用使用uuid(fromJson中如果值为null会自动创建)
+          e["bill_item_id"] = null;
+          return BillItem.fromJson(e);
+        }).toList();
 
         // 导入前，先删除所有旧的，因为json文件中没有id不好修改
         await _dbHelper.clearBillItems();
