@@ -75,15 +75,9 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
   /// 下面主要是文生图的高级选项相关参数
   // 不同的模型，这两个值的取值范围不同，lighting和turbo会小很多
   // 但这个取值范围就不设为API参数支持了，而设置成体验中心的那个
-  List lightingCus = [
-    CusLLM.siliconCloud_StableDiffusionXL_Lighting_ITI,
-    CusLLM.siliconCloud_StableDiffusionXL_Lighting_TTI,
-  ];
+  List lightingCus = [];
 
-  List turborCus = [
-    CusLLM.siliconCloud_StableDiffusion_Turbo_TTI,
-    CusLLM.siliconCloud_StableDiffusionXL_Turbo_TTI,
-  ];
+  List turborCus = [];
 
   // 初始值也不太一样
   double inferenceStepsValue = 1;

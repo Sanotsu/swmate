@@ -98,9 +98,9 @@ const _$CusLLMEnumMap = {
   CusLLM.lingyiwanwu_YiSpark: 'lingyiwanwu_YiSpark',
   CusLLM.lingyiwanwu_YiLargeRag: 'lingyiwanwu_YiLargeRag',
   CusLLM.lingyiwanwu_YiLargeTurbo: 'lingyiwanwu_YiLargeTurbo',
+  CusLLM.siliconCloud_Qwen2p5_7B_Instruct: 'siliconCloud_Qwen2p5_7B_Instruct',
   CusLLM.siliconCloud_Qwen2_7B_Instruct: 'siliconCloud_Qwen2_7B_Instruct',
   CusLLM.siliconCloud_Qwen2_1p5B_Instruct: 'siliconCloud_Qwen2_1p5B_Instruct',
-  CusLLM.siliconCloud_Qwen1p5_7B_Chat: 'siliconCloud_Qwen1p5_7B_Chat',
   CusLLM.siliconCloud_GLM4_9B_Chat: 'siliconCloud_GLM4_9B_Chat',
   CusLLM.siliconCloud_ChatGLM3_6B: 'siliconCloud_ChatGLM3_6B',
   CusLLM.siliconCloud_Yi1p5_9B_Chat_16K: 'siliconCloud_Yi1p5_9B_Chat_16K',
@@ -117,48 +117,40 @@ const _$CusLLMEnumMap = {
       'siliconCloud_StableDiffusionXL_TTI',
   CusLLM.siliconCloud_StableDiffusion2p1_TTI:
       'siliconCloud_StableDiffusion2p1_TTI',
-  CusLLM.siliconCloud_StableDiffusion_Turbo_TTI:
-      'siliconCloud_StableDiffusion_Turbo_TTI',
-  CusLLM.siliconCloud_StableDiffusionXL_Turbo_TTI:
-      'siliconCloud_StableDiffusionXL_Turbo_TTI',
-  CusLLM.siliconCloud_StableDiffusionXL_Lighting_TTI:
-      'siliconCloud_StableDiffusionXL_Lighting_TTI',
-  CusLLM.siliconCloud_PhotoMaker_ITI: 'siliconCloud_PhotoMaker_ITI',
-  CusLLM.siliconCloud_InstantID_ITI: 'siliconCloud_InstantID_ITI',
-  CusLLM.siliconCloud_StableDiffusionXL_ITI:
-      'siliconCloud_StableDiffusionXL_ITI',
-  CusLLM.siliconCloud_StableDiffusion2p1_ITI:
-      'siliconCloud_StableDiffusion2p1_ITI',
-  CusLLM.siliconCloud_StableDiffusionXL_Lighting_ITI:
-      'siliconCloud_StableDiffusionXL_Lighting_ITI',
-  CusLLM.siliconCloud_Qwen2_72B_Instruct: 'siliconCloud_Qwen2_72B_Instruct',
+  CusLLM.siliconCloud_Qwen2p5_Coder_7B_Instruct:
+      'siliconCloud_Qwen2p5_Coder_7B_Instruct',
+  CusLLM.siliconCloud_VendorA_Qwen2_72B_Instruct:
+      'siliconCloud_VendorA_Qwen2_72B_Instruct',
+  CusLLM.siliconCloud_Qwen2p5_72B_Instruct: 'siliconCloud_Qwen2p5_72B_Instruct',
+  CusLLM.siliconCloud_Qwen2p5_32B_Instruct: 'siliconCloud_Qwen2p5_32B_Instruct',
+  CusLLM.siliconCloud_Qwen2p5_14B_Instruct: 'siliconCloud_Qwen2p5_14B_Instruct',
+  CusLLM.siliconCloud_Qwen2p5_Math_72B_Instruct:
+      'siliconCloud_Qwen2p5_Math_72B_Instruct',
   CusLLM.siliconCloud_Qwen2_Math_72B_Instruct:
       'siliconCloud_Qwen2_Math_72B_Instruct',
   CusLLM.siliconCloud_Qwen2_57B_A14B_Instruct:
       'siliconCloud_Qwen2_57B_A14B_Instruct',
-  CusLLM.siliconCloud_Qwen1p5_110B_Chat: 'siliconCloud_Qwen1p5_110B_Chat',
-  CusLLM.siliconCloud_Qwen1p5_32B_Chat: 'siliconCloud_Qwen1p5_32B_Chat',
-  CusLLM.siliconCloud_Qwen1p5_14B_Chat: 'siliconCloud_Qwen1p5_14B_Chat',
   CusLLM.siliconCloud_Yi1p5_34B_Chat_16K: 'siliconCloud_Yi1p5_34B_Chat_16K',
+  CusLLM.siliconCloud_DeepSeek_V2p5: 'siliconCloud_DeepSeek_V2p5',
   CusLLM.siliconCloud_DeepSeek_Coder_V2_Instruct:
       'siliconCloud_DeepSeek_Coder_V2_Instruct',
   CusLLM.siliconCloud_DeepSeek_V2_Chat: 'siliconCloud_DeepSeek_V2_Chat',
-  CusLLM.siliconCloud_DeepSeek_LLM_67B_Chat:
-      'siliconCloud_DeepSeek_LLM_67B_Chat',
   CusLLM.siliconCloud_internlm2p5_20B_Chat: 'siliconCloud_internlm2p5_20B_Chat',
   CusLLM.siliconCloud_Llama3p1_405B_Instruct:
       'siliconCloud_Llama3p1_405B_Instruct',
   CusLLM.siliconCloud_Llama3p1_70B_Instruct:
       'siliconCloud_Llama3p1_70B_Instruct',
   CusLLM.siliconCloud_Llama3_70B_Instruct: 'siliconCloud_Llama3_70B_Instruct',
-  CusLLM.siliconCloud_Mixtral_8x7B_Instruct_v0p1:
-      'siliconCloud_Mixtral_8x7B_Instruct_v0p1',
   CusLLM.siliconCloud_gemma2_27B_Instruct: 'siliconCloud_gemma2_27B_Instruct',
+  CusLLM.siliconCloud_Pro_Flux1_Schnell_TTI:
+      'siliconCloud_Pro_Flux1_Schnell_TTI',
+  CusLLM.siliconCloud_Pro_Flux1_Dev_TTI: 'siliconCloud_Pro_Flux1_Dev_TTI',
   CusLLM.zhipu_GLM4_Plus: 'zhipu_GLM4_Plus',
   CusLLM.zhipu_GLM4_0520: 'zhipu_GLM4_0520',
   CusLLM.zhipu_GLM4_AirX: 'zhipu_GLM4_AirX',
   CusLLM.zhipu_GLM4_Air: 'zhipu_GLM4_Air',
   CusLLM.zhipu_GLM4_Long: 'zhipu_GLM4_Long',
+  CusLLM.zhipu_GLM4_FlashX: 'zhipu_GLM4_FlashX',
   CusLLM.zhipu_GLM4V_Plus: 'zhipu_GLM4V_Plus',
   CusLLM.zhipu_GLM4V: 'zhipu_GLM4V',
   CusLLM.zhipu_CogView3_Plus_TTI: 'zhipu_CogView3_Plus_TTI',

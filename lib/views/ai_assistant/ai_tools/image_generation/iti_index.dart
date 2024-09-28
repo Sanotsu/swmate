@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../../apis/image_to_image/silicon_flow_iti_apis.dart';
 import '../../../../common/components/tool_widget.dart';
@@ -17,8 +15,7 @@ import '../../../../services/cus_get_storage.dart';
 import '../../_componets/loading_overlay.dart';
 import '../../_componets/prompt_input.dart';
 import '../../_helper/constants.dart';
-import '../../_ig_screen_parts/image_pick_and_view_area.dart';
-import '../../_ig_screen_parts/size_and_num_selector.dart';
+
 import 'base_ig_screen_state.dart';
 
 ///
@@ -57,14 +54,6 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
   /// 不同模型有的可能有默认的样式
   @override
   List<String> getStyleList() {
-    if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_PhotoMaker_ITI) {
-      return PhotoMaker_StyleMap.keys.toList();
-    }
-
-    if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI) {
-      return InstantID_StyleMap.keys.toList();
-    }
-
     // 文字变形不需要样式
     return [];
   }
@@ -112,16 +101,6 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
       return false;
     }
 
-    // 如果是文字纹理，自定义样式和预设都必须提供prompt
-    if (selectedModelSpec.cusLlm != CusLLM.siliconCloud_InstantID_ITI) {
-      return selectedImage != null;
-    }
-
-    // 如果是百家姓，且是“自定义风格，那么提示词不能为空;其他预设风格，则prompt输入了也无效
-    if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI) {
-      return selectedFaceImage != null && selectedPoseImage != null;
-    }
-
     // 文字变形默认prompt必传的
     return prompt.isNotEmpty;
   }
@@ -139,51 +118,18 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
     List<String> imageUrls = [];
 
     // 图片转为base64
-    // var tempBase64Str = base64Encode((await selectedImage!.readAsBytes()));
-    // String? imageBase64String = "data:image/png;base64,$tempBase64Str";
-
     String? imageBase64String = await getImageBase64String(selectedImage);
-    String? faceImageBase64String =
-        await getImageBase64String(selectedFaceImage);
-    String? poseImageBase64String =
-        await getImageBase64String(selectedPoseImage);
 
-    // 不同的模型参数不完全相同
-    SiliconflowItiReq a;
-
-    if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_PhotoMaker_ITI) {
-      a = SiliconflowItiReq.photoMaker(
-        prompt: prompt,
-        negativePrompt: negativePrompt,
-        image: imageBase64String,
-        imageSize: selectedSize,
-        batchSize: selectedNum,
-        styleName: PhotoMaker_StyleMap[selectedStyle],
-        numInferenceSteps: inferenceStepsValue.toInt(),
-        guidanceScale: guidanceScaleValue,
-      );
-    } else if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI) {
-      a = SiliconflowItiReq.instantID(
-        faceImage: faceImageBase64String,
-        poseImage: poseImageBase64String,
-        prompt: prompt,
-        negativePrompt: negativePrompt,
-        styleName: InstantID_StyleMap[selectedStyle],
-        numInferenceSteps: inferenceStepsValue.toInt(),
-        guidanceScale: guidanceScaleValue,
-      );
-    } else {
-      // 默认就是SD这样必要的参数
-      a = SiliconflowItiReq.sd(
-        prompt: prompt,
-        negativePrompt: negativePrompt,
-        image: imageBase64String,
-        imageSize: selectedSize,
-        batchSize: selectedNum,
-        numInferenceSteps: inferenceStepsValue.toInt(),
-        guidanceScale: guidanceScaleValue,
-      );
-    }
+    // 不同的模型参数不完全相同，默认就是SD这样必要的参数
+    SiliconflowItiReq a = SiliconflowItiReq.sd(
+      prompt: prompt,
+      negativePrompt: negativePrompt,
+      image: imageBase64String,
+      imageSize: selectedSize,
+      batchSize: selectedNum,
+      numInferenceSteps: inferenceStepsValue.toInt(),
+      guidanceScale: guidanceScaleValue,
+    );
 
     SiliconFlowIGResp result =
         await getSFImageToImageResp(a, selectedModelSpec.model);
@@ -218,88 +164,6 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
       ...super.buildConfigArea(),
 
       /// 尺寸、张数选择
-      /// 如果是 InstantID，尺寸和张数都没用
-      if (selectedModelSpec.cusLlm != CusLLM.siliconCloud_InstantID_ITI)
-        SizeAndNumArea(
-          selectedSize: selectedSize,
-          selectedNum: selectedNum,
-          sizeList: getSizeList(),
-          numList: ImageNumList,
-          onSizeChanged: (val) => setState(() => selectedSize = val),
-          onNumChanged: (val) => setState(() => selectedNum = val),
-        ),
-
-      if ((selectedModelSpec.cusLlm == CusLLM.siliconCloud_PhotoMaker_ITI ||
-          selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI))
-        Container(
-          margin: EdgeInsets.fromLTRB(
-            5.sp,
-            // 如果是InstantID，就完全没有尺寸和张数组件，上方空白就不留了
-            (selectedModelSpec.cusLlm != CusLLM.siliconCloud_InstantID_ITI)
-                ? 5.sp
-                : 0.sp,
-            5.sp,
-            0,
-          ),
-          height: 32.sp,
-          child: Row(
-            children: [
-              Expanded(
-                child: SizeAndNumSelector(
-                  label: "样式",
-                  selectedValue: selectedStyle,
-                  items: getStyleList(),
-                  onChanged: (val) {
-                    setState(() {
-                      selectedStyle = val;
-                    });
-                  },
-                  itemToString: (item) => item.toString(),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-      // ？？？2024-08-23 实测腾讯的photoMaker会报500错误，无法解决
-      // 正常的图生图，只需要一个参考图
-      if (selectedModelSpec.cusLlm != CusLLM.siliconCloud_InstantID_ITI)
-        SizedBox(
-          height: 100.sp,
-          child: ImagePickAndViewArea(
-            imageSelectedHandle: _pickImage,
-            imageClearHandle: () => setState(() => selectedImage = null),
-            selectedImage: selectedImage,
-          ),
-        ),
-
-      // InstantID 需要传两个图片，和其他的不一样
-      if (selectedModelSpec.cusLlm == CusLLM.siliconCloud_InstantID_ITI)
-        SizedBox(
-          height: 100.sp,
-          child: Row(
-            children: [
-              Expanded(
-                child: ImagePickAndViewArea(
-                  imageSelectedHandle: _pickFaceImage,
-                  imageClearHandle: () =>
-                      setState(() => selectedFaceImage = null),
-                  selectedImage: selectedFaceImage,
-                  imagePlaceholder: "【脸部】参考图",
-                ),
-              ),
-              Expanded(
-                child: ImagePickAndViewArea(
-                  imageSelectedHandle: _pickPoseImage,
-                  imageClearHandle: () =>
-                      setState(() => selectedPoseImage = null),
-                  selectedImage: selectedPoseImage,
-                  imagePlaceholder: "【姿势】参考图",
-                ),
-              ),
-            ],
-          ),
-        ),
 
       /// 正向、反向提示词
       Column(
@@ -330,41 +194,5 @@ class _CommonITIScreenState extends BaseIGScreenState<CommonITIScreen> {
         ],
       ),
     ];
-  }
-
-  /// 选择图片来源
-  Future<void> _pickImage(ImageSource source) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
-
-    debugPrint("选中的图片---------$pickedFile");
-
-    if (pickedFile != null) {
-      setState(() {
-        selectedImage = File(pickedFile.path);
-      });
-    }
-  }
-
-  Future<void> _pickFaceImage(ImageSource source) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
-
-    debugPrint("选中的Face图片---------$pickedFile");
-
-    if (pickedFile != null) {
-      setState(() => selectedFaceImage = File(pickedFile.path));
-    }
-  }
-
-  Future<void> _pickPoseImage(ImageSource source) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
-
-    debugPrint("选中的Pose图片---------$pickedFile");
-
-    if (pickedFile != null) {
-      setState(() => selectedPoseImage = File(pickedFile.path));
-    }
   }
 }

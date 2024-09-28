@@ -11,8 +11,12 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../apis/_default_system_role_list/inner_system_prompt.dart';
+import '../../apis/chat_completion/common_cc_apis.dart';
+import '../../models/chat_competion/com_cc_resp.dart';
 import '../constants.dart';
 import '../llm_spec/cus_llm_model.dart';
+import '../llm_spec/cus_llm_spec.dart';
 
 /// 请求各种权限
 /// 目前存储类的权限要分安卓版本，所以单独处理
@@ -399,4 +403,27 @@ Future<List<CusSysRoleSpec>> readSysRoleListFromJsonFile(
   final jsonString = await File(filePath).readAsString();
   final jsonList = jsonDecode(jsonString) as List;
   return jsonList.map((map) => CusSysRoleSpec.fromMap(map)).toList();
+}
+
+/// 非常简化，使用文本对话大模型，调用同步响应API，得到翻译结果
+Future<String> getAITranslation(
+  String text, {
+  ApiPlatform? plat,
+  String? model,
+  TargetLanguage? tl,
+}) async {
+  List<CCMessage> msgs = [
+    CCMessage(content: translateToChinese(), role: CusRole.system.name),
+    CCMessage(content: text, role: CusRole.user.name),
+  ];
+
+  // 完全没处理错误情况
+  var cc = await useAkCCResp(
+    msgs,
+    // plat ?? ApiPlatform.siliconCloud,
+    // model ?? "Qwen/Qwen2-7B-Instruct",
+    plat ?? ApiPlatform.zhipu,
+    model ?? "glm-4-flash",
+  );
+  return cc.cusText;
 }

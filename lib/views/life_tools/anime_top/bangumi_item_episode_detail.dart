@@ -24,7 +24,7 @@ class BangumiEpisodeDetail extends StatefulWidget {
 }
 
 class _BangumiEpisodeDetailState extends State<BangumiEpisodeDetail> {
-  final int _pageSize = 10;
+  final int _pageSize = 15;
   int _currentPage = 1;
   // 查询的结果列表
   List<BGMEpisode> subjectList = [];
@@ -179,9 +179,9 @@ Widget buildEpDetailCard(
         buildTitleText("第${item.ep}集 ${item.nameCn}"),
         Table(
           // 设置表格边框
-          border: TableBorder.all(color: Theme.of(context).disabledColor),
+          // border: TableBorder.all(color: Theme.of(context).disabledColor),
           // 隐藏边框
-          // border: TableBorder.all(width: 0, color: Colors.transparent),
+          border: TableBorder.all(width: 0, color: Colors.transparent),
           // 设置每列的宽度占比
           columnWidths: {
             0: FixedColumnWidth(80.sp),
@@ -193,7 +193,7 @@ Widget buildEpDetailCard(
             // buildTableRow("中文名称", "${item.nameCn}"),
             buildTableRow("播放日期", "${item.airdate}"),
             buildTableRow("时长", "${item.duration}"),
-            buildTableRow("简介", "${item.desc}"),
+            // buildTableRow("简介", "${item.desc}"),
             // buildTableRow("集数", "${item.ep}"),
             // buildTableRow("排序", "${item.sort}"),
             // buildTableRow("类型", "${item.type}"),
@@ -204,6 +204,25 @@ Widget buildEpDetailCard(
             // buildTableRow("时长(秒)", "${item.durationSeconds}"),
           ],
         ),
+        Row(
+          children: [
+            SizedBox(
+              width: 80.sp,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 2.sp),
+                child: const Text(
+                  "简介",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ),
+            Expanded(
+              child: TranslatableText(text: item.desc ?? "", isAppend: false),
+            ),
+          ],
+        ),
+        Divider(height: 4.sp),
       ],
     ),
   );

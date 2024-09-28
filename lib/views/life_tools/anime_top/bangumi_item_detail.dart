@@ -353,7 +353,7 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [buildTitleText("简介")],
       ),
-      buildContentRow(null, bgmSub.summary ?? ""),
+      TranslatableText(text: bgmSub.summary ?? "", isAppend: false),
     ];
   }
 }

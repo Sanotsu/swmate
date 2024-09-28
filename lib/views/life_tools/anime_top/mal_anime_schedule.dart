@@ -198,7 +198,7 @@ class _MALAnimeScheduleState extends State<MALAnimeSchedule> {
   /// 构建历史季度选择折叠栏
   Widget buildSeasonSelectPanel() {
     return Padding(
-      padding: EdgeInsets.all(10.sp),
+      padding: EdgeInsets.all(1.sp),
       child: ExpansionTile(
         title: const Row(
           mainAxisAlignment: MainAxisAlignment.end,

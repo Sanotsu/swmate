@@ -560,7 +560,7 @@ Future<StreamWithCancel<ComCCResp>> zhipuCCRespWithCancel(
   );
 }
 
-/// 零一万物的请求方法
+/// 阿里云的请求方法
 Future<StreamWithCancel<ComCCResp>> aliyunCCRespWithCancel(
   List<CCMessage> messages, {
   String? model,
@@ -621,4 +621,277 @@ Future<StreamWithCancel<ComCCResp>> infiniCCRespWithCancel(
     body.toJson(),
     stream: stream,
   );
+}
+
+///
+/// 2024-09-28
+/// 单独的，不需要流式的时候，可以更简单的处理，不必强行混合在流式响应中
+///
+/// 百度的、腾讯的、讯飞的验证麻烦一点，其他的操作类似，只需AK即可
+///
+Future<ComCCResp> baiduCCResp(
+  List<CCMessage> messages,
+  String model, {
+  String? system,
+  // 百度如果传这两个参数，就是调用Fuyu8
+  String? prompt,
+  String? image,
+}) async {
+  // 获取token信息
+  var tokenInfo = MyGetStorage().getBaiduTokenInfo();
+
+  String token = "";
+  if (tokenInfo["accessToken"] != null &&
+      tokenInfo["expiredDate"] != null &&
+      DateTime.now().isBefore(DateTime.parse(tokenInfo["expiredDate"]!))) {
+    token = tokenInfo["accessToken"]!;
+  } else {
+    try {
+      token = await getAccessToken();
+    } catch (e) {
+      // 请求token报错就直接返回了
+      return ComCCResp(
+        errorCode: (e as CusHttpException).cusCode,
+        errorMsg: (e).errRespString,
+      );
+    }
+  }
+
+  ComCCReq body;
+  if (prompt != null && image != null) {
+    body = ComCCReq.baiduFuyu8B(prompt: prompt, image: image);
+  } else {
+    body = ComCCReq.baidu(messages: messages, system: system);
+  }
+
+  var headers = {"Content-Type": "application/json"};
+
+  return getCCResp(
+    (prompt != null && image != null)
+        ? "${platUrls[PlatUrl.baiduTTIUrl]!}$model?access_token=$token"
+        : "${platUrls[PlatUrl.baiduCCUrl]!}$model?access_token=$token",
+    body.toJson(),
+    headers: headers,
+  );
+}
+
+Future<ComCCResp> tencentCCResp(
+  List<CCMessage> messages,
+  String model,
+) async {
+  Map<String, dynamic> tempBody = {
+    "Model": model,
+    "Messages": messages
+        .map((e) => {
+              "Role": e.role,
+              "Content": e.content.toString(),
+            })
+        .toList(),
+  };
+
+  var header = genHunyuanLiteSignatureHeaders(
+    jsonEncode(tempBody),
+    getStoredUserKey(SKN.tencentSecretId.name, TENCENT_SECRET_ID),
+    getStoredUserKey(SKN.tencentSecretKey.name, TENCENT_SECRET_KEY),
+  );
+
+  return getCCResp(
+    platUrls[PlatUrl.tencentCCUrl]!,
+    tempBody,
+    headers: header,
+  );
+}
+
+Future<ComCCResp> xfyunCCResp(
+  List<CCMessage> messages,
+  String model,
+) async {
+  var specs = await _dbHelper.queryCusLLMSpecList(platform: ApiPlatform.xfyun);
+
+  var body = ComCCReq.xfyun(model: model, messages: messages);
+
+  var ak = "";
+
+  if (model ==
+      specs.firstWhere((e) => e.cusLlm == CusLLM.xfyun_Spark_Lite).model) {
+    ak = getStoredUserKey(
+      SKN.xfyunSparkLiteApiPassword.name,
+      XUNFEI_SPARK_LITE_API_PASSWORD,
+    );
+  } else if (model ==
+      specs.firstWhere((e) => e.cusLlm == CusLLM.xfyun_Spark_Pro).model) {
+    ak = getStoredUserKey(
+      SKN.xfyunSparkProApiPassword.name,
+      XUNFEI_SPARK_PRO_API_PASSWORD,
+    );
+  }
+
+  return getCCResp(
+    platUrls[PlatUrl.xfyunCCUrl]!,
+    body.toJson(),
+    ak: ak,
+  );
+}
+
+// 这个仅仅用于非流式请求时的各个使用ak的平台的对话api地址，不包含校验地址
+Map<ApiPlatform, String> platAPIUrlMap = {
+  ApiPlatform.baidu: platUrls[PlatUrl.baiduCCUrl]!,
+  ApiPlatform.tencent: platUrls[PlatUrl.tencentCCUrl]!,
+  ApiPlatform.xfyun: platUrls[PlatUrl.xfyunCCUrl]!,
+  // 无问芯穹地址比较特殊，包含模型，所以不在这里
+  ApiPlatform.aliyun: platUrls[PlatUrl.aliyunCompatibleCCUrl]!,
+  ApiPlatform.siliconCloud: platUrls[PlatUrl.siliconFlowCCUrl]!,
+  ApiPlatform.lingyiwanwu: platUrls[PlatUrl.lingyiwanwuCCUrl]!,
+  ApiPlatform.zhipu: platUrls[PlatUrl.zhipuCCUrl]!,
+};
+
+// 这个仅仅用于非流式请求时的各个使用ak的平台的ak(智谱还有二次加密)
+Map<ApiPlatform, String> platAKMap = {
+  ApiPlatform.aliyun: getStoredUserKey(SKN.aliyunApiKey.name, ALIYUN_API_KEY),
+  ApiPlatform.siliconCloud:
+      getStoredUserKey(SKN.siliconFlowAK.name, SILICON_CLOUD_AK),
+  ApiPlatform.lingyiwanwu: getStoredUserKey(SKN.lingyiwanwuAK.name, LINGYI_AK),
+  ApiPlatform.infini: getStoredUserKey(SKN.infiniAK.name, INFINI_GEN_STUDIO_AK),
+};
+
+///
+/// 这几个使用AK的，再简化一点
+///
+Future<ComCCResp> useAkCCResp(
+  List<CCMessage> messages,
+  ApiPlatform plat,
+  String model,
+) async {
+  if (!platAKMap.keys.contains(plat)) {
+    return ComCCResp(errorCode: 9999, errorMsg: "不支持该平台的统一AK调用");
+  }
+
+  var ak = plat == ApiPlatform.zhipu
+      ? zhipuGenerateToken(getStoredUserKey(SKN.zhipuAK.name, ZHIPU_AK))
+      : platAKMap[plat]!;
+
+  var body = plat == ApiPlatform.zhipu
+      ? ComCCReq.glm(
+          model: model,
+          messages: messages,
+          tools: [
+            CCTool(
+              "web_search",
+              webSearch: CCWebSearch(enable: true, searchResult: true),
+            )
+          ],
+        )
+      : ComCCReq(model: model, messages: messages);
+
+  return getCCResp(
+    platAPIUrlMap[plat]!,
+    body.toJson(),
+    ak: ak,
+  );
+}
+
+Future<ComCCResp> zhipuCCResp(
+  List<CCMessage> messages,
+  String model,
+) async {
+  var body = ComCCReq.glm(
+    model: model,
+    messages: messages,
+    tools: [
+      CCTool(
+        "web_search",
+        webSearch: CCWebSearch(enable: true, searchResult: true),
+      )
+    ],
+  );
+
+  return getCCResp(
+    platAPIUrlMap[ApiPlatform.zhipu]!,
+    body.toJson(),
+    ak: zhipuGenerateToken(getStoredUserKey(SKN.zhipuAK.name, ZHIPU_AK)),
+  );
+}
+
+Future<ComCCResp> siliconFlowCCResp(
+  List<CCMessage> messages,
+  String model,
+) async {
+  return getCCResp(
+    platUrls[PlatUrl.siliconFlowCCUrl]!,
+    ComCCReq(model: model, messages: messages).toJson(),
+    ak: getStoredUserKey(SKN.siliconFlowAK.name, SILICON_CLOUD_AK),
+  );
+}
+
+Future<ComCCResp> lingyiwanwuCCResp(
+  List<CCMessage> messages,
+  String model,
+) async {
+  return getCCResp(
+    platUrls[PlatUrl.lingyiwanwuCCUrl]!,
+    ComCCReq(model: model, messages: messages).toJson(),
+    ak: getStoredUserKey(SKN.lingyiwanwuAK.name, LINGYI_AK),
+  );
+}
+
+Future<ComCCResp> aliyunCCResp(
+  List<CCMessage> messages,
+  String model,
+) async {
+  return getCCResp(
+    platUrls[PlatUrl.aliyunCompatibleCCUrl]!,
+    ComCCReq.aliyun(model: model, messages: messages).toJson(),
+    ak: getStoredUserKey(SKN.aliyunApiKey.name, ALIYUN_API_KEY),
+  );
+}
+
+Future<ComCCResp> infiniCCResp(
+  List<CCMessage> messages,
+  String model,
+) async {
+  return getCCResp(
+    infiniCCUrl(model),
+    ComCCReq(model: model, messages: messages).toJson(),
+    ak: getStoredUserKey(SKN.infiniAK.name, INFINI_GEN_STUDIO_AK),
+  );
+}
+
+Future<ComCCResp> getCCResp(
+  String url,
+  Map<String, dynamic> data, {
+  // 如果传入标头，就直接使用；如果是传入ak，就要构建标头；
+  // 二者至少一项，header优先级更高，暂不验证都不存在
+  Map<String, dynamic>? headers,
+  String? ak,
+}) async {
+  var cusHeaders = headers ??
+      {"Content-Type": "application/json", "Authorization": "Bearer $ak"};
+
+  try {
+    var respData = await HttpUtils.post(
+      path: url,
+      method: CusHttpMethod.post,
+      responseType: CusRespType.json,
+      headers: cusHeaders,
+      data: data,
+    );
+
+    if (respData.runtimeType == String) respData = json.decode(respData);
+
+    // 2024-08-17 腾讯的响应，在最外面还多一个Response栏位,得取出来才和其他结构类似
+    if (respData["Response"] != null) {
+      respData = respData["Response"];
+    }
+
+    return ComCCResp.fromJson(respData);
+  } on CusHttpException catch (e) {
+    return ComCCResp(
+      cusText: """HTTP请求响应异常:
+\n\n错误代码: ${e.cusCode}
+\n\n错误信息: ${e.cusMsg}
+\n\n\n\n原始信息: ${e.errRespString}""",
+    );
+  } catch (e) {
+    rethrow;
+  }
 }

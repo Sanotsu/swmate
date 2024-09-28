@@ -122,7 +122,8 @@ class _MALTopState extends State<MALTop> {
         actions: [
           buildInfoButtonOnAction(
             context,
-            "数据来源: [myanimelist](https://myanimelist.net/)",
+            """数据来源: [myanimelist](https://myanimelist.net/)
+\n\n详情页面中提供的翻译按钮，是使用AI大模型进行文本翻译成中文，不一定准确，请注意识别。""",
           ),
         ],
       ),

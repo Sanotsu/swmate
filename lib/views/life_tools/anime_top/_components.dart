@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
+import '../../../common/utils/tools.dart';
 
 // MAL 可排名的有anime、manga、characters、people，响应的参数不太相似
 enum MALType {
@@ -59,6 +60,14 @@ List<CusLabel> malSeasonFilterTypes = [
   // 十月番
   CusLabel(cnLabel: "秋季番", value: "fall"),
 ];
+
+// MAL中部分简单的英文翻译成中文的枚举（仅用在显示中）
+Map<String, String> malSeasonMap = {
+  "winter": "冬季番",
+  "spring": "春季番",
+  "summer": "夏季番",
+  "fall": "秋季番",
+};
 
 // bangumi 可排名的有1 = book, 2 = anime, 3 = music, 4 = game, 6 = real.没有5
 List<CusLabel> bgmTypes = [
@@ -767,4 +776,150 @@ Widget buildImageAndRatingArea(
       ),
     ),
   );
+}
+
+/// 带有可翻译按钮的标题组件
+/// 用于mal详情页英文标题翻译成中文等地方
+class TranslatableTitleButton extends StatefulWidget {
+  final String title;
+  final String? url;
+
+  const TranslatableTitleButton({super.key, required this.title, this.url});
+
+  @override
+  State<TranslatableTitleButton> createState() =>
+      _TranslatableTitleButtonState();
+}
+
+class _TranslatableTitleButtonState extends State<TranslatableTitleButton> {
+  String? translatedText;
+
+  Future<void> _translateText() async {
+    String translation = await getAITranslation(widget.title);
+    setState(() {
+      translatedText = translation;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: widget.url != null
+                    ? () => launchStringUrl(widget.url!)
+                    : null,
+                child: Text(
+                  "${widget.title}${translatedText != null ? '($translatedText)' : ''}",
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            // 两个按钮都显示占太宽了，如果翻译结果不满意，关闭后再点击
+            (translatedText != null && translatedText!.isNotEmpty)
+                ? IconButton(
+                    onPressed: () => setState(() => translatedText = null),
+                    icon: Icon(Icons.clear, size: 16.sp),
+                  )
+                : IconButton(
+                    onPressed: _translateText,
+                    icon: Icon(Icons.translate, size: 16.sp),
+                  ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// 带有可翻译按钮的正文组件
+/// 用于mal详情页简介翻译成中文等地方
+class TranslatableText extends StatefulWidget {
+  final String text;
+  // 是否是追加模式，不是就直接替换
+  final bool? isAppend;
+
+  const TranslatableText({
+    super.key,
+    required this.text,
+    this.isAppend = true,
+  });
+
+  @override
+  State<TranslatableText> createState() => _TranslatableTextState();
+}
+
+class _TranslatableTextState extends State<TranslatableText> {
+  String? translatedText;
+
+  Future<void> _translateText() async {
+    String translation = await getAITranslation(widget.text);
+    setState(() {
+      translatedText = translation;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: _translateText,
+              icon: Icon(Icons.translate, size: 20.sp),
+            ),
+            if (translatedText != null && translatedText!.isNotEmpty)
+              IconButton(
+                onPressed: () => setState(() => translatedText = null),
+                icon: Icon(Icons.clear, size: 20.sp),
+              ),
+          ],
+        ),
+        if (widget.isAppend == false)
+          Padding(
+            padding: EdgeInsets.all(5.sp),
+            child: Text(
+              translatedText ?? widget.text,
+              // style: TextStyle(
+              //   fontSize: 14.sp,
+              //   color: Theme.of(context).primaryColor,
+              // ),
+            ),
+          ),
+        if (widget.isAppend == true) ...[
+          Padding(
+            padding: EdgeInsets.all(5.sp),
+            child: Text(
+              widget.text,
+              // style: TextStyle(
+              //   fontSize: 14.sp,
+              //   color: Theme.of(context).primaryColor,
+              // ),
+            ),
+          ),
+          if (translatedText != null)
+            Padding(
+              padding: EdgeInsets.all(5.sp),
+              child: Text(
+                "【AI翻译】\n${translatedText!}",
+                // style: TextStyle(
+                //   fontSize: 14.sp,
+                //   color: Colors.grey[600],
+                // ),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
 }
