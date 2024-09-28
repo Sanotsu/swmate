@@ -227,7 +227,7 @@ enum CusLLM {
   // infini_Qwen1p5_7B_Chat, // 无法连接到服务器
   // infini_Qwen1p5_72B, // 模型广场没此模型
   // infini_Qwen2_7B, // 服务器已关闭
-  infini_Yi_34B_Chat,
+  infini_Yi1p5_34B_Chat,
   infini_Baichuan2_7B_Chat,
   infini_Baichuan2_13B_Chat,
   infini_Baichuan2_13B_Base,
@@ -236,6 +236,10 @@ enum CusLLM {
   infini_ChatGLM3_6B,
   infini_ChatGLM3_6B_32K,
   infini_MtInfini_3B,
+  infini_Qwen2p5_7B_Instruct,
+  infini_Qwen2p5_14B_Instruct,
+  infini_Qwen2p5_32B_Instruct,
+  infini_Qwen2p5_72B_Instruct,
   infini_Qwen_72B_Chat,
   infini_Qwen1p5_14B_Chat,
   infini_Qwen1p5_32B_Chat,

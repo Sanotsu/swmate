@@ -752,6 +752,8 @@ Map<ApiPlatform, String> platAKMap = {
       getStoredUserKey(SKN.siliconFlowAK.name, SILICON_CLOUD_AK),
   ApiPlatform.lingyiwanwu: getStoredUserKey(SKN.lingyiwanwuAK.name, LINGYI_AK),
   ApiPlatform.infini: getStoredUserKey(SKN.infiniAK.name, INFINI_GEN_STUDIO_AK),
+  // 智谱这个是占位的，需要key来做是否存在的判断
+  ApiPlatform.zhipu: "",
 };
 
 ///
@@ -763,7 +765,7 @@ Future<ComCCResp> useAkCCResp(
   String model,
 ) async {
   if (!platAKMap.keys.contains(plat)) {
-    return ComCCResp(errorCode: 9999, errorMsg: "不支持该平台的统一AK调用");
+    return ComCCResp(errorCode: 9999, cusText: "不支持该平台的统一AK调用");
   }
 
   var ak = plat == ApiPlatform.zhipu
