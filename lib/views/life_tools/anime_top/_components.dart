@@ -523,6 +523,7 @@ Widget buildContentRow(
   double? labelFontSize,
   double? valueFontSize,
   int? maxLines,
+  bool? isSmall,
 }) {
   return Row(
     children: [
@@ -532,7 +533,7 @@ Widget buildContentRow(
           child: Text(
             label,
             style: TextStyle(
-              fontSize: labelFontSize ?? 14.sp,
+              fontSize: labelFontSize ?? (isSmall == true ? 12 : 14.sp),
             ),
             textAlign: TextAlign.center,
           ),
@@ -543,7 +544,7 @@ Widget buildContentRow(
           child: Text(
             value,
             style: TextStyle(
-              fontSize: valueFontSize ?? 14.sp,
+              fontSize: valueFontSize ?? (isSmall == true ? 12 : 14.sp),
               color: Colors.black87,
             ),
             textAlign: TextAlign.left,
@@ -579,6 +580,190 @@ Widget buildGotoButton(
         fontWeight: FontWeight.bold,
         // color: Theme.of(context).primaryColor,
         color: Colors.blue,
+      ),
+    ),
+  );
+}
+
+/// 详情页面中构建关联人物或角色的卡片
+/// 一般是上面为预览图，下面为姓名、岗位或职责(图方便暂时为一个Map)
+/// 点击时需要带上编号进行跳转的目标详情页
+class RelatedCardList<T, K> extends StatelessWidget {
+  final String label;
+  final List<Map<String, dynamic>> list;
+  final Widget Function(T, K)? targetPageBuilder;
+  final T Function(Map<String, dynamic>)? dataExtractor;
+  final K Function(Map<String, dynamic>)? typeExtractor;
+
+  const RelatedCardList({
+    super.key,
+    required this.label,
+    required this.list,
+    this.targetPageBuilder,
+    this.dataExtractor,
+    this.typeExtractor,
+  });
+
+  Widget _genCard(BuildContext context, Map<String, dynamic> item) {
+    if (targetPageBuilder != null) {
+      if (dataExtractor == null || typeExtractor == null) {
+        throw Exception("需要跳转页面时必须传入完整参数");
+      }
+    }
+
+    return GestureDetector(
+      // 单击预览
+      onTap: targetPageBuilder != null
+          ? () {
+              final T data = dataExtractor!(item);
+              final K type = typeExtractor!(item);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  // bgm 和 mal 跳转子页面的参数类型不一样
+                  builder: (context) => targetPageBuilder!(data, type),
+                ),
+              );
+            }
+          : null,
+      child: Card(
+        shape: RoundedRectangleBorder(
+          // 减少圆角半径
+          borderRadius: BorderRadius.circular(0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            /// 预览图片
+            SizedBox(
+              height: 110.sp,
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 2.sp),
+                child: buildImageGridTile(
+                  context,
+                  item["imageUrl"]!,
+                  prefix: "bangumi",
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            // 简介
+            Flexible(
+              child: Column(
+                children: [
+                  Text(
+                    item["name"]!.toString(),
+                    maxLines: 2,
+                    style: TextStyle(fontSize: 10.sp),
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                  Expanded(child: Container()),
+                  Text(
+                    item["sub1"]!.toString(),
+                    maxLines: 1,
+                    style: TextStyle(fontSize: 10.sp),
+                    textAlign: TextAlign.center,
+                  ),
+                  Text(
+                    item["sub2"]!.toString(),
+                    maxLines: 1,
+                    style: TextStyle(fontSize: 10.sp),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 2.sp),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildTitleText(label),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Wrap(
+            // direction: Axis.horizontal,
+            // alignment: WrapAlignment.spaceAround,
+            children: list.isNotEmpty
+                ? List.generate(
+                    list.length,
+                    // 这个尺寸和上面的图片要配合好
+                    (index) => SizedBox(
+                      height: 180.sp,
+                      width: 110.sp,
+                      child: _genCard(context, list[index]),
+                    ),
+                  ).toList()
+                : [],
+          ),
+        )
+      ],
+    );
+  }
+}
+
+///
+/// (详情页)构建可调用外部浏览器打开url的标题文字
+buildUrlTitle(BuildContext context, String title, {String? url}) {
+  return TextButton(
+    onPressed: url != null ? () => launchStringUrl(url) : null,
+    child: Text(
+      title,
+      style: TextStyle(
+        fontSize: 20.sp,
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).primaryColor,
+      ),
+      textAlign: TextAlign.center,
+    ),
+  );
+}
+
+///  (详情页)预览图和评分区域(评分区域由于结构差距，这里简单当作子组件传入)
+Widget buildImageAndRatingArea(
+  BuildContext context,
+  String imageUrl, // 图片地址
+  String imgDlPrefix, // 图片下载的名称前缀
+  List<Widget> subList, // 右侧评分或简介的组件列表
+) {
+  return SizedBox(
+    height: 160.sp,
+    child: Card(
+      margin: EdgeInsets.only(left: 5.sp, right: 5.sp),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 左侧预览图片
+          Expanded(
+            flex: 1,
+            child: Padding(
+              padding: EdgeInsets.all(2.sp),
+              child: buildImageGridTile(
+                context,
+                imageUrl,
+                prefix: "bangumi",
+                fit: BoxFit.scaleDown,
+              ),
+            ),
+          ),
+          SizedBox(width: 10.sp),
+          // 右侧简介
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: subList,
+            ),
+          ),
+        ],
       ),
     ),
   );

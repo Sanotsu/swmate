@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../common/utils/dio_client/cus_http_client.dart';
+import '../../models/jikan/jikan_related_character_resp.dart';
 import '../../models/jikan/jikan_statistic.dart';
 import '../../models/jikan/jikan_data.dart';
 import '../../views/life_tools/anime_top/_components.dart';
@@ -283,6 +284,29 @@ Future<JikanResp> getJikanSingleSeason({
     }
 
     return JikanResp.fromJson(respData);
+  } catch (e) {
+    // API请求报错，显示报错信息
+    rethrow;
+  }
+}
+
+/// 获取动漫或漫画关联的角色
+Future<JikanRelatedCharacterResp> getJikanRelatedCharacters(
+  int id, {
+  // anime | manga
+  MALType type = MALType.anime,
+}) async {
+  try {
+    var respData = await HttpUtils.get(
+      path: "$jikanBase/${type.name}/$id/characters",
+      showLoading: false,
+    );
+
+    if (respData.runtimeType == String) {
+      respData = json.decode(respData);
+    }
+
+    return JikanRelatedCharacterResp.fromJson(respData);
   } catch (e) {
     // API请求报错，显示报错信息
     rethrow;

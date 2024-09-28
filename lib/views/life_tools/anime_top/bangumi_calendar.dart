@@ -9,12 +9,6 @@ import '../../../models/bangumi/bangumi.dart';
 import '_components.dart';
 import 'bangumi_item_detail.dart';
 
-///
-/// 动漫推荐，进来就是bangumi的放送日历，可切换MAL的Schedule
-///   点击日历中的item跳转到对应的详情页面去
-///
-/// 然后可点击指定按钮，跳转到自定义的bangumi详情页面
-///
 class BangumiCalendar extends StatefulWidget {
   const BangumiCalendar({super.key});
 
@@ -132,33 +126,39 @@ class _BangumiCalendarState extends State<BangumiCalendar> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          /// 分类下拉框
-          TypeDropdown(
-            selectedValue: selectedBgmType,
-            items: bgmTypes,
-            onChanged: (value) async {
-              setState(() {
-                selectedBgmType = value!;
-              });
-              // 因为查询必须输入关键字，所以切换时不用触发查询
-              // _handleSearch();
-            },
-          ),
+      body: GestureDetector(
+        // 允许子控件（如TextField）接收点击事件
+        behavior: HitTestBehavior.translucent,
+        // 点击空白处可以移除焦点，关闭键盘
+        onTap: unfocusHandle,
+        child: Column(
+          children: [
+            /// 分类下拉框
+            TypeDropdown(
+              selectedValue: selectedBgmType,
+              items: bgmTypes,
+              onChanged: (value) async {
+                setState(() {
+                  selectedBgmType = value!;
+                });
+                // 因为查询必须输入关键字，所以切换时不用触发查询
+                // _handleSearch();
+              },
+            ),
 
-          /// 关键字输入框
-          KeywordInputArea(
-            searchController: searchController,
-            hintText: "关键字查询，空则查询每日放送",
-            onSearchPressed: _handleSearch,
-          ),
+            /// 关键字输入框
+            KeywordInputArea(
+              searchController: searchController,
+              hintText: "关键字查询，空则查询每周番组",
+              onSearchPressed: _handleSearch,
+            ),
 
-          Divider(height: 20.sp),
+            Divider(height: 20.sp),
 
-          /// 主列表，可上拉下拉刷新
-          buildRefreshList(),
-        ],
+            /// 主列表，可上拉下拉刷新
+            buildRefreshList(),
+          ],
+        ),
       ),
     );
   }
@@ -208,7 +208,6 @@ class _BangumiCalendarState extends State<BangumiCalendar> {
                               ),
                             ),
                             buildItemCardWrap(
-                              context,
                               calendarList[index],
                               selectedBgmType,
                             ),
@@ -218,8 +217,8 @@ class _BangumiCalendarState extends State<BangumiCalendar> {
                             // SingleChildScrollView(
                             //   scrollDirection: Axis.horizontal,
                             //   child: buildItemCardWrap(
-                            //     context,
                             //     calendarList[index],
+                            //     selectedBgmType,
                             //   ),
                             // ),
                           ],
@@ -243,6 +242,7 @@ class _BangumiCalendarState extends State<BangumiCalendar> {
     );
   }
 
+  /// 预览列表的条目
   Widget buildOverviewItem(BGMSubject subject, int index) {
     return OverviewItem(
       imageUrl: subject.images?.medium ?? "",
@@ -277,42 +277,42 @@ class _BangumiCalendarState extends State<BangumiCalendar> {
       ],
     );
   }
-}
 
-/// 每日放送是查询一周七天，需要List中再嵌套一个周几的放映列表
-Widget buildItemCardWrap(
-  BuildContext context,
-  BGMLargeCalendar calendar,
-  CusLabel type,
-) {
-  return Wrap(
-    // direction: Axis.horizontal,
-    // alignment: WrapAlignment.spaceAround,
-    children: calendar.items != null && calendar.items!.isNotEmpty
-        ? List.generate(
-            calendar.items!.length,
-            (index) {
-              var subject = calendar.items![index];
-              return SizedBox(
-                height: 240.sp,
-                width: 0.325.sw,
-                child: buildPreviewTileCard(
-                  context,
-                  subject.images?.medium ?? "",
-                  subject.airDate ?? "",
-                  subject.rating?.score ?? 0,
-                  subject.rating?.total ?? 0,
-                  (subject.nameCn != null && subject.nameCn!.isNotEmpty)
-                      ? subject.nameCn!
-                      : subject.name ?? "",
-                  targetPage: BangumiItemDetail(
-                    id: subject.id!,
-                    subType: type.cnLabel,
+  /// 每日放送是查询一周七天，需要List中再嵌套一个周几的放映列表
+  Widget buildItemCardWrap(
+    BGMLargeCalendar calendar,
+    CusLabel type,
+  ) {
+    return Wrap(
+      // direction: Axis.horizontal,
+      // alignment: WrapAlignment.spaceAround,
+      children: calendar.items != null && calendar.items!.isNotEmpty
+          ? List.generate(
+              calendar.items!.length,
+              (index) {
+                var subject = calendar.items![index];
+                return SizedBox(
+                  height: 240.sp,
+                  width: 0.325.sw,
+                  child: buildPreviewTileCard(
+                    context,
+                    // grid和small过于小了
+                    subject.images?.medium ?? "",
+                    subject.airDate ?? "",
+                    subject.rating?.score ?? 0,
+                    subject.rating?.total ?? 0,
+                    (subject.nameCn != null && subject.nameCn!.isNotEmpty)
+                        ? subject.nameCn!
+                        : subject.name ?? "",
+                    targetPage: BangumiItemDetail(
+                      id: subject.id!,
+                      subType: type.cnLabel,
+                    ),
                   ),
-                ),
-              );
-            },
-          ).toList()
-        : [],
-  );
+                );
+              },
+            ).toList()
+          : [],
+    );
+  }
 }

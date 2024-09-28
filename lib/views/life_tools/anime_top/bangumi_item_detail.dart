@@ -112,6 +112,23 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
   genImageUrl() =>
       ["https://api.bgm.tv/v0/subjects/${widget.id}/image?type=large"];
 
+  // 构建关联人物、角色、条目时，需要传给子组件的内容
+  Map<String, dynamic> buildRelatedSimpleMap(BGMSubjectRelation e) => {
+        "id": e.id!,
+        "imageUrl": e.images?.medium ?? "",
+        "name": e.name ?? e.nameCn,
+        "sub1": e.relation,
+        "sub2": e.career != null
+            ? e.career?.join(',')
+            : (e.actors != null && e.actors!.isNotEmpty)
+                ? "cv: ${e.actors!.first.name}"
+                : "",
+        // 子组件中取来作为参数的栏位
+        "data": e.id ?? 1,
+        // 目前bgm的详情的type参数只是显示的文字而已，没有其他用法
+        "type": e.nameCn ?? e.name ?? "",
+      };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,11 +140,21 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
           ? buildLoader(isLoading)
           : ListView(
               children: [
-                /// 可跳转到源网页的标题
-                buildTitleArea(),
+                /// 标题
+                buildUrlTitle(
+                  context,
+                  (bgmSub.nameCn != null && bgmSub.nameCn!.isNotEmpty)
+                      ? bgmSub.nameCn!
+                      : bgmSub.name ?? "",
+                ),
 
                 /// 预览图和评分区域
-                buildImageAndRatingArea(bgmSub),
+                buildImageAndRatingArea(
+                  context,
+                  bgmSub.images?.common ?? "",
+                  "bangumi",
+                  _buildSubRatingChildren(bgmSub),
+                ),
 
                 // 跳转到分集简介按钮
                 // (2024-09-25 应该是只有动画才有意义)
@@ -148,20 +175,41 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
                 // buildTitleText("图片"),
                 // buildPictureArea(),
 
-                if (characterList.isNotEmpty) ...[
-                  buildTitleText("角色表"),
-                  buildRelatedTileCard(context, characterList),
-                ],
+                if (characterList.isNotEmpty)
+                  RelatedCardList<int, String>(
+                    label: "角色表",
+                    list: characterList
+                        .map((e) => buildRelatedSimpleMap(e))
+                        .toList(),
+                    targetPageBuilder: (int data, String type) =>
+                        BangumiItemDetail(id: data, subType: type),
+                    dataExtractor: (Map<String, dynamic> item) => item["data"],
+                    typeExtractor: (Map<String, dynamic> item) => item["type"],
+                  ),
 
-                if (personList.isNotEmpty) ...[
-                  buildTitleText("演职表"),
-                  buildRelatedTileCard(context, personList),
-                ],
+                if (personList.isNotEmpty)
+                  RelatedCardList<int, String>(
+                    label: "演职表",
+                    list: personList
+                        .map((e) => buildRelatedSimpleMap(e))
+                        .toList(),
+                    targetPageBuilder: (int data, String type) =>
+                        BangumiItemDetail(id: data, subType: type),
+                    dataExtractor: (Map<String, dynamic> item) => item["data"],
+                    typeExtractor: (Map<String, dynamic> item) => item["type"],
+                  ),
 
-                if (subjectList.isNotEmpty) ...[
-                  buildTitleText("关联作品"),
-                  buildRelatedTileCard(context, subjectList),
-                ],
+                if (subjectList.isNotEmpty)
+                  RelatedCardList<int, String>(
+                    label: "关联作品",
+                    list: subjectList
+                        .map((e) => buildRelatedSimpleMap(e))
+                        .toList(),
+                    targetPageBuilder: (int data, String type) =>
+                        BangumiItemDetail(id: data, subType: type),
+                    dataExtractor: (Map<String, dynamic> item) => item["data"],
+                    typeExtractor: (Map<String, dynamic> item) => item["type"],
+                  ),
 
                 ///
                 /// 上面几个占位的高度是比较固定的，下面的都不怎么固定
@@ -179,62 +227,6 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
   ///
   /// 从上到下的组件
   ///
-  /// 可跳转到源网页的标题
-  Widget buildTitleArea() {
-    return TextButton(
-      onPressed: () {
-        // launchStringUrl(bgmSub.url ?? "");
-      },
-      child: Text(
-        (bgmSub.nameCn != null && bgmSub.nameCn!.isNotEmpty)
-            ? bgmSub.nameCn!
-            : bgmSub.name ?? "",
-        style: TextStyle(
-          fontSize: 20.sp,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).primaryColor,
-        ),
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
-  /// 预览图和评分区域
-  Widget buildImageAndRatingArea(BGMSubject item) {
-    return SizedBox(
-      height: 160.sp,
-      child: Card(
-        margin: EdgeInsets.only(left: 5.sp, right: 5.sp),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 左侧预览图片
-            Expanded(
-              flex: 1,
-              child: Padding(
-                padding: EdgeInsets.all(2.sp),
-                child: buildImageGridTile(
-                  context,
-                  item.images?.common ?? "",
-                  prefix: "bangumi",
-                  fit: BoxFit.scaleDown,
-                ),
-              ),
-            ),
-            SizedBox(width: 10.sp),
-            // 右侧简介
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: _buildSubRatingChildren(item),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // 构建上分右侧评分和概述区域内容children
   List<Widget> _buildSubRatingChildren(BGMSubject item) {
@@ -257,15 +249,36 @@ class _BangumiItemDetailState extends State<BangumiItemDetail> {
       ),
 
       /// 想看人数
-      Divider(height: 5.sp),
+      Divider(height: 10.sp),
       Expanded(
-        child: Text(
-          """${item.collection?.doing}人正在看/${item.collection?.wish}人想看/${item.collection?.collect}人收藏
-${item.collection?.onHold}人搁置/${item.collection?.dropped}人弃坑""",
-          style: TextStyle(fontSize: 10.5.sp),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                _buildCollectSize("在看 ${item.collection?.doing}人"),
+                _buildCollectSize("想看 ${item.collection?.wish}人"),
+                _buildCollectSize("收藏 ${item.collection?.collect}人"),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                _buildCollectSize("搁置 ${item.collection?.onHold}人"),
+                _buildCollectSize("弃坑 ${item.collection?.dropped}人"),
+                Expanded(child: Container()),
+              ],
+            )
+          ],
         ),
       ),
     ];
+  }
+
+  _buildCollectSize(String label) {
+    return Expanded(
+      child: Text(label, style: TextStyle(fontSize: 10.5.sp)),
+    );
   }
 
   /// 动漫的图片
@@ -345,111 +358,6 @@ ${item.collection?.onHold}人搁置/${item.collection?.dropped}人弃坑""",
   }
 }
 
-/// 网格，预览图+名称，一排可以多个
-/// ??? 2024-09-25 暂时不做点击继续跳转到关联页面了，同样的tag等也不跳转了
-Widget buildRelatedTileCard(
-  BuildContext context,
-  List<BGMSubjectRelation> list,
-) {
-  Widget genCard(BGMSubjectRelation item) => GestureDetector(
-        // 单击预览
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BangumiItemDetail(
-                id: item.id!,
-                // // 这里应该是有的
-                // subType:
-                //     bgmTypes.where((e) => e.value == item.type).first.cnLabel,
-                // 2024-09-25 嵌套跳转的，直接传名字吧
-                subType: "[${item.name ?? item.nameCn}]",
-              ),
-            ),
-          );
-        },
-        child: Card(
-          shape: RoundedRectangleBorder(
-            // 减少圆角半径
-            borderRadius: BorderRadius.circular(0),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              /// 预览图片
-              SizedBox(
-                height: 110.sp,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 2.sp),
-                  child: buildImageGridTile(
-                    context,
-                    item.images?.medium ?? "",
-                    prefix: "bangumi",
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              // 简介
-              Flexible(
-                child: Column(
-                  children: [
-                    Text(
-                      "${item.name}",
-                      maxLines: 3,
-                      style: TextStyle(fontSize: 10.sp),
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                    Expanded(child: Container()),
-                    Text(
-                      "${item.relation}",
-                      maxLines: 1,
-                      style: TextStyle(fontSize: 10.sp),
-                      textAlign: TextAlign.center,
-                    ),
-                    if (item.career != null)
-                      Text(
-                        "${item.career?.join(',')}",
-                        maxLines: 1,
-                        style: TextStyle(fontSize: 10.sp),
-                        textAlign: TextAlign.center,
-                      ),
-                    if (item.actors != null && item.actors!.isNotEmpty)
-                      Text(
-                        "cv: ${item.actors!.first.name}",
-                        maxLines: 1,
-                        style: TextStyle(fontSize: 10.sp),
-                        textAlign: TextAlign.center,
-                      ),
-                    SizedBox(height: 2.sp),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-
-  return SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    child: Wrap(
-      // direction: Axis.horizontal,
-      // alignment: WrapAlignment.spaceAround,
-      children: list.isNotEmpty
-          ? List.generate(
-              list.length,
-              // 这个尺寸和下面的图片要配合好
-              (index) => SizedBox(
-                height: 180.sp,
-                width: 110.sp,
-                child: genCard(list[index]),
-              ),
-            ).toList()
-          : [],
-    ),
-  );
-}
-
 // 表格行
 TableRow buildTableRow(
   String? label,
@@ -460,21 +368,27 @@ TableRow buildTableRow(
   return TableRow(
     children: [
       if (label != null)
-        Text(
-          label,
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 2.sp),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: labelFontSize ?? 14.sp,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.left,
+          ),
+        ),
+      Padding(
+        padding: EdgeInsets.symmetric(horizontal: 2.sp),
+        child: Text(
+          value,
           style: TextStyle(
-            fontSize: labelFontSize ?? 14.sp,
-            fontWeight: FontWeight.bold,
+            fontSize: valueFontSize ?? 14.sp,
+            color: Colors.black87,
           ),
           textAlign: TextAlign.left,
         ),
-      Text(
-        value,
-        style: TextStyle(
-          fontSize: valueFontSize ?? 14.sp,
-          color: Colors.black87,
-        ),
-        textAlign: TextAlign.left,
       ),
     ],
   );

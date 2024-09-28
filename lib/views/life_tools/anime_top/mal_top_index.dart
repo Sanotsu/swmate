@@ -8,7 +8,7 @@ import '../../../common/constants.dart';
 import '../../../models/jikan/jikan_data.dart';
 import '_components.dart';
 import 'mal_item_detail.dart';
-import 'mal_schedule.dart';
+import 'mal_anime_schedule.dart';
 
 class MALTop extends StatefulWidget {
   const MALTop({super.key});
@@ -118,7 +118,7 @@ class _MALTopState extends State<MALTop> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MAL排行'),
+        title: const Text('MAL排行榜'),
         actions: [
           buildInfoButtonOnAction(
             context,
@@ -126,45 +126,51 @@ class _MALTopState extends State<MALTop> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          /// 分类下拉框
-          /// 左边加个按钮获取放映计划
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              /// 可跳转到MAL的播放日期表(不在当前页处理了)
-              buildGotoButton(context, "放映计划", const MALAnimeSchedule()),
+      body: GestureDetector(
+        // 允许子控件（如TextField）接收点击事件
+        behavior: HitTestBehavior.translucent,
+        // 点击空白处可以移除焦点，关闭键盘
+        onTap: unfocusHandle,
+        child: Column(
+          children: [
+            /// 分类下拉框
+            /// 左边加个按钮获取放映计划
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                /// 可跳转到MAL的播放日期表(不在当前页处理了)
+                buildGotoButton(context, "放映计划", const MALAnimeSchedule()),
 
-              /// 分类下拉框
-              TypeDropdown(
-                selectedValue: selectedMalType,
-                items: malTypes,
-                label: "排行榜分类:",
-                onChanged: (value) async {
-                  setState(() {
-                    selectedMalType = value!;
-                  });
-                  // 因为查询必须输入关键字，所以切换时不用触发查询
-                  // _handleSearch();
-                },
-              ),
-            ],
-          ),
-          SizedBox(height: 10.sp),
+                /// 分类下拉框
+                TypeDropdown(
+                  selectedValue: selectedMalType,
+                  items: malTypes,
+                  label: "排行榜分类:",
+                  onChanged: (value) async {
+                    setState(() {
+                      selectedMalType = value!;
+                    });
+                    // 切换分类后，直接重新查询
+                    _handleSearch();
+                  },
+                ),
+              ],
+            ),
+            SizedBox(height: 10.sp),
 
-          /// 关键字输入框
-          KeywordInputArea(
-            searchController: searchController,
-            hintText: "输入关键字进行查询",
-            onSearchPressed: _handleSearch,
-          ),
+            /// 关键字输入框
+            KeywordInputArea(
+              searchController: searchController,
+              hintText: "输入关键字进行查询",
+              onSearchPressed: _handleSearch,
+            ),
 
-          Divider(height: 20.sp),
+            Divider(height: 20.sp),
 
-          /// 主列表，可上拉下拉刷新
-          buildRefreshList(),
-        ],
+            /// 主列表，可上拉下拉刷新
+            buildRefreshList(),
+          ],
+        ),
       ),
     );
   }

@@ -11,6 +11,7 @@ import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../models/chat_competion/com_cc_resp.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
+import '../../../models/jikan/jikan_related_character_resp.dart';
 import '../../../models/jikan/jikan_statistic.dart';
 import '../../../models/jikan/jikan_data.dart';
 import '../../ai_assistant/_helper/handle_cc_response.dart';
@@ -50,9 +51,18 @@ class _MALItemDetailState extends State<MALItemDetail> {
   // 评分组成
   List<List<ChartData>> malScoreList = [];
 
+  // 详情页中额外查询的，暂时只有图片、角色表(原本就是角色、人物进来的就只有图片)
   // 是否加载图片中
   bool isPictureLoading = false;
   List<JKImage> malPictureList = [];
+
+  bool isCharacterLoading = false;
+  List<JKRelatedCharacter> malCharacterList = [];
+
+  /// 注意请求限制：每秒最多3次，每分钟最多60次
+  /// 所以默认进来就只有查询统计，图片、角色表，单独获取
+  bool isShowPicture = false;
+  bool isShowCharacter = false;
 
   @override
   void initState() {
@@ -66,8 +76,6 @@ class _MALItemDetailState extends State<MALItemDetail> {
         (widget.malType.value as MALType) == MALType.manga) {
       queryMALStatistic();
     }
-
-    queryMALPicture();
   }
 
   // 查询当前mal条目的评分统计
@@ -108,7 +116,7 @@ class _MALItemDetailState extends State<MALItemDetail> {
   }
 
   // 查询图片
-  queryMALPicture() async {
+  queryMALPictures() async {
     if (isPictureLoading) return;
 
     setState(() {
@@ -128,6 +136,30 @@ class _MALItemDetailState extends State<MALItemDetail> {
 
     setState(() {
       isPictureLoading = false;
+    });
+  }
+
+  /// 查询角色
+  queryMALCharacters() async {
+    if (isCharacterLoading) return;
+
+    setState(() {
+      isCharacterLoading = true;
+    });
+
+    var temp = await getJikanRelatedCharacters(
+      widget.item.malId,
+      type: (widget.malType.value as MALType),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      // 添加图片
+      malCharacterList = temp.data;
+    });
+
+    setState(() {
+      isCharacterLoading = false;
     });
   }
 
@@ -273,107 +305,93 @@ class _MALItemDetailState extends State<MALItemDetail> {
       appBar: AppBar(
         title: Text("${widget.malType.cnLabel}详情"),
       ),
-      body: ListView(
-        children: [
-          ...buildDetail(jkdata, (widget.malType.value as MALType)),
-        ],
-      ),
+      body: buildBodyDetail(jkdata, (widget.malType.value as MALType)),
     );
   }
 
   /// 构建详情页面主体内容
-  List<Widget> buildDetail(JKData item, MALType malType) {
-    return [
-      TextButton(
-        onPressed: () {
-          launchStringUrl(item.url);
-        },
-        child: Text(
-          item.title ?? item.name ?? "",
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).primaryColor,
-          ),
-          textAlign: TextAlign.center,
+  Widget buildBodyDetail(JKData item, MALType malType) {
+    return ListView(
+      children: [
+        /// 标题
+        buildUrlTitle(context, item.title ?? item.name ?? "", url: item.url),
+
+        /// 预览图和评分区域
+        buildImageAndRatingArea(
+          context,
+          item.images.jpg?.imageUrl ?? "",
+          "mal",
+          _buildSubRatingChildren(item, malType),
         ),
-      ),
 
-      SizedBox(
-        height: 160.sp,
-        child: Card(
-          margin: EdgeInsets.only(left: 5.sp, right: 5.sp),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 左侧预览图片
-              Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: EdgeInsets.all(2.sp),
-                  child: buildImageGridTile(
-                    context,
-                    item.images.jpg?.imageUrl ?? "",
-                    prefix: "mal",
-                    fit: BoxFit.scaleDown,
-                  ),
-                ),
+        /// 显示角色表、图片集、演职表
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            // 只有动画和漫画才显示角色表
+            if ((widget.malType.value as MALType) == MALType.anime ||
+                (widget.malType.value as MALType) == MALType.manga)
+              TextButton(
+                onPressed: () {
+                  setState(() => isShowCharacter = !isShowCharacter);
+                  // 如果角色不为空，则已经查询过了，不用再查了，直接展示即可
+                  if (isShowCharacter && malCharacterList.isEmpty) {
+                    queryMALCharacters();
+                  }
+                },
+                child: Text(isShowCharacter ? "隐藏角色表" : "显示角色表"),
               ),
-              SizedBox(width: 10.sp),
-              // 右侧简介
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _buildSubRatingChildren(item, malType),
-                ),
-              ),
-            ],
-          ),
+            TextButton(
+              onPressed: () {
+                setState(() => isShowPicture = !isShowPicture);
+                // 如果图片不为空，则已经查询过了，不用再查了，直接展示即可
+                if (isShowPicture && malPictureList.isEmpty) {
+                  queryMALPictures();
+                }
+              },
+              child: Text(isShowPicture ? "隐藏图片集" : "显示图片集"),
+            ),
+          ],
         ),
-      ),
+        if (isShowCharacter) buildCharacterArea(),
+        if (isShowPicture) buildPictureArea(),
 
-      /// 基础信息栏位
-      buildTitleText("信息"),
-      if (malType == MALType.anime) ...buildAnmieNote(item),
-      if (malType == MALType.manga) ...buildMangaNote(item),
-      if (malType == MALType.characters) ...buildCharactersNote(item),
-      if (malType == MALType.people) ...buildPeopleNote(item),
+        /// 基础信息栏位
+        buildTitleText("信息"),
+        if (malType == MALType.anime) ...buildAnmieNote(item),
+        if (malType == MALType.manga) ...buildMangaNote(item),
+        if (malType == MALType.characters) ...buildCharactersNote(item),
+        if (malType == MALType.people) ...buildPeopleNote(item),
 
-      /// 图片
-      if (!isPictureLoading) ...[
-        buildTitleText("图片"),
-        buildPictureArea(),
-      ],
-
-      /// 简介和背景栏位
-      Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          buildTitleText("简介"),
-          IconButton(
-            onPressed: () => _getCCResponse("about"),
-            icon: Icon(Icons.translate, size: 20.sp),
-          ),
-        ],
-      ),
-      buildContentRow(null, about),
-      // 角色和人物没有背景栏位
-      if (background.isNotEmpty) ...[
+        /// 简介和背景栏位
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            buildTitleText("背景"),
+            buildTitleText("简介"),
             IconButton(
-              onPressed: () => _getCCResponse("background"),
+              onPressed: () => _getCCResponse("about"),
               icon: Icon(Icons.translate, size: 20.sp),
             ),
           ],
         ),
-        buildContentRow(null, background),
+        buildContentRow(null, about),
+        // 角色和人物没有背景栏位
+        if (background.isNotEmpty) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              buildTitleText("背景"),
+              IconButton(
+                onPressed: () => _getCCResponse("background"),
+                icon: Icon(Icons.translate, size: 20.sp),
+              ),
+            ],
+          ),
+          buildContentRow(null, background),
+        ],
+        SizedBox(height: 20.sp),
       ],
-      SizedBox(height: 20.sp),
-    ];
+    );
   }
 
   // 构建上分右侧评分和概述区域内容children
@@ -383,9 +401,6 @@ class _MALItemDetailState extends State<MALItemDetail> {
       if (malType == MALType.anime || malType == MALType.manga) ...[
         /// 漫画动漫的星级评分，人物角色最爱人数
         buildBgmScoreArea(item.score, total: item.scoredBy, rank: item.rank),
-
-        // if (malType == MALType.anime) ...buildAnimeBrief(item),
-        // if (malType == MALType.manga) ...buildMangaBrief(item),
 
         /// 评分人数分布
         if (!isScoreLoading) ...[
@@ -397,13 +412,31 @@ class _MALItemDetailState extends State<MALItemDetail> {
               seriesNames: const ["MAL评分"],
             ),
           ),
-          // 想看人数
-          Divider(height: 5.sp),
+          Divider(height: 10.sp),
+
+          /// 想看人数
           Expanded(
-            child: Text(
-              """${statisticData?.watching ?? statisticData?.reading}人正在看/${statisticData?.planToWatch ?? statisticData?.planToRead}人想看/${statisticData?.completed}人看过
-${statisticData?.onHold}人搁置/${statisticData?.dropped}人弃坑/${statisticData?.total}总人数""",
-              style: TextStyle(fontSize: 10.5.sp),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _buildCollectSize(
+                        "在看 ${statisticData?.watching ?? statisticData?.reading}人"),
+                    _buildCollectSize(
+                        "想看 ${statisticData?.planToWatch ?? statisticData?.planToRead}人"),
+                    _buildCollectSize("看过 ${statisticData?.completed}人"),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _buildCollectSize("搁置 ${statisticData?.onHold}人"),
+                    _buildCollectSize("弃坑 ${statisticData?.dropped}人"),
+                    _buildCollectSize("总数 ${statisticData?.total}人"),
+                  ],
+                )
+              ],
             ),
           ),
         ]
@@ -411,124 +444,89 @@ ${statisticData?.onHold}人搁置/${statisticData?.dropped}人弃坑/${statistic
 
       // 人物角色分类时
       if (malType == MALType.characters || malType == MALType.people)
-        // 注意，这里排名要-1,因为该组件中用的索引
-        // 实际上角色和人物没有排名
+        // 注意，实际上角色和人物没有排名
         ...[
         buildFavoritesArea(item.favorites),
-        if (malType == MALType.characters) ...[
-          buildContentRow("日文", "${item.nameKanji}",
-              maxLines: 1, labelFontSize: 12.sp, valueFontSize: 12.sp),
-          buildContentRow("简介", "${item.about}",
-              maxLines: 6, labelFontSize: 12.sp, valueFontSize: 12.sp),
-        ],
+        SizedBox(height: 5.sp),
+        if (malType == MALType.characters)
+          ...buildCharactersNote(item, isSmall: true),
         if (malType == MALType.people) ...buildPeopleNote(item, isSmall: true),
       ]
     ];
   }
 
-  /// 动漫的图片
-  Widget buildPictureArea() {
-    /// 图片只放一行，可以横向滚动显示
-    return SizedBox(
-      height: 100.sp,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 5.sp),
-        child: GridView.count(
-          scrollDirection: Axis.horizontal, // 设置为横向滚动
-          crossAxisCount: 1, // 每行显示 1 张图片
-          mainAxisSpacing: 2.0, // 主轴方向的间距
-          crossAxisSpacing: 2.0, // 交叉轴方向的间距
-          childAspectRatio: 5 / 4, // 横向，高宽比
-          children: buildImageList(
-            context,
-            malPictureList.map((e) => e.jpg?.imageUrl ?? "").toSet().toList(),
-            prefix: "mal_",
-            fit: BoxFit.cover,
-          ),
-        ),
-      ),
+  _buildCollectSize(String label) {
+    return Expanded(
+      child: Text(label, style: TextStyle(fontSize: 10.5.sp)),
     );
   }
 
-  /// 概要也只少数几个栏位，不同分类栏位不一样(字体要小些)
-  List<Widget> buildAnimeBrief(JKData item) {
-    return [
-      buildContentRow(
-        "人气",
-        "No.${item.popularity}",
-        labelFontSize: 12.sp,
-        valueFontSize: 12.sp,
-      ),
-      buildContentRow(
-        "集数",
-        "${item.episodes}",
-        labelFontSize: 12.sp,
-        valueFontSize: 12.sp,
-      ),
-      buildContentRow(
-        "时长",
-        "${item.duration}",
-        labelFontSize: 12.sp,
-        valueFontSize: 12.sp,
-      ),
-      // buildItemRow(
-      //   "分级",
-      //   "${item.rating}",
-      //   maxLines: 1,
-      //   labelFontSize: 12.sp,
-      //   valueFontSize: 12.sp,
-      // ),
-      buildContentRow(
-        "放送",
-        "${item.aired?.from?.split("T").first} ~ ${item.aired?.to?.split("T").first ?? 'now'}",
-        labelFontSize: 12.sp,
-        valueFontSize: 12.sp,
-      ),
-      buildContentRow(
-        "类型",
-        (item.genres?.map((e) => e.name).toList() ?? []).join("/"),
-        maxLines: 2,
-        labelFontSize: 12.sp,
-        valueFontSize: 12.sp,
-      ),
-    ];
+  /// 动漫的图片
+  Widget buildPictureArea() {
+    Widget genGrid() {
+      return SizedBox(
+        height: 100.sp,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 5.sp),
+          child: GridView.count(
+            scrollDirection: Axis.horizontal, // 设置为横向滚动
+            crossAxisCount: 1, // 每行显示 1 张图片
+            mainAxisSpacing: 2.0, // 主轴方向的间距
+            crossAxisSpacing: 2.0, // 交叉轴方向的间距
+            childAspectRatio: 5 / 4, // 横向，高宽比
+            children: buildImageList(
+              context,
+              malPictureList.map((e) => e.jpg?.imageUrl ?? "").toSet().toList(),
+              prefix: "mal_",
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      );
+    }
+
+    /// 图片只放一行，可以横向滚动显示
+    return isPictureLoading
+        ? buildLoader(isPictureLoading)
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildTitleText("图片集"),
+              genGrid(),
+            ],
+          );
   }
 
-  List<Widget> buildMangaBrief(JKData item) {
-    return [
-      buildContentRow(
-        "人气",
-        "No.${item.popularity}",
-        labelFontSize: 12.sp,
-        valueFontSize: 12.sp,
-      ),
-      buildContentRow(
-        "作者",
-        (item.authors?.map((e) => e.name).toList() ?? []).join("/"),
-        labelFontSize: 12.sp,
-        valueFontSize: 12.sp,
-        maxLines: 1,
-      ),
-      buildContentRow(
-        "册数",
-        "${item.volumes ?? '无'}",
-        labelFontSize: 12.sp,
-        valueFontSize: 12.sp,
-      ),
-      buildContentRow(
-        "周期",
-        "${item.published?.from?.split("T").first} ~ ${(item.published?.to?.split("T").first) ?? 'now'}",
-        labelFontSize: 12.sp,
-        valueFontSize: 12.sp,
-      ),
-      buildContentRow(
-        "类型",
-        (item.genres?.map((e) => e.name).toList() ?? []).join("/"),
-        maxLines: 2,
-        labelFontSize: 12.sp,
-        valueFontSize: 12.sp,
-      ),
-    ];
+  /// 动漫的角色表
+  Widget buildCharacterArea() {
+    return isCharacterLoading
+        ? buildLoader(isCharacterLoading)
+        : RelatedCardList<JKData, CusLabel>(
+            label: "角色表",
+            list: malCharacterList
+                .map((e) => {
+                      "id": e.character,
+                      "imageUrl": e.character?.images.jpg?.imageUrl ?? "",
+                      "name": e.character?.name,
+                      "sub1": e.role,
+                      "sub2": "${e.favorites}人最爱",
+                      // 子组件中取来作为参数的栏位
+                      // 角色的数据
+                      "data": e.character,
+                      // 类型要为角色
+                      "type": CusLabel(
+                        cnLabel: "角色",
+                        value: MALType.characters,
+                      ),
+                    })
+                .toList(),
+            // 2024-09-28 由于关联查询的角色栏位不全，而复用的mal详情页面没有使用id重新查询
+            // 所有详情页的角色表，就暂时不点击跳转了
+            // targetPageBuilder: (JKData data, CusLabel type) =>
+            //     MALItemDetail(item: data, malType: type),
+            // dataExtractor: (Map<String, dynamic> item) => item["data"],
+            // typeExtractor: (Map<String, dynamic> item) => item["type"],
+          );
   }
 
   /// 因为4种类型的栏位差距过大，所以各自单独处理，就算有重复的也无所谓了
@@ -653,47 +651,25 @@ ${statisticData?.onHold}人搁置/${statisticData?.dropped}人弃坑/${statistic
     ];
   }
 
-  List<Widget> buildCharactersNote(JKData item) {
+  List<Widget> buildCharactersNote(JKData item, {bool? isSmall}) {
     return [
-      buildContentRow("姓名", "${item.name}"),
-      buildContentRow("日文", "${item.nameKanji}"),
-      buildContentRow("昵称", (item.nicknames ?? []).join("/")),
-      buildContentRow("最爱", "${item.favorites}"),
+      buildContentRow("姓名", "${item.name}", isSmall: isSmall),
+      buildContentRow("日文", "${item.nameKanji}", isSmall: isSmall),
+      buildContentRow("昵称", (item.nicknames ?? []).join("/"), isSmall: isSmall),
+      buildContentRow("最爱", "${item.favorites} 人", isSmall: isSmall),
     ];
   }
 
   List<Widget> buildPeopleNote(JKData item, {bool? isSmall}) {
     return [
-      buildContentRow(
-        "姓名",
-        "${item.name}",
-        labelFontSize: isSmall == true ? 12 : null,
-        valueFontSize: isSmall == true ? 12 : null,
-      ),
-      buildContentRow(
-        "中文",
-        "${item.familyName} ${item.givenName}",
-        labelFontSize: isSmall == true ? 12 : null,
-        valueFontSize: isSmall == true ? 12 : null,
-      ),
-      buildContentRow(
-        "昵称",
-        (item.alternateNames ?? []).join("/"),
-        labelFontSize: isSmall == true ? 12 : null,
-        valueFontSize: isSmall == true ? 12 : null,
-      ),
-      buildContentRow(
-        "生日",
-        "${item.birthday?.split('T').first}",
-        labelFontSize: isSmall == true ? 12 : null,
-        valueFontSize: isSmall == true ? 12 : null,
-      ),
-      buildContentRow(
-        "最爱",
-        "${item.favorites}",
-        labelFontSize: isSmall == true ? 12 : null,
-        valueFontSize: isSmall == true ? 12 : null,
-      ),
+      buildContentRow("姓名", "${item.name}", isSmall: isSmall),
+      buildContentRow("中文", "${item.familyName ?? ''} ${item.givenName}",
+          isSmall: isSmall),
+      buildContentRow("昵称", (item.alternateNames ?? []).join("/"),
+          isSmall: isSmall),
+      buildContentRow("生日", item.birthday?.split('T').first ?? '',
+          isSmall: isSmall),
+      buildContentRow("最爱", "${item.favorites} 人", isSmall: isSmall),
     ];
   }
 }

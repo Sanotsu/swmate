@@ -9,12 +9,6 @@ import '../../../models/jikan/jikan_data.dart';
 import '_components.dart';
 import 'mal_item_detail.dart';
 
-///
-/// 动漫推荐，进来就是bangumi的放送日历，可切换MAL的Schedule
-///   点击日历中的item跳转到对应的详情页面去
-///
-/// 然后可点击指定按钮，跳转到自定义的bangumi详情页面
-///
 class MALAnimeSchedule extends StatefulWidget {
   const MALAnimeSchedule({super.key});
 
@@ -126,9 +120,11 @@ class _MALAnimeScheduleState extends State<MALAnimeSchedule> {
         actions: [
           buildInfoButtonOnAction(
             context,
-            """选择“历史分季”后星期筛选无效，星期筛选仅适用于“每周番组”。
-\n“历史分季”需要同时选中“年份”和“分季”，否则查询当前季度的动漫。       
-\n清空“历史分季”则查询当前季度的动漫。""",
+            """默认查询最新的“每周番组”，可使用星期筛选。
+\n展开“历史分季”后星期筛选无效。
+\n使用“历史分季”需要同时选中“年份”和“分季”，否则查询当前季度的动漫。       
+\n清空“历史分季”则查询当前季度的动漫。
+\n收起“历史分季”则查询最新放映日历表。""",
           ),
         ],
       ),

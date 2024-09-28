@@ -8,7 +8,7 @@ import '../ai_assistant/index.dart';
 import 'accounting/index.dart';
 import 'animal_lover/dog_cat_index.dart';
 import 'anime_top/bangumi_calendar.dart';
-import 'anime_top/mal_index.dart';
+import 'anime_top/mal_top_index.dart';
 import 'random_dish/dish_wheel_index.dart';
 import 'waifu_pics/index.dart';
 
