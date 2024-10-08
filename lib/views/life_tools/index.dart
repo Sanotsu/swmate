@@ -9,6 +9,8 @@ import 'accounting/index.dart';
 import 'animal_lover/dog_cat_index.dart';
 import 'anime_top/bangumi_calendar.dart';
 import 'anime_top/mal_top_index.dart';
+import 'free_dictionary/index.dart';
+import 'news/daily_60s/index.dart';
 import 'news/momoyu/index.dart';
 import 'random_dish/dish_wheel_index.dart';
 import 'waifu_pics/index.dart';
@@ -95,7 +97,7 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                 const CustomEntranceCard(
                   title: 'WAIFU图片',
                   subtitle: "随机二次元WAIFU",
-                  icon: Icons.leaderboard_outlined,
+                  icon: Icons.image,
                   targetPage: WaifuPicIndex(),
                 ),
 
@@ -118,6 +120,22 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                   subtitle: "聚合新闻摸鱼网站",
                   icon: Icons.newspaper,
                   targetPage: MomoyuIndex(),
+                ),
+
+                const CustomEntranceCard(
+                  title: '每天60秒',
+                  subtitle: "每天60秒读懂世界",
+                  icon: Icons.newspaper,
+                  targetPage: Daily60S(
+                    imageUrl: 'https://api.03c3.cn/api/zb',
+                  ),
+                ),
+
+                const CustomEntranceCard(
+                  title: '英英词典',
+                  subtitle: "维基词典单词查询",
+                  icon: Icons.newspaper,
+                  targetPage: FreeDictionary(),
                 ),
 
                 // buildAIToolEntrance(

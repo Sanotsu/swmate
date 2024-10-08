@@ -91,6 +91,7 @@ dependencies:
   marquee: ^2.2.3
   easy_refresh: ^3.4.0
   flutter_rating_stars: ^1.1.0
+  audioplayers: ^6.1.0
 
 # 2024-09-18 marquee 依赖的fading_edge_scrollview版本会报错，使用此覆盖
 # 参看 https://github.com/mponkin/fading_edge_scrollview/issues/29

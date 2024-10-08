@@ -411,9 +411,13 @@ Future<String> getAITranslation(
   ApiPlatform? plat,
   String? model,
   TargetLanguage? tl,
+  String? systemPrompt,
 }) async {
   List<CCMessage> msgs = [
-    CCMessage(content: translateToChinese(), role: CusRole.system.name),
+    CCMessage(
+      content: systemPrompt ?? translateToChinese(),
+      role: CusRole.system.name,
+    ),
     CCMessage(content: text, role: CusRole.user.name),
   ];
 
