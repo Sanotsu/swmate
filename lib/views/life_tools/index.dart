@@ -9,6 +9,7 @@ import 'accounting/index.dart';
 import 'animal_lover/dog_cat_index.dart';
 import 'anime_top/bangumi_calendar.dart';
 import 'anime_top/mal_top_index.dart';
+import 'news/momoyu/index.dart';
 import 'random_dish/dish_wheel_index.dart';
 import 'waifu_pics/index.dart';
 
@@ -110,6 +111,13 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                   subtitle: "Bangumi番组计划",
                   icon: Icons.leaderboard_outlined,
                   targetPage: BangumiCalendar(),
+                ),
+
+                const CustomEntranceCard(
+                  title: '摸摸鱼',
+                  subtitle: "聚合新闻摸鱼网站",
+                  icon: Icons.newspaper,
+                  targetPage: MomoyuIndex(),
                 ),
 
                 // buildAIToolEntrance(

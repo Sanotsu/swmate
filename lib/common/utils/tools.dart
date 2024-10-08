@@ -427,3 +427,50 @@ Future<String> getAITranslation(
   );
   return cc.cusText;
 }
+
+String formatTimeAgo(String timeString) {
+  if (timeString.isEmpty) return "未知";
+
+  DateTime dateTime = DateTime.parse(timeString);
+  DateTime now = DateTime.now();
+  Duration difference = now.difference(dateTime);
+
+  if (difference.inDays > 365) {
+    int years = (difference.inDays / 365).floor();
+    return '$years年前';
+  } else if (difference.inDays > 30) {
+    int months = (difference.inDays / 30).floor();
+    return '$months月前';
+  } else if (difference.inDays > 0) {
+    return '${difference.inDays}天前';
+  } else if (difference.inHours > 0) {
+    return '${difference.inHours}小时前';
+  } else if (difference.inMinutes > 0) {
+    return '${difference.inMinutes}分钟前';
+  } else {
+    return '${difference.inSeconds}秒前';
+  }
+}
+
+// 英文显示有单数复数之分
+String formatTimeAgoEn(String timeString) {
+  DateTime dateTime = DateTime.parse(timeString);
+  DateTime now = DateTime.now();
+  Duration difference = now.difference(dateTime);
+
+  if (difference.inDays > 365) {
+    int years = (difference.inDays / 365).floor();
+    return '$years year${years > 1 ? 's' : ''} ago';
+  } else if (difference.inDays > 30) {
+    int months = (difference.inDays / 30).floor();
+    return '$months month${months > 1 ? 's' : ''} ago';
+  } else if (difference.inDays > 0) {
+    return '${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
+  } else if (difference.inHours > 0) {
+    return '${difference.inHours} hour${difference.inHours > 1 ? 's' : ''} ago';
+  } else if (difference.inMinutes > 0) {
+    return '${difference.inMinutes} minute${difference.inMinutes > 1 ? 's' : ''} ago';
+  } else {
+    return '${difference.inSeconds} second${difference.inSeconds > 1 ? 's' : ''} ago';
+  }
+}

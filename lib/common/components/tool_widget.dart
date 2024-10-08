@@ -988,8 +988,13 @@ buildClickImageDialog(BuildContext context, String imageUrl) {
 
 // 调用外部浏览器打开url
 Future<void> launchStringUrl(String url) async {
-  if (!await launchUrl(Uri.parse(url))) {
-    throw Exception('Could not launch $url');
+  if (!await launchUrl(
+    Uri.parse(url),
+    // mode: LaunchMode.externalApplication,
+    // mode: LaunchMode.inAppBrowserView,
+    // browserConfiguration: const BrowserConfiguration(showTitle: true),
+  )) {
+    throw Exception('无法访问 $url');
   }
 }
 

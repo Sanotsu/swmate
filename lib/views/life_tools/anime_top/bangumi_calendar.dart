@@ -71,6 +71,7 @@ class _BangumiCalendarState extends State<BangumiCalendar> {
     // 如果是日历，则一次查询完所有，上拉下拉都重新刷新
     if (query.isEmpty) {
       var jkRst = await getBangumiCalendar();
+      if (!mounted) return;
       setState(() {
         calendarList = jkRst;
         hasMore = true;

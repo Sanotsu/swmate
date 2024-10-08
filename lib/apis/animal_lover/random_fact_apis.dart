@@ -20,7 +20,8 @@ enum FactSource {
 
 const Map<FactSource, String> apiUrls = {
   FactSource.dogapi: "https://dogapi.dog/api/v2/facts",
-  FactSource.meowfacts: "https://meowfacts.herokuapp.com/?lang=zho",
+  // 2024-10-07 国内好像不能访问
+  // FactSource.meowfacts: "https://meowfacts.herokuapp.com/?lang=zho",
   FactSource.catfact: "https://catfact.ninja/fact",
 };
 
