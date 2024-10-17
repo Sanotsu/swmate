@@ -4,9 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class Daily60S extends StatelessWidget {
   final String? title;
-  final String imageUrl;
+  final String? imageUrl;
 
-  const Daily60S({super.key, required this.imageUrl, this.title});
+  const Daily60S({super.key, this.imageUrl, this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,8 @@ class Daily60S extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         child: CachedNetworkImage(
-          imageUrl: imageUrl,
+          imageUrl: imageUrl ??
+              'https://api.03c3.cn/api/zb?random=${DateTime.now().millisecondsSinceEpoch}',
           // width: MediaQuery.of(context).size.width,
           width: 1.sw,
           fit: BoxFit.fitWidth,

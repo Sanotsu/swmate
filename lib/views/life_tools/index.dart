@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../../apis/hitokoto/hitokoto_apis.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
+import '../../models/hitokoto/hitokoto.dart';
 import '../ai_assistant/_componets/custom_entrance_card.dart';
 import '../ai_assistant/index.dart';
 import 'accounting/index.dart';
@@ -13,6 +15,7 @@ import 'free_dictionary/index.dart';
 import 'news/daily_60s/index.dart';
 import 'news/momoyu/index.dart';
 import 'random_dish/dish_wheel_index.dart';
+import 'usda_food_data/index.dart';
 import 'waifu_pics/index.dart';
 
 ///
@@ -27,6 +30,28 @@ class LifeToolIndex extends StatefulWidget {
 }
 
 class _LifeToolIndexState extends State<LifeToolIndex> {
+  String? hitokoto;
+
+  Hitokoto? hito;
+
+  @override
+  void initState() {
+    getOneSentence();
+    super.initState();
+  }
+
+
+  // 2024-10-17 注意，请求太过频繁会无法使用
+  getOneSentence() async {
+    var a = await getHitokoto();
+
+    if (!mounted) return;
+    setState(() {
+      hitokoto = "${a.hitokoto ?? ''}——${a.fromWho ?? ''}[${a.from ?? ''}]";
+      hito = a;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // 计算屏幕剩余的高度
@@ -51,10 +76,19 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(height: 10.sp),
+          // SizedBox(height: 10.sp),
+          buildHitokoto(),
+          // 滚动显示一行有趣的一言
+          // hitokoto != null
+          //     ? SimpleMarqueeOrText(
+          //         data: hitokoto ?? "",
+          //         velocity: 30,
+          //         style: TextStyle(fontSize: 15.sp),
+          //       )
+          //     : Container(),
           // 入口按钮
           SizedBox(
-            height: screenBodyHeight - 50.sp,
+            height: screenBodyHeight - 80.sp,
             child: GridView.count(
               primary: false,
               padding: EdgeInsets.symmetric(horizontal: 5.sp),
@@ -126,9 +160,7 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                   title: '每天60秒',
                   subtitle: "每天60秒读懂世界",
                   icon: Icons.newspaper,
-                  targetPage: Daily60S(
-                    imageUrl: 'https://api.03c3.cn/api/zb',
-                  ),
+                  targetPage: Daily60S(),
                 ),
 
                 const CustomEntranceCard(
@@ -136,6 +168,13 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                   subtitle: "维基词典单词查询",
                   icon: Icons.newspaper,
                   targetPage: FreeDictionary(),
+                ),
+
+                const CustomEntranceCard(
+                  title: "食品数据",
+                  subtitle: "USDA食品数据中心",
+                  icon: Icons.food_bank,
+                  targetPage: USDAFoodDataCentral(),
                 ),
 
                 // buildAIToolEntrance(
@@ -148,5 +187,39 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
         ],
       ),
     );
+  }
+
+  Widget buildHitokoto() {
+    return hitokoto != null
+        ? SizedBox(
+            height: 60.sp,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 5.sp),
+              child: RichText(
+                softWrap: true,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: hito?.hitokoto ?? '',
+                      style: TextStyle(color: Colors.blue, fontSize: 15.sp),
+                    ),
+                    // 第二行文本，靠右对齐
+                    WidgetSpan(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          "\n——${hito?.fromWho ?? ''}「${hito?.from ?? ''}」",
+                          style: TextStyle(fontSize: 12.sp),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        : Container(height: 60.sp);
   }
 }
