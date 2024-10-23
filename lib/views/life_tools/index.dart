@@ -16,7 +16,7 @@ import 'free_dictionary/index.dart';
 import 'news/daily_60s/index.dart';
 import 'news/momoyu/index.dart';
 import 'random_dish/dish_wheel_index.dart';
-import 'usda_food_data/index.dart';
+import 'food/usda_food_data/index.dart';
 import 'waifu_pics/index.dart';
 
 ///

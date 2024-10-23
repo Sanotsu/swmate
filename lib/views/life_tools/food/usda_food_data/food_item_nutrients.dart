@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../apis/usda_food_data_central/usda_food_data_apis.dart';
-import '../../../common/components/tool_widget.dart';
-import '../../../models/usda_food_data/usda_food_item.dart';
+import '../../../../apis/food/usda_food_data_central/usda_food_data_apis.dart';
+import '../../../../common/components/tool_widget.dart';
+import '../../../../models/food/usda_food_data/usda_food_item.dart';
 
 // 食品营养素详情页面
 class USDAFoodItemNutrientPage extends StatefulWidget {

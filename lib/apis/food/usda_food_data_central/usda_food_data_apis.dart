@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import '../../common/utils/dio_client/cus_http_client.dart';
-import '../../models/usda_food_data/usda_food_item.dart';
-import '../../models/usda_food_data/usda_food_search_resp.dart';
+import '../../../common/utils/dio_client/cus_http_client.dart';
+import '../../../models/food/usda_food_data/usda_food_item.dart';
+import '../../../models/food/usda_food_data/usda_food_search_resp.dart';
 
 /// 来源：https://fdc.nal.usda.gov/api-guide.html
 /// 关于数据类型的说明：https://fdc.nal.usda.gov/data-documentation.html

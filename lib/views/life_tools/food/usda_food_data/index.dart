@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../apis/usda_food_data_central/usda_food_data_apis.dart';
-import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
-import '../../../models/usda_food_data/usda_food_item.dart';
-import '../anime_top/_components.dart';
+import '../../../../apis/food/usda_food_data_central/usda_food_data_apis.dart';
+import '../../../../common/components/tool_widget.dart';
+import '../../../../common/constants.dart';
+import '../../../../models/food/usda_food_data/usda_food_item.dart';
+import '../../anime_top/_components.dart';
 import 'food_item_nutrients.dart';
 
 // 主要用来区分不同数据源返回的结构不太，因此显示的栏位不同
