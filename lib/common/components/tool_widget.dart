@@ -231,10 +231,11 @@ void showSnackMessage(
   BuildContext context,
   String message, {
   Color? backgroundColor = Colors.red,
+  int? seconds,
 }) {
   var snackBar = SnackBar(
     content: Text(message),
-    duration: const Duration(seconds: 3),
+    duration: Duration(seconds: seconds ?? 3),
     backgroundColor: backgroundColor,
   );
 

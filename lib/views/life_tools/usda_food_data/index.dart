@@ -202,6 +202,7 @@ class _USDAFoodDataCentralState extends State<USDAFoodDataCentral> {
               searchController: searchController,
               hintText: "Input English keywords",
               onSearchPressed: _handleSearch,
+              height: 48.sp,
             ),
 
             Divider(height: 20.sp),

@@ -11,6 +11,7 @@ import 'accounting/index.dart';
 import 'animal_lover/dog_cat_index.dart';
 import 'anime_top/bangumi_calendar.dart';
 import 'anime_top/mal_top_index.dart';
+import 'food/nutritionix/index.dart';
 import 'free_dictionary/index.dart';
 import 'news/daily_60s/index.dart';
 import 'news/momoyu/index.dart';
@@ -39,7 +40,6 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
     getOneSentence();
     super.initState();
   }
-
 
   // 2024-10-17 注意，请求太过频繁会无法使用
   getOneSentence() async {
@@ -170,11 +170,20 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                   targetPage: FreeDictionary(),
                 ),
 
+                Container(),
+
                 const CustomEntranceCard(
                   title: "食品数据",
                   subtitle: "USDA食品数据中心",
                   icon: Icons.food_bank,
                   targetPage: USDAFoodDataCentral(),
+                ),
+
+                const CustomEntranceCard(
+                  title: "Nutritionix",
+                  subtitle: "Nutritionix食品数据",
+                  icon: Icons.food_bank,
+                  targetPage: NutritionixFoodCentral(),
                 ),
 
                 // buildAIToolEntrance(

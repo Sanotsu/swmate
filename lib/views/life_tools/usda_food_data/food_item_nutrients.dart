@@ -155,7 +155,7 @@ https://www.ars.usda.gov/northeast-area/beltsville-md-bhnrc/beltsville-human-nut
                 if (item.foodNutrients != null)
                   Expanded(
                     child: SingleChildScrollView(
-                      child: buildModelDataTable(dataType, item.foodNutrients!),
+                      child: buildFoodDataTable(dataType, item.foodNutrients!),
                     ),
                   ),
               ],
@@ -230,7 +230,7 @@ https://www.ars.usda.gov/northeast-area/beltsville-md-bhnrc/beltsville-human-nut
     );
   }
 
-  Widget buildModelDataTable(
+  Widget buildFoodDataTable(
       String dataType, List<USDAFoodNutrient> foodNutrients) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
