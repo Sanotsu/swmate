@@ -33,7 +33,6 @@ class LifeToolIndex extends StatefulWidget {
 
 class _LifeToolIndexState extends State<LifeToolIndex> {
   String? hitokoto;
-
   Hitokoto? hito;
 
   @override
@@ -55,19 +54,6 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
 
   @override
   Widget build(BuildContext context) {
-    // 计算屏幕剩余的高度
-    // 设备屏幕的总高度
-    //  - 屏幕顶部的安全区域高度，即状态栏的高度
-    //  - 屏幕底部的安全区域高度，即导航栏的高度或者虚拟按键的高度
-    //  - 应用程序顶部的工具栏（如 AppBar）的高度
-    //  - 应用程序底部的导航栏的高度
-    //  - 组件的边框间隔(不一定就是2)
-    double screenBodyHeight = MediaQuery.of(context).size.height -
-        MediaQuery.of(context).padding.top -
-        MediaQuery.of(context).padding.bottom -
-        kToolbarHeight -
-        kBottomNavigationBarHeight;
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -88,116 +74,21 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
           //       )
           //     : Container(),
           // 入口按钮
-          SizedBox(
-            height: screenBodyHeight - 80.sp,
-            child: GridView.count(
-              primary: false,
-              padding: EdgeInsets.symmetric(horizontal: 5.sp),
-              crossAxisSpacing: 5,
-              mainAxisSpacing: 5,
-              crossAxisCount: 2,
-              childAspectRatio: 3 / 2,
-              children: <Widget>[
-                const CustomEntranceCard(
-                  title: '极简记账',
-                  subtitle: "手动记账图表统计",
-                  icon: Icons.receipt,
-                  targetPage: BillItemIndex(),
-                ),
-
-                const CustomEntranceCard(
-                  title: '随机菜品',
-                  subtitle: "随机生成一道菜品",
-                  icon: Icons.restaurant_menu,
-                  targetPage: DishWheelIndex(),
-                ),
-
-                CustomEntranceCard(
-                  title: '猫狗之家',
-                  subtitle: "猫狗的图片和事实",
-                  icon: FontAwesomeIcons.dog,
-                  onTap: () async {
-                    await navigateToToolScreen(
-                      context,
-                      LLModelType.vision,
-                      (llmSpecList, cusSysRoleSpecs) => DogCatLover(
-                        llmSpecList: llmSpecList,
-                      ),
-                      roleType: LLModelType.vision,
-                    );
-                  },
-                  // targetPage: DogCatLover(),
-                ),
-
-                const CustomEntranceCard(
-                  title: 'WAIFU图片',
-                  subtitle: "随机二次元WAIFU",
-                  icon: Icons.image,
-                  targetPage: WaifuPicIndex(),
-                ),
-
-                const CustomEntranceCard(
-                  title: 'MAL动漫排行',
-                  subtitle: "MyAnimeList排行榜",
-                  icon: Icons.leaderboard_outlined,
-                  targetPage: MALTop(),
-                ),
-
-                const CustomEntranceCard(
-                  title: 'BGM动漫资讯',
-                  subtitle: "Bangumi番组计划",
-                  icon: Icons.leaderboard_outlined,
-                  targetPage: BangumiCalendar(),
-                ),
-
-                const CustomEntranceCard(
-                  title: '摸摸鱼',
-                  subtitle: "聚合新闻摸鱼网站",
-                  icon: Icons.newspaper,
-                  targetPage: MomoyuIndex(),
-                ),
-
-                const CustomEntranceCard(
-                  title: '每天60秒',
-                  subtitle: "每天60秒读懂世界",
-                  icon: Icons.newspaper,
-                  targetPage: Daily60S(),
-                ),
-
-                const CustomEntranceCard(
-                  title: '英英词典',
-                  subtitle: "维基词典单词查询",
-                  icon: Icons.newspaper,
-                  targetPage: FreeDictionary(),
-                ),
-
-                Container(),
-
-                const CustomEntranceCard(
-                  title: "食品数据",
-                  subtitle: "USDA食品数据中心",
-                  icon: Icons.food_bank,
-                  targetPage: USDAFoodDataCentral(),
-                ),
-
-                const CustomEntranceCard(
-                  title: "Nutritionix",
-                  subtitle: "Nutritionix食品数据",
-                  icon: Icons.food_bank,
-                  targetPage: NutritionixFoodCentral(),
-                ),
-
-                const CustomEntranceCard(
-                  title: "热量计算器",
-                  subtitle: "食物热量和运动消耗",
-                  icon: Icons.food_bank,
-                  targetPage: NixSimpleCalculator(),
-                ),
-
-                // buildAIToolEntrance(
-                //   "功能\n占位(TODO)",
-                //   icon: const Icon(Icons.search),
-                // ),
+          const Divider(),
+          Expanded(
+            child: ListView(
+              children: [
+                // 这个是直接展示全部
+                // ...buildCardList(context),
+                // 这个是分类的折叠栏
+                buildToolTile(context),
+                const Divider(),
+                buildAnimeTile(),
+                const Divider(),
+                buildNewsTile(),
+                const Divider(),
+                buildFoodTile(),
+                const Divider(),
               ],
             ),
           ),
@@ -239,4 +130,212 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
           )
         : Container(height: 60.sp);
   }
+}
+
+/// 直接全部平铺展示
+List<Widget> buildCardList(BuildContext context) {
+  return [
+    const Divider(),
+    titleWidget('实用小工具', iconData: Icons.build),
+    ...toolRows(context),
+    const Divider(),
+    titleWidget('图片与动漫', iconData: Icons.image),
+    ...animeRows(),
+    const Divider(),
+    titleWidget('摸鱼看新闻', iconData: Icons.newspaper),
+    ...newsRows(),
+    const Divider(),
+    titleWidget('饮食和健康', iconData: Icons.set_meal),
+    ...foodRows(),
+  ];
+}
+
+/// 分类的折叠框显示
+buildToolTile(BuildContext context) {
+  return ExpansionTile(
+    // 展开后不显示上下的边框
+    shape: const Border(),
+    // 展开后不显示上下的边框(改为透明色也看不到)
+    // shape: Border.all(color: Colors.transparent),
+    leading: const Icon(Icons.build, color: Colors.green),
+    title: titleWidget('实用工具'),
+    children: toolRows(context),
+  );
+}
+
+buildAnimeTile() {
+  return ExpansionTile(
+    // 展开后不显示上下的边框
+    shape: const Border(),
+    leading: const Icon(Icons.image, color: Colors.green),
+    title: titleWidget('图片动漫'),
+    children: animeRows(),
+  );
+}
+
+buildNewsTile() {
+  return ExpansionTile(
+    // 展开后不显示上下的边框
+    shape: const Border(),
+    leading: const Icon(Icons.newspaper, color: Colors.green),
+    title: titleWidget('摸鱼新闻'),
+    children: newsRows(),
+  );
+}
+
+buildFoodTile() {
+  return ExpansionTile(
+    // 展开后不显示上下的边框
+    shape: const Border(),
+    leading: const Icon(Icons.set_meal, color: Colors.green),
+    title: titleWidget('饮食健康'),
+    children: foodRows(),
+  );
+}
+
+Widget titleWidget(String title, {IconData? iconData}) {
+  return Padding(
+    padding: EdgeInsets.all(5.sp),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        if (iconData != null) Icon(iconData, color: Colors.green),
+        SizedBox(width: 10.sp),
+        Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18.sp,
+            color: Colors.green,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+List<Widget> toolRows(BuildContext context) {
+  return [
+    buildRow([
+      const LifeToolEntranceCard(
+        title: '极简记账',
+        subtitle: "手动记账图表统计",
+        icon: Icons.receipt,
+        targetPage: BillItemIndex(),
+      ),
+      const LifeToolEntranceCard(
+        title: '随机菜品',
+        subtitle: "随机生成一道菜品",
+        icon: Icons.restaurant_menu,
+        targetPage: DishWheelIndex(),
+      ),
+    ]),
+    buildRow([
+      LifeToolEntranceCard(
+        title: '猫狗之家',
+        subtitle: "图片识别猫狗品种",
+        icon: FontAwesomeIcons.dog,
+        onTap: () async {
+          await navigateToToolScreen(
+            context,
+            LLModelType.vision,
+            (llmSpecList, cusSysRoleSpecs) => DogCatLover(
+              llmSpecList: llmSpecList,
+            ),
+            roleType: LLModelType.vision,
+          );
+        },
+      ),
+      const LifeToolEntranceCard(
+        title: '英英词典',
+        subtitle: "维基词典单词查询",
+        icon: Icons.newspaper,
+        targetPage: FreeDictionary(),
+      ),
+    ]),
+  ];
+}
+
+List<Widget> animeRows() {
+  return [
+    buildRow([
+      const LifeToolEntranceCard(
+        title: 'BGM动漫资讯',
+        subtitle: "Bangumi番组计划",
+        icon: Icons.leaderboard_outlined,
+        targetPage: BangumiCalendar(),
+      ),
+      const LifeToolEntranceCard(
+        title: 'MAL动漫排行',
+        subtitle: "MyAnimeList排行榜",
+        icon: Icons.leaderboard_outlined,
+        targetPage: MALTop(),
+      ),
+    ]),
+    buildRow([
+      const LifeToolEntranceCard(
+        title: 'WAIFU图片',
+        subtitle: "随机二次元WAIFU",
+        icon: Icons.image,
+        targetPage: WaifuPicIndex(),
+      ),
+      const SizedBox(),
+    ])
+  ];
+}
+
+List<Widget> newsRows() {
+  return [
+    buildRow([
+      const LifeToolEntranceCard(
+        title: '摸摸鱼',
+        subtitle: "聚合新闻摸鱼网站",
+        icon: Icons.newspaper,
+        targetPage: MomoyuIndex(),
+      ),
+      const LifeToolEntranceCard(
+        title: '每天60秒',
+        subtitle: "每天60秒读懂世界",
+        icon: Icons.newspaper,
+        targetPage: Daily60S(),
+      ),
+    ]),
+  ];
+}
+
+List<Widget> foodRows() {
+  return [
+    buildRow([
+      const LifeToolEntranceCard(
+        title: "食品数据",
+        subtitle: "USDA食品数据中心",
+        icon: Icons.food_bank,
+        targetPage: USDAFoodDataCentral(),
+      ),
+      const LifeToolEntranceCard(
+        title: "Nutritionix",
+        subtitle: "Nutritionix食品数据",
+        icon: Icons.food_bank,
+        targetPage: NutritionixFoodCentral(),
+      ),
+    ]),
+    buildRow([
+      const LifeToolEntranceCard(
+        title: "热量计算器",
+        subtitle: "食物热量和运动消耗",
+        icon: Icons.calculate,
+        targetPage: NixSimpleCalculator(),
+      ),
+      const SizedBox(),
+    ]),
+  ];
+}
+
+Widget buildRow(List<Widget> children) {
+  return SizedBox(
+    height: 80.sp,
+    child: Row(
+      children: children.map((child) => Expanded(child: child)).toList(),
+    ),
+  );
 }

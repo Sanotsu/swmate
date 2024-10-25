@@ -125,7 +125,7 @@ class _FreeDictionaryState extends State<FreeDictionary> {
             KeywordInputArea(
               searchController: searchController,
               height: 52.sp,
-              hintText: "input word here",
+              hintText: "Enter word here",
               buttonHintText: "Query",
               textOnChanged: (val) => setState(() => query = val),
               onSearchPressed: query.isNotEmpty ? _handleSearch : null,

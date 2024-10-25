@@ -14,13 +14,13 @@ import '../../common/utils/dio_client/cus_http_client.dart';
 
 enum FactSource {
   dogapi,
-  meowfacts,
+  // meowfacts,
   catfact,
 }
 
 const Map<FactSource, String> apiUrls = {
   FactSource.dogapi: "https://dogapi.dog/api/v2/facts",
-  // 2024-10-07 国内好像不能访问
+  // 2024-10-07 国内不能访问
   // FactSource.meowfacts: "https://meowfacts.herokuapp.com/?lang=zho",
   FactSource.catfact: "https://catfact.ninja/fact",
 };
@@ -47,10 +47,12 @@ Future<String> getAnimalFact() async {
       // "attributes":{"body":"Fifty-eight percent of people put pets in family and holiday portraits."}}]}
       return ((respData["data"] as List<dynamic>).first["attributes"]
           as Map<String, dynamic>)["body"];
-    } else if (apikey == FactSource.meowfacts) {
-      // 结构类似 {"data":["貓咪極速奔跑可達時速 50 公里。"]}
-      return (respData["data"] as List<dynamic>).first;
-    } else if (apikey == FactSource.catfact) {
+    }
+    //  else if (apikey == FactSource.meowfacts) {
+    //   // 结构类似 {"data":["貓咪極速奔跑可達時速 50 公里。"]}
+    //   return (respData["data"] as List<dynamic>).first;
+    // }
+    else if (apikey == FactSource.catfact) {
       // 结构类似 {"fact":"Cats take between 20-40 breaths per minute.","length":43}
       return respData["fact"];
     }
