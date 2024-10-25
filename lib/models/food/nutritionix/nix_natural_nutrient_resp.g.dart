@@ -67,7 +67,9 @@ NixNutrientFood _$NixNutrientFoodFromJson(Map<String, dynamic> json) =>
       nixBrandName: json['nix_brand_name'] as String?,
       nixItemId: json['nix_item_id'] as String?,
       nixItemName: json['nix_item_name'] as String?,
-      subRecipe: json['sub_recipe'] as String?,
+      subRecipe: (json['sub_recipe'] as List<dynamic>?)
+          ?.map((e) => NixSubRecipe.fromJson(e as Map<String, dynamic>))
+          .toList(),
       tagId: json['tag_id'] as String?,
       note: json['note'] as String?,
       updatedAt: json['updated_at'] as String?,
@@ -111,7 +113,7 @@ Map<String, dynamic> _$NixNutrientFoodToJson(NixNutrientFood instance) =>
       'lng': instance.lng,
       'meal_type': instance.mealType,
       'photo': instance.photo?.toJson(),
-      'sub_recipe': instance.subRecipe,
+      'sub_recipe': instance.subRecipe?.map((e) => e.toJson()).toList(),
       'note': instance.note,
       'class_code': instance.classCode,
       'brick_code': instance.brickCode,
@@ -171,6 +173,29 @@ Map<String, dynamic> _$NixAltMeasureToJson(NixAltMeasure instance) =>
       'measure': instance.measure,
       'seq': instance.seq,
       'qty': instance.qty,
+    };
+
+NixSubRecipe _$NixSubRecipeFromJson(Map<String, dynamic> json) => NixSubRecipe(
+      servingWeight: (json['serving_weight'] as num?)?.toInt(),
+      food: json['food'] as String?,
+      ndbNumber: (json['ndb_number'] as num?)?.toInt(),
+      calories: (json['calories'] as num?)?.toDouble(),
+      tagId: (json['tag_id'] as num?)?.toInt(),
+      recipeId: (json['recipe_id'] as num?)?.toInt(),
+      servingQty: (json['serving_qty'] as num?)?.toDouble(),
+      servingUnit: json['serving_unit'] as String?,
+    );
+
+Map<String, dynamic> _$NixSubRecipeToJson(NixSubRecipe instance) =>
+    <String, dynamic>{
+      'serving_weight': instance.servingWeight,
+      'food': instance.food,
+      'ndb_number': instance.ndbNumber,
+      'calories': instance.calories,
+      'tag_id': instance.tagId,
+      'recipe_id': instance.recipeId,
+      'serving_qty': instance.servingQty,
+      'serving_unit': instance.servingUnit,
     };
 
 NixPhoto _$NixPhotoFromJson(Map<String, dynamic> json) => NixPhoto(

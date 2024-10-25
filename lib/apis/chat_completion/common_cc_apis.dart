@@ -762,8 +762,9 @@ Map<ApiPlatform, String> platAKMap = {
 Future<ComCCResp> useAkCCResp(
   List<CCMessage> messages,
   ApiPlatform plat,
-  String model,
-) async {
+  String model, {
+  bool? webSearch = true,
+}) async {
   if (!platAKMap.keys.contains(plat)) {
     return ComCCResp(errorCode: 9999, cusText: "不支持该平台的统一AK调用");
   }
@@ -776,12 +777,15 @@ Future<ComCCResp> useAkCCResp(
       ? ComCCReq.glm(
           model: model,
           messages: messages,
-          tools: [
-            CCTool(
-              "web_search",
-              webSearch: CCWebSearch(enable: true, searchResult: true),
-            )
-          ],
+          // 翻译的时候联网反而可能会出事，所以加一个可以控制联网的参数
+          tools: webSearch == true
+              ? [
+                  CCTool(
+                    "web_search",
+                    webSearch: CCWebSearch(enable: true, searchResult: true),
+                  )
+                ]
+              : null,
         )
       : ComCCReq(model: model, messages: messages);
 

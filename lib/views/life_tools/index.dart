@@ -12,6 +12,7 @@ import 'animal_lover/dog_cat_index.dart';
 import 'anime_top/bangumi_calendar.dart';
 import 'anime_top/mal_top_index.dart';
 import 'food/nutritionix/index.dart';
+import 'food/nutritionix_calculator/index.dart';
 import 'free_dictionary/index.dart';
 import 'news/daily_60s/index.dart';
 import 'news/momoyu/index.dart';
@@ -184,6 +185,13 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
                   subtitle: "Nutritionix食品数据",
                   icon: Icons.food_bank,
                   targetPage: NutritionixFoodCentral(),
+                ),
+
+                const CustomEntranceCard(
+                  title: "热量计算器",
+                  subtitle: "食物热量和运动消耗",
+                  icon: Icons.food_bank,
+                  targetPage: NixSimpleCalculator(),
                 ),
 
                 // buildAIToolEntrance(

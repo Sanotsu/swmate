@@ -69,7 +69,10 @@ class _USDAFoodDataCentralState extends State<USDAFoodDataCentral> {
 
   String note = """
 数据来源: [美国农业部食品数据中心(USDA FoodData Central)](https://fdc.nal.usda.gov/data-documentation.html)
-\n\n“数据类型”官方文档: (https://fdc.nal.usda.gov/data-documentation.html)
+
+**由于是国外的API，请输入英文进行搜索。**
+
+“数据类型”官方文档: (https://fdc.nal.usda.gov/data-documentation.html)
 
 定义分别如下：
 

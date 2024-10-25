@@ -138,7 +138,7 @@ class NixNutrientFood {
   NixPhoto? photo;
 
   @JsonKey(name: 'sub_recipe')
-  String? subRecipe;
+  List<NixSubRecipe>? subRecipe;
 
   @JsonKey(name: 'note')
   String? note;
@@ -327,6 +327,49 @@ class NixAltMeasure {
       _$NixAltMeasureFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$NixAltMeasureToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true)
+class NixSubRecipe {
+  @JsonKey(name: 'serving_weight')
+  int? servingWeight;
+
+  @JsonKey(name: 'food')
+  String? food;
+
+  @JsonKey(name: 'ndb_number')
+  int? ndbNumber;
+
+  @JsonKey(name: 'calories')
+  double? calories;
+
+  @JsonKey(name: 'tag_id')
+  int? tagId;
+
+  @JsonKey(name: 'recipe_id')
+  int? recipeId;
+
+  @JsonKey(name: 'serving_qty')
+  double? servingQty;
+
+  @JsonKey(name: 'serving_unit')
+  String? servingUnit;
+
+  NixSubRecipe({
+    this.servingWeight,
+    this.food,
+    this.ndbNumber,
+    this.calories,
+    this.tagId,
+    this.recipeId,
+    this.servingQty,
+    this.servingUnit,
+  });
+
+  factory NixSubRecipe.fromJson(Map<String, dynamic> srcJson) =>
+      _$NixSubRecipeFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$NixSubRecipeToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)

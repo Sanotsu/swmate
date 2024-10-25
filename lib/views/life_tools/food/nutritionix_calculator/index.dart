@@ -5,52 +5,65 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../apis/_default_system_role_list/inner_system_prompt.dart';
 import '../../../../apis/food/nutritionix/nutritionix_apis.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/utils/dio_client/interceptor_error.dart';
+import '../../../../common/utils/tools.dart';
 import '../../../../models/food/nutritionix/nix_natural_exercise_resp.dart';
 import '../../../../models/food/nutritionix/nix_natural_nutrient_resp.dart';
 import '../../../../services/cus_get_storage.dart';
-import 'nix_food_item_nutrients_page.dart';
+import '../nutritionix/nix_food_item_nutrients_page.dart';
 
-class NixNaturalLanguageQuery extends StatefulWidget {
-  const NixNaturalLanguageQuery({super.key});
+///
+/// 2024-10-25
+/// 直接隐藏大模型翻译中文为英文这部分
+/// 如果后续想要用户看到翻译后的内容，到时候再加显示按钮
+///
+class NixSimpleCalculator extends StatefulWidget {
+  const NixSimpleCalculator({super.key});
 
   @override
-  State<NixNaturalLanguageQuery> createState() =>
-      _NixNaturalLanguageQueryState();
+  State createState() => _NixSimpleCalculatorState();
 }
 
-class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
+class _NixSimpleCalculatorState extends State<NixSimpleCalculator>
     with SingleTickerProviderStateMixin {
-  // tab控制器
   late TabController _tabController;
-  // 食物摄入文本框控制器
-  final _foodController = TextEditingController();
-  // 运动锻炼文本框控制器
-  final _exerciseController = TextEditingController();
+  final TextEditingController _foodController = TextEditingController();
+  final TextEditingController _exerciseController = TextEditingController();
+
+  // 输入的食物摄入或者运动项次(两者不会同时存在)
+  String foodQuery = '';
+  String exerciseQuery = '';
+
+  // 身高体重年龄的修改表单全局key
+  final _formKey = GlobalKey<FormBuilderState>();
+
+  // 是否在查询数据中
+  bool isLoading = false;
 
   // 食物摄入能量查询的结果
   List<NixNutrientFood> foodResult = [];
   // 运动消耗能量查询的结果
   List<NixExercise> exerciseResult = [];
 
-  // 是否在查询数据中
-  bool isLoading = false;
-
-  // 身高体重年龄的修改表单全局key
-  final _formKey = GlobalKey<FormBuilderState>();
+  // 中文翻译后的英文
+  String translatedTxt = "";
 
   // 提示说明文本
-  String note = '''数据来源于[nutritionix](https://www.nutritionix.com/business/api)
+  String note = '''
+数据来源于[nutritionix API](https://www.nutritionix.com/business/api)
 
-**由于是国外的API，请输入英文进行搜索。**
-- **运动需要每项单独一行输入**；避免理解不当，食物也建议每项单行输入。
+**运动需要每项单独一行输入**；避免理解不当，食物也建议每项单行输入。
+- 最好使用可量化的单位，比如：300克熟米饭、跳绳30分钟……
+- 原始接口需要英文输入，所以默认是把用户输入使用大模型翻译为英文后调用后台API(已经是英文则使用原文)，结果仅供参考。
 
-\n\n[MET](https://en.wikipedia.org/wiki/Metabolic_equivalent_of_task)可以被理解为特定活动状态下相对于静息代谢状态的能耗水平。
-\n\n可以简单的将 1 MET 定义为 1kcal/kg/hour （每公斤体重每小时消耗1大卡），这个数字基本与静息代谢率相等。
+[MET](https://en.wikipedia.org/wiki/Metabolic_equivalent_of_task)可以被理解为特定活动状态下相对于静息代谢状态的能耗水平。
+- 可以简单的将 1 MET 定义为 1kcal/kg/hour（每公斤体重每小时消耗1大卡），这个数字基本与静息代谢率相等。
 
 用于计算运动消耗的默认体重为70KG。
+- 可以点击“身高体重”文字按钮进行修改。
   ''';
 
   @override
@@ -69,7 +82,7 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
     super.dispose();
   }
 
-  // 切换tab时清空查询结果（暂时不用）
+  // 切换tab之后，翻译的内容也要变了(暂时不用)
   void handleTabChange() {
     // tab is animating. from active (getting the index) to inactive(getting the index)
     if (_tabController.indexIsChanging) {
@@ -78,34 +91,54 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
       // tab is finished animating you get the current index
       // here you can get your index or run some method once.
 
-      if (_tabController.index == 0) {
-        setState(() {
-          // exerciseResult.clear();
-        });
-      }
+      // 切换tab后，翻译成的英文不显示
+      setState(() {
+        translatedTxt = "";
+      });
 
-      if (_tabController.index == 1) {
-        setState(() {
-          // foodResult.clear();
-        });
-      }
+      // if (_tabController.index == 0) {
+      //   if (foodQuery.isEmpty) {
+      //     setState(() {
+      //       foodResult.clear();
+      //     });
+      //   }
+      // }
+
+      // if (_tabController.index == 1) {
+      //   if (exerciseQuery.isEmpty) {
+      //     setState(() {
+      //       exerciseResult.clear();
+      //     });
+      //   }
+      // }
     }
   }
 
+  Future<String> _translateText(String text) async {
+    // 如果tab索引为0,即查询食物；否则就是运动
+    return await getAITranslation(
+      text,
+      systemPrompt: translateToEnglish(),
+    );
+  }
+
   // 自然语言查询食物摄入、运动消耗的接口
-  Future<void> fetchData(String query) async {
+  Future<void> fetchData() async {
     if (isLoading) return;
     setState(() {
       isLoading = true;
     });
 
-    if (query.isEmpty) {
-      showSnackMessage(context, "输入框不可为空");
-      setState(() {
-        isLoading = false;
-      });
-      return;
-    }
+    String input = _tabController.index == 0
+        ? _foodController.text
+        : _exerciseController.text;
+
+    var query = await _translateText(input);
+
+    if (!mounted) return;
+    setState(() {
+      translatedTxt = query;
+    });
 
     try {
       if (_tabController.index == 0) {
@@ -137,6 +170,12 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
           "数据查询出错：${jsonDecode(e.errRespString)['message']}",
           seconds: 5,
         );
+      } else {
+        showSnackMessage(
+          context,
+          "数据查询出错\n 其他错误：${e.toString()}",
+          seconds: 5,
+        );
       }
     } finally {
       setState(() {
@@ -158,15 +197,14 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text('食物能量与运动消耗'),
+        title: const Text('热量计算器'),
         actions: [
           IconButton(
             onPressed: () {
               commonMDHintModalBottomSheet(
                 context,
-                "食品成分说明",
+                "使用说明",
                 note,
                 msgFontSize: 15.sp,
               );
@@ -177,8 +215,8 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Food'),
-            Tab(text: 'Exercise'),
+            Tab(text: '食物摄入'),
+            Tab(text: '运动消耗'),
           ],
         ),
       ),
@@ -187,22 +225,36 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
         behavior: HitTestBehavior.translucent,
         // 点击空白处可以移除焦点，关闭键盘
         onTap: unfocusHandle,
-        child: TabBarView(
-          controller: _tabController,
+        child: Column(
           children: [
-            buildTabContent(
-              _foodController,
-              'Enter a query like " 1 cup mashed potatoes and 2 tbsp gravy " to see how it works. We support tens of thousands of foods, including international dishes.',
-              'Food',
+            SizedBox(
+              height: 120.sp,
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildInputTab(
+                    _foodController,
+                    '自然语言输入，比如：\n“1杯土豆泥，2汤匙肉汁，300克熟米饭”',
+                  ),
+                  _buildInputTab(
+                    _exerciseController,
+                    '逐行输入你的运动量，示例：\n  跑了3英里\n  30分钟举重\n  30分钟瑜伽',
+                  ),
+                ],
+              ),
             ),
-            buildTabContent(
-              _exerciseController,
-              '''Enter your workout by lines. Examples:
-  - ran 3 miles
-  - 30 min weight lifting
-  - 30 min yoga''',
-              'Exercise',
+
+            /// 按钮区域
+            buildButtonArea(),
+
+            /// 翻译后的文本
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 5.sp),
+              child: Text(translatedTxt),
             ),
+
+            /// 请求响应区域
+            isLoading ? buildLoader(isLoading) : buildResultArea(),
           ],
         ),
       ),
@@ -210,84 +262,90 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
   }
 
   ///
-  /// 构建tab内容(食物摄入和运动消耗都可以)
+  /// 输入框所在的tab区域
   ///
-  Widget buildTabContent(
+  Widget _buildInputTab(
     TextEditingController controller,
     String hintText,
-    String type,
   ) {
     return Padding(
       padding: EdgeInsets.all(5.sp),
-      child: Column(
-        children: [
-          ...buildInputArea(controller, hintText),
-          buildButtonArea(controller),
-          if (_tabController.index == 0 && foodResult.isNotEmpty)
-            ...buildFoodInputNutritionArea(type),
-          if (_tabController.index == 1 && exerciseResult.isNotEmpty)
-            ...buildExerciseBurnedArea(type),
-        ],
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(),
+          contentPadding: EdgeInsets.all(5.sp),
+          hintText: hintText,
+          hintStyle: const TextStyle(
+            fontWeight: FontWeight.normal,
+          ),
+        ),
+        onChanged: (val) {
+          setState(() {
+            if (_tabController.index == 0) {
+              foodQuery = val;
+            } else {
+              exerciseQuery = val;
+            }
+          });
+        },
+        maxLines: 8,
+        minLines: 5,
       ),
     );
   }
 
   ///
-  /// 输入框区域
-  ///
-  List<Widget> buildInputArea(
-    TextEditingController controller,
-    String hintText,
-  ) {
-    return [
-      SizedBox(height: 10.sp),
-      SizedBox(
-        height: 120.sp,
-        child: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              contentPadding: EdgeInsets.all(5.sp),
-              hintText: hintText,
-              hintStyle: const TextStyle(
-                // fontSize: 12.sp,
-                fontWeight: FontWeight.normal,
-              )
-              // labelText: 'Input Natural Language Query',
-              ),
-          maxLines: 8,
-          minLines: 5,
-        ),
-      ),
-    ];
-  }
-
-  ///
   /// 按钮区域
   ///
-  Widget buildButtonArea(TextEditingController controller) {
+  Widget buildButtonArea() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         (_tabController.index == 1)
             ? TextButton(
-                onPressed: () {
-                  _showFormDialog(context);
-                },
+                onPressed: isLoading ? null : () => _showHeightWeightDialog(),
                 child: const Text('身高体重'),
               )
             : Container(),
         ElevatedButton(
           style: buildFunctionButtonStyle(),
-          onPressed: isLoading
+          onPressed: isLoading ||
+                  (foodQuery.isEmpty && _tabController.index == 0) ||
+                  (exerciseQuery.isEmpty && _tabController.index == 1)
               ? null
               : () {
                   unfocusHandle();
-                  fetchData(controller.text);
+                  fetchData();
                 },
-          child: isLoading ? const Text('查询中') : const Text('查询'),
+          child: isLoading ? const Text('计算中') : const Text('计算'),
         ),
       ],
+    );
+  }
+
+  ///
+  /// 请求响应区域
+  ///
+  Widget buildResultArea() {
+    debugPrint(
+      "当前的结果--${_tabController.index}-食物${foodResult.length} 运动${exerciseResult.length}",
+    );
+
+    return Expanded(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(1.sp),
+          child: Column(
+            children: [
+              if (_tabController.index == 0 && foodResult.isNotEmpty)
+                ...buildFoodInputNutritionArea("Food"),
+              if (_tabController.index == 1 && exerciseResult.isNotEmpty)
+                ...buildExerciseBurnedArea("Exercise"),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -296,24 +354,25 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
   ///
   List<Widget> buildFoodInputNutritionArea(String type) {
     return [
-      Divider(thickness: 5.sp),
+      Divider(thickness: 1.sp),
+      SizedBox(height: 24.sp),
       SizedBox(
-        height: 60.sp,
+        height: 68.sp,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text(
-              'Total Calories Intake:',
+              '预估食物热量总摄入：',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
               ),
             ),
             Text(
-              "${getFoodNurientSum((obj) => obj.nfCalories?.toDouble() ?? 0).toStringAsFixed(0)} kcal",
+              "${getFoodNurientSum((obj) => obj.nfCalories?.toDouble() ?? 0).toStringAsFixed(0)} 大卡",
               style: TextStyle(
-                fontSize: 20.sp,
+                fontSize: 25.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
               ),
@@ -321,18 +380,8 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
           ],
         ),
       ),
-      SizedBox(
-        height: 120.sp,
-        child: SingleChildScrollView(
-          child: _buildDataTable(type),
-        ),
-      ),
-      Divider(thickness: 5.sp),
-      Expanded(
-        child: SingleChildScrollView(
-          child: _buildMainNutrient(),
-        ),
-      ),
+      // Divider(thickness: 5.sp),
+      _buildDataTable(type),
     ];
   }
 
@@ -341,28 +390,31 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
   ///
   List<Widget> buildExerciseBurnedArea(String type) {
     return [
-      Divider(thickness: 5.sp),
-      Text(
-        "身高 ${box.read('height') ?? '170'} 厘米, 体重 ${box.read('weight') ?? '70'} 公斤, 年龄 ${box.read('age') ?? '30'} 岁",
-        textAlign: TextAlign.start,
+      Divider(thickness: 1.sp),
+      SizedBox(
+        height: 24.sp,
+        child: Text(
+          "身高 ${box.read('height') ?? '170'} 厘米, 体重 ${box.read('weight') ?? '70'} 公斤, 年龄 ${box.read('age') ?? '30'} 岁",
+          textAlign: TextAlign.start,
+        ),
       ),
       SizedBox(
-        height: 80.sp,
+        height: 68.sp,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text(
-              'Estimated Calories Burned:',
+              '预估运动热量总消耗：',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
               ),
             ),
             Text(
-              "${getFoodExerciseSum((obj) => obj.nfCalories?.toDouble() ?? 0).toStringAsFixed(0)} kcal",
+              "${getFoodExerciseSum((obj) => obj.nfCalories?.toDouble() ?? 0).toStringAsFixed(0)} 大卡",
               style: TextStyle(
-                fontSize: 20.sp,
+                fontSize: 25.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
               ),
@@ -370,12 +422,8 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
           ],
         ),
       ),
-      Divider(thickness: 5.sp),
-      Expanded(
-        child: SingleChildScrollView(
-          child: _buildDataTable(type),
-        ),
-      ),
+      // Divider(thickness: 5.sp),
+      _buildDataTable(type),
     ];
   }
 
@@ -387,7 +435,7 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
         dataRowMinHeight: 15.sp,
         dataRowMaxHeight: 56.sp,
         headingRowHeight: 50.sp,
-        horizontalMargin: 10,
+        horizontalMargin: 10.sp,
         headingTextStyle: const TextStyle(fontWeight: FontWeight.bold),
         columnSpacing: 10.sp,
         columns: _buildTableHead(type),
@@ -402,23 +450,21 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
     if (dataType == "Food") {
       return const [
         DataColumn(label: Text("")),
-        DataColumn(label: Text("Qty"), numeric: true),
-        DataColumn(label: Text("Unit")),
-        DataColumn(label: Text("Food")),
-        DataColumn(label: Text("Calories")),
-        DataColumn(label: Text("Weight")),
-        // DataColumn(label: Text("Food Group")),
+        DataColumn(label: Text("数量"), numeric: true),
+        DataColumn(label: Text("单位")),
+        DataColumn(label: Text("食物")),
+        DataColumn(label: Text("热量")),
+        DataColumn(label: Text("重量")),
       ];
     } else {
       return const [
-        // DataColumn(label: Text("")),
-        DataColumn(label: Text("Exercise Name")),
+        DataColumn(label: Text("运动名称")),
         DataColumn(
           label: Text("MET", style: TextStyle(color: Colors.blue)),
           numeric: true,
         ),
-        DataColumn(label: Text("Duration")),
-        DataColumn(label: Text("Calories Expended")),
+        DataColumn(label: Text("持续时长")),
+        DataColumn(label: Text("热量消耗")),
       ];
     }
   }
@@ -447,7 +493,6 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
             ),
             _buildFormatDataCell(item.servingQty),
             _buildFormatDataCell(item.servingUnit),
-            // _buildFormatDataCell(item.foodName),
             DataCell(
               InkWell(
                 onTap: () {
@@ -470,9 +515,8 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
                 ),
               ),
             ),
-            _buildFormatDataCell("${item.nfCalories} kcal"),
-            _buildFormatDataCell("${item.servingWeightGrams} g"),
-            // _buildFormatDataCell(item.tags?.foodGroup),
+            _buildFormatDataCell("${item.nfCalories} 大卡"),
+            _buildFormatDataCell("${item.servingWeightGrams} 克"),
           ],
         );
       },
@@ -510,10 +554,9 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
                 ],
               ),
             ),
-            // buildFormatDataCell(item.name),
             _buildFormatDataCell(item.met),
-            _buildFormatDataCell("${item.durationMin} min"),
-            _buildFormatDataCell("${item.nfCalories} kcal"),
+            _buildFormatDataCell("${item.durationMin} 分钟"),
+            _buildFormatDataCell("${item.nfCalories} 大卡"),
           ],
         );
       },
@@ -531,110 +574,10 @@ class _NixNaturalLanguageQueryState extends State<NixNaturalLanguageQuery>
     );
   }
 
-  /// 构建主要营养素显示区域
-  Widget _buildMainNutrient() {
-    return Column(
-      children: [
-        Text(
-          'Total Main Nutritions',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.green,
-          ),
-        ),
-        Divider(thickness: 1.sp),
-        // buildNutrientRow(
-        //   'Total Calories',
-        //   getFoodNurientSum((obj) => obj.nfCalories ?? 0),
-        //   'kcal',
-        //   isBold: true,
-        // ),
-        buildNutrientRow(
-          'Total Fat',
-          getFoodNurientSum((obj) => obj.nfTotalFat ?? 0),
-          'g',
-          isBold: true,
-        ),
-        buildNutrientRow(
-          'Saturated Fat',
-          getFoodNurientSum((obj) => obj.nfSaturatedFat ?? 0),
-          'g',
-        ),
-        buildNutrientRow(
-          'Cholesterol',
-          getFoodNurientSum((obj) => obj.nfCholesterol?.toDouble() ?? 0),
-          'mg',
-          isBold: true,
-        ),
-        buildNutrientRow(
-          'Sodium',
-          getFoodNurientSum((obj) => obj.nfSodium ?? 0),
-          'mg',
-          isBold: true,
-        ),
-        buildNutrientRow(
-          'Potassium',
-          getFoodNurientSum((obj) => obj.nfPotassium ?? 0),
-          'mg',
-          isBold: true,
-        ),
-        buildNutrientRow(
-          'Total Carbohydrate',
-          getFoodNurientSum((obj) => obj.nfTotalCarbohydrate ?? 0),
-          'mg',
-          isBold: true,
-        ),
-        buildNutrientRow(
-          'Dietary Fiber',
-          getFoodNurientSum((obj) => obj.nfDietaryFiber ?? 0),
-          'g',
-        ),
-        buildNutrientRow(
-          'Sugars',
-          getFoodNurientSum((obj) => obj.nfSugars ?? 0),
-          'g',
-        ),
-        buildNutrientRow(
-          'Protein',
-          getFoodNurientSum((obj) => obj.nfProtein ?? 0),
-          'g',
-          isBold: true,
-        ),
-      ],
-    );
-  }
-
-  // 构建主要营养素显示行
-  Widget buildNutrientRow(
-    String label,
-    double? value,
-    String unit, {
-    bool? isBold,
-  }) {
-    return value != null
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              isBold == true
-                  ? Text(
-                      '$label: ${value.toStringAsFixed(2)} $unit',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    )
-                  : Row(
-                      children: [
-                        SizedBox(width: 20.sp),
-                        Text('$label: ${value.toStringAsFixed(2)} $unit'),
-                      ],
-                    ),
-              Divider(height: 10.sp),
-            ],
-          )
-        : const SizedBox.shrink();
-  }
-
-  // 显示修改身高、体重、年龄的表单
-  void _showFormDialog(BuildContext context) {
+  ///
+  /// 显示修改身高、体重、年龄的表单
+  ///
+  void _showHeightWeightDialog() {
     showDialog(
       context: context,
       builder: (context) {

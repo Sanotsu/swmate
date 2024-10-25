@@ -38,13 +38,17 @@ class _NutritionixFoodCentralState extends State<NutritionixFoodCentral>
   // 关键字查询
   String query = '';
 
-  String note = """数据来源: [nutritionix](https://www.nutritionix.com/)，品牌食品为美国品牌
+  String note = """数据来源: [nutritionix API](https://www.nutritionix.com/)，品牌食品为美国品牌
+
+**由于是国外的API，请输入英文进行搜索。**
 
 截止2024-10-21，Nutritionix Database 1,201,565 food items and growing!
 
 API文档参看
 - https://www.nutritionix.com/business/api
 - https://docx.riversand.com/developers/docs/nutritionix-api-guide
+
+因为是国外的API，**请输入英文进行查询**。
 """;
 
   late TabController _tabController;

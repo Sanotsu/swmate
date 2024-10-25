@@ -428,6 +428,7 @@ Future<String> getAITranslation(
     // model ?? "Qwen/Qwen2-7B-Instruct",
     plat ?? ApiPlatform.zhipu,
     model ?? "glm-4-flash",
+    webSearch: false,
   );
   return cc.cusText;
 }
