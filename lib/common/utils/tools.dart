@@ -251,6 +251,8 @@ Future<File> saveTtiBase64ImageToLocal(
 saveImageToLocal(
   String netImageUrl, {
   String? prefix,
+  // 指定保存的名称，比如 xxx.png
+  String? imageName,
   Directory? dlDir,
 }) async {
 // 首先获取设备外部存储管理权限
@@ -263,7 +265,8 @@ saveImageToLocal(
   // 2024-09-04 文生图片一般有一个随机的名称，就只使用它就好(可以避免同一个保存了多份)
   // 注意，像阿里云这种地址会带上过期日期token信息等参数内容，所以下载保存的文件名要过滤掉，只保留图片地址信息
   // 目前硅基流动、智谱等没有额外信息，问号分割后也不影响
-  var saveImageUrl = netImageUrl.split("?").first.split('/').last;
+  // 2024-11-04 如果有指定保存的图片名称，则不用从url获取
+  imageName ??= netImageUrl.split("?").first.split('/').last;
 
   // print("新获取的图片地址---$saveImageUrl");
 
@@ -277,7 +280,7 @@ saveImageToLocal(
     }
 
     // 传入的前缀有强制带上下划线
-    final file = File('${dir.path}/${prefix ?? ""}$saveImageUrl');
+    final file = File('${dir.path}/${prefix ?? ""}$imageName');
 
     EasyLoading.show(status: '【图片保存中...】');
     var response = await Dio().get(
