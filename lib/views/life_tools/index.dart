@@ -307,7 +307,7 @@ List<Widget> foodRows() {
   return [
     buildRow([
       const LifeToolEntranceCard(
-        title: "食品数据",
+        title: "USDA食品",
         subtitle: "USDA食品数据中心",
         icon: Icons.food_bank,
         targetPage: USDAFoodDataCentral(),
