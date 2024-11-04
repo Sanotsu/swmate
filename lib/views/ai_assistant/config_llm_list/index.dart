@@ -104,6 +104,16 @@ TPM  12000 1 分钟   所有预置模型
         title: const Text("模型列表"),
         actions: [
           IconButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ApiKeyConfig(),
+              ),
+            ),
+            icon: const Icon(Icons.key),
+          ),
+          _buildPopupMenuButton(),
+          IconButton(
             onPressed: () {
               commonMDHintModalBottomSheet(
                 context,
@@ -114,16 +124,6 @@ TPM  12000 1 分钟   所有预置模型
             },
             icon: const Icon(Icons.info_outline),
           ),
-          IconButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ApiKeyConfig(),
-              ),
-            ),
-            icon: const Icon(Icons.key),
-          ),
-          _buildPopupMenuButton(),
         ],
       ),
       body: Container(

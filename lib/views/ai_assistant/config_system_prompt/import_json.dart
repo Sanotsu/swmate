@@ -165,6 +165,15 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
         ),
         actions: [
           IconButton(
+            onPressed: sysRoleSpecs.isNotEmpty ? _saveToDb : null,
+            icon: Icon(
+              Icons.save,
+              color: sysRoleSpecs.isNotEmpty
+                  ? null
+                  : Theme.of(context).disabledColor,
+            ),
+          ),
+          IconButton(
             onPressed: () {
               commonMDHintModalBottomSheet(
                 context,
@@ -191,15 +200,6 @@ class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
               );
             },
             icon: const Icon(Icons.info_outline),
-          ),
-          IconButton(
-            onPressed: sysRoleSpecs.isNotEmpty ? _saveToDb : null,
-            icon: Icon(
-              Icons.save,
-              color: sysRoleSpecs.isNotEmpty
-                  ? null
-                  : Theme.of(context).disabledColor,
-            ),
           ),
         ],
       ),

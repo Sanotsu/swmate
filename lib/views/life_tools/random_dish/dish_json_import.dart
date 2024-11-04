@@ -167,6 +167,13 @@ class _DishJsonImportState extends State<DishJsonImport> {
         ),
         actions: [
           IconButton(
+            onPressed: dishes.isNotEmpty ? _saveToDb : null,
+            icon: Icon(
+              Icons.save,
+              color: dishes.isNotEmpty ? null : Theme.of(context).disabledColor,
+            ),
+          ),
+          IconButton(
             onPressed: () {
               commonMDHintModalBottomSheet(
                 context,
@@ -205,13 +212,6 @@ class _DishJsonImportState extends State<DishJsonImport> {
               );
             },
             icon: const Icon(Icons.info_outline),
-          ),
-          IconButton(
-            onPressed: dishes.isNotEmpty ? _saveToDb : null,
-            icon: Icon(
-              Icons.save,
-              color: dishes.isNotEmpty ? null : Theme.of(context).disabledColor,
-            ),
           ),
         ],
       ),

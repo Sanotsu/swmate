@@ -43,7 +43,7 @@ class _HomePageState extends State<HomePage> {
     return PopScope(
       // 点击返回键时暂停返回
       canPop: false,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (bool didPop, Object? result) async {
         print("didPop-----------$didPop");
         if (didPop) {
           return;

@@ -64,6 +64,7 @@ dynamic readErrorMsgValue(Map json, String key) {
     }
   }
 
-  // 单独报错消息，还可以其他形状 ，比如讯飞的message、无问芯穹的msg
+  // 单独报错消息，除了error_msg，还可以其他形状 ，比如讯飞的message、无问芯穹的msg
+  // 2024-11-04 注意，讯飞的报错使用了message栏位，但是成功该栏位也有值"Success"，需要特殊处理
   return json["message"] ?? json['Message'] ?? json["msg"] ?? json["Msg"];
 }

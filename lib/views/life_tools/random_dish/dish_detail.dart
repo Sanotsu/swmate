@@ -60,7 +60,7 @@ class _DishDetailState extends State<DishDetail> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (bool didPop, Object? result) async {
         if (didPop) return;
 
         // 返回上一页时，返回是否被修改标识，用于父组件判断是否需要重新查询

@@ -93,6 +93,14 @@ class _FreeDictionaryState extends State<FreeDictionary> {
       appBar: AppBar(
         title: const Text('FreeDictionary'),
         actions: [
+          TextButton(
+            onPressed: query.isNotEmpty
+                ? () {
+                    _translateText();
+                  }
+                : null,
+            child: const Text('AI 翻译'),
+          ),
           IconButton(
             onPressed: () {
               commonMDHintModalBottomSheet(
@@ -103,14 +111,6 @@ class _FreeDictionaryState extends State<FreeDictionary> {
               );
             },
             icon: const Icon(Icons.info_outline),
-          ),
-          TextButton(
-            onPressed: query.isNotEmpty
-                ? () {
-                    _translateText();
-                  }
-                : null,
-            child: const Text('AI 翻译'),
           ),
         ],
       ),
