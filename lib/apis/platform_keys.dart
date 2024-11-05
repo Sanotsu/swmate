@@ -34,5 +34,9 @@
 // 无问芯穹 genStudio 的ak
 // var INFINI_GEN_STUDIO_AK = "sk-xxx";
 
+// nutritionix API ID 和 key
+// var NUTRITIONIX_APP_ID = "xxx";
+// var NUTRITIONIX_APP_KEY = "xxx";
+
 // 使用的密钥的命名如上即可，这里只是使用了作者的密钥
 part '_self_keys.dart';

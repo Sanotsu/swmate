@@ -1,3 +1,6 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 - [SWMate](#swmate)
 - [版本更新](#%E7%89%88%E6%9C%AC%E6%9B%B4%E6%96%B0)
 - [功能介绍](#%E5%8A%9F%E8%83%BD%E4%BB%8B%E7%BB%8D)
@@ -12,10 +15,13 @@
   - [生活日常工具](#%E7%94%9F%E6%B4%BB%E6%97%A5%E5%B8%B8%E5%B7%A5%E5%85%B7)
     - [极简记账](#%E6%9E%81%E7%AE%80%E8%AE%B0%E8%B4%A6)
     - [随机菜品](#%E9%9A%8F%E6%9C%BA%E8%8F%9C%E5%93%81)
+    - [其他功能（图片动漫、摸鱼新闻、饮食健康等）](#%E5%85%B6%E4%BB%96%E5%8A%9F%E8%83%BD%E5%9B%BE%E7%89%87%E5%8A%A8%E6%BC%AB%E6%91%B8%E9%B1%BC%E6%96%B0%E9%97%BB%E9%A5%AE%E9%A3%9F%E5%81%A5%E5%BA%B7%E7%AD%89)
   - [用户设置](#%E7%94%A8%E6%88%B7%E8%AE%BE%E7%BD%AE)
 - [其他说明](#%E5%85%B6%E4%BB%96%E8%AF%B4%E6%98%8E)
   - [开发环境](#%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83)
   - [仅 Android](#%E4%BB%85-android)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # SWMate
 
@@ -23,14 +29,26 @@ Smart Work&Life Mate
 
 使用 flutter 开发的一个“智能工作生活类助手”应用。主要包含：
 
-- 以调用各个云平台部署的大模型 API 为基底的“AI 智能助手”，
-- 包含极简的记账功能、幸运转盘随机菜品功能的“生活日常工具”。
+- 以调用各个云平台部署的在线大模型 API 为基底的“**AI 智能助手**”。
+  - [阿里百炼](https://bailian.console.aliyun.com/)
+  - [百度千帆](https://qianfan.cloud.baidu.com/)
+  - [腾讯混元](https://console.cloud.tencent.com/hunyuan)
+  - [零一万物](https://platform.lingyiwanwu.com/)
+  - [智谱 AI](https://open.bigmodel.cn/)
+  - [讯飞星火](https://xinghuo.xfyun.cn/sparkapi)
+  - [硅基流动](https://siliconflow.cn/zh-cn/models)
+  - [无问芯穹](https://cloud.infini-ai.com/platform/ai)
+- 包含实用工具、图片动漫、摸鱼新闻、饮食健康等分类的“**生活日常工具**”。
+  - 实用工具：极简记账、随机菜品、猫狗之家、英英词典
+  - 图片动漫：Bangumi 番组计划、MyAnimeList 排行榜、WAIFU 图片
+  - 摸鱼新闻：摸摸鱼、每天 60 秒
+  - 饮食健康：美国农业部(USDA)食品数据查询、Nutritionix 食品营养素查询、热量计算器
 
 目前只调试了 Android 部分。
 
 # 版本更新
 
-[CHANGELOG](CHANGELOG.md)
+查看 [CHANGELOG](CHANGELOG.md)，**新版本增加的模块和功能也在该 ChangeLog 中简述**。
 
 # 功能介绍
 
@@ -40,7 +58,7 @@ Smart Work&Life Mate
 
 _其实就是支持查看几个平台大模型 API 调用效果的 demo，因为有多个平台，所以根据模型类型不同切分出不同的功能模块，而没有聚合在一起，实际上没什么客制化功能。_
 
-目前(2024-09-06)是兼容了**百度、腾讯、阿里、智谱 AI、零一万物、SiliconFlow、讯飞 7 个平台的 92 个大模型(含重复)** 的 API 调用。
+目前(2024-09-29)是兼容了**百度、腾讯、阿里、智谱 AI、零一万物、SiliconFlow、讯飞、无问芯穹 8 个平台的 100 个大模型(含重复)** 的 API 调用。
 
 ### 智能对话
 
@@ -265,6 +283,10 @@ _这个其实是之前(2024-04-09)就单独开发好的 app 了，功能融合�
 
 在`_dishes/HowToCook`中有整理一些菜品的 json 文件，可用直接导入使用。菜品数据来源于 github 的 [Anduin2017/HowToCook](https://github.com/Anduin2017/HowToCook)。
 
+### 其他功能（图片动漫、摸鱼新闻、饮食健康等）
+
+查看 [CHANGELOG](CHANGELOG.md) 查看更多。
+
 ## 用户设置
 
 目前其实没有用户这个概念，除了调用 API 和一些网络图片，都没有需要联网的东西。
@@ -277,7 +299,7 @@ _这个其实是之前(2024-04-09)就单独开发好的 app 了，功能融合�
 
 ## 开发环境
 
-在一个 Windows7 中使用 Visual Box 7 安装的 Ubuntu20.04 LTS 虚拟机中使用 VSCode 进行开发。
+在一个 Windows 7 中使用 Visual Box 7 安装的 Ubuntu20.04 LTS 虚拟机中使用 VSCode 进行开发。
 
 2024-05-27 使用最新 flutter 版本：
 
@@ -287,6 +309,16 @@ Flutter 3.22.1 • channel stable • https://github.com/flutter/flutter.git
 Framework • revision a14f74ff3a (4 天前) • 2024-05-22 11:08:21 -0500
 Engine • revision 55eae6864b
 Tools • Dart 3.4.1 • DevTools 2.34.3
+```
+
+2024-11-04 使用最新 flutter 版本：
+
+```sh
+$ flutter --version
+Flutter 3.24.4 • channel stable • https://github.com/flutter/flutter.git
+Framework • revision 603104015d (11 天前) • 2024-10-24 08:01:25 -0700
+Engine • revision db49896cf2
+Tools • Dart 3.5.4 • DevTools 2.37.3
 ```
 
 ## 仅 Android

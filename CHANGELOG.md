@@ -1,6 +1,36 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+一些较大变更、新功能、bug 修复等记录放在此处，仅做参看的提交更新.
+
+## 0.3.0-beta.1
+
+- chore:
+  - 更新开发环境到 flutter 3.24.4、Java 17, 以及更新相关依赖到最新
+- refactor:
+  - 将“生活日常工具”中模块划分为几个大类:
+    - **实用工具**: 极简记账、随机菜品、猫狗之家、英英词典(新)
+    - **图片动漫**: BGM 动漫资讯、MAL 动漫排行、WAIFU 图片
+    - **摸鱼新闻(新)**: 摸摸鱼、每天 60 秒
+    - **饮食健康(新)**: USDA 食品数据、Nutritionix 食品数据、热量计算器
+- feat:
+  - 在“生活日常工具”主页上方添加了每日一言
+  - “生活日常工具”添加了以下几个新模块：
+    - **英英词典**：使用 [freeDictionaryAPI](https://github.com/meetDeveloper/freeDictionaryAPI) 做的英英释义词典
+      - 如果单词在 API 中查不到，可以使用“AI 翻译”通过大模型获取释义
+    - **摸摸鱼**: 来源于 [摸摸鱼热榜](https://momoyu.cc/) 聚合新闻热点
+    - **每天 60 秒**: [每天 60 秒图片](https://api.03c3.cn/api/zb) 展示最近热点新闻
+    - **USDA 食品数据**: 来源于 [美国农业部(USDA)官方的食品数据](https://fdc.nal.usda.gov/api-guide.html)，可用“英文”进行搜索查询
+      - 包含基础食品、品牌(美国)食品等 40 多万条数据
+      - 目前用的"DEMO_KEY"作为 api_key，可自行申请替换
+    - **Nutritionix 食品数据**: 来源于 [Nutritionix](https://www.nutritionix.com/business/api) 的食品营养素数据，可用“英文”进行搜索查询。
+      - 号称“Largest Verified Nutrition Database”
+        - 截止 2024-11-04，拥有“1,202,162 food items and growing!”
+      - 可用自然语言查询食物摄入和运动消耗的预估热量
+      - _**因为免费方案的限制，最好自行申请一个 api key，并在“智能助手”->“模型列表”->“平台密钥”处导入**_。
+    - **热量计算器**: 基于 [Nutritionix API](https://www.nutritionix.com/business/api) 和 AI 大模型，预估用户输入的食品摄入或运动消耗的热量
+      - 可中文或其他语言输入，AI 大模型翻译成英文后调用 Nutritionix API 得到预估热量数据。
+
+[0.3.0-beta.1 新增内容截图](_doc/changelog_pics/0.3.0-beta.1新增内容截图.jpg)
 
 ## 0.2.0-beta.1
 
@@ -20,7 +50,7 @@ All notable changes to this project will be documented in this file.
 - fix:
   - 跟着 SiliconFlow 官方下架了一些模型后，移除相关图生图功能模块。
 
-[0.2.0-beta.1 截图](_doc/changelog_pics/0.2.0-beta.1截图.png)
+[0.2.0-beta.1 新增内容截图](_doc/changelog_pics/0.2.0-beta.1新增内容截图.png)
 
 ## v0.1.0-beta.1
 

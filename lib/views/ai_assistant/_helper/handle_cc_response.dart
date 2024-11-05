@@ -256,7 +256,10 @@ void commonOnDataHandler({
     setIsResponsing();
 
     // 更新响应文本
-    if (crb.errorMsg != null || crb.tencentErrorMsg != null) {
+    // 2024-11-04 讯飞星火，虽然成功返回，还是会有message栏位，其他的是出错了才有该栏位
+    // 所以需要判断该errorMsg的值
+    if ((crb.errorMsg != null && crb.errorMsg?.toLowerCase() != "success") ||
+        crb.tencentErrorMsg != null) {
       csMsg.content += """后台响应报错:
           \n\n错误代码: ${crb.errorCode ?? crb.tencentErrorMsg?.code}
           \n\n错误原因: ${crb.errorMsg ?? crb.tencentErrorMsg?.message}

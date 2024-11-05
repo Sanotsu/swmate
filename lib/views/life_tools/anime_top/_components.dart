@@ -449,19 +449,25 @@ class TypeDropdown extends StatelessWidget {
 class KeywordInputArea extends StatelessWidget {
   final TextEditingController searchController;
   final String hintText;
-  final VoidCallback onSearchPressed;
+  final VoidCallback? onSearchPressed;
+  final void Function(String)? textOnChanged;
+  final double? height;
+  final String? buttonHintText;
 
   const KeywordInputArea({
     super.key,
     required this.searchController,
     required this.hintText,
-    required this.onSearchPressed,
+    this.onSearchPressed,
+    this.height,
+    this.buttonHintText,
+    this.textOnChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 32.sp,
+      height: height ?? 32.sp,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 5.sp),
         child: Row(
@@ -483,6 +489,7 @@ class KeywordInputArea extends StatelessWidget {
                   filled: true,
                   fillColor: Colors.transparent,
                 ),
+                onChanged: textOnChanged,
               ),
             ),
             SizedBox(width: 10.sp),
@@ -491,7 +498,7 @@ class KeywordInputArea extends StatelessWidget {
               child: ElevatedButton(
                 style: buildFunctionButtonStyle(),
                 onPressed: onSearchPressed,
-                child: const Text("搜索"),
+                child: Text(buttonHintText ?? "搜索"),
               ),
             ),
           ],

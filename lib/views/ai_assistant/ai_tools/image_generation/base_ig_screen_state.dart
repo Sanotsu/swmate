@@ -522,19 +522,6 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
             ),
           IconButton(
             onPressed: () {
-              commonMDHintModalBottomSheet(
-                context,
-                '温馨提示',
-                """1. 选中的分辨率越高、批量生成的数量越大，则耗费费的时间越久，部分模型收费也越高;
-2. 阿里云平台的各项文生图在取消绘制后可以在查看历史记录时继续获取，其他平台不支持。
-3. 图片生成图片时，注意两者比例要一致，否则会有意想不到的结果。""",
-                msgFontSize: 15.sp,
-              );
-            },
-            icon: const Icon(Icons.info_outline),
-          ),
-          IconButton(
-            onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -548,6 +535,19 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
               });
             },
             icon: const Icon(Icons.history),
+          ),
+          IconButton(
+            onPressed: () {
+              commonMDHintModalBottomSheet(
+                context,
+                '温馨提示',
+                """1. 选中的分辨率越高、批量生成的数量越大，则耗费费的时间越久，部分模型收费也越高;
+2. 阿里云平台的各项文生图在取消绘制后可以在查看历史记录时继续获取，其他平台不支持。
+3. 图片生成图片时，注意两者比例要一致，否则会有意想不到的结果。""",
+                msgFontSize: 15.sp,
+              );
+            },
+            icon: const Icon(Icons.info_outline),
           ),
         ],
       ),

@@ -76,6 +76,9 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           SKN.lingyiwanwuAK.name: jsonData[SKN.lingyiwanwuAK.name] ?? "",
           SKN.zhipuAK.name: jsonData[SKN.zhipuAK.name] ?? "",
           SKN.infiniAK.name: jsonData[SKN.infiniAK.name] ?? "",
+          SKN.nutritionixAppId.name: jsonData[SKN.nutritionixAppId.name] ?? "",
+          SKN.nutritionixAppKey.name:
+              jsonData[SKN.nutritionixAppKey.name] ?? "",
         });
 
         setState(() {
@@ -130,6 +133,8 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
         SKN.lingyiwanwuAK.name: "",
         SKN.zhipuAK.name: "",
         SKN.infiniAK.name: "",
+        SKN.nutritionixAppId.name: "",
+        SKN.nutritionixAppKey.name: "",
       });
     });
   }
@@ -164,6 +169,10 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           SKN.lingyiwanwuAK.name: temp?[SKN.lingyiwanwuAK.name]?.value ?? "",
           SKN.zhipuAK.name: temp?[SKN.zhipuAK.name]?.value ?? "",
           SKN.infiniAK.name: temp?[SKN.infiniAK.name]?.value ?? "",
+          SKN.nutritionixAppId.name:
+              temp?[SKN.nutritionixAppId.name]?.value ?? "",
+          SKN.nutritionixAppKey.name:
+              temp?[SKN.nutritionixAppKey.name]?.value ?? "",
         });
 
         setState(() {
@@ -377,6 +386,15 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
           Card(
             child: Column(
               children: [buildField(SKN.infiniAK.name, "无问芯穹 AK")],
+            ),
+          ),
+          SizedBox(height: 10.sp),
+          Card(
+            child: Column(
+              children: [
+                buildField(SKN.nutritionixAppId.name, "Nutritionix APP ID"),
+                buildField(SKN.nutritionixAppKey.name, "Nutritionix API KEY"),
+              ],
             ),
           ),
         ],
