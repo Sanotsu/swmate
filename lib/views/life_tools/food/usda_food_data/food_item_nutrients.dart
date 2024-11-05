@@ -89,6 +89,7 @@ https://www.ars.usda.gov/northeast-area/beltsville-md-bhnrc/beltsville-human-nut
 
           return Container(
             width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 5.sp),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.only(

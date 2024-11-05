@@ -29,8 +29,6 @@
       - _**因为免费方案的限制，最好自行申请一个 api key，并在“智能助手”->“模型列表”->“平台密钥”处导入**_。
     - **热量计算器**: 基于 [Nutritionix API](https://www.nutritionix.com/business/api) 和 AI 大模型，预估用户输入的食品摄入或运动消耗的热量
       - 可中文或其他语言输入，AI 大模型翻译成英文后调用 Nutritionix API 得到预估热量数据。
-- fix:
-  - 跟着 SiliconFlow 官方下架了一些模型后，移除相关图生图功能模块。
 
 [0.3.0-beta.1 新增内容截图](_doc/changelog_pics/0.3.0-beta.1新增内容截图.jpg)
 
