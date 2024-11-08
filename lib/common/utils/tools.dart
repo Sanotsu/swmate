@@ -482,3 +482,14 @@ String formatTimeAgoEn(String timeString) {
     return '${difference.inSeconds} second${difference.inSeconds > 1 ? 's' : ''} ago';
   }
 }
+
+// 把各种时间字符串格式化指定格式的字符串
+String formatDateTimeString(
+  String timeString, {
+  String? formatType,
+}) {
+  if (timeString.isEmpty) return "未知";
+
+  return DateFormat(formatType ?? constDatetimeFormat)
+      .format(DateTime.tryParse(timeString) ?? DateTime.now());
+}

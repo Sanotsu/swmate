@@ -13,7 +13,8 @@ const constDatetimeSuffix = "yyyyMMdd_HHmmss";
 const unknownDateTimeString = '1970-01-01 00:00:00';
 const unknownDateString = '1970-01-01';
 
-const String placeholderImageUrl = 'assets/images/no_image.jpg';
+// const String placeholderImageUrl = 'assets/images/no_image.jpg';
+const String placeholderImageUrl = 'assets/images/no_image.png';
 const String brandImageUrl = 'assets/brand.png';
 
 // 数据库分页查询数据的时候，还需要带上一个该表的总数量
