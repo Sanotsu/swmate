@@ -16,9 +16,10 @@ import 'anime_top/mal_top_index.dart';
 import 'food/nutritionix/index.dart';
 import 'food/nutritionix_calculator/index.dart';
 import 'free_dictionary/index.dart';
+import 'news/base_news_page/newsapi_page.dart';
+import 'news/base_news_page/sina_roll_news_page.dart';
 import 'news/daily_60s/index.dart';
 import 'news/momoyu/index.dart';
-import 'news/newsapi/index.dart';
 import 'news/readhub/index.dart';
 import 'random_dish/dish_wheel_index.dart';
 import 'food/usda_food_data/index.dart';
@@ -243,7 +244,6 @@ List<Widget> _animeRows(BuildContext context) {
         title: 'BGM动漫资讯',
         subtitle: "Bangumi番组计划",
         icon: Icons.leaderboard_outlined,
-        // targetPage: BangumiCalendar(),
         onTap: () => showNoNetworkOrGoTargetPage(
           context,
           BangumiCalendar(),
@@ -253,7 +253,6 @@ List<Widget> _animeRows(BuildContext context) {
         title: 'MAL动漫排行',
         subtitle: "MyAnimeList排行榜",
         icon: Icons.leaderboard_outlined,
-        // targetPage: MALTop(),
         onTap: () => showNoNetworkOrGoTargetPage(
           context,
           MALTop(),
@@ -265,7 +264,6 @@ List<Widget> _animeRows(BuildContext context) {
         title: 'WAIFU图片',
         subtitle: "随机二次元WAIFU",
         icon: Icons.image,
-        // targetPage: WaifuPicIndex(),
         onTap: () => showNoNetworkOrGoTargetPage(
           context,
           WaifuPicIndex(),
@@ -283,7 +281,6 @@ List<Widget> _newsRows(BuildContext context) {
         title: '摸摸鱼',
         subtitle: "聚合新闻摸鱼网站",
         icon: Icons.newspaper,
-        // targetPage: MomoyuIndex(),
         onTap: () => showNoNetworkOrGoTargetPage(
           context,
           MomoyuIndex(),
@@ -293,13 +290,10 @@ List<Widget> _newsRows(BuildContext context) {
         title: 'Readhub',
         subtitle: "Readhub热门话题",
         icon: Icons.newspaper,
-        // targetPage: ReadhubIndex(),
-        onTap: () {
-          showNoNetworkOrGoTargetPage(
-            context,
-            ReadhubIndex(),
-          );
-        },
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          ReadhubIndex(),
+        ),
       ),
     ]),
     _rowWidget([
@@ -308,25 +302,32 @@ List<Widget> _newsRows(BuildContext context) {
         subtitle: "每天60秒读懂世界",
         icon: Icons.newspaper,
         // targetPage: Daily60S(),
-        onTap: () {
-          showNoNetworkOrGoTargetPage(
-            context,
-            Daily60S(),
-          );
-        },
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          Daily60S(),
+        ),
       ),
       LifeToolEntranceCard(
         title: '国际新闻',
         subtitle: "NewsAPI新闻资讯",
         icon: Icons.newspaper,
-        // targetPage: NewsApiIndex(),
-        onTap: () {
-          showNoNetworkOrGoTargetPage(
-            context,
-            NewsApiIndex(),
-          );
-        },
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          NewsApiPage(),
+        ),
       ),
+    ]),
+    _rowWidget([
+      LifeToolEntranceCard(
+        title: '新浪新闻',
+        subtitle: "新闻中心滚动新闻",
+        icon: Icons.newspaper,
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          SinaRollNewsPage(),
+        ),
+      ),
+      const SizedBox(),
     ]),
   ];
 }
@@ -338,7 +339,6 @@ List<Widget> _foodRows(BuildContext context) {
         title: "USDA食品",
         subtitle: "USDA食品数据中心",
         icon: Icons.food_bank,
-        // targetPage: USDAFoodDataCentral(),
         onTap: () => showNoNetworkOrGoTargetPage(
           context,
           USDAFoodDataCentral(),
@@ -348,7 +348,6 @@ List<Widget> _foodRows(BuildContext context) {
         title: "Nutritionix",
         subtitle: "Nutritionix食品数据",
         icon: Icons.food_bank,
-        // targetPage: NutritionixFoodCentral(),
         onTap: () => showNoNetworkOrGoTargetPage(
           context,
           NutritionixFoodCentral(),
@@ -360,7 +359,6 @@ List<Widget> _foodRows(BuildContext context) {
         title: "热量计算器",
         subtitle: "食物热量和运动消耗",
         icon: Icons.calculate,
-        // targetPage: NixSimpleCalculator(),
         onTap: () => showNoNetworkOrGoTargetPage(
           context,
           NixSimpleCalculator(),

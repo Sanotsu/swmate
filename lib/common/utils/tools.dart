@@ -493,3 +493,25 @@ String formatDateTimeString(
   return DateFormat(formatType ?? constDatetimeFormat)
       .format(DateTime.tryParse(timeString) ?? DateTime.now());
 }
+
+// 10位的时间戳转字符串
+String formatTimestampToString(String? timestamp, {String? format}) {
+  if (timestamp == null || timestamp.isEmpty) {
+    return "";
+  }
+
+  if (timestamp.trim().length == 10) {
+    timestamp = "${timestamp}000";
+  }
+
+  if (timestamp.trim().length != 13) {
+    return "输入的时间戳不是10位或者13位的整数";
+  }
+
+  return DateFormat(format ?? constDatetimeFormat).format(
+    DateTime.fromMillisecondsSinceEpoch(
+      // 如果传入的时间戳字符串转型不对，就使用 1970-01-01 23:59:59 的毫秒数
+      int.tryParse(timestamp) ?? 57599000,
+    ),
+  );
+}
