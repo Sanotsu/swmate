@@ -96,6 +96,8 @@ dependencies:
   flutter_rating_stars: ^1.1.0
   audioplayers: ^6.1.0
   flutter_typeahead: ^5.2.0
+  flutter_math_fork: ^0.7.3
+  record: ^5.2.0
 
 dependency_overrides: 
   # 2024-09-18 marquee 依赖的fading_edge_scrollview版本会报错，使用此覆盖

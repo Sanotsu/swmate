@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'ai_assistant/index.dart';
+import 'brief_ai_assistant/index.dart';
 import 'life_tools/index.dart';
 import 'user_and_settings/index.dart';
 
@@ -26,6 +27,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     _widgetOptions = [
+      const BriefAITools(),
       const AIToolIndex(),
       const LifeToolIndex(),
       const UserAndSettings(),
@@ -94,6 +96,10 @@ class _HomePageState extends State<HomePage> {
           // 为了使用主题色，这里手动设置为fixed
           type: BottomNavigationBarType.fixed,
           items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.android),
+              label: "新的助手",
+            ),
             BottomNavigationBarItem(
               icon: Icon(Icons.bolt),
               label: "智能助手",

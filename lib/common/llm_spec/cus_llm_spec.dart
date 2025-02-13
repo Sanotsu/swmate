@@ -43,6 +43,7 @@ enum LLModelType {
   tti_word, // 生成艺术字图片
   iti, // Image To Image
   ttv, // Text To Video
+  voice, // 语音大模型
 }
 
 // 模型类型对应的中文名
@@ -53,6 +54,7 @@ final Map<LLModelType, String> MT_NAME_MAP = {
   LLModelType.tti_word: '创意文字',
   LLModelType.iti: '图片生图',
   LLModelType.ttv: '文生视频',
+  LLModelType.voice: '语音对话',
 };
 
 ///

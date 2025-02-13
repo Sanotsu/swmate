@@ -46,6 +46,17 @@ Smart Work&Life Mate
 
 目前只调试了 Android 部分。
 
+_2025-02-11_
+
+当然，如果对 [硅基流动平台](https://siliconflow.cn/zh-cn/models) 感兴趣，还能用下我的邀请码注册，那就更好了，谢谢：
+
+```
+https://cloud.siliconflow.cn/i/tRIcST68
+```
+
+该平台有很多不同的大模型 API 可以调用，比如最新的 DeepSeek、Qwen、Llama、stable-diffusion 等。
+很多轻量级的模型可以免费使用，一些小需求可以节约时间，不必频繁切换。
+
 # 版本更新
 
 查看 [CHANGELOG](CHANGELOG.md)，**新版本增加的模块和功能也在该 ChangeLog 中简述**。

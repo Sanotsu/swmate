@@ -276,7 +276,11 @@ Future<StreamWithCancel<ComCCResp>> getSseCcResponse(
     streamController.add(
       ComCCResp(
         cusText:
-            "HTTP请求响应异常:\n\n错误代码: ${e.cusCode}\n\n错误信息: ${e.cusMsg}\n\n\n\n原始信息: ${e.errRespString}",
+            """HTTP请求响应异常:\n\n错误代码: ${e.cusCode}
+            \n\n错误信息: ${e.cusMsg}
+            \n\n错误原文: ${e.errMessage}
+            \n\n原始信息: ${e.errRespString}
+            \n\n""",
       ),
     );
     streamController.add(ComCCResp(cusText: '[DONE]-后台响应错误'));
