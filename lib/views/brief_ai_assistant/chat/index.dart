@@ -18,12 +18,7 @@ import 'components/message_actions.dart';
 import '../../../services/model_manager_service.dart';
 
 class BriefChatScreen extends StatefulWidget {
-  final List<CusBriefLLMSpec> llmSpecList;
-
-  const BriefChatScreen({
-    super.key,
-    required this.llmSpecList,
-  });
+  const BriefChatScreen({super.key});
 
   @override
   State<BriefChatScreen> createState() => _BriefChatScreenState();
@@ -41,10 +36,39 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
   VoidCallback? _cancelResponse;
   int? _regeneratingIndex; // 添加重新生成索引
 
+  // 可用的模型列表
+  List<CusBriefLLMSpec> _modelList = [];
+
+  // 添加加载状态标记
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
-    _initializeChat();
+    _initialize();
+  }
+
+  // 统一初始化方法
+  Future<void> _initialize() async {
+    try {
+      // 1. 获取可用模型列表
+      final availableModels =
+          await ModelManagerService.getAvailableModelByTypes([
+        LLModelType.cc,
+        LLModelType.vision,
+      ]);
+
+      if (!mounted) return;
+
+      setState(() => _modelList = availableModels);
+
+      // 2. 初始化对话
+      await _initializeChat();
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Future<void> _initializeChat() async {
@@ -53,27 +77,51 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
     if (!mounted) return;
     if (histories.isNotEmpty) {
       final lastChat = histories.first;
-      setState(() {
-        _messages = lastChat.messages;
-        _currentChat = lastChat;
-        // 根据历史记录设置模型
-        _selectedModel = widget.llmSpecList.firstWhere(
-          (m) =>
-              m.name == lastChat.llmName &&
-              m.platform.name == lastChat.cloudPlatformName,
-          orElse: () => widget.llmSpecList.first,
-        );
-        _selectedType = _selectedModel!.modelType;
-      });
+
+      // 检查最后一次对话是否是今天
+      final isToday = lastChat.gmtModified.day == DateTime.now().day &&
+          lastChat.gmtModified.month == DateTime.now().month &&
+          lastChat.gmtModified.year == DateTime.now().year;
+
+      if (isToday) {
+        // 如果是今天的对话，加载上次对话
+        setState(() {
+          _messages = lastChat.messages;
+          _currentChat = lastChat;
+          // 根据历史记录设置模型
+          _selectedModel = _modelList.firstWhere(
+            (m) =>
+                m.name == lastChat.llmName &&
+                m.platform.name == lastChat.cloudPlatformName,
+            orElse: () => _modelList.first,
+          );
+          _selectedType = _selectedModel!.modelType;
+        });
+
+        // 等待布局完成后滚动到底部
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToBottom();
+        });
+      } else {
+        // 如果不是今天的对话，创建新对话
+        setState(() {
+          _messages = [];
+          _currentChat = null;
+          _selectedModel = _modelList.first;
+          _selectedType = _selectedModel!.modelType;
+        });
+      }
     } else {
       // 没有历史记录时，使用默认值
       setState(() {
         _messages = [];
         _currentChat = null;
-        _selectedModel = widget.llmSpecList.first;
+        _selectedModel = _modelList.first;
         _selectedType = _selectedModel!.modelType;
       });
     }
+
+    print('初始化对话: ${_selectedModel?.name}, 消息数: ${_messages.length}');
   }
 
   void _createNewChat() {
@@ -97,11 +145,9 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
   }
 
   Future<void> _showModelSelector() async {
-// 获取可用的模型列表
-    final availableModels = await ModelManagerService.getAvailableModels();
-
+    // 获取可用的模型列表
     final filteredModels =
-        availableModels.where((m) => m.modelType == _selectedType).toList();
+        _modelList.where((m) => m.modelType == _selectedType).toList();
 
     if (filteredModels.isEmpty && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -131,18 +177,23 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
     }
   }
 
-  void _handleHistorySelect(ChatHistory history) {
+  Future<void> _handleHistorySelect(ChatHistory history) async {
     setState(() {
       _messages = history.messages;
       _currentChat = history;
       // 恢复使用的模型
-      _selectedModel = widget.llmSpecList.firstWhere(
+      _selectedModel = _modelList.firstWhere(
         (m) =>
             m.name == history.llmName &&
             m.platform.name == history.cloudPlatformName,
-        orElse: () => _selectedModel!,
+        orElse: () => _modelList.first,
       );
       _selectedType = _selectedModel!.modelType;
+    });
+
+    // 等待布局完成后滚动到底部
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom();
     });
   }
 
@@ -272,6 +323,11 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
         setState(() => _isStreaming = false);
       }
     }
+
+    // 消息添加完成后滚动到底部
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom();
+    });
   }
 
   // 处理重新生成
@@ -318,19 +374,57 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
   }
 
   void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+    if (_scrollController.hasClients) {
+      // 计算需要额外考虑的底部高度
+      double bottomPadding = 0;
+
+      // 输入框高度 (基础高度 + padding)
+      bottomPadding += 56.sp + 16.sp;
+
+      // 如果正在流式响应，添加进度条高度
+      if (_isStreaming) {
+        bottomPadding += 4.sp; // LinearProgressIndicator 的高度
       }
-    });
+
+      // 如果在首页中显示，需要考虑底部导航栏高度
+      if (ModalRoute.of(context)?.settings.name == '/') {
+        bottomPadding += kBottomNavigationBarHeight;
+      }
+
+      // 获取消息列表的最大滚动范围
+      final maxScroll = _scrollController.position.maxScrollExtent;
+
+      // 计算最终的滚动位置，确保最后一条消息完全可见
+      final finalScrollPosition = maxScroll + bottomPadding;
+
+      _scrollController.animateTo(
+        finalScrollPosition + 80, // 尽量滚动到消息最底部
+        curve: Curves.easeOut,
+        // 注意：sse的间隔比较短，这个滚动也要快一点
+        duration: const Duration(milliseconds: 50),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_modelList.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('智能对话')),
+        body: const Center(
+          child: Text('暂无可用的模型'),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -380,7 +474,7 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
         children: [
           SizedBox(height: 5.sp),
           ModelFilter(
-            models: widget.llmSpecList,
+            models: _modelList,
             selectedType: _selectedType,
             onTypeChanged: _isStreaming ? null : _handleTypeChanged,
             onModelSelect: _isStreaming ? null : _showModelSelector,
@@ -440,7 +534,7 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
           children: [
             Icon(Icons.chat, size: 36.sp),
             Text(
-              '嗨，我是思文智能助手',
+              '嗨，我是思文',
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w500,

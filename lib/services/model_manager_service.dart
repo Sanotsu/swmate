@@ -61,6 +61,32 @@ class ModelManagerService {
     }).toList();
   }
 
+  // 指定模型分类来获取可用的模型列表
+  static Future<List<CusBriefLLMSpec>> getAvailableModelByTypes(
+    List<LLModelType> modelTypes,
+  ) async {
+    final allModels = await getAvailableModels();
+
+    // 然后过滤出指定类型的模型
+    List<CusBriefLLMSpec> list = allModels
+        .where((model) => modelTypes.contains(model.modelType))
+        .toList();
+
+    // 固定平台排序后模型名排序
+    list.sort((a, b) {
+      // 先比较 平台名称
+      int compareA = a.platform.name.compareTo(b.platform.name);
+      if (compareA != 0) {
+        return compareA;
+      }
+
+      // 如果 平台名称 相同，再比较 模型名称
+      return a.name.compareTo(b.name);
+    });
+
+    return list;
+  }
+
   // 验证用户导入的模型配置
   static bool validateModelConfig(Map<String, dynamic> json) {
     try {

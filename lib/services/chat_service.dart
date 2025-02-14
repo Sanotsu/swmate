@@ -207,6 +207,10 @@ class ChatService {
     return (
       streamController.stream,
       () {
+        // 先发送最后一个手动终止的信息，再实际取消
+        if (!streamController.isClosed) {
+          streamController.add('[手动终止]');
+        }
         subscription.cancel();
         streamWithCancel.cancel();
         if (!streamController.isClosed) {

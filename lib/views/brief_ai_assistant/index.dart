@@ -82,9 +82,7 @@ class _BriefAIToolsState extends State<BriefAITools> {
                     await navigateToToolScreen(
                       context,
                       [LLModelType.cc, LLModelType.vision],
-                      (llmSpecList) => BriefChatScreen(
-                        llmSpecList: llmSpecList,
-                      ),
+                      (llmSpecList) => BriefChatScreen(),
                     );
                   },
                 ),
@@ -97,9 +95,7 @@ class _BriefAIToolsState extends State<BriefAITools> {
                     await navigateToToolScreen(
                       context,
                       [LLModelType.cc, LLModelType.vision],
-                      (llmSpecList) => BriefChatScreen(
-                        llmSpecList: llmSpecList,
-                      ),
+                      (llmSpecList) => BriefChatScreen(),
                     );
                   },
                 ),
@@ -112,9 +108,7 @@ class _BriefAIToolsState extends State<BriefAITools> {
                     await navigateToToolScreen(
                       context,
                       [LLModelType.cc, LLModelType.vision],
-                      (llmSpecList) => BriefChatScreen(
-                        llmSpecList: llmSpecList,
-                      ),
+                      (llmSpecList) => BriefChatScreen(),
                     );
                   },
                 ),
