@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../common/llm_spec/cus_llm_model.dart';
+import '../../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 
 class ModelSelector extends StatelessWidget {
-  final List<CusLLMSpec> models;
-  final CusLLMSpec? selectedModel;
-  final ValueChanged<CusLLMSpec?> onModelChanged;
+  final List<CusBriefLLMSpec> models;
+  final CusBriefLLMSpec? selectedModel;
+  final ValueChanged<CusBriefLLMSpec?> onModelChanged;
 
   const ModelSelector({
     super.key,

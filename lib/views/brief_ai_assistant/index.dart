@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:swmate/views/brief_ai_assistant/chat/index.dart';
 
-import '../../apis/_default_model_list/index.dart';
 import '../../common/components/tool_widget.dart';
-import '../../common/llm_spec/cus_llm_model.dart';
+import '../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
 import '../../common/utils/db_tools/db_helper.dart';
-import '../ai_assistant/_helper/tools.dart';
+import '../../services/model_manager_service.dart';
+import 'model_config/index.dart';
 
 class BriefAITools extends StatefulWidget {
   const BriefAITools({super.key});
@@ -18,40 +18,6 @@ class BriefAITools extends StatefulWidget {
 
 class _BriefAIToolsState extends State<BriefAITools> {
   final DBHelper dbHelper = DBHelper();
-
-  // db中是否存在模型列表，不存在则自动导入免费的模型列表，已存在则忽略
-  List cusModelList = [];
-
-  @override
-  void initState() {
-    initModelAndSysRole();
-
-    super.initState();
-  }
-
-  // 初始化模型和系统角色信息到数据库
-  // 后续文件还是别的东西看情况放
-  initModelAndSysRole() async {
-    // 如果数据库中已经有模型信息了，就不用再导入了
-    var ll = await dbHelper.queryCusLLMSpecList();
-    if (ll.isNotEmpty) {
-      if (!mounted) return;
-      setState(() {
-        cusModelList = ll;
-      });
-      return;
-    }
-
-    // 初始化模型信息和系统角色
-    // 要考虑万一用户导入收费模型使用，顶不顶得住
-    await testInitModelAndSysRole(FREE_all_MODELS);
-    var afterList = await dbHelper.queryCusLLMSpecList();
-
-    if (!mounted) return;
-    setState(() {
-      cusModelList = afterList;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,8 +40,15 @@ class _BriefAIToolsState extends State<BriefAITools> {
         title: const Text('智能助手'),
         actions: [
           IconButton(
-            onPressed: () async {},
-            icon: const Icon(Icons.face),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BriefModelConfig(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.import_export),
           ),
         ],
       ),
@@ -91,71 +64,70 @@ class _BriefAIToolsState extends State<BriefAITools> {
           SizedBox(height: 10.sp),
 
           /// 入口按钮
-          if (cusModelList.isNotEmpty)
-            SizedBox(
-              height: screenBodyHeight - 50.sp,
-              child: GridView.count(
-                primary: false,
-                padding: EdgeInsets.symmetric(horizontal: 5.sp),
-                crossAxisSpacing: 5,
-                mainAxisSpacing: 5,
-                crossAxisCount: 1,
-                childAspectRatio: 5 / 2,
-                children: <Widget>[
-                  buildCard(
-                    context,
-                    '助手',
-                    Icons.chat_outlined,
-                    () async {
-                      await navigateToToolScreen(
-                        context,
-                        [LLModelType.cc, LLModelType.vision],
-                        (llmSpecList) => BriefChatScreen(
-                          llmSpecList: llmSpecList,
-                        ),
-                      );
-                    },
-                  ),
+          SizedBox(
+            height: screenBodyHeight - 50.sp,
+            child: GridView.count(
+              primary: false,
+              padding: EdgeInsets.symmetric(horizontal: 5.sp),
+              crossAxisSpacing: 5,
+              mainAxisSpacing: 5,
+              crossAxisCount: 1,
+              childAspectRatio: 5 / 2,
+              children: <Widget>[
+                buildCard(
+                  context,
+                  '助手',
+                  Icons.chat_outlined,
+                  () async {
+                    await navigateToToolScreen(
+                      context,
+                      [LLModelType.cc, LLModelType.vision],
+                      (llmSpecList) => BriefChatScreen(
+                        llmSpecList: llmSpecList,
+                      ),
+                    );
+                  },
+                ),
 
-                  buildCard(
-                    context,
-                    '绘图',
-                    Icons.image_outlined,
-                    () async {
-                      await navigateToToolScreen(
-                        context,
-                        [LLModelType.cc, LLModelType.vision],
-                        (llmSpecList) => BriefChatScreen(
-                          llmSpecList: llmSpecList,
-                        ),
-                      );
-                    },
-                  ),
+                buildCard(
+                  context,
+                  '绘图',
+                  Icons.image_outlined,
+                  () async {
+                    await navigateToToolScreen(
+                      context,
+                      [LLModelType.cc, LLModelType.vision],
+                      (llmSpecList) => BriefChatScreen(
+                        llmSpecList: llmSpecList,
+                      ),
+                    );
+                  },
+                ),
 
-                  buildCard(
-                    context,
-                    '视频',
-                    Icons.video_call_outlined,
-                    () async {
-                      await navigateToToolScreen(
-                        context,
-                        [LLModelType.cc, LLModelType.vision],
-                        (llmSpecList) => BriefChatScreen(
-                          llmSpecList: llmSpecList,
-                        ),
-                      );
-                    },
-                  ),
+                buildCard(
+                  context,
+                  '视频',
+                  Icons.video_call_outlined,
+                  () async {
+                    await navigateToToolScreen(
+                      context,
+                      [LLModelType.cc, LLModelType.vision],
+                      (llmSpecList) => BriefChatScreen(
+                        llmSpecList: llmSpecList,
+                      ),
+                    );
+                  },
+                ),
 
-                  // buildToolEntrance(
-                  //   "[测试]",
-                  //   icon: const Icon(Icons.chat_outlined),
-                  //   color: Colors.blue[100],
-                  //   onTap: () async {},
-                  // ),
-                ],
-              ),
+                // buildToolEntrance(
+                //   "[测试]",
+                //   icon: const Icon(Icons.chat_outlined),
+                //   color: Colors.blue[100],
+                //   onTap: () async {},
+                // ),
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -167,11 +139,29 @@ class _BriefAIToolsState extends State<BriefAITools> {
 ///
 Future<void> navigateToToolScreen(
   BuildContext context,
-  List<LLModelType> modelTypes,
-  Widget Function(List<CusLLMSpec>) pageBuilder,
+  List<LLModelType>? modelTypes,
+  Widget Function(List<CusBriefLLMSpec>) pageBuilder,
 ) async {
-  // 获取对话的模型列表(具体逻辑看函数内部)
-  List<CusLLMSpec> llmSpecList = await fetchAllCusLLMSpecList(modelTypes);
+  // 得到所有可用的模型
+  final availableModels = await ModelManagerService.getAvailableModels();
+
+  // 然后过滤出指定类型的模型
+  List<CusBriefLLMSpec> llmSpecList = availableModels
+      .where(
+          (spec) => modelTypes == null || modelTypes.contains(spec.modelType))
+      .toList();
+
+  // 固定平台排序后模型名排序
+  llmSpecList.sort((a, b) {
+    // 先比较 平台名称
+    int compareA = a.platform.name.compareTo(b.platform.name);
+    if (compareA != 0) {
+      return compareA;
+    }
+
+    // 如果 平台名称 相同，再比较 模型名称
+    return a.name.compareTo(b.name);
+  });
 
   if (!context.mounted) return;
   if (llmSpecList.isEmpty) {

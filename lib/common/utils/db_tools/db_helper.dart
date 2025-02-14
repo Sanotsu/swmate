@@ -15,6 +15,7 @@ import '../../../models/chat_competion/com_cc_state.dart';
 import '../../../models/text_to_image/com_ig_state.dart';
 import '../../../views/ai_assistant/_helper/constants.dart';
 import '../../constants.dart';
+import '../../llm_spec/cus_brief_llm_model.dart';
 import '../../llm_spec/cus_llm_spec.dart';
 import '../../llm_spec/cus_llm_model.dart';
 import 'ddl_swmate.dart';
@@ -66,6 +67,7 @@ class DBHelper {
       txn.execute(SWMateDdl.ddlForGroupChatHistory);
       txn.execute(SWMateDdl.ddlForIGVGHistory);
       txn.execute(SWMateDdl.ddlForCusLlmSpec);
+      txn.execute(SWMateDdl.ddlForCusBriefLlmSpec);
       txn.execute(SWMateDdl.ddlForCusSySroleSpec);
       txn.execute(SWMateDdl.ddlForBillItem);
       txn.execute(SWMateDdl.ddlForDish);
@@ -797,6 +799,92 @@ class DBHelper {
     for (var item in rsts) {
       batch.insert(
         SWMateDdl.tableNameOfCusLlmSpec,
+        item.toMap(),
+      );
+    }
+    return await batch.commit();
+  }
+
+  ///***********************************************/
+  /// 2025-02-14 简洁版本的 自定义的LLM信息管理
+  ///
+
+  // 查询所有模型信息
+  Future<List<CusBriefLLMSpec>> queryCusBriefLLMSpecList({
+    String? cusLlmSpecId, // 模型规格编号
+    ApiPlatform? platform, // 平台
+    String? name, // 模型名称
+    LLModelType? modelType, // 模型分类枚举
+    bool? isFree, // 是否收费(0要收费，1不收费)
+  }) async {
+    Database db = await database;
+
+    // print("模型规格查询参数：");
+    // print("uuid $cusLlmSpecId");
+    // print("平台 $platform");
+    // print("cusLlm $cusLlm");
+    // print("name $name");
+    // print("modelType $modelType");
+    // print("isFree $isFree");
+
+    final where = <String>[];
+    final whereArgs = <dynamic>[];
+
+    if (cusLlmSpecId != null) {
+      where.add('cusLlmSpecId = ?');
+      whereArgs.add(cusLlmSpecId);
+    }
+
+    if (platform != null) {
+      where.add('platform = ?');
+      whereArgs.add(platform.toString());
+    }
+    if (name != null) {
+      where.add('name = ?');
+      whereArgs.add(name);
+    }
+    if (modelType != null) {
+      where.add('modelType = ?');
+      whereArgs.add(modelType.toString());
+    }
+
+    if (cusLlmSpecId != null) {
+      where.add('isFree = ?');
+      whereArgs.add(isFree == true ? 1 : 0);
+    }
+
+    final rows = await db.query(
+      SWMateDdl.tableNameOfCusBriefLlmSpec,
+      where: where.isNotEmpty ? where.join(' AND ') : null,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
+      orderBy: "gmtCreate ASC",
+    );
+
+    return rows.map((row) => CusBriefLLMSpec.fromMap(row)).toList();
+  }
+
+  // 删除单条
+  Future<int> deleteCusBriefLLMSpecById(String cusLlmSpecId) async =>
+      (await database).delete(
+        SWMateDdl.tableNameOfCusBriefLlmSpec,
+        where: "cusLlmSpecId = ?",
+        whereArgs: [cusLlmSpecId],
+      );
+
+  // 清空所有模型信息
+  Future<int> clearCusBriefLLMSpecs() async => (await database).delete(
+        SWMateDdl.tableNameOfCusBriefLlmSpec,
+        where: "cusLlmSpecId != ?",
+        whereArgs: ["cusLlmSpecId"],
+      );
+
+  // 新增
+  Future<List<Object?>> insertCusBriefLLMSpecList(
+      List<CusBriefLLMSpec> rsts) async {
+    var batch = (await database).batch();
+    for (var item in rsts) {
+      batch.insert(
+        SWMateDdl.tableNameOfCusBriefLlmSpec,
         item.toMap(),
       );
     }

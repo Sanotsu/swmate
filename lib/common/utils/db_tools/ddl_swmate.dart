@@ -141,6 +141,30 @@ class SWMateDdl {
     );
     """;
 
+  // 2025-02-14 新的简洁版用户自动导入的模型配置
+  // (栏位更新，和上面的cus_llm_spec区分开，不影响旧版本业务)
+  static const tableNameOfCusBriefLlmSpec = '${DB_TABLE_PREFIX}cus_brief_llm_spec';
+
+  static const String ddlForCusBriefLlmSpec = """
+    CREATE TABLE $tableNameOfCusBriefLlmSpec (
+      cusLlmSpecId   TEXT    NOT NULL,
+      platform       TEXT    NOT NULL,
+      model          TEXT    NOT NULL,
+      name           TEXT    NOT NULL,
+      contextLength  INTEGER,
+      isFree         INTEGER NOT NULL,
+      modelType      TEXT    NOT NULL,
+      inputPrice     REAL,
+      outputPrice    REAL,
+      costPer        REAL,
+      gmtRelease     TEXT,
+      gmtCreate      TEXT    NOT NULL,
+      isBuiltin      INTEGER NOT NULL,
+      PRIMARY KEY(cusLlmSpecId),
+      UNIQUE(platform,model,modelType)
+    );
+    """;
+
   // 2024-08-26
   // 保存自定义系统角色型信息(以前 system_prompt_list.dart预设的系统提示词数组，存入json，初始化到数据库,后续使用从数据库查询)
   // 省事，用驼峰命名栏位

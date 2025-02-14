@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../common/llm_spec/cus_llm_model.dart';
+import '../../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 
 class ModelFilter extends StatelessWidget {
-  final List<CusLLMSpec> models;
+  final List<CusBriefLLMSpec> models;
   final LLModelType selectedType;
   final Function(LLModelType)? onTypeChanged;
   final VoidCallback? onModelSelect;
@@ -36,19 +36,23 @@ class ModelFilter extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               children: displayTypes.map((type) {
                 final count = models.where((m) => m.modelType == type).length;
-                return Padding(
-                  padding: EdgeInsets.only(right: 8.sp),
-                  child: FilterChip(
-                    label: Text("${MT_NAME_MAP[type]}($count)"),
-                    selected: type == selectedType,
-                    onSelected: isStreaming
-                        ? null
-                        : (_) {
-                            onTypeChanged?.call(type);
-                            onModelSelect?.call();
-                          },
-                  ),
-                );
+
+                if (count > 0) {
+                  return Padding(
+                    padding: EdgeInsets.only(right: 8.sp),
+                    child: FilterChip(
+                      label: Text("${MT_NAME_MAP[type]}($count)"),
+                      selected: type == selectedType,
+                      onSelected: isStreaming
+                          ? null
+                          : (_) {
+                              onTypeChanged?.call(type);
+                              onModelSelect?.call();
+                            },
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
               }).toList(),
             ),
           ),

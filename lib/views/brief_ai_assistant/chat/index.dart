@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../common/constants.dart';
-import '../../../common/llm_spec/cus_llm_model.dart';
+import '../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/db_tools/db_helper.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
@@ -15,9 +15,10 @@ import 'components/model_selector.dart';
 import '../../../services/chat_service.dart';
 import 'components/chat_history_drawer.dart';
 import 'components/message_actions.dart';
+import '../../../services/model_manager_service.dart';
 
 class BriefChatScreen extends StatefulWidget {
-  final List<CusLLMSpec> llmSpecList;
+  final List<CusBriefLLMSpec> llmSpecList;
 
   const BriefChatScreen({
     super.key,
@@ -33,7 +34,7 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
   final DBHelper _dbHelper = DBHelper();
 
   LLModelType _selectedType = LLModelType.cc;
-  CusLLMSpec? _selectedModel;
+  CusBriefLLMSpec? _selectedModel;
   List<ChatMessage> _messages = [];
   bool _isStreaming = false;
   ChatHistory? _currentChat;
@@ -96,17 +97,21 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
   }
 
   Future<void> _showModelSelector() async {
-    final filteredModels =
-        widget.llmSpecList.where((m) => m.modelType == _selectedType).toList();
+// 获取可用的模型列表
+    final availableModels = await ModelManagerService.getAvailableModels();
 
-    if (filteredModels.isEmpty) {
+    final filteredModels =
+        availableModels.where((m) => m.modelType == _selectedType).toList();
+
+    if (filteredModels.isEmpty && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('当前类型没有可用的模型')),
       );
       return;
     }
 
-    final model = await showModalBottomSheet<CusLLMSpec>(
+    if (!mounted) return;
+    final model = await showModalBottomSheet<CusBriefLLMSpec>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -211,7 +216,7 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
   Future<void> _handleSendMessage(String text,
       {File? image, File? voice}) async {
     if (!mounted) return;
-    
+
     if (_selectedModel == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('请先选择模型')),

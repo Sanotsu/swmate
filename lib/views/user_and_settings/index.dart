@@ -10,12 +10,9 @@ import 'package:photo_view/photo_view.dart';
 import '../../apis/_default_model_list/index.dart';
 import '../../common/components/tool_widget.dart';
 import '../../common/constants.dart';
-import '../../common/llm_spec/cus_llm_model.dart';
-import '../../common/llm_spec/cus_llm_spec.dart';
 import '../../common/utils/db_tools/db_helper.dart';
 import '../../services/cus_get_storage.dart';
 import '../ai_assistant/_helper/tools.dart';
-import '../brief_ai_assistant/chat/index.dart';
 import '../home.dart';
 import 'backup_and_restore/index.dart';
 
@@ -32,9 +29,6 @@ class _UserAndSettingsState extends State<UserAndSettings> {
   // 用户头像路径
   String? _avatarPath = MyGetStorage().getUserAvatarPath();
 
-  // 对话的模型列表
-  List<CusLLMSpec> _llmSpecList = [];
-
   // 修改头像
   // 选择图片来源
   Future<void> _pickImage(ImageSource source) async {
@@ -46,24 +40,6 @@ class _UserAndSettingsState extends State<UserAndSettings> {
         _avatarPath = pickedFile.path;
       });
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _initUserInfo();
-  }
-
-  void _initUserInfo() async {
-    // 获取对话的模型列表(具体逻辑看函数内部)
-    List<CusLLMSpec> list = await fetchAllCusLLMSpecList([
-      LLModelType.cc,
-      LLModelType.vision,
-    ]);
-
-    setState(() {
-      _llmSpecList = list;
-    });
   }
 
   // 长按5秒启动作者测试的模型(但是付费的还是用不了，没有加载作者的密钥)
@@ -152,23 +128,6 @@ class _UserAndSettingsState extends State<UserAndSettings> {
             // height: (screenBodyHeight - 250 - 20),
             height: 160.sp,
             child: Center(child: _buildBakAndRestoreAndMoreSettingRow()),
-          ),
-
-          SizedBox(
-            height: 50.sp,
-            child: TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => BriefChatScreen(
-                      llmSpecList: _llmSpecList,
-                    ),
-                  ),
-                );
-              },
-              child: const Text("退出登录"),
-            ),
           ),
         ],
       ),

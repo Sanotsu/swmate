@@ -5,12 +5,13 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:http/http.dart' as http;
 import '../apis/chat_completion/common_cc_apis.dart';
-import '../apis/platform_keys.dart';
 import '../common/constants.dart';
-import '../common/llm_spec/cus_llm_model.dart';
+import '../common/llm_spec/cus_brief_llm_model.dart';
 import '../common/llm_spec/cus_llm_spec.dart';
 import '../models/chat_competion/com_cc_state.dart';
 import 'dart:io';
+import '../common/constants/default_models.dart';
+import '../services/cus_get_storage.dart';
 
 /// 2025-02-13 改版后所有平台都使用open API兼容的版本，不兼容的就不用了。
 ///     讯飞每个模型的AK都单独的，太麻烦了，而且效果并不出类拔萃，放弃支持它平台的调用了
@@ -45,77 +46,96 @@ class ChatService {
     }
   }
 
-  static String _getApiKey(ApiPlatform platform) {
-    switch (platform) {
-      case ApiPlatform.lingyiwanwu:
-        return LINGYI_AK;
-      case ApiPlatform.zhipu:
-        return ZHIPU_AK;
-      case ApiPlatform.siliconCloud:
-        return SILICON_CLOUD_AK;
-      case ApiPlatform.infini:
-        return INFINI_GEN_STUDIO_AK;
-      case ApiPlatform.aliyun:
-        return ALIYUN_API_KEY;
-      case ApiPlatform.baidu:
-        return BAIDU_API_KEY_V2;
-      case ApiPlatform.tencent:
-        return TENCENT_API_KEY;
+  static Future<String> _getApiKey(CusBriefLLMSpec model) async {
+    if (model.cusLlmSpecId?.endsWith('_builtin') ?? false) {
+      // 使用内置的 API Key
+      switch (model.platform) {
+        case ApiPlatform.baidu:
+          return DefaultApiKeys.baiduApiKey;
+        case ApiPlatform.siliconCloud:
+          return DefaultApiKeys.siliconCloudAK;
+        case ApiPlatform.lingyiwanwu:
+          return DefaultApiKeys.lingyiAK;
+        case ApiPlatform.zhipu:
+          return DefaultApiKeys.zhipuAK;
+        case ApiPlatform.infini:
+          return DefaultApiKeys.infiniAK;
+        case ApiPlatform.aliyun:
+          return DefaultApiKeys.aliyunApiKey;
+        case ApiPlatform.tencent:
+          return DefaultApiKeys.tencentApiKey;
+        default:
+          throw Exception('不支持的平台');
+      }
+    } else {
+      // 使用用户的 API Key
+      final userKeys = MyGetStorage().getUserAKMap();
+      String? apiKey;
+
+      switch (model.platform) {
+        case ApiPlatform.baidu:
+          apiKey = userKeys['USER_BAIDU_API_KEY_V2'];
+          break;
+        case ApiPlatform.siliconCloud:
+          apiKey = userKeys['USER_SILICON_CLOUD_AK'];
+          break;
+        case ApiPlatform.lingyiwanwu:
+          apiKey = userKeys['USER_LINGYIWANWU_AK'];
+          break;
+        case ApiPlatform.zhipu:
+          apiKey = userKeys['USER_ZHIPU_AK'];
+          break;
+        case ApiPlatform.infini:
+          apiKey = userKeys['USER_INFINI_GEN_STUDIO_AK'];
+          break;
+        case ApiPlatform.aliyun:
+          apiKey = userKeys['USER_ALIYUN_API_KEY'];
+          break;
+        case ApiPlatform.tencent:
+          apiKey = userKeys['USER_TENCENT_API_KEY'];
+          break;
+        default:
+          throw Exception('不支持的平台');
+      }
+
+      if (apiKey == null || apiKey.isEmpty) {
+        throw Exception('未配置该平台的 API Key');
+      }
+      return apiKey;
+    }
+  }
+
+  static Future<Map<String, String>> _getHeaders(
+    CusBriefLLMSpec model,
+  ) async {
+    final apiKey = await _getApiKey(model);
+
+    switch (model.platform) {
+      case ApiPlatform.baidu ||
+            ApiPlatform.siliconCloud ||
+            ApiPlatform.lingyiwanwu ||
+            ApiPlatform.zhipu ||
+            ApiPlatform.infini ||
+            ApiPlatform.aliyun ||
+            ApiPlatform.tencent:
+        return {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        };
+      // ... 其他平台的 headers
       default:
         throw Exception('不支持的平台');
     }
   }
 
-  static Future<Map<String, String>> _getHeaders(
-      CusLLMSpec model, String apiKey) async {
-    // final headers = {
-    //   'Content-Type': 'application/json',
-    // };
-
-    // switch (model.platform) {
-    //   case ApiPlatform.lingyiwanwu:
-    //     headers['Authorization'] = 'Bearer $apiKey';
-    //     break;
-    //   case ApiPlatform.zhipu:
-    //     // 智谱需要特殊的token生成逻辑
-    //    final token = zhipuGenerateToken(apiKey);
-    //    headers['Authorization'] = 'Bearer $token';
-    //     break;
-    //   case ApiPlatform.siliconCloud:
-    //     headers['Authorization'] = 'Bearer $apiKey';
-    //     break;
-    //   case ApiPlatform.infini:
-    //     headers['Authorization'] = 'Bearer $apiKey';
-    //     break;
-    //   case ApiPlatform.aliyun:
-    //     headers['Authorization'] = 'Bearer $apiKey';
-    //     break;
-    //   case ApiPlatform.baidu:
-    //     headers['Authorization'] = 'Bearer $apiKey';
-    //     break;
-    //   case ApiPlatform.tencent:
-    //     headers['Authorization'] = 'Bearer $apiKey';
-    //     break;
-    //   default:
-    //     throw Exception('不支持的平台');
-    // }
-
-    // return headers;
-
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $apiKey',
-    };
-  }
-
   static Future<(Stream<String>, VoidCallback)> sendMessage(
-    CusLLMSpec model,
+    CusBriefLLMSpec model,
     List<ChatMessage> messages, {
     File? image,
     File? voice,
   }) async {
-    final url = '${_getBaseUrl(model.platform)}/chat/completions';
-    final headers = await _getHeaders(model, _getApiKey(model.platform));
+    final headers = await _getHeaders(model);
+    final baseUrl = "${_getBaseUrl(model.platform)}/chat/completions";
 
     // 构建请求体
     // ？？？ 2025-02-13 这个是非常简化的请求体，不同平台，不同模型，请求参数差别很大的，后续可能需要定制一下
@@ -155,7 +175,7 @@ class ChatService {
 
     final streamController = StreamController<String>();
     final streamWithCancel = await getSseCcResponse(
-      url,
+      baseUrl,
       headers,
       requestBody,
       stream: true,
@@ -198,12 +218,12 @@ class ChatService {
 
   // ??? 暂未用到
   static Future<void> sendVoice(
-    CusLLMSpec model,
+    CusBriefLLMSpec model,
     String voicePath,
     List<ChatMessage> messages,
   ) async {
     final url = '${_getBaseUrl(model.platform)}/audio/transcriptions';
-    final headers = await _getHeaders(model, _getApiKey(model.platform));
+    final headers = await _getHeaders(model);
 
     // 创建multipart请求
     var request = http.MultipartRequest('POST', Uri.parse(url))
