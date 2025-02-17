@@ -49,6 +49,12 @@ class MessageActions extends StatelessWidget {
             tooltip: '重新生成',
             onPressed: isRegenerating ? null : onRegenerate,
           ),
+          // token 信息
+          if (tokens != null)
+            Padding(
+              padding: EdgeInsets.only(left: 16.sp),
+              child: Text('$tokens tokens'),
+            ),
         ],
       ),
     );

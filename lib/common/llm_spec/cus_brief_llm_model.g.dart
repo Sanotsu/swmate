@@ -24,6 +24,7 @@ CusBriefLLMSpec _$CusBriefLLMSpecFromJson(Map<String, dynamic> json) =>
       gmtCreate: json['gmtCreate'] == null
           ? null
           : DateTime.parse(json['gmtCreate'] as String),
+      isBuiltin: json['isBuiltin'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$CusBriefLLMSpecToJson(CusBriefLLMSpec instance) =>
@@ -40,6 +41,7 @@ Map<String, dynamic> _$CusBriefLLMSpecToJson(CusBriefLLMSpec instance) =>
       'contextLength': instance.contextLength,
       'gmtRelease': instance.gmtRelease?.toIso8601String(),
       'gmtCreate': instance.gmtCreate?.toIso8601String(),
+      'isBuiltin': instance.isBuiltin,
     };
 
 const _$ApiPlatformEnumMap = {

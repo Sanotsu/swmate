@@ -4,14 +4,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:http/http.dart' as http;
-import '../apis/chat_completion/common_cc_apis.dart';
 import '../common/constants.dart';
 import '../common/llm_spec/cus_brief_llm_model.dart';
 import '../common/llm_spec/cus_llm_spec.dart';
+import '../models/chat_completions/chat_completion_response.dart';
 import '../models/chat_competion/com_cc_state.dart';
 import 'dart:io';
 import '../common/constants/default_models.dart';
 import '../services/cus_get_storage.dart';
+import '../models/chat_completions/chat_completion_request.dart';
+import '../apis/chat_completion/openai_compatible_apis.dart';
 
 /// 2025-02-13 改版后所有平台都使用open API兼容的版本，不兼容的就不用了。
 ///     讯飞每个模型的AK都单独的，太麻烦了，而且效果并不出类拔萃，放弃支持它平台的调用了
@@ -128,36 +130,25 @@ class ChatService {
     }
   }
 
-  static Future<(Stream<String>, VoidCallback)> sendMessage(
+  static Future<(Stream<ChatCompletionResponse>, VoidCallback)> sendMessage(
     CusBriefLLMSpec model,
     List<ChatMessage> messages, {
     File? image,
     File? voice,
+    bool stream = true,
   }) async {
     final headers = await _getHeaders(model);
     final baseUrl = "${_getBaseUrl(model.platform)}/chat/completions";
 
-    // 构建请求体
-    // ？？？ 2025-02-13 这个是非常简化的请求体，不同平台，不同模型，请求参数差别很大的，后续可能需要定制一下
-    final Map<String, dynamic> requestBody = {
-      'model': model.model,
-      'stream': true,
-    };
-
     // 构建消息内容
-    requestBody['messages'] = messages.map((m) {
-      // 如果消息包含图片，构建多模态内容
+    final messagesList = messages.map((m) {
       if (m.imageUrl != null) {
         final bytes = File(m.imageUrl!).readAsBytesSync();
         final base64Image = base64Encode(bytes);
-
         return {
           'role': m.role,
           'content': [
-            {
-              'type': 'text',
-              'text': m.content,
-            },
+            {'type': 'text', 'text': m.content},
             {
               'type': 'image_url',
               'image_url': {'url': 'data:image/jpeg;base64,$base64Image'}
@@ -165,59 +156,20 @@ class ChatService {
           ]
         };
       } else {
-        // 普通文本消息
-        return {
-          'role': m.role,
-          'content': m.content,
-        };
+        return {'role': m.role, 'content': m.content};
       }
     }).toList();
 
-    final streamController = StreamController<String>();
-    final streamWithCancel = await getSseCcResponse(
-      baseUrl,
-      headers,
-      requestBody,
-      stream: true,
+    final request = ChatCompletionRequest(
+      model: model.model,
+      messages: messagesList,
+      stream: stream,
+      temperature: 0.7,
     );
 
-    // 订阅流
-    final subscription = streamWithCancel.stream.listen(
-      (resp) {
-        if (resp.cusText == '[DONE]' || resp.cusText == '[手动终止]') {
-          if (!streamController.isClosed) {
-            streamController.close();
-          }
-        } else {
-          streamController.add(resp.cusText);
-        }
-      },
-      onError: (error) {
-        streamController.addError(error);
-        streamController.close();
-      },
-      onDone: () {
-        if (!streamController.isClosed) {
-          streamController.close();
-        }
-      },
-    );
+    final requestBody = request.toRequestBody(model.platform);
 
-    // 返回流和取消函数
-    return (
-      streamController.stream,
-      () {
-        // 先发送最后一个手动终止的信息，再实际取消
-        if (!streamController.isClosed) {
-          streamController.add('[手动终止]');
-        }
-        subscription.cancel();
-        streamWithCancel.cancel();
-        if (!streamController.isClosed) {
-          streamController.close();
-        }
-      }
-    );
+    return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
   }
 
   // ??? 暂未用到

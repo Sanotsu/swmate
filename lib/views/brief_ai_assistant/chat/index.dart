@@ -7,6 +7,7 @@ import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../models/chat_completions/chat_completion_response.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
 import 'components/chat_input.dart';
 import 'components/chat_message_item.dart';
@@ -233,61 +234,80 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
     }
   }
 
-  // 统一处理流式响应
-  Future<void> _handleStreamResponse(Stream<String> stream) async {
-    final assistantMessage = ChatMessage(
-      messageId: DateTime.now().toString(),
-      dateTime: DateTime.now(),
-      role: CusRole.assistant.name,
-      content: '',
-      modelLabel: _selectedModel!.name,
-    );
-
-    setState(() => _messages.add(assistantMessage));
-
+  // 处理流式响应
+  Future<void> _handleStreamResponse(
+      Stream<ChatCompletionResponse> stream) async {
     try {
-      await for (final chunk in stream) {
+      await for (final response in stream) {
         if (!mounted) break;
+
+        // 不使用choices，使用cusText，统一处理
+        final content = response.cusText;
+        print('content---: $content');
+
+        // 检查是否是结束标记(正常结束应该没有DONE，手动终止应该有标识)
+        if (content == '[手动终止]' || content == '[DONE]') {
+          setState(() {
+            _messages.last.content += response.cusText;
+            _isStreaming = false;
+            _cancelResponse = null;
+          });
+          break;
+        }
+
         setState(() {
-          assistantMessage.content += chunk;
+          if (_messages.last.role == CusRole.assistant.name) {
+            // 更新现有消息(出错也是正常流，但额外手动的cusText)
+            _messages.last.content += response.cusText;
+            _messages.last.promptTokens = response.usage?.promptTokens;
+            _messages.last.completionTokens = response.usage?.completionTokens;
+            _messages.last.totalTokens = response.usage?.totalTokens;
+          } else {
+            // 创建新的助手消息
+            _messages.add(ChatMessage(
+              messageId: response.id,
+              dateTime: DateTime.now(),
+              role: CusRole.assistant.name,
+              content: content,
+              modelLabel: _selectedModel?.name,
+            ));
+          }
         });
-        _scrollToBottom();
+
+        // 可以在这里处理 response 的其他属性
+        // if (response.usage != null) {
+        //   print('Token 使用情况: ${response.usage!.totalTokens}');
+        // }
       }
     } catch (e) {
-      print('流式响应错误: $e');
-      // 如果是用户取消导致的错误，不显示错误提示
-      if (!e.toString().contains('用户取消') && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('响应错误: $e')),
-        );
-      }
+      if (!mounted) return;
+      print('处理流式响应出错: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('处理响应出错: $e')),
+      );
     }
   }
 
   Future<void> _handleSendMessage(String text,
       {File? image, File? voice}) async {
-    if (!mounted) return;
-
     if (_selectedModel == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先选择模型')),
+        const SnackBar(content: Text('请先选择一个模型')),
       );
       return;
     }
 
-    // 构建用户消息，确保包含所有必要信息
-    final userMessage = ChatMessage(
-      messageId: DateTime.now().toString(),
-      dateTime: DateTime.now(),
-      role: CusRole.user.name,
-      content: text,
-      imageUrl: image?.path,
-      contentVoicePath: voice?.path,
-      modelLabel: _selectedModel!.name, // 添加模型标签
-    );
-
-    setState(() => _messages.add(userMessage));
-    _scrollToBottom();
+    // 添加用户消息
+    setState(() {
+      _messages.add(ChatMessage(
+        messageId: DateTime.now().toString(),
+        dateTime: DateTime.now(),
+        role: CusRole.user.name,
+        content: text,
+        imageUrl: image?.path,
+        contentVoicePath: voice?.path,
+      ));
+    });
 
     try {
       setState(() => _isStreaming = true);
@@ -301,21 +321,11 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
       if (!mounted) return;
       await _handleStreamResponse(stream);
       await _saveChatHistory(text);
-
-      print('发送成功，_isStreaming: $_isStreaming');
-
-      print('发送成功，消息列表: ${_messages.map((m) => {
-            'role': m.role,
-            'content': m.content,
-            'imageUrl': m.imageUrl,
-            'contentVoicePath': m.contentVoicePath,
-            'modelLabel': m.modelLabel,
-          }).toList()}');
     } catch (e) {
       if (!mounted) return;
-      print('发送失败: $e');
+      print('发送消息失败: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('发送失败: $e')),
+        SnackBar(content: Text('发送消息失败: $e')),
       );
     } finally {
       _cancelResponse = null;
@@ -323,37 +333,28 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
         setState(() => _isStreaming = false);
       }
     }
-
-    // 消息添加完成后滚动到底部
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom();
-    });
   }
 
-  // 处理重新生成
   Future<void> _handleRegenerate(ChatMessage message) async {
+    if (_isStreaming) return;
+
     final index = _messages.indexOf(message);
     if (index == -1) return;
 
-    setState(() => _regeneratingIndex = index);
+    // 移除当前消息及其之后的所有消息
+    setState(() {
+      _messages.removeRange(index, _messages.length);
+      _regeneratingIndex = index;
+      _isStreaming = true;
+    });
 
     try {
-      // 获取到此消息之前的对话历史(不包含当前消息)
-      final messages = _messages.sublist(0, index);
-
-      setState(() => _isStreaming = true);
       final (stream, cancelFunc) = await ChatService.sendMessage(
         _selectedModel!,
-        messages,
+        _messages,
       );
       _cancelResponse = cancelFunc;
-
       if (!mounted) return;
-      // 移除此消息及之后的所有消息
-      setState(() {
-        _messages = messages;
-      });
-
       await _handleStreamResponse(stream);
       await _saveChatHistory(_messages.last.content);
     } catch (e) {
@@ -506,6 +507,7 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
                                 content: message.content,
                                 onRegenerate: () => _handleRegenerate(message),
                                 isRegenerating: index == _regeneratingIndex,
+                                tokens: message.totalTokens,
                               ),
                             ),
                         ],
