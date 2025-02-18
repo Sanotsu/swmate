@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import '../../common/constants.dart';
 import '../../common/utils/dio_client/cus_http_client.dart';
 import '../../common/utils/dio_client/cus_http_request.dart';
@@ -65,7 +65,7 @@ Future<(Stream<ChatCompletionResponse>, VoidCallback)> getStreamResponse(
                   streamController.add(response);
                 }
               } catch (e) {
-                print('解析响应数据出错: $e');
+                debugPrint('解析响应数据出错: $e');
                 // 流式响应出错时，继续处理下一行
                 continue;
               }

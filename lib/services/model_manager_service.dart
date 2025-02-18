@@ -11,7 +11,6 @@ class ModelManagerService {
   // 初始化内置模型
   static Future<void> initBuiltinModels() async {
     final models = defaultModels.map((model) {
-      model.cusLlmSpecId = '${model.platform}_${model.model}_builtin';
       model.gmtCreate = DateTime.now();
       model.isBuiltin = true;
       return model;
@@ -19,13 +18,30 @@ class ModelManagerService {
 
     for (final model in models) {
       final exists = await _dbHelper.queryCusBriefLLMSpecList(
-        platform: model.platform,
         cusLlmSpecId: model.cusLlmSpecId,
       );
+
       if (exists.isEmpty) {
         await _dbHelper.insertCusBriefLLMSpecList([model]);
       }
     }
+  }
+
+  // 初始化内置模型(测试用,删除全部内置模型重新加入)
+  static Future<void> initBuiltinModelsTest() async {
+    final models = defaultModels.map((model) {
+      model.gmtCreate = DateTime.now();
+      model.isBuiltin = true;
+      return model;
+    }).toList();
+
+    // 删除全部内置模型
+    final exists = await _dbHelper.queryCusBriefLLMSpecList(isBuiltin: true);
+    for (final model in exists) {
+      await _dbHelper.deleteCusBriefLLMSpecById(model.cusLlmSpecId!);
+    }
+
+    await _dbHelper.insertCusBriefLLMSpecList(models);
   }
 
   // 获取可用的模型列表(有对应平台 AK 的模型)

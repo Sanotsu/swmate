@@ -1,13 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'com_ig_state.dart';
+part of 'image_generation_history.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-LlmIGVGResult _$LlmIGVGResultFromJson(Map<String, dynamic> json) =>
-    LlmIGVGResult(
+ImageGenerationHistory _$ImageGenerationHistoryFromJson(
+        Map<String, dynamic> json) =>
+    ImageGenerationHistory(
       requestId: json['requestId'] as String,
       taskId: json['taskId'] as String?,
       isFinish: json['isFinish'] as bool? ?? false,
@@ -20,7 +21,7 @@ LlmIGVGResult _$LlmIGVGResultFromJson(Map<String, dynamic> json) =>
       gmtCreate: DateTime.parse(json['gmtCreate'] as String),
       llmSpec: json['llmSpec'] == null
           ? null
-          : CusLLMSpec.fromJson(json['llmSpec'] as Map<String, dynamic>),
+          : CusBriefLLMSpec.fromJson(json['llmSpec'] as Map<String, dynamic>),
       videoUrls: (json['videoUrls'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList(),
@@ -33,7 +34,8 @@ LlmIGVGResult _$LlmIGVGResultFromJson(Map<String, dynamic> json) =>
       modelType: $enumDecode(_$LLModelTypeEnumMap, json['modelType']),
     );
 
-Map<String, dynamic> _$LlmIGVGResultToJson(LlmIGVGResult instance) =>
+Map<String, dynamic> _$ImageGenerationHistoryToJson(
+        ImageGenerationHistory instance) =>
     <String, dynamic>{
       'requestId': instance.requestId,
       'taskId': instance.taskId,

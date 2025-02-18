@@ -138,6 +138,10 @@ final CHAT_AUDIO_DIR = Directory('/storage/emulated/0/SWMate/chat_audio');
 /// 所有的文生图、图生图都保存在同一个位置
 final LLM_IG_DIR = Directory('/storage/emulated/0/SWMate/image_generation');
 
+///  新版本的文生图(2025-02-18保存在系统的pictures目录下photo_manager扫不到)
+final LLM_IG_DIR_V2 =
+    Directory('/storage/emulated/0/SWMate/brief_image_generation');
+
 /// 所有的文生视频都保存在同一个位置
 final LLM_VG_DIR = Directory('/storage/emulated/0/SWMate/video_generation');
 

@@ -44,6 +44,7 @@ enum LLModelType {
   iti, // Image To Image
   ttv, // Text To Video
   voice, // 语音大模型
+  image, // 图片大模型
 }
 
 // 模型类型对应的中文名

@@ -7,6 +7,7 @@ import '../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
 import '../../common/utils/db_tools/db_helper.dart';
 import '../../services/model_manager_service.dart';
+import 'image/index.dart';
 import 'model_config/index.dart';
 
 class BriefAITools extends StatefulWidget {
@@ -95,7 +96,7 @@ class _BriefAIToolsState extends State<BriefAITools> {
                     await navigateToToolScreen(
                       context,
                       [LLModelType.cc, LLModelType.vision],
-                      (llmSpecList) => BriefChatScreen(),
+                      (llmSpecList) => BriefImageScreen(),
                     );
                   },
                 ),

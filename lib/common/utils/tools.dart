@@ -171,6 +171,17 @@ String formatFileSize(int bytes, {int decimals = 2}) {
   return '${(bytes / pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
 }
 
+/// 格式化Duration为 HH:MM:SS格式
+formatDurationToString(Duration d) =>
+    d.toString().split('.').first.padLeft(8, "0");
+
+String formatDurationToString2(Duration duration) {
+  String twoDigits(int n) => n.toString().padLeft(2, "0");
+  String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+  String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+  return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+}
+
 /// 保存文本文件到外部存储(如果是pdf等还需要改造，传入保存方法等)
 Future<void> saveTextFileToStorage(
   String text,
@@ -254,6 +265,8 @@ saveImageToLocal(
   // 指定保存的名称，比如 xxx.png
   String? imageName,
   Directory? dlDir,
+  // 是否显示保存提示
+  bool showSaveHint = true,
 }) async {
 // 首先获取设备外部存储管理权限
   if (!(await requestStoragePermission())) {
@@ -282,7 +295,10 @@ saveImageToLocal(
     // 传入的前缀有强制带上下划线
     final file = File('${dir.path}/${prefix ?? ""}$imageName');
 
-    EasyLoading.show(status: '【图片保存中...】');
+    if (showSaveHint) {
+      EasyLoading.show(status: '【图片保存中...】');
+    }
+
     var response = await Dio().get(
       netImageUrl,
       options: Options(responseType: ResponseType.bytes),
@@ -290,9 +306,13 @@ saveImageToLocal(
 
     await file.writeAsBytes(response.data);
 
-    EasyLoading.showToast("图片已保存在手机下/${file.path.split("/0/").last}");
+    if (showSaveHint) {
+      EasyLoading.showToast("图片已保存在手机下/${file.path.split("/0/").last}");
+    }
   } finally {
-    EasyLoading.dismiss();
+    if (showSaveHint) {
+      EasyLoading.dismiss();
+    }
   }
 
   // 用这个自定义的，阿里云地址会报403错误，原因不清楚

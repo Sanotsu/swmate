@@ -1,5 +1,6 @@
 import '../llm_spec/cus_brief_llm_model.dart';
 import '../llm_spec/cus_llm_spec.dart';
+import 'default_images_generation_models.dart';
 
 /// 内置模型的 API Keys (用户不可见和修改)
 // class DefaultApiKeys {
@@ -16,7 +17,10 @@ import '../llm_spec/cus_llm_spec.dart';
 part '_self_build_in_ak.dart';
 
 /// 内置的默认模型列表
+/// 2025-02-17 内置模型的 cusLlmSpecId 需要手动创建好，
+/// 在应用首次初始化时，会根据 cusLlmSpecId 来判断是否存在，不存在才加入数据库
 final defaultModels = [
+  ...defaultImagesGenerationModels,
   CusBriefLLMSpec(
     ApiPlatform.siliconCloud,
     'deepseek-ai/DeepSeek-R1-Distill-Llama-8B',
@@ -56,30 +60,6 @@ final defaultModels = [
     contextLength: 32000,
     cusLlmSpecId: 'siliconCloud_deepseek_r1_distill_qwen_1_5b_builtin',
     gmtRelease: DateTime.parse('2025-01-20'),
-    gmtCreate: DateTime.now(),
-    isBuiltin: true,
-  ),
-  CusBriefLLMSpec(
-    ApiPlatform.siliconCloud,
-    'deepseek-ai/Janus-Pro-7B',
-    LLModelType.tti,
-    'Janus-Pro-7B',
-    true,
-    costPer: 0,
-    cusLlmSpecId: 'siliconCloud_janus_pro_7b_builtin',
-    gmtRelease: DateTime.parse('2025-01-28'),
-    gmtCreate: DateTime.now(),
-    isBuiltin: true,
-  ),
-  CusBriefLLMSpec(
-    ApiPlatform.siliconCloud,
-    'stabilityai/stable-diffusion-3-5-large',
-    LLModelType.tti,
-    'stable-diffusion-3-5-large',
-    true,
-    costPer: 0,
-    cusLlmSpecId: 'siliconCloud_stable_diffusion_3_5_large_builtin',
-    gmtRelease: DateTime.parse('2024-10-23'),
     gmtCreate: DateTime.now(),
     isBuiltin: true,
   ),

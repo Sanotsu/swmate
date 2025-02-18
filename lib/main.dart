@@ -47,10 +47,10 @@ class AppCatchError {
           await GetStorage.init();
 
           // 只在首次启动时初始化内置模型
-          if (MyGetStorage().isFirstLaunch()) {
-            await ModelManagerService.initBuiltinModels();
+          // if (MyGetStorage().isFirstLaunch()) {
+            await ModelManagerService.initBuiltinModelsTest();
             await MyGetStorage().markLaunched();
-          }
+          // }
 
           NetworkStatusService().initialize();
           runApp(const SWMateApp());

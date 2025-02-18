@@ -19,6 +19,7 @@ import '../../llm_spec/cus_brief_llm_model.dart';
 import '../../llm_spec/cus_llm_spec.dart';
 import '../../llm_spec/cus_llm_model.dart';
 import 'ddl_swmate.dart';
+import '../../../models/image_generation/image_generation_history.dart';
 
 class DBHelper {
   ///
@@ -816,6 +817,7 @@ class DBHelper {
     String? name, // 模型名称
     LLModelType? modelType, // 模型分类枚举
     bool? isFree, // 是否收费(0要收费，1不收费)
+    bool? isBuiltin, // 是否内置(0不是，1是)
   }) async {
     Database db = await database;
 
@@ -851,6 +853,11 @@ class DBHelper {
     if (cusLlmSpecId != null) {
       where.add('isFree = ?');
       whereArgs.add(isFree == true ? 1 : 0);
+    }
+
+    if (isBuiltin != null) {
+      where.add('isBuiltin = ?');
+      whereArgs.add(isBuiltin == true ? 1 : 0);
     }
 
     final rows = await db.query(
@@ -1185,5 +1192,59 @@ class DBHelper {
     );
 
     return randomRows.map((row) => Dish.fromMap(row)).toList();
+  }
+
+  ///***********************************************/
+  /// AI 文生图的相关操作
+  /// 2025-02-17 文生视频也用这个，重构后也是一样的类，只不过换了名字
+  ///
+
+  // 插入图片生成历史
+  Future<String> insertImageGenerationHistory(
+    ImageGenerationHistory history,
+  ) async {
+    Database db = await database;
+    await db.insert(
+      SWMateDdl.tableNameOfIGVGHistory,
+      history.toMap(),
+    );
+    return history.requestId;
+  }
+
+  // 指定requestId更新图片生成历史
+  Future<void> updateImageGenerationHistoryByRequestId(
+    String requestId,
+    Map<String, dynamic> values,
+  ) async {
+    Database db = await database;
+    await db.update(
+      SWMateDdl.tableNameOfIGVGHistory,
+      values,
+      where: 'requestId = ?',
+      whereArgs: [requestId],
+    );
+  }
+
+  // 查询图片生成历史
+  Future<List<ImageGenerationHistory>> queryImageGenerationHistoryByIsFinish({
+    bool? isFinish,
+  }) async {
+    Database db = await database;
+
+    final where = <String>[];
+    final whereArgs = <dynamic>[];
+
+    if (isFinish != null) {
+      where.add('isFinish = ?');
+      whereArgs.add(isFinish ? 1 : 0);
+    }
+
+    final rows = await db.query(
+      SWMateDdl.tableNameOfIGVGHistory,
+      where: where.isNotEmpty ? where.join(' AND ') : null,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
+    );
+
+    return rows.map((row) => ImageGenerationHistory.fromMap(row)).toList();
   }
 }

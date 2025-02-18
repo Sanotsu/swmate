@@ -185,6 +185,7 @@ const _$LLModelTypeEnumMap = {
   LLModelType.iti: 'iti',
   LLModelType.ttv: 'ttv',
   LLModelType.voice: 'voice',
+  LLModelType.image: 'image',
 };
 
 CusSysRoleSpec _$CusSysRoleSpecFromJson(Map<String, dynamic> json) =>
