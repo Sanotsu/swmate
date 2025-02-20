@@ -1225,9 +1225,22 @@ class DBHelper {
     );
   }
 
+  // 指定requestId更新图片生成历史
+  Future<void> deleteImageGenerationHistoryByRequestId(
+    String requestId,
+  ) async {
+    Database db = await database;
+    await db.delete(
+      SWMateDdl.tableNameOfIGVGHistory,
+      where: 'requestId = ?',
+      whereArgs: [requestId],
+    );
+  }
+
   // 查询图片生成历史
   Future<List<ImageGenerationHistory>> queryImageGenerationHistoryByIsFinish({
     bool? isFinish,
+    List<LLModelType>? modelTypes, // 在调用处取枚举，可多个
   }) async {
     Database db = await database;
 
@@ -1239,11 +1252,23 @@ class DBHelper {
       whereArgs.add(isFinish ? 1 : 0);
     }
 
+    if (modelTypes != null && modelTypes.isNotEmpty) {
+      where.add(
+        'modelType IN (${List.filled(modelTypes.length, '?').join(',')})',
+      );
+      whereArgs.addAll(modelTypes.map((e) => e.toString()));
+    }
+
+    print("where $where");
+    print("whereArgs $whereArgs");
+
     final rows = await db.query(
       SWMateDdl.tableNameOfIGVGHistory,
       where: where.isNotEmpty ? where.join(' AND ') : null,
       whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
     );
+
+    print('<<<<<<<<<<<<<rows: ${rows.first}');
 
     return rows.map((row) => ImageGenerationHistory.fromMap(row)).toList();
   }

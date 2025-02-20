@@ -9,6 +9,7 @@ import '../../common/utils/db_tools/db_helper.dart';
 import '../../services/model_manager_service.dart';
 import 'image/index.dart';
 import 'model_config/index.dart';
+import 'video/index.dart';
 
 class BriefAITools extends StatefulWidget {
   const BriefAITools({super.key});
@@ -95,7 +96,7 @@ class _BriefAIToolsState extends State<BriefAITools> {
                   () async {
                     await navigateToToolScreen(
                       context,
-                      [LLModelType.cc, LLModelType.vision],
+                      [LLModelType.image, LLModelType.tti, LLModelType.iti],
                       (llmSpecList) => BriefImageScreen(),
                     );
                   },
@@ -108,8 +109,8 @@ class _BriefAIToolsState extends State<BriefAITools> {
                   () async {
                     await navigateToToolScreen(
                       context,
-                      [LLModelType.cc, LLModelType.vision],
-                      (llmSpecList) => BriefChatScreen(),
+                      [LLModelType.video, LLModelType.ttv, LLModelType.itv],
+                      (llmSpecList) => BriefVideoScreen(),
                     );
                   },
                 ),

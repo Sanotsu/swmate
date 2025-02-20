@@ -326,6 +326,62 @@ saveImageToLocal(
   // EasyLoading.showToast("图片已保存${file.path}");
 }
 
+// 保存文生视频的视频到本地
+Future<String?> saveVideoToLocal(
+  String netVideoUrl, {
+  String? prefix,
+  // 指定保存的名称，比如 xxx.png
+  String? videoName,
+  Directory? dlDir,
+  // 是否显示保存提示
+  bool showSaveHint = true,
+}) async {
+// 首先获取设备外部存储管理权限
+  if (!(await requestStoragePermission())) {
+    EasyLoading.showError("未授权访问设备外部存储，无法保存视频");
+    return null;
+  }
+
+  videoName ??= netVideoUrl.split("?").first.split('/').last;
+
+  try {
+    var dir = dlDir ?? LLM_VG_DIR;
+
+    // 2024-08-17 直接保存文件到指定位置
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    // 2024-09-04 智谱文生视频有一个随机的名称，就只使用它就好(可以避免同一个视频保存了多个)
+    final filePath = '${dir.path}/${prefix ?? ""}$videoName';
+
+    if (showSaveHint) {
+      EasyLoading.show(status: '【视频保存中...】');
+    }
+    await Dio().download(netVideoUrl, filePath);
+
+    // 保存的地址在 /storage/emulated/0/SWMate/…… 前面一节就不显示了
+    if (showSaveHint) {
+      EasyLoading.showToast("视频已保存在手机下/${filePath.split("/0/").last}");
+    }
+
+    return filePath;
+  } finally {
+    if (showSaveHint) {
+      EasyLoading.dismiss();
+    }
+  }
+
+  // 用这个自定义的，阿里云地址会报403错误，原因不清楚
+  // var respData = await HttpUtils.get(
+  //   path: netImageUrl,
+  //   showLoading: true,
+  //   responseType: CusRespType.bytes,
+  // );
+
+  // await file.writeAsBytes(respData);
+  // EasyLoading.showToast("图片已保存${file.path}");
+}
+
 /// 获取网络图片的base64字符串
 Future<String> getBase64FromNetworkImage(String imageUrl) async {
   // 下载图片

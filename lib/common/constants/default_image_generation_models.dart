@@ -2,11 +2,12 @@ import '../llm_spec/cus_brief_llm_model.dart';
 import '../llm_spec/cus_llm_spec.dart';
 
 /// 内置的默认模型列表
-final defaultImagesGenerationModels = [
+final defaultImageGenerationModels = [
+  /// 硅基流动
   CusBriefLLMSpec(
     ApiPlatform.siliconCloud,
     'black-forest-labs/FLUX.1-schnell',
-    LLModelType.image,
+    LLModelType.tti,
     'FLUX.1-schnell',
     true,
     costPer: 0,
@@ -18,7 +19,7 @@ final defaultImagesGenerationModels = [
   CusBriefLLMSpec(
     ApiPlatform.siliconCloud,
     'stabilityai/stable-diffusion-xl-base-1.0',
-    LLModelType.image,
+    LLModelType.tti,
     'stable-diffusion-xl-base-1.0',
     true,
     costPer: 0,
@@ -30,7 +31,7 @@ final defaultImagesGenerationModels = [
   CusBriefLLMSpec(
     ApiPlatform.siliconCloud,
     'stabilityai/stable-diffusion-3-5-large',
-    LLModelType.image,
+    LLModelType.tti,
     'stable-diffusion-3-5-large',
     true,
     costPer: 0,
@@ -42,7 +43,7 @@ final defaultImagesGenerationModels = [
   CusBriefLLMSpec(
     ApiPlatform.siliconCloud,
     'deepseek-ai/Janus-Pro-7B',
-    LLModelType.image,
+    LLModelType.tti,
     'Janus-Pro-7B',
     false,
     costPer: 0,
@@ -55,51 +56,13 @@ final defaultImagesGenerationModels = [
   /// 智谱AI
   CusBriefLLMSpec(
     ApiPlatform.zhipu,
-    'cogview-4',
-    LLModelType.image,
-    'cogview-4',
-    false,
-    costPer: 0.06,
-    cusLlmSpecId: 'zhipu_cogview_4_builtin',
-    gmtRelease: DateTime.parse('1970-01-01'),
-    gmtCreate: DateTime.now(),
-    isBuiltin: true,
-  ),
-  CusBriefLLMSpec(
-    ApiPlatform.zhipu,
     'cogview-3-flash',
-    LLModelType.image,
+    LLModelType.tti,
     'CogView-3-Flash',
     false,
     costPer: 0.06,
     cusLlmSpecId: 'zhipu_cogview_3_flash_builtin',
     gmtRelease: DateTime.parse('1970-01-01'),
-    gmtCreate: DateTime.now(),
-    isBuiltin: true,
-  ),
-
-  /// 阿里云
-  CusBriefLLMSpec(
-    ApiPlatform.aliyun,
-    'flux-merged',
-    LLModelType.image,
-    'FLUX-merged',
-    false,
-    costPer: 0.06,
-    cusLlmSpecId: 'aliyun_flux_merged_builtin',
-    gmtRelease: DateTime.parse('2024-08-22'),
-    gmtCreate: DateTime.now(),
-    isBuiltin: true,
-  ),
-  CusBriefLLMSpec(
-    ApiPlatform.aliyun,
-    'wanx2.1-t2i-plus',
-    LLModelType.image,
-    '通义万相-文生图2.1-Plus',
-    false,
-    costPer: 0.2,
-    cusLlmSpecId: 'aliyun_wanx2_1_t2i_plus_builtin',
-    gmtRelease: DateTime.parse('2025-01-09'),
     gmtCreate: DateTime.now(),
     isBuiltin: true,
   ),

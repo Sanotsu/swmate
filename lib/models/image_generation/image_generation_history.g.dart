@@ -55,10 +55,12 @@ Map<String, dynamic> _$ImageGenerationHistoryToJson(
 const _$LLModelTypeEnumMap = {
   LLModelType.cc: 'cc',
   LLModelType.vision: 'vision',
-  LLModelType.tti: 'tti',
   LLModelType.tti_word: 'tti_word',
-  LLModelType.iti: 'iti',
-  LLModelType.ttv: 'ttv',
   LLModelType.voice: 'voice',
+  LLModelType.tti: 'tti',
+  LLModelType.iti: 'iti',
   LLModelType.image: 'image',
+  LLModelType.ttv: 'ttv',
+  LLModelType.itv: 'itv',
+  LLModelType.video: 'video',
 };

@@ -78,9 +78,7 @@ class ImageGenerationService {
     }
   }
 
-  static Future<Map<String, String>> _getHeaders(
-    CusBriefLLMSpec model,
-  ) async {
+  static Future<Map<String, String>> _getHeaders(CusBriefLLMSpec model) async {
     final apiKey = await _getApiKey(model);
 
     switch (model.platform) {

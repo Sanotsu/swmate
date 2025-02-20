@@ -52,6 +52,7 @@ class _ModelImportState extends State<ModelImport> {
       // 设置ID和时间
       models = models.map((e) {
         e.cusLlmSpecId = const Uuid().v4();
+        e.name = !e.isFree ? '【收费】${e.name}' : e.name;
         e.gmtCreate = DateTime.now();
         e.isBuiltin = false; // 用户导入的模型
         return e;

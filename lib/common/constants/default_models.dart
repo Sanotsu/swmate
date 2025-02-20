@@ -1,6 +1,7 @@
 import '../llm_spec/cus_brief_llm_model.dart';
 import '../llm_spec/cus_llm_spec.dart';
-import 'default_images_generation_models.dart';
+import 'default_image_generation_models.dart';
+import 'default_video_generation_models.dart';
 
 /// 内置模型的 API Keys (用户不可见和修改)
 // class DefaultApiKeys {
@@ -20,7 +21,8 @@ part '_self_build_in_ak.dart';
 /// 2025-02-17 内置模型的 cusLlmSpecId 需要手动创建好，
 /// 在应用首次初始化时，会根据 cusLlmSpecId 来判断是否存在，不存在才加入数据库
 final defaultModels = [
-  ...defaultImagesGenerationModels,
+  ...defaultImageGenerationModels,
+  ...defaultVideoGenerationModels,
   CusBriefLLMSpec(
     ApiPlatform.siliconCloud,
     'deepseek-ai/DeepSeek-R1-Distill-Llama-8B',
