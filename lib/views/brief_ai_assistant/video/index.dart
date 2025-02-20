@@ -7,7 +7,7 @@ import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/tools.dart';
-import '../../../models/image_generation/image_generation_history.dart';
+import '../../../models/media_generation_history/media_generation_history.dart';
 import '../../../services/video_generation_service.dart';
 import '../../../views/brief_ai_assistant/video/video_manager.dart';
 import '../../../views/brief_ai_assistant/common/media_generation_base.dart';
@@ -23,7 +23,7 @@ class BriefVideoScreen extends MediaGenerationBase {
 class _BriefVideoScreenState
     extends MediaGenerationBaseState<BriefVideoScreen> {
   // 所有的视频生成任务
-  final List<ImageGenerationHistory> _allTasks = [];
+  final List<MediaGenerationHistory> _allTasks = [];
 
   ///
   /// 2025-02-19 一些视频生成配置参数选项预留，目前都用不上
@@ -66,13 +66,14 @@ class _BriefVideoScreenState
   @override
   String get note => '''
 - 目前支持以下平台的视频生成:
-  - **阿里云**通义万相-图生视频
+  - **阿里云**通义万相-文/图生视频
   - **智谱AI**的cogvideox
-  - **硅基流动**的图生视频
-- 可以选择是否上传参考图片
-- 视频生成耗时较长，请耐心等待
-- 生成的视频会保存在设备的以下目录:
-  - Pictures/SWMate/video_generation
+  - **硅基流动**的视频生成
+- 部分模型可以选择是否上传参考图片
+- 视频生成耗时较长，可稍后查询任务状态
+- 生成的视频会自动保存在设备的以下目录:
+  - /SWMate/video_generation
+- 视频生成任务记录可以长按删除
 ''';
 
   /// 2025-02-19
@@ -130,77 +131,6 @@ class _BriefVideoScreenState
     );
   }
 
-  // @override
-  // Widget buildGeneratedList() {
-  //   if (generatedVideos.isEmpty) {
-  //     return const Expanded(child: Center(child: Text('暂无生成的视频')));
-  //   }
-
-  //   return Expanded(
-  //     child: Column(
-  //       children: [
-  //         const Divider(),
-  //         Padding(
-  //           padding: EdgeInsets.all(5.sp),
-  //           child: Text(
-  //             "生成的视频(点击播放、长按保存)",
-  //             style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-  //           ),
-  //         ),
-  //         Expanded(
-  //           child: ListView.builder(
-  //             itemCount: generatedVideos.length,
-  //             itemBuilder: (context, index) {
-  //               return Card(
-  //                 margin: EdgeInsets.all(8.sp),
-  //                 child: ListTile(
-  //                   leading: generatedCovers.isNotEmpty
-  //                       ? Image.network(
-  //                           generatedCovers[index],
-  //                           width: 50.sp,
-  //                           height: 50.sp,
-  //                           fit: BoxFit.cover,
-  //                         )
-  //                       : Icon(Icons.video_file, size: 50.sp),
-  //                   title: Text('视频 ${index + 1}'),
-  //                   subtitle: Text('$_resolution - $_videoLength秒'),
-  //                   onTap: () {
-  //                     Navigator.push(
-  //                       context,
-  //                       MaterialPageRoute(
-  //                         builder: (_) => VideoPlayerScreen(
-  //                           videoUrl: generatedVideos[index],
-  //                         ),
-  //                       ),
-  //                     );
-  //                   },
-  //                   onLongPress: () async {
-  //                     try {
-  //                       await saveVideoToLocal(
-  //                         generatedVideos[index],
-  //                         dlDir: LLM_VG_DIR,
-  //                       );
-  //                       if (!context.mounted) return;
-  //                       ScaffoldMessenger.of(context).showSnackBar(
-  //                         const SnackBar(content: Text('保存成功')),
-  //                       );
-  //                     } catch (e) {
-  //                       if (!context.mounted) return;
-  //                       ScaffoldMessenger.of(context).showSnackBar(
-  //                         SnackBar(content: Text('保存失败: $e')),
-  //                       );
-  //                     }
-  //                   },
-  //                 ),
-  //               );
-  //             },
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   @override
   Widget buildGeneratedList() {
     if (_allTasks.isEmpty) {
@@ -210,35 +140,27 @@ class _BriefVideoScreenState
     return Expanded(
       child: Column(
         children: [
-          const Divider(),
+          Divider(height: 5.sp),
           Padding(
-            padding: EdgeInsets.all(5.sp),
+            padding: EdgeInsets.symmetric(horizontal: 8.sp),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Expanded(
-                  child: Text(
-                    "视频生成任务",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                Text(
+                  "视频生成任务",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.sp,
                   ),
                 ),
                 IconButton(
-                  onPressed: () async {
-                    if (_allTasks.isNotEmpty) {
-                      for (final task in _allTasks) {
-                        await dbHelper.deleteImageGenerationHistoryByRequestId(
-                          task.requestId,
-                        );
-                      }
-
-                      if (!mounted) return;
-                      setState(() => _allTasks.clear());
-                    }
-                  },
-                  icon: Icon(Icons.delete),
+                  onPressed: () => _checkUnfinishedTasks(),
+                  icon: Icon(Icons.refresh, color: Colors.blue),
                 ),
               ],
             ),
           ),
+          Divider(height: 5.sp),
           Expanded(
             child: ListView.builder(
               itemCount: _allTasks.length,
@@ -248,11 +170,16 @@ class _BriefVideoScreenState
                 return Card(
                   margin: EdgeInsets.all(5.sp),
                   child: ListTile(
-                    leading: Icon(Icons.video_file, size: 50.sp),
-                    title: Text(task.llmSpec?.platform.name ?? ''),
-                    subtitle: Text(task.prompt),
+                    leading: Icon(Icons.video_file, size: 48.sp),
+                    title: Text(CP_NAME_MAP[task.llmSpec.platform] ?? ''),
+                    subtitle: Text(
+                      task.prompt,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12.sp),
+                    ),
                     // 视频生成任务，虽然设计时可能有多个，但实际只是有一个元素的数组
-                    trailing: task.isFinish &&
+                    trailing: task.isSuccess &&
                             task.videoUrls?.first != null &&
                             task.videoUrls?.first.trim() != ''
                         ? IconButton(
@@ -266,11 +193,48 @@ class _BriefVideoScreenState
                                 ),
                               );
                             },
-                            icon: Icon(Icons.play_circle, size: 32.sp),
+                            icon: Icon(
+                              Icons.play_circle,
+                              size: 36.sp,
+                              color: Colors.blue,
+                            ),
                           )
-                        : const SizedBox.shrink(),
-                    onTap: () {},
-                    onLongPress: () async {},
+                        : Icon(Icons.hourglass_empty, size: 36.sp),
+                    // 长按删除
+                    onLongPress: () async {
+                      final result = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text('删除视频生成任务'),
+                          content: Text(
+                            '删除后，视频生成任务记录将不再显示，但不会影响已保存的视频文件。',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context, false);
+                              },
+                              child: Text('取消'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context, true);
+                              },
+                              child: Text('确定'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (result == true) {
+                        await dbHelper.deleteMediaGenerationHistoryByRequestId(
+                          task.requestId,
+                        );
+                      }
+
+                      if (!mounted) return;
+                      await _queryAllTasks();
+                    },
                   ),
                 );
               },
@@ -280,6 +244,25 @@ class _BriefVideoScreenState
       ),
     );
   }
+
+  // @override
+  // Widget buildReferenceImagePreview() {
+  //   if (referenceImage == null) return const SizedBox.shrink();
+
+  //   return Padding(
+  //     padding: EdgeInsets.all(8.sp),
+  //     child: Stack(
+  //       children: [
+  //         Image.file(
+  //           referenceImage!,
+  //           height: 100.sp,
+  //           width: 100.sp,
+  //           fit: BoxFit.cover,
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   @override
   Future<void> generate() async {
@@ -316,23 +299,26 @@ class _BriefVideoScreenState
 
       // 创建历史记录
       // 将视频生成任务提交响应保存到历史记录，后续轮询任务状态
-      final history = ImageGenerationHistory(
+      final history = MediaGenerationHistory(
         requestId: response.requestId ?? const Uuid().v4(),
         prompt: promptController.text.trim(),
-        taskId: taskId,
-        isFinish: false,
-        videoUrls: null,
         refImageUrls: [],
+        taskId: taskId,
+        isSuccess: false,
+        isProcessing: true,
+        isFailed: false,
+        videoUrls: null,
         gmtCreate: DateTime.now(),
-        llmSpec: selectedModel,
+        llmSpec: selectedModel!,
         modelType: LLModelType.video,
       );
 
-      final requestId = await dbHelper.insertImageGenerationHistory(history);
+      await dbHelper.insertMediaGenerationHistory(history);
 
-      EasyLoading.showSuccess('视频生成任务提交成功$requestId');
+      EasyLoading.showSuccess('视频生成任务已提交成功');
 
-      if (!mounted) return;
+      // 提交新任务之后，重新查询所有任务并更新UI
+      await _queryAllTasks();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -357,97 +343,149 @@ class _BriefVideoScreenState
     _checkUnfinishedTasks();
   }
 
-  // 检查未完成的任务
-  Future<void> _checkUnfinishedTasks() async {
-    // 查询所有视频生成任务
-    final all = await dbHelper.queryImageGenerationHistoryByIsFinish(
+  // 查询所有视频生成任务
+  Future<void> _queryAllTasks() async {
+    final all = await dbHelper.queryMediaGenerationHistory(
       modelTypes: [LLModelType.video, LLModelType.ttv, LLModelType.itv],
     );
 
-    print('<<<<<<<<<<<<<all: ${all.first.videoUrls}');
+    print("所有的视频生成任务: $all");
 
-    // 过滤出未完成的任务
-    final unfinishedTasks = all.where((e) => e.isFinish == false).toList();
-
+    if (!mounted) return;
     setState(() {
-      // _allTasks.addAll(unfinishedTasks);
+      _allTasks.clear();
       _allTasks.addAll(all);
     });
+  }
 
-    print(
-      '所有任务: ${all.length} 未完成的任务: ${unfinishedTasks.length} ${LLModelType.video.toString()}',
-    );
+  // 检查未完成的任务
+  Future<void> _checkUnfinishedTasks() async {
+    try {
+      // 查询所有视频生成任务
+      await _queryAllTasks();
 
-    // 遍历未完成的任务
-    for (final task in unfinishedTasks) {
-      if (task.taskId != null) {
-        print('task.taskId: ${task.taskId}');
-        try {
-          final response = await VideoGenerationService.pollTaskStatus(
-            task.taskId!,
-            modelList.firstWhere(
-                (model) => model.platform == task.llmSpec?.platform),
+      // 过滤出未完成的任务
+      final unfinishedTasks =
+          _allTasks.where((e) => e.isProcessing == true).toList();
+
+      if (unfinishedTasks.isEmpty) return;
+
+      // 并行处理未完成的任务，查询任务状态(不轮询，让用户手动刷新)
+      await Future.wait(unfinishedTasks.map((task) async {
+        if (task.taskId != null) {
+          final model = modelList.firstWhere(
+            (m) => m.platform == task.llmSpec.platform,
           );
+
+          final response = await VideoGenerationService.queryTaskStatus(
+            task.taskId!,
+            model,
+          );
+
+          // 使用查询到的任务状态更新数据库(大体栏位是一样的，就更新部分状态和结果栏位)
+          var item = MediaGenerationHistory.fromMap(task.toMap());
+
+          // 统一状态，然后在实际响应的状态的再次更新
+          item.taskStatus = response.taskStatus;
+
+          // 如果有成功或者失败的，视频地址栏位也要更新
 
           // 2025-02-20 视频生成成功,但大部分的在线地址都是临时地址，所以需要保存到本地
           // 存入数据库的就是本地地址(那就要注意，视频删除时也要更新数据库)
-          // 除了智谱其他都没有封面图，所以暂时统一不处理封面图属性
-          if (response.status == 'SUCCEEDED') {
-            var urls = response.results?.map((r) => r.url).toList() ?? [];
+          List<String> newUrls = [];
 
-            // 保存视频到本地
-            var newUrls = <String>[];
-            for (final url in urls) {
-              var newUrl = await saveVideoToLocal(url,
-                  dlDir: LLM_VG_DIR, showSaveHint: false);
-              if (newUrl != null) {
-                newUrls.add(newUrl);
+          switch (model.platform) {
+            case ApiPlatform.siliconCloud:
+              if (response.taskStatus == 'Succeed') {
+                item.isSuccess = true;
+                item.isProcessing = false;
+                item.isFailed = false;
+
+                newUrls = await _saveNetworkVideosToLocal(
+                  response.results?.videos?.map((e) => e.url).toList() ?? [],
+                );
+                item.videoUrls = newUrls;
               }
-            }
+              break;
+            case ApiPlatform.aliyun:
+              if (response.output?.taskStatus == 'SUCCEEDED') {
+                item.isSuccess = true;
+                item.isProcessing = false;
+                item.isFailed = false;
 
-            // 更新数据库视频地址
-            await dbHelper.updateImageGenerationHistoryByRequestId(
-              task.requestId,
-              {
-                'isFinish': 1,
-                'videoUrls': newUrls.join(";"),
-              },
-            );
+                newUrls = await _saveNetworkVideosToLocal(
+                  [response.output?.videoUrl ?? ''],
+                );
+                item.videoUrls = newUrls;
+              }
+              if (response.output?.taskStatus == 'FAILED' ||
+                  response.output?.taskStatus == 'UNKNOWN') {
+                item.isSuccess = false;
+                item.isProcessing = false;
+                item.isFailed = true;
+              }
+              break;
+            case ApiPlatform.zhipu:
+              if (response.taskStatus == 'SUCCESS') {
+                item.isSuccess = true;
+                item.isProcessing = false;
+                item.isFailed = false;
 
-            // 更新UI
-            if (mounted) {
-              setState(() {
-                _allTasks
-                    .firstWhere((e) => e.requestId == task.requestId)
-                    .videoUrls = newUrls;
-              });
-            }
-          } else if (response.code == 'FAILED' || response.code == 'UNKNOWN') {
-            await dbHelper.updateImageGenerationHistoryByRequestId(
-              task.requestId,
-              {'isFinish': 1},
-            );
-
-            // 更新UI
-            if (mounted) {
-              setState(() {
-                _allTasks
-                    .firstWhere((e) => e.requestId == task.requestId)
-                    .isFinish = true;
-              });
-            }
+                newUrls = await _saveNetworkVideosToLocal(
+                  response.videoResult?.map((e) => e.url).toList() ?? [],
+                );
+                item.videoUrls = newUrls;
+              }
+              if (response.output?.taskStatus == 'FAIL') {
+                item.isSuccess = false;
+                item.isProcessing = false;
+                item.isFailed = true;
+              }
+              break;
+            default:
+              throw Exception('不支持的平台');
           }
-        } catch (e) {
-          print('检查任务状态失败: $e');
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('检查任务状态失败: $e'),
-              duration: const Duration(seconds: 5),
-            ),
-          );
+
+          await dbHelper.updateMediaGenerationHistory(item);
+
+          // 更新UI
+          // if (mounted) {
+          //   setState(() {
+          //     _allTasks
+          //         .firstWhere((e) => e.requestId == task.requestId)
+          //         .videoUrls = newUrls;
+          //   });
+          // }
         }
+      }));
+
+      // 未完成任务查询完之后，重新更新UI
+      await _queryAllTasks();
+    } catch (e) {
+      print('检查任务状态失败: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('检查任务状态失败: $e'),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
+  // 保存视频到本地
+  Future<List<String>> _saveNetworkVideosToLocal(List<String> urls) async {
+    final localUrls = <String>[];
+    for (final url in urls) {
+      final localUrl = await saveVideoToLocal(
+        url,
+        dlDir: LLM_VG_DIR_V2,
+        showSaveHint: false,
+      );
+      if (localUrl != null) {
+        localUrls.add(localUrl);
       }
     }
+    return localUrls;
   }
 }

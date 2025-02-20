@@ -259,7 +259,7 @@ Future<File> saveTtiBase64ImageToLocal(
 }
 
 // 保存文生图的图片到本地
-saveImageToLocal(
+Future<String?> saveImageToLocal(
   String netImageUrl, {
   String? prefix,
   // 指定保存的名称，比如 xxx.png
@@ -270,7 +270,9 @@ saveImageToLocal(
 }) async {
 // 首先获取设备外部存储管理权限
   if (!(await requestStoragePermission())) {
-    return EasyLoading.showError("未授权访问设备外部存储，无法保存图片");
+    EasyLoading.showError("未授权访问设备外部存储，无法保存图片");
+
+    return null;
   }
 
   // print("原图片地址---$netImageUrl");
@@ -309,6 +311,8 @@ saveImageToLocal(
     if (showSaveHint) {
       EasyLoading.showToast("图片已保存在手机下/${file.path.split("/0/").last}");
     }
+
+    return file.path;
   } finally {
     if (showSaveHint) {
       EasyLoading.dismiss();

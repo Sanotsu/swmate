@@ -145,6 +145,10 @@ final LLM_IG_DIR_V2 =
 /// 所有的文生视频都保存在同一个位置
 final LLM_VG_DIR = Directory('/storage/emulated/0/SWMate/video_generation');
 
+/// 所有的视频都保存在同一个位置
+final LLM_VG_DIR_V2 =
+    Directory('/storage/emulated/0/SWMate/brief_video_generation');
+
 /// 一般性质的文件下载的位置
 final DL_DIR = Directory('/storage/emulated/0/SWMate/download');
 

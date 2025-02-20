@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:video_player/video_player.dart';
 import '../common/media_preview_base.dart';
 
@@ -23,16 +24,21 @@ class VideoPreviewScreen extends MediaPreviewBase {
           return const Center(child: CircularProgressIndicator());
         }
 
-        return VideoPlayerWidget(file: snapshot.data!);
+        return VideoPlayerWidget(videoUrl: snapshot.data!.path);
       },
     );
   }
 }
 
 class VideoPlayerWidget extends StatefulWidget {
-  final File file;
+  final String videoUrl;
+  final String? sourceType;
 
-  const VideoPlayerWidget({super.key, required this.file});
+  const VideoPlayerWidget({
+    super.key,
+    required this.videoUrl,
+    this.sourceType = 'file',
+  });
 
   @override
   State<VideoPlayerWidget> createState() => _VideoPlayerWidgetState();
@@ -45,12 +51,20 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(widget.file)
-      ..initialize().then((_) {
-        setState(() => _isInitialized = true);
-      });
 
-    print(' 视频播放页文件路径initState: ${widget.file.path}');
+    if (widget.sourceType == "network") {
+      _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+        ..initialize().then((_) {
+          setState(() => _isInitialized = true);
+          _controller.play();
+        });
+    } else {
+      _controller = VideoPlayerController.file(File(widget.videoUrl))
+        ..initialize().then((_) {
+          setState(() => _isInitialized = true);
+          _controller.play();
+        });
+    }
   }
 
   @override
@@ -60,12 +74,11 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     }
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Expanded(
-          child: AspectRatio(
-            aspectRatio: _controller.value.aspectRatio,
-            child: VideoPlayer(_controller),
-          ),
+        AspectRatio(
+          aspectRatio: _controller.value.aspectRatio,
+          child: VideoPlayer(_controller),
         ),
         VideoProgressIndicator(_controller, allowScrubbing: true),
         Row(
@@ -73,7 +86,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
           children: [
             IconButton(
               icon: Icon(
-                _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                _controller.value.isPlaying
+                    ? Icons.pause_circle
+                    : Icons.play_circle,
+                size: 32.sp,
               ),
               onPressed: () {
                 setState(() {
@@ -81,6 +97,13 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                       ? _controller.pause()
                       : _controller.play();
                 });
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.replay_circle_filled, size: 32.sp),
+              onPressed: () {
+                _controller.seekTo(Duration.zero);
+                _controller.play();
               },
             ),
           ],

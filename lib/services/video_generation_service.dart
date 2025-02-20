@@ -180,7 +180,7 @@ class VideoGenerationService {
     const interval = Duration(seconds: 2); // 轮询间隔
 
     for (var i = 0; i < maxAttempts; i++) {
-      final response = await _queryTaskStatus(taskId, model);
+      final response = await queryTaskStatus(taskId, model);
 
       // 这里任务的状态都使用阿里云的枚举
       switch (model.platform) {
@@ -234,7 +234,7 @@ class VideoGenerationService {
   }
 
   // 查询任务状态
-  static Future<VideoGenerationTaskResponse> _queryTaskStatus(
+  static Future<VideoGenerationTaskResponse> queryTaskStatus(
     String taskId,
     CusBriefLLMSpec model,
   ) async {

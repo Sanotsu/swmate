@@ -19,7 +19,7 @@ import '../../llm_spec/cus_brief_llm_model.dart';
 import '../../llm_spec/cus_llm_spec.dart';
 import '../../llm_spec/cus_llm_model.dart';
 import 'ddl_swmate.dart';
-import '../../../models/image_generation/image_generation_history.dart';
+import '../../../models/media_generation_history/media_generation_history.dart';
 
 class DBHelper {
   ///
@@ -67,6 +67,7 @@ class DBHelper {
       txn.execute(SWMateDdl.ddlForChatHistory);
       txn.execute(SWMateDdl.ddlForGroupChatHistory);
       txn.execute(SWMateDdl.ddlForIGVGHistory);
+      txn.execute(SWMateDdl.ddlForMediaGenerationHistory);
       txn.execute(SWMateDdl.ddlForCusLlmSpec);
       txn.execute(SWMateDdl.ddlForCusBriefLlmSpec);
       txn.execute(SWMateDdl.ddlForCusSySroleSpec);
@@ -1195,51 +1196,65 @@ class DBHelper {
   }
 
   ///***********************************************/
-  /// AI 文生图的相关操作
-  /// 2025-02-17 文生视频也用这个，重构后也是一样的类，只不过换了名字
+  /// AI 媒体资源生成的相关操作
+  /// 文生视频（后续语音合成也可能）也用这个
   ///
 
   // 插入图片生成历史
-  Future<String> insertImageGenerationHistory(
-    ImageGenerationHistory history,
+  Future<String> insertMediaGenerationHistory(
+    MediaGenerationHistory history,
   ) async {
     Database db = await database;
     await db.insert(
-      SWMateDdl.tableNameOfIGVGHistory,
+      SWMateDdl.tableNameOfMediaGenerationHistory,
       history.toMap(),
     );
     return history.requestId;
   }
 
   // 指定requestId更新图片生成历史
-  Future<void> updateImageGenerationHistoryByRequestId(
+  Future<void> updateMediaGenerationHistoryByRequestId(
     String requestId,
     Map<String, dynamic> values,
   ) async {
     Database db = await database;
     await db.update(
-      SWMateDdl.tableNameOfIGVGHistory,
+      SWMateDdl.tableNameOfMediaGenerationHistory,
       values,
       where: 'requestId = ?',
       whereArgs: [requestId],
     );
   }
 
+  Future<void> updateMediaGenerationHistory(
+    MediaGenerationHistory item,
+  ) async {
+    Database db = await database;
+    await db.update(
+      SWMateDdl.tableNameOfMediaGenerationHistory,
+      item.toMap(),
+      where: 'requestId = ?',
+      whereArgs: [item.requestId],
+    );
+  }
+
   // 指定requestId更新图片生成历史
-  Future<void> deleteImageGenerationHistoryByRequestId(
+  Future<void> deleteMediaGenerationHistoryByRequestId(
     String requestId,
   ) async {
     Database db = await database;
     await db.delete(
-      SWMateDdl.tableNameOfIGVGHistory,
+      SWMateDdl.tableNameOfMediaGenerationHistory,
       where: 'requestId = ?',
       whereArgs: [requestId],
     );
   }
 
   // 查询图片生成历史
-  Future<List<ImageGenerationHistory>> queryImageGenerationHistoryByIsFinish({
-    bool? isFinish,
+  Future<List<MediaGenerationHistory>> queryMediaGenerationHistory({
+    bool? isSuccess,
+    bool? isProcessing,
+    bool? isFailed,
     List<LLModelType>? modelTypes, // 在调用处取枚举，可多个
   }) async {
     Database db = await database;
@@ -1247,9 +1262,19 @@ class DBHelper {
     final where = <String>[];
     final whereArgs = <dynamic>[];
 
-    if (isFinish != null) {
-      where.add('isFinish = ?');
-      whereArgs.add(isFinish ? 1 : 0);
+    if (isSuccess != null) {
+      where.add('isSuccess = ?');
+      whereArgs.add(isSuccess ? 1 : 0);
+    }
+
+    if (isProcessing != null) {
+      where.add('isProcessing = ?');
+      whereArgs.add(isProcessing ? 1 : 0);
+    }
+
+    if (isFailed != null) {
+      where.add('isFailed = ?');
+      whereArgs.add(isFailed ? 1 : 0);
     }
 
     if (modelTypes != null && modelTypes.isNotEmpty) {
@@ -1263,13 +1288,13 @@ class DBHelper {
     print("whereArgs $whereArgs");
 
     final rows = await db.query(
-      SWMateDdl.tableNameOfIGVGHistory,
+      SWMateDdl.tableNameOfMediaGenerationHistory,
       where: where.isNotEmpty ? where.join(' AND ') : null,
       whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
     );
 
-    print('<<<<<<<<<<<<<rows: ${rows.first}');
+    print('<<<<<<<<<<<<<rows: $rows');
 
-    return rows.map((row) => ImageGenerationHistory.fromMap(row)).toList();
+    return rows.map((row) => MediaGenerationHistory.fromMap(row)).toList();
   }
 }

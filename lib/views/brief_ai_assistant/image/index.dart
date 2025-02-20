@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
-import 'dart:convert';
 
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/tools.dart';
-import '../../../models/image_generation/image_generation_history.dart';
+import '../../../models/media_generation_history/media_generation_history.dart';
 import '../../../services/image_generation_service.dart';
 import '../../../views/brief_ai_assistant/image/image_manager.dart';
 import '../../../views/brief_ai_assistant/common/media_generation_base.dart';
@@ -38,14 +37,14 @@ class _BriefImageScreenState
     CusLabel(cnLabel: "3:4", value: "768x1024"),
     CusLabel(cnLabel: "16:9", value: "1024x576"),
     CusLabel(cnLabel: "9:16", value: "576x1024"),
-    // 智谱
+    // 智谱(传参时修改为比例接近的尺寸)
     //  CusLabel(cnLabel: "1:1", value: "1024x1024"),
-    CusLabel(cnLabel: "4:7", value: "768x1344"),
-    CusLabel(cnLabel: "3:4", value: "864x1152"),
-    CusLabel(cnLabel: "7:4", value: "1344x768"),
-    CusLabel(cnLabel: "4:3", value: "1152x864"),
-    CusLabel(cnLabel: "2:1", value: "1440x720"),
-    CusLabel(cnLabel: "1:2", value: "720x1440"),
+    // CusLabel(cnLabel: "4:7", value: "768x1344"),
+    // CusLabel(cnLabel: "3:4", value: "864x1152"),
+    // CusLabel(cnLabel: "7:4", value: "1344x768"),
+    // CusLabel(cnLabel: "4:3", value: "1152x864"),
+    // CusLabel(cnLabel: "2:1", value: "1440x720"),
+    // CusLabel(cnLabel: "1:2", value: "720x1440"),
   ];
 
   late CusLabel _selectedImageSize;
@@ -66,11 +65,12 @@ class _BriefImageScreenState
   - **阿里云**"通义万相-文生图V2版"、Flux系列
   - **硅基流动**文生图模型
   - **智谱AI**的文生图模型
-- 先选择平台模型和图片尺寸，再输入提示词
+- 先选择平台模型和图片比例，再输入提示词
+  - 智谱支持的尺寸与众不同，故用近似比例
 - 文生图耗时较长，**请勿在生成过程中退出**
 - 默认一次生成1张图片
 - 生成的图片会保存在设备的以下目录:
-  - Pictures/SWMate/image_generation
+  - /SWMate/image_generation
 ''';
 
   @override
@@ -88,23 +88,6 @@ class _BriefImageScreenState
               },
         itemToString: (e) => (e as CusLabel).cnLabel,
       ),
-
-      // DropdownButton<CusLabel>(
-      //   value: _selectedImageSize,
-      //   isExpanded: true,
-      //   items: _imageSizeOptions.map((CusLabel size) {
-      //     return DropdownMenuItem(
-      //       value: size,
-      //       alignment: AlignmentDirectional.center,
-      //       child: Text(size.cnLabel, style: TextStyle(fontSize: 12.sp)),
-      //     );
-      //   }).toList(),
-      //   onChanged: isGenerating
-      //       ? null
-      //       : (value) {
-      //           setState(() => _selectedImageSize = value!);
-      //         },
-      // ),
     );
   }
 
@@ -137,63 +120,94 @@ class _BriefImageScreenState
 
     try {
       // 创建历史记录
-      final history = ImageGenerationHistory(
+      final history = MediaGenerationHistory(
         requestId: const Uuid().v4(),
         prompt: promptController.text.trim(),
         negativePrompt: '',
         taskId: null,
-        isFinish: false,
-        style: '',
         imageUrls: null,
         refImageUrls: [],
         gmtCreate: DateTime.now(),
-        llmSpec: selectedModel,
+        llmSpec: selectedModel!,
         modelType: LLModelType.image,
       );
 
-      final requestId = await dbHelper.insertImageGenerationHistory(history);
+      final requestId = await dbHelper.insertMediaGenerationHistory(history);
+
+      // 生成图片(这里返回的就已经是生成图片的结果了)
+      // 2025-02-20 因为智谱的文生图比例和其他的差异过大，所以这里特殊处理
+      // 使用比例接近的尺寸
+      String tempSize = _selectedImageSize.value;
+
+      if (selectedModel?.platform == ApiPlatform.zhipu) {
+        switch (_selectedImageSize.cnLabel) {
+          case "1:1":
+            tempSize = "1024x1024";
+            break;
+          case "1:2":
+            tempSize = "720x1440";
+            break;
+          case "3:2":
+            tempSize = "1344x768";
+            break;
+          case "3:4":
+            tempSize = "864x1152";
+            break;
+          case "16:9":
+            tempSize = "1440x720";
+            break;
+          case "9:16":
+            tempSize = "768x1344";
+            break;
+          default:
+            tempSize = "1024x1024";
+            break;
+        }
+      }
 
       final response = await ImageGenerationService.generateImage(
         selectedModel!,
         promptController.text.trim(),
         n: 1,
         size: selectedModel?.platform == ApiPlatform.aliyun
-            ? (_selectedImageSize.value as String).replaceAll('x', '*')
-            : _selectedImageSize.value,
+            ? tempSize.replaceAll('x', '*')
+            : tempSize,
       );
 
       if (!mounted) return;
 
-      // 如果是阿里云平台，则需要保存任务ID和已完成的标识
-      if (selectedModel?.platform == ApiPlatform.aliyun) {
-        await dbHelper.updateImageGenerationHistoryByRequestId(
-          requestId,
-          {
-            'taskId': response.output?.taskId,
-            'isFinish': 1,
-            'imageUrls':
-                jsonEncode(response.results.map((r) => r.url).toList()),
-          },
+      // 保存返回的网络图片到本地
+      var imageUrls = response.results.map((r) => r.url).toList();
+      List<String> newUrls = [];
+      for (final url in imageUrls) {
+        var localPath = await saveImageToLocal(
+          url,
+          dlDir: LLM_IG_DIR_V2,
+          showSaveHint: false,
         );
+
+        if (localPath != null) {
+          newUrls.add(localPath);
+        }
       }
 
+      // 更新UI(这里使用网络地址或本地地址没差，毕竟历史记录在其他页面，这里只有当前页面还在时才有图片展示)
+      if (!mounted) return;
       setState(() {
-        _generatedImages.addAll(response.results.map((r) => r.url));
+        _generatedImages.addAll(newUrls);
       });
 
-      // 更新数据库历史记录
-      await dbHelper.updateImageGenerationHistoryByRequestId(
+      // 更新数据库历史记录。如果是阿里云平台，则需要保存任务ID和已完成的标识
+      await dbHelper.updateMediaGenerationHistoryByRequestId(
         requestId,
         {
-          'isFinish': 1,
-          'imageUrls': jsonEncode(_generatedImages),
+          'taskId': selectedModel?.platform == ApiPlatform.aliyun
+              ? response.output?.taskId
+              : null,
+          'isSuccess': 1,
+          'imageUrls': _generatedImages.join(','),
         },
       );
-
-      // 保存图片到本地
-      for (final url in _generatedImages) {
-        await saveImageToLocal(url, dlDir: LLM_IG_DIR_V2, showSaveHint: true);
-      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -218,13 +232,16 @@ class _BriefImageScreenState
   }
 
   // 检查未完成的任务
+  // 2025-02-20 和视频生成中不一样，图片生成目前就阿里云的通义万相-文生图V2版需要任务查询，其他直接返回的
+  // 耗时不会特别长，所以这里调用轮询
   Future<void> _checkUnfinishedTasks() async {
     // 查询未完成的任务
-    final unfinishedTasks =
-        await dbHelper.queryImageGenerationHistoryByIsFinish(
-      isFinish: false,
+    final all = await dbHelper.queryMediaGenerationHistory(
       modelTypes: [LLModelType.image, LLModelType.tti, LLModelType.iti],
     );
+
+    // 过滤出未完成的任务
+    final unfinishedTasks = all.where((e) => e.isProcessing == true).toList();
 
     // 遍历未完成的任务
     for (final task in unfinishedTasks) {
@@ -232,25 +249,28 @@ class _BriefImageScreenState
         try {
           final response = await ImageGenerationService.pollTaskStatus(
             modelList.firstWhere(
-                (model) => model.platform == task.llmSpec?.platform),
+              (model) => model.platform == task.llmSpec.platform,
+            ),
             task.taskId!,
           );
 
           if (response.output?.taskStatus == 'SUCCEEDED') {
-            await dbHelper.updateImageGenerationHistoryByRequestId(
+            await dbHelper.updateMediaGenerationHistoryByRequestId(
               task.requestId,
               {
-                'isFinish': 1,
-                'imageUrls': jsonEncode(
-                  response.output?.results?.map((r) => r.url).toList() ?? [],
-                ),
+                'isSuccess': 1,
+                'imageUrls': response.output?.results
+                        ?.map((r) => r.url)
+                        .toList()
+                        .join(',') ??
+                    '',
               },
             );
           } else if (response.output?.taskStatus == 'FAILED' ||
               response.output?.taskStatus == 'UNKNOWN') {
-            await dbHelper.updateImageGenerationHistoryByRequestId(
+            await dbHelper.updateMediaGenerationHistoryByRequestId(
               task.requestId,
-              {'isFinish': 1},
+              {'isFailed': 1},
             );
           }
         } catch (e) {

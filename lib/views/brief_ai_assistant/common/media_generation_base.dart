@@ -41,6 +41,16 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
     _loadModels();
   }
 
+  // 是否显示选择参考图片按钮和参考图片预览
+  bool _isShowImageRef() {
+    return [
+      LLModelType.image,
+      LLModelType.iti,
+      LLModelType.video,
+      LLModelType.itv
+    ].contains(selectedModel?.modelType);
+  }
+
   // 加载可用模型
   Future<void> _loadModels() async {
     final models = await ModelManagerService.getAvailableModelByTypes(
@@ -94,7 +104,7 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
     return Row(
       children: [
         // 选择参考图片按钮
-        if (mediaTypes.contains(LLModelType.video)) ...[
+        if (_isShowImageRef()) ...[
           ElevatedButton.icon(
             onPressed: isGenerating ? null : pickReferenceImage,
             icon: const Icon(Icons.image),
@@ -114,7 +124,14 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
             ),
-            child: Text(isGenerating ? '生成中...' : '生成'),
+            // child: Text(isGenerating ? '生成中...' : '生成'),
+            child: isGenerating
+                ? SizedBox(
+                    width: 24.sp,
+                    height: 24.sp,
+                    child: CircularProgressIndicator(),
+                  )
+                : const Text('生成'),
           ),
         ),
       ],
@@ -159,20 +176,23 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
         padding: EdgeInsets.all(8.sp),
         child: Column(
           children: [
-            Row(
-              children: [
-                // 模型选择
-                buildModelSelector(),
+            Padding(
+              padding: EdgeInsets.only(bottom: 8.sp),
+              child: Row(
+                children: [
+                  // 模型选择
+                  buildModelSelector(),
 
-                // 媒体选项(由子类实现)
-                buildMediaOptions()
-              ],
+                  // 媒体选项(由子类实现)
+                  buildMediaOptions()
+                ],
+              ),
             ),
 
             Row(
               children: [
                 // 参考图片预览(如果子类没有图片预览，可以重写一个空box)
-                buildReferenceImagePreview(),
+                if (_isShowImageRef()) buildReferenceImagePreview(),
 
                 // 提示词输入
                 buildPromptInput(),
@@ -180,7 +200,10 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
             ),
 
             // 参考图片和生成按钮
-            buildReferenceImageAndButton(),
+            Padding(
+              padding: EdgeInsets.only(top: 8.sp),
+              child: buildReferenceImageAndButton(),
+            ),
 
             // 生成的媒体列表(由子类实现)
             buildGeneratedList(),
@@ -196,7 +219,7 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
   List<Widget> buildAppBarActions() {
     return [
       IconButton(
-        icon: const Icon(Icons.photo_library),
+        icon: const Icon(Icons.photo_library_outlined),
         onPressed: () {
           Navigator.push(
             context,
@@ -226,24 +249,19 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
   // 模型选择器
   Widget buildModelSelector() {
     return Expanded(
-      child: DropdownButton<CusBriefLLMSpec>(
+      child: buildDropdownButton2<CusBriefLLMSpec?>(
         value: selectedModel,
-        isExpanded: true,
-        menuMaxHeight: 0.5.sh,
-        items: modelList.map((model) {
-          return DropdownMenuItem(
-            value: model,
-            child: Text(
-              '${model.platform.name} - ${model.name}',
-              style: TextStyle(fontSize: 12.sp),
-            ),
-          );
-        }).toList(),
+        items: modelList,
+        hintLabel: "选择模型",
+        alignment: Alignment.centerLeft,
+        // labelSize: 12.sp,
         onChanged: isGenerating
             ? null
-            : (model) {
-                setState(() => selectedModel = model);
+            : (value) {
+                setState(() => selectedModel = value!);
               },
+        itemToString: (e) =>
+            "${CP_NAME_MAP[(e as CusBriefLLMSpec).platform]} - ${e.name}",
       ),
     );
   }
@@ -253,7 +271,7 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
     return Expanded(
       child: TextField(
         controller: promptController,
-        maxLines: 3,
+        maxLines: 5,
         decoration: const InputDecoration(
           labelText: '提示词',
           hintText: '请输入描述',
