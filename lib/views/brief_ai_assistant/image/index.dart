@@ -94,7 +94,7 @@ class _BriefImageScreenState
   @override
   Widget buildGeneratedList() {
     if (_generatedImages.isEmpty) {
-      return const Center(child: Text('暂无生成的图片'));
+      return const Expanded(child: Center(child: Text('暂无生成的图片')));
     }
 
     /// 图片展示
@@ -274,7 +274,7 @@ class _BriefImageScreenState
             );
           }
         } catch (e) {
-          print('检查任务状态失败: $e');
+          // print('检查任务状态失败: $e');
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

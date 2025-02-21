@@ -17,6 +17,10 @@ const unknownDateString = '1970-01-01';
 const String placeholderImageUrl = 'assets/images/no_image.png';
 const String brandImageUrl = 'assets/brand.png';
 
+const String aiAssistantCoverUrl = 'assets/aliyun_wanx_styles/人像写真.png';
+const String aiImageCoverUrl = 'assets/aliyun_wanx_styles/摄影.png';
+const String aiVideoCoverUrl = 'assets/aliyun_wanx_styles/动画.jpg';
+
 // 数据库分页查询数据的时候，还需要带上一个该表的总数量
 // 还可以按需补入其他属性
 class CusDataResult {

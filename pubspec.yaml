@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.3.1-beta.1
+version: 0.4.0-beta.1
 
 environment:
   sdk: ^3.5.4
@@ -101,6 +101,8 @@ dependencies:
   share_plus: ^10.1.4
   photo_manager: ^3.6.4
   photo_manager_image_provider: ^2.2.0
+  mime: ^2.0.0
+  get_thumbnail_video: ^0.7.3
 
 dependency_overrides: 
   # 2024-09-18 marquee 依赖的fading_edge_scrollview版本会报错，使用此覆盖

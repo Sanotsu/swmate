@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'ai_assistant/index.dart';
 import 'brief_ai_assistant/chat/index.dart';
 import 'brief_ai_assistant/index.dart';
 import 'life_tools/index.dart';
@@ -30,7 +30,6 @@ class _HomePageState extends State<HomePage> {
     _widgetOptions = [
       const BriefChatScreen(),
       const BriefAITools(),
-      const AIToolIndex(),
       const LifeToolIndex(),
       const UserAndSettings(),
     ];
@@ -97,26 +96,36 @@ class _HomePageState extends State<HomePage> {
           // 当item数量小于等于3时会默认fixed模式下使用主题色，大于3时则会默认shifting模式下使用白色。
           // 为了使用主题色，这里手动设置为fixed
           type: BottomNavigationBarType.fixed,
+
+          /// 只显示文字时label设为空字符串，即使设置了 showSelectedLabels为false；
+          /// 只显示icon时icon设为SizedBox.shrink()；
+          /// 两个属性都必须有，都设置则都显示。
+
+          selectedLabelStyle: TextStyle(
+            fontSize: 20.sp,
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: TextStyle(fontSize: 16.sp),
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
-              icon: Icon(Icons.chat),
-              label: "直接对话",
+              // icon: Icon(Icons.chat),
+              icon: SizedBox.shrink(),
+              label: "助手",
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.android),
-              label: "新的助手",
+              // icon: Icon(Icons.android),
+              icon: SizedBox.shrink(),
+              label: "工具",
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.bolt),
-              label: "智能助手",
+              // icon: Icon(Icons.receipt),
+              icon: SizedBox.shrink(),
+              label: "生活",
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.receipt),
-              label: "日常工具",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: "用户设置",
+              // icon: Icon(Icons.person),
+              icon: SizedBox.shrink(),
+              label: "设置",
             ),
           ],
           currentIndex: _selectedIndex,

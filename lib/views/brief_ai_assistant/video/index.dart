@@ -349,8 +349,6 @@ class _BriefVideoScreenState
       modelTypes: [LLModelType.video, LLModelType.ttv, LLModelType.itv],
     );
 
-    print("所有的视频生成任务: $all");
-
     if (!mounted) return;
     setState(() {
       _allTasks.clear();
@@ -462,7 +460,7 @@ class _BriefVideoScreenState
       // 未完成任务查询完之后，重新更新UI
       await _queryAllTasks();
     } catch (e) {
-      print('检查任务状态失败: $e');
+      // print('检查任务状态失败: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -2,6 +2,33 @@
 
 一些较大变更、新功能、bug 修复等记录放在此处，仅做参看的提交更新.
 
+## 0.4.0-beta.1
+
+- refactor:
+  - 重构了主页和“AI 智能助手”模块，尽量简洁化:
+    - 进入 App 首页即“助手”模块，可以选择不同平台的模型进行对话
+    - 原本“AI 智能助手”模块中工具，简化为“AI 助手”、“AI 绘图”、“AI 视频”。
+  - 大模型 API 调用**只保留兼容 openAI API 结构的**平台和模型，不再兼容其他平台自定义 API 结构。
+    - 涉及到阿里云、腾讯等平台，API 升级到 V2；移除了讯飞的大模型、阿里云的创意文字锦书模型。
+  - 支持的平台和大模型 API 不在追求多，更加选择能用和代码编写兼容好：
+    - 对话模型继续保留
+      - [百度](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Fm2vrveyu)
+      - [阿里](https://help.aliyun.com/zh/model-studio/developer-reference/compatibility-of-openai-with-dashscope)
+      - [腾讯](https://console.cloud.tencent.com/hunyuan/start)
+      - [智谱](https://open.bigmodel.cn/dev/api/normal-model/glm-4)
+      - [零一万物](https://platform.lingyiwanwu.com/docs/api-reference)
+      - [无问芯穹](https://docs.infini-ai.com/gen-studio/api/maas.html#/operations/chatCompletions)
+      - [硅基流动](https://docs.siliconflow.cn/cn/api-reference/chat-completions/chat-completions)
+    - 图片生成只保留了：
+      - 阿里云:[图像生成-通义万相 文生图 V2 版](https://help.aliyun.com/zh/model-studio/developer-reference/text-to-image-v2-api-reference)、[文生图 FLUX](https://help.aliyun.com/zh/model-studio/developer-reference/flux/)
+      - 智谱 AI: [CogView](https://open.bigmodel.cn/dev/api/image-model/cogview)
+      - 硅基流动: [创建图片生成请求](https://docs.siliconflow.cn/cn/api-reference/images/images-generations)
+    - 视频生成只保留了：
+      - 阿里云: [视频生成-通义万相](https://help.aliyun.com/zh/model-studio/developer-reference/video-generation-wanx/)
+      - 智谱 AI: [CogVideoX](https://open.bigmodel.cn/dev/api/videomodel/cogvideox)
+      - 硅基流动: [创建视频生成请求](https://docs.siliconflow.cn/cn/api-reference/videos/videos_submit)
+    - DeepSeek 官方平台暂时不能充值，可以使用其他平台部署的，比如硅基流动。
+
 ## 0.3.0-beta.1
 
 - chore:

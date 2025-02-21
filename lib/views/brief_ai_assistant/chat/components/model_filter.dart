@@ -57,7 +57,7 @@ class ModelFilter extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.model_training),
+            icon: const Icon(Icons.expand_more),
             onPressed: isStreaming ? null : onModelSelect,
           ),
         ],

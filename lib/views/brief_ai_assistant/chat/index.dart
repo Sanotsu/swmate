@@ -507,7 +507,7 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
                                 content: message.content,
                                 onRegenerate: () => _handleRegenerate(message),
                                 isRegenerating: index == _regeneratingIndex,
-                                tokens: message.totalTokens,
+                                // tokens: message.totalTokens,
                               ),
                             ),
                         ],
@@ -534,7 +534,7 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.chat, size: 36.sp),
+            Icon(Icons.chat, size: 36.sp, color: Colors.blue),
             Text(
               '嗨，我是思文',
               style: TextStyle(
@@ -543,7 +543,7 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
               ),
             ),
             Text(
-              '我可以帮你完成很多任务，让我们开始吧！',
+              '我可以帮您完成很多任务，让我们开始吧！',
               style: TextStyle(color: Colors.grey),
             ),
           ],

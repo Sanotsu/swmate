@@ -264,7 +264,7 @@ class NewCusSettingCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(2.sp),
       child: Card(
-        elevation: 5,
+        // elevation: 5,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.sp),
         ),
