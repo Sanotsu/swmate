@@ -1,8 +1,9 @@
-// ignore_for_file: avoid_print
-
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
@@ -25,20 +26,37 @@ class BriefChatScreen extends StatefulWidget {
   State<BriefChatScreen> createState() => _BriefChatScreenState();
 }
 
-class _BriefChatScreenState extends State<BriefChatScreen> {
-  final ScrollController _scrollController = ScrollController();
+class _BriefChatScreenState extends State<BriefChatScreen>
+    with WidgetsBindingObserver {
+  // 数据库帮助类
   final DBHelper _dbHelper = DBHelper();
-
-  LLModelType _selectedType = LLModelType.cc;
-  CusBriefLLMSpec? _selectedModel;
-  List<ChatMessage> _messages = [];
-  bool _isStreaming = false;
-  ChatHistory? _currentChat;
-  VoidCallback? _cancelResponse;
-  int? _regeneratingIndex; // 添加重新生成索引
 
   // 可用的模型列表
   List<CusBriefLLMSpec> _modelList = [];
+  // 当前选中的模型类型
+  LLModelType _selectedType = LLModelType.cc;
+  // 当前选中的模型
+  CusBriefLLMSpec? _selectedModel;
+
+  // 消息列表
+  List<ChatMessage> _messages = [];
+  // 是否正在流式响应中
+  bool _isStreaming = false;
+  // 当前对话
+  ChatHistory? _currentChat;
+  // 取消响应
+  VoidCallback? _cancelResponse;
+  // 重新生成索引
+  int? _regeneratingIndex;
+
+  // 对话列表滚动控制器
+  final ScrollController _scrollController = ScrollController();
+  // 是否显示“滚动到底部”按钮
+  bool _showScrollToBottom = false;
+  // 是否用户手动滚动
+  bool _isUserScrolling = false;
+  // 最后内容高度(用于判断是否需要滚动到底部)
+  double _lastContentHeight = 0;
 
   // 添加加载状态标记
   bool _isLoading = true;
@@ -46,7 +64,40 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initialize();
+
+    // 监听滚动事件
+    _scrollController.addListener(() {
+      // 判断用户是否正在手动滚动
+      if (_scrollController.position.userScrollDirection ==
+              ScrollDirection.reverse ||
+          _scrollController.position.userScrollDirection ==
+              ScrollDirection.forward) {
+        _isUserScrolling = true;
+      } else {
+        _isUserScrolling = false;
+      }
+
+      // print('用户滚动: $_isUserScrolling');
+
+      // 判断是否显示“滚动到底部”按钮
+      setState(() {
+        _showScrollToBottom = _scrollController.offset <
+            _scrollController.position.maxScrollExtent - 50;
+      });
+    });
+  }
+
+// 布局发生变化时（如键盘弹出/收起）
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+
+    // 流式响应还未完成且不是用户手动滚动，滚动到底部
+    if (_isStreaming && !_isUserScrolling) {
+      _scrollToBottom();
+    }
   }
 
   // 统一初始化方法
@@ -60,7 +111,6 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
       ]);
 
       if (!mounted) return;
-
       setState(() => _modelList = availableModels);
 
       // 2. 初始化对话
@@ -99,10 +149,8 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
           _selectedType = _selectedModel!.modelType;
         });
 
-        // 等待布局完成后滚动到底部
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollToBottom();
-        });
+        // 滚动到底部
+        _scrollToBottom();
       } else {
         // 如果不是今天的对话，创建新对话
         setState(() {
@@ -122,7 +170,7 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
       });
     }
 
-    print('初始化对话: ${_selectedModel?.name}, 消息数: ${_messages.length}');
+    // print('初始化对话: ${_selectedModel?.name}, 消息数: ${_messages.length}');
   }
 
   void _createNewChat() {
@@ -192,14 +240,12 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
       _selectedType = _selectedModel!.modelType;
     });
 
-    // 等待布局完成后滚动到底部
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom();
-    });
+    // 滚动到底部
+    _scrollToBottom();
   }
 
   // 保存或更新对话历史
-  Future<void> _saveChatHistory(String title) async {
+  Future<void> _saveChatHistory() async {
     // 确保所有消息都包含完整信息
     final updatedMessages = _messages
         .map((m) => ChatMessage(
@@ -215,6 +261,7 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
 
     if (_currentChat == null) {
       // 新对话，创建新记录
+      var title = _messages.last.content;
       _currentChat = ChatHistory(
         uuid: DateTime.now().toString(),
         title: title.substring(0, title.length > 20 ? 20 : title.length),
@@ -236,64 +283,86 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
 
   // 处理流式响应
   Future<void> _handleStreamResponse(
-      Stream<ChatCompletionResponse> stream) async {
+    Stream<ChatCompletionResponse> stream,
+  ) async {
     try {
-      await for (final response in stream) {
-        if (!mounted) break;
+      stream.listen(
+        (ccr) {
+          if (!mounted) return;
 
-        // 不使用choices，使用cusText，统一处理
-        final content = response.cusText;
-        print('content---: $content');
+          // 不使用choices，使用cusText，统一处理
+          final content = ccr.cusText;
 
-        // 检查是否是结束标记(正常结束应该没有DONE，手动终止应该有标识)
-        if (content == '[手动终止]' || content == '[DONE]') {
-          setState(() {
-            _messages.last.content += response.cusText;
-            _isStreaming = false;
-            _cancelResponse = null;
-          });
-          break;
-        }
-
-        setState(() {
-          if (_messages.last.role == CusRole.assistant.name) {
-            // 更新现有消息(出错也是正常流，但额外手动的cusText)
-            _messages.last.content += response.cusText;
-            _messages.last.promptTokens = response.usage?.promptTokens;
-            _messages.last.completionTokens = response.usage?.completionTokens;
-            _messages.last.totalTokens = response.usage?.totalTokens;
-          } else {
-            // 创建新的助手消息
-            _messages.add(ChatMessage(
-              messageId: response.id,
-              dateTime: DateTime.now(),
-              role: CusRole.assistant.name,
-              content: content,
-              modelLabel: _selectedModel?.name,
-            ));
+          // 检查是否是结束标记(正常结束应该没有DONE，手动终止应该有标识)
+          if (content.contains('[手动终止]') ||
+              content.toLowerCase().contains('[done]')) {
+            setState(() {
+              _isStreaming = false;
+              _cancelResponse = null;
+            });
           }
-        });
 
-        // 可以在这里处理 response 的其他属性
-        // if (response.usage != null) {
-        //   print('Token 使用情况: ${response.usage!.totalTokens}');
-        // }
-      }
+          setState(() {
+            if (_messages.last.role == CusRole.assistant.name) {
+              // 更新现有消息(出错也是正常流，但额外手动的cusText)
+              _messages.last.content += ccr.cusText;
+              _messages.last.promptTokens = ccr.usage?.promptTokens;
+              _messages.last.completionTokens = ccr.usage?.completionTokens;
+              _messages.last.totalTokens = ccr.usage?.totalTokens;
+            } else {
+              // 创建新的助手消息
+              _messages.add(ChatMessage(
+                messageId: ccr.id,
+                dateTime: DateTime.now(),
+                role: CusRole.assistant.name,
+                content: content,
+                modelLabel: _selectedModel?.name,
+              ));
+            }
+          });
+
+          // 如果用户没有手动滚动或者已经在底部，则自动滚动
+          // 在布局更新后检查内容高度变化
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final currentHeight = _scrollController.position.maxScrollExtent;
+            if (!_isUserScrolling && currentHeight - _lastContentHeight > 20) {
+              // 高度增加超过 20 像素
+              _scrollController.jumpTo(currentHeight);
+              _lastContentHeight = currentHeight;
+            }
+          });
+        },
+        onDone: () {
+          // 这里只有流式响应，流式响应正常结束直接就关闭了，没有任何返回内容
+          // 流式响应结束,手动终止也会触发
+          _saveChatHistory();
+
+          if (!mounted) return;
+          setState(() {
+            _cancelResponse = null;
+            _isStreaming = false;
+          });
+        },
+        onError: (error) {
+          // 报错时会返回错误信息，直接弹窗显示
+          if (!mounted) return;
+          commonExceptionDialog(context, "异常提示", error.toString());
+        },
+      );
     } catch (e) {
       if (!mounted) return;
-      print('处理流式响应出错: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('处理响应出错: $e')),
-      );
+      commonExceptionDialog(context, "处理流式响应出错", e.toString());
     }
   }
 
-  Future<void> _handleSendMessage(String text,
-      {File? image, File? voice}) async {
+  Future<void> _handleSendMessage(
+    String text, {
+    File? image,
+    File? voice,
+  }) async {
+    if (!mounted) return;
     if (_selectedModel == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先选择一个模型')),
-      );
+      commonExceptionDialog(context, "异常提示", "请先选择一个模型");
       return;
     }
 
@@ -320,17 +389,12 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
       _cancelResponse = cancelFunc;
       if (!mounted) return;
       await _handleStreamResponse(stream);
-      await _saveChatHistory(text);
     } catch (e) {
       if (!mounted) return;
-      print('发送消息失败: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('发送消息失败: $e')),
-      );
+      commonExceptionDialog(context, "异常提示", "发送消息失败: $e");
     } finally {
-      _cancelResponse = null;
       if (mounted) {
-        setState(() => _isStreaming = false);
+        setState(() => _cancelResponse = null);
       }
     }
   }
@@ -348,6 +412,11 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
       _isStreaming = true;
     });
 
+    // 重置内容高度
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _lastContentHeight = _scrollController.position.maxScrollExtent;
+    });
+
     try {
       final (stream, cancelFunc) = await ChatService.sendMessage(
         _selectedModel!,
@@ -356,73 +425,48 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
       _cancelResponse = cancelFunc;
       if (!mounted) return;
       await _handleStreamResponse(stream);
-      await _saveChatHistory(_messages.last.content);
     } catch (e) {
       if (!mounted) return;
-      print('重新生成失败: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('重新生成失败: $e')),
-      );
+      commonExceptionDialog(context, "异常提示", "重新生成失败: $e");
     } finally {
-      _cancelResponse = null;
       if (mounted) {
         setState(() {
           _regeneratingIndex = null;
-          _isStreaming = false;
         });
       }
     }
   }
 
   void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      // 计算需要额外考虑的底部高度
-      double bottomPadding = 0;
+    // 统一在这里等待布局更新完成，才滚动到底部
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
 
-      // 输入框高度 (基础高度 + padding)
-      bottomPadding += 56.sp + 16.sp;
-
-      // 如果正在流式响应，添加进度条高度
-      if (_isStreaming) {
-        bottomPadding += 4.sp; // LinearProgressIndicator 的高度
-      }
-
-      // 如果在首页中显示，需要考虑底部导航栏高度
-      if (ModalRoute.of(context)?.settings.name == '/') {
-        bottomPadding += kBottomNavigationBarHeight;
-      }
-
-      // 获取消息列表的最大滚动范围
-      final maxScroll = _scrollController.position.maxScrollExtent;
-
-      // 计算最终的滚动位置，确保最后一条消息完全可见
-      final finalScrollPosition = maxScroll + bottomPadding;
-
+      // print('触发滚动到底部');
       _scrollController.animateTo(
-        finalScrollPosition + 80, // 尽量滚动到消息最底部
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 500),
         curve: Curves.easeOut,
-        // 注意：sse的间隔比较短，这个滚动也要快一点
-        duration: const Duration(milliseconds: 50),
       );
-    }
+
+      setState(() {
+        _isUserScrolling = false;
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_modelList.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: const Text('智能对话')),
-        body: const Center(
-          child: Text('暂无可用的模型'),
-        ),
+        body: const Center(child: Text('暂无可用的模型')),
       );
     }
 
@@ -471,57 +515,74 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
           );
         },
       ),
-      body: Column(
+      body: Stack(
         children: [
-          SizedBox(height: 5.sp),
-          ModelFilter(
-            models: _modelList,
-            selectedType: _selectedType,
-            onTypeChanged: _isStreaming ? null : _handleTypeChanged,
-            onModelSelect: _isStreaming ? null : _showModelSelector,
-            isStreaming: _isStreaming,
-            supportedTypes: [LLModelType.cc, LLModelType.vision],
-          ),
-          Divider(height: 10.sp),
-          Expanded(
-            child: _messages.isEmpty
-                ? _buildEmptyHint()
-                : ListView.builder(
-                    controller: _scrollController,
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      final isAssistant =
-                          message.role == CusRole.assistant.name;
-                      return Column(
-                        children: [
-                          ChatMessageItem(
-                            message: message,
-                            showModelLabel: true,
-                          ),
-                          // 在助手消息下方显示操作按钮
-                          if (isAssistant)
-                            Padding(
-                              padding: EdgeInsets.only(right: 8.sp),
-                              child: MessageActions(
-                                content: message.content,
-                                onRegenerate: () => _handleRegenerate(message),
-                                isRegenerating: index == _regeneratingIndex,
-                                // tokens: message.totalTokens,
+          Column(
+            children: [
+              SizedBox(height: 5.sp),
+              ModelFilter(
+                models: _modelList,
+                selectedType: _selectedType,
+                onTypeChanged: _isStreaming ? null : _handleTypeChanged,
+                onModelSelect: _isStreaming ? null : _showModelSelector,
+                isStreaming: _isStreaming,
+                supportedTypes: [LLModelType.cc, LLModelType.vision],
+              ),
+              Divider(height: 10.sp),
+              Expanded(
+                child: _messages.isEmpty
+                    ? _buildEmptyHint()
+                    : ListView.builder(
+                        controller: _scrollController,
+                        itemCount: _messages.length,
+                        itemBuilder: (context, index) {
+                          final message = _messages[index];
+                          final isAssistant =
+                              message.role == CusRole.assistant.name;
+                          return Column(
+                            children: [
+                              ChatMessageItem(
+                                message: message,
+                                showModelLabel: true,
                               ),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
+                              // 不在流式响应时在助手消息下方显示操作按钮
+                              if (isAssistant && !_isStreaming)
+                                Padding(
+                                  padding: EdgeInsets.only(right: 8.sp),
+                                  child: MessageActions(
+                                    content: message.content,
+                                    onRegenerate: () =>
+                                        _handleRegenerate(message),
+                                    isRegenerating: index == _regeneratingIndex,
+                                    // tokens: message.totalTokens,
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+              ),
+              if (_isStreaming) const LinearProgressIndicator(),
+              ChatInput(
+                model: _selectedModel,
+                onSend: _handleSendMessage,
+                onCancel: _cancelResponse,
+                isStreaming: _isStreaming,
+              ),
+            ],
           ),
-          if (_isStreaming) const LinearProgressIndicator(),
-          ChatInput(
-            model: _selectedModel,
-            onSend: _handleSendMessage,
-            onCancel: _cancelResponse,
-            isStreaming: _isStreaming,
-          ),
+
+          // 滚动到底部按钮
+          if (_showScrollToBottom)
+            Positioned(
+              right: 8.sp,
+              bottom: 120.sp, // 调整位置避免遮挡输入框
+              child: FloatingActionButton(
+                mini: true,
+                onPressed: _scrollToBottom,
+                child: const Icon(Icons.arrow_downward),
+              ),
+            ),
         ],
       ),
     );
@@ -554,6 +615,7 @@ class _BriefChatScreenState extends State<BriefChatScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _cancelResponse?.call();
     _scrollController.dispose();
     super.dispose();

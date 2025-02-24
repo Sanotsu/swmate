@@ -237,20 +237,19 @@ class _ChatInputState extends State<ChatInput> {
     return InkWell(
       onTap: () => _pickImage(source),
       child: Container(
-        width: 96.sp,
-        height: 96.sp,
+        width: 48.sp,
+        height: 48.sp,
         decoration: BoxDecoration(
           color: Colors.grey[200],
           borderRadius: BorderRadius.circular(8.sp),
           border: Border.all(color: Colors.grey.shade300),
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IconButton(
-              icon: Icon(icon, color: Colors.grey[600]),
-              onPressed: () => _pickImage(source),
-            ),
-            Text(label),
+            Icon(icon, color: Colors.grey[600]),
+            Text(label, style: TextStyle(fontSize: 12.sp)),
           ],
         ),
       ),

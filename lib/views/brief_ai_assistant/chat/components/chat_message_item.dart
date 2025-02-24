@@ -111,8 +111,20 @@ class ChatMessageItem extends StatelessWidget {
             selectable: true,
             styleSheet: MarkdownStyleSheet(
               p: TextStyle(color: textColor),
+              code: TextStyle(
+                color: Colors.black,
+                backgroundColor: Colors.grey.shade200,
+              ),
+              tableBody: TextStyle(color: Colors.black),
             ),
           ),
+          // 如果是流式加载中(还没有输出内容)，显示一个加载圈
+          if (message.role != CusRole.user.name && message.content.isEmpty)
+            SizedBox(
+              width: 16.sp,
+              height: 16.sp,
+              child: CircularProgressIndicator(strokeWidth: 2.sp),
+            ),
           if (message.quotes?.isNotEmpty == true) ..._buildQuotes(),
         ],
       ),
