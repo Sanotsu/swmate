@@ -7,7 +7,7 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
-import '../../../../common/utils/db_tools/db_helper.dart';
+import '../../../../common/utils/db_tools/db_life_tool_helper.dart';
 import '../../../../models/base_model/brief_accounting_state.dart';
 
 /// 绘制图表时，用于展示数据需要的结构
@@ -35,7 +35,7 @@ class _BillReportIndexState extends State<BillReportIndex>
     with SingleTickerProviderStateMixin {
   late TooltipBehavior _tooltip;
 
-  final DBHelper _dbHelper = DBHelper();
+  final DBLifeToolHelper _dbHelper = DBLifeToolHelper();
   // 定义TabController
   late TabController _tabController;
 

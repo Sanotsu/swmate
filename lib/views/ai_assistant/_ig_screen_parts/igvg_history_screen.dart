@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_ai_tool_helper.dart';
 import '../../../models/text_to_image/com_ig_state.dart';
 import 'igvg_history_detail.dart';
 
@@ -29,7 +29,7 @@ class IGVGHistoryScreen extends StatefulWidget {
 }
 
 class _IGVGHistoryScreenState extends State<IGVGHistoryScreen> {
-  final DBHelper dbHelper = DBHelper();
+  final DBAIToolHelper dbHelper = DBAIToolHelper();
   // 最近对话需要的记录历史对话的变量
   List<LlmIGVGResult> imageGenerationHistory = [];
 

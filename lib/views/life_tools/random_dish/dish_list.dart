@@ -8,7 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_life_tool_helper.dart';
 import '../../../common/utils/tools.dart';
 import '../../../models/base_model/dish_state.dart';
 import 'dish_detail.dart';
@@ -25,7 +25,7 @@ class DishList extends StatefulWidget {
 }
 
 class _DishListState extends State<DishList> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBLifeToolHelper _dbHelper = DBLifeToolHelper();
 
   List<Dish> dishItems = [];
   // 食物的总数(查询时则为符合条件的总数，默认一页只有10条，看不到总数量)

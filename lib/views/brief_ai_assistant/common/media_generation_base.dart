@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../services/model_manager_service.dart';
 
@@ -17,7 +17,7 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
   // 提示词控制器
   final TextEditingController promptController = TextEditingController();
   // 数据库帮助类
-  final DBHelper dbHelper = DBHelper();
+  final DBBriefAIToolHelper dbHelper = DBBriefAIToolHelper();
   // 模型列表
   List<CusBriefLLMSpec> modelList = [];
   // 选中的模型

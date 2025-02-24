@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 import 'components/model_import.dart';
 import 'components/api_key_config.dart';
 import 'components/model_list.dart';
@@ -13,7 +13,7 @@ class BriefModelConfig extends StatefulWidget {
 }
 
 class _BriefModelConfigState extends State<BriefModelConfig> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBBriefAIToolHelper _dbHelper = DBBriefAIToolHelper();
   List<CusBriefLLMSpec> _models = [];
   bool _isLoading = true;
 
@@ -26,7 +26,7 @@ class _BriefModelConfigState extends State<BriefModelConfig> {
   Future<void> _loadModels() async {
     setState(() => _isLoading = true);
     try {
-      final models = await _dbHelper.queryCusBriefLLMSpecList();
+      final models = await _dbHelper.queryBriefCusLLMSpecList();
       setState(() => _models = models);
     } finally {
       setState(() => _isLoading = false);

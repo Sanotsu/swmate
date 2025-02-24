@@ -64,16 +64,30 @@ abstract class MediaManagerBaseState<T extends MediaManagerBase>
         ),
       );
 
+      // for (var element in albums) {
+      //   print("相册: ${element.name}");
+      // }
+
       // 查找AI生成的媒体目录
-      final aiMediaPath = albums.firstWhere(
-        (entity) => entity.name == getAIMediaDirName(),
-      );
+      AssetPathEntity? aiMediaPath;
+      List<AssetEntity> media = [];
+      try {
+        aiMediaPath = albums.firstWhere(
+          (entity) => entity.name == getAIMediaDirName(),
+        );
 
-      // 获取AI生成媒体文件列表
-      final media = await aiMediaPath.getAssetListRange(start: 0, end: 1000);
+        // 获取AI生成媒体文件列表
+        media = await aiMediaPath.getAssetListRange(start: 0, end: 1000);
 
-      // 设置媒体列表
-      setState(() => mediaList = media);
+        // 设置媒体列表
+        if (mounted && mediaList.isNotEmpty) {
+          setState(() => mediaList = media);
+        }
+      } catch (e) {
+        // if (!mounted) return;
+        // commonExceptionDialog(context, title, "AI生成目录为空");
+        return;
+      }
 
       ///
       /// 测试
@@ -119,11 +133,14 @@ abstract class MediaManagerBaseState<T extends MediaManagerBase>
       }
     } catch (e) {
       if (!mounted) return;
+      // print("查询AI绘图历史记录失败: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('查询AI绘图历史记录失败: $e')),
       );
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -205,7 +222,7 @@ abstract class MediaManagerBaseState<T extends MediaManagerBase>
         selectedMedia.toList(),
       );
 
-      if (list.isNotEmpty) {
+      if (list.isNotEmpty && mounted) {
         setState(() {
           mediaList.removeWhere(selectedMedia.contains);
           selectedMedia.clear();

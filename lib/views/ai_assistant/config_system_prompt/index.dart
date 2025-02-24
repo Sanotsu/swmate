@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_ai_tool_helper.dart';
 import 'import_json.dart';
 import 'system_prompt_detail.dart';
 
@@ -16,7 +16,7 @@ class SystemPromptIndex extends StatefulWidget {
 }
 
 class _SystemPromptIndexState extends State<SystemPromptIndex> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBAIToolHelper _dbHelper = DBAIToolHelper();
 
   List<CusSysRoleSpec> sysRoleSpecs = [];
 

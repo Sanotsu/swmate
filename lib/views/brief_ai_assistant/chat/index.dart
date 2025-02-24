@@ -7,7 +7,7 @@ import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 import '../../../models/chat_completions/chat_completion_response.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
 import '../../../services/cus_get_storage.dart';
@@ -30,7 +30,7 @@ class BriefChatScreen extends StatefulWidget {
 class _BriefChatScreenState extends State<BriefChatScreen>
     with WidgetsBindingObserver {
   // 数据库帮助类
-  final DBHelper _dbHelper = DBHelper();
+  final DBBriefAIToolHelper _dbHelper = DBBriefAIToolHelper();
 
   // 可用的模型列表
   List<CusBriefLLMSpec> _modelList = [];
@@ -52,7 +52,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
 
   // 对话列表滚动控制器
   final ScrollController _scrollController = ScrollController();
-  // 是否显示“滚动到底部”按钮
+  // 是否显示"滚动到底部"按钮
   bool _showScrollToBottom = false;
   // 是否用户手动滚动
   bool _isUserScrolling = false;
@@ -89,7 +89,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
 
       // print('用户滚动: $_isUserScrolling');
 
-      // 判断是否显示“滚动到底部”按钮
+      // 判断是否显示"滚动到底部"按钮
       setState(() {
         _showScrollToBottom = _scrollController.offset <
             _scrollController.position.maxScrollExtent - 50;
@@ -132,7 +132,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
 
   // 初始化对话
   Future<void> _initializeChat() async {
-    final histories = await _dbHelper.queryChatList();
+    final histories = await getHistoryChats();
 
     if (!mounted) return;
     if (histories.isNotEmpty) {
@@ -291,12 +291,12 @@ class _BriefChatScreenState extends State<BriefChatScreen>
         cloudPlatformName: _selectedModel!.platform.name,
         chatType: LLModelType.cc.name,
       );
-      await _dbHelper.insertChatList([_currentChat!]);
+      await _dbHelper.insertBriefChatHistoryList([_currentChat!]);
     } else {
       // 更新现有对话
       _currentChat!.messages = updatedMessages; // 使用更新后的消息列表
       _currentChat!.gmtModified = DateTime.now();
-      await _dbHelper.updateChatHistory(_currentChat!);
+      await _dbHelper.updateBriefChatHistory(_currentChat!);
     }
   }
 
@@ -549,6 +549,11 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     );
   }
 
+  // 获取指定分类的历史对话
+  Future<List<ChatHistory>> getHistoryChats() async {
+    return await _dbHelper.queryBriefChatHistoryList();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -598,7 +603,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
         ],
       ),
       endDrawer: FutureBuilder<List<ChatHistory>>(
-        future: _dbHelper.queryChatList(chatType: LLModelType.cc.name),
+        future: getHistoryChats(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Drawer(
@@ -610,6 +615,11 @@ class _BriefChatScreenState extends State<BriefChatScreen>
             histories: snapshot.data!,
             currentChat: _currentChat,
             onHistorySelect: _handleHistorySelect,
+            onRefresh: () async {
+              // 重新加载聊天历史
+              await getHistoryChats();
+              setState(() {});
+            },
           );
         },
       ),

@@ -8,9 +8,9 @@ import '../../../apis/_default_system_role_list/index.dart';
 import '../../../apis/get_app_key_helper.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_ai_tool_helper.dart';
 
-final DBHelper _dbHelper = DBHelper();
+final DBAIToolHelper _dbHelper = DBAIToolHelper();
 
 ///
 /// 获取所有平台中支持的模型列表
@@ -98,7 +98,7 @@ Future<List<CusSysRoleSpec>> fetchCusSysRoleSpecList(
       .toList();
 }
 
-final DBHelper dbHelper = DBHelper();
+final DBAIToolHelper dbHelper = DBAIToolHelper();
 
 /// 将预设的大模型数据导入数据库
 Future testInitModelAndSysRole(List<CusLLMSpec> cslist) async {

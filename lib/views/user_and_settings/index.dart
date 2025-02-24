@@ -10,13 +10,13 @@ import 'package:photo_view/photo_view.dart';
 import '../../apis/_default_model_list/index.dart';
 import '../../common/components/tool_widget.dart';
 import '../../common/constants.dart';
-import '../../common/utils/db_tools/db_helper.dart';
+import '../../common/utils/db_tools/db_ai_tool_helper.dart';
 import '../../services/cus_get_storage.dart';
 import '../ai_assistant/_helper/tools.dart';
 import '../home.dart';
 import 'backup_and_restore/index.dart';
 
-final DBHelper dbHelper = DBHelper();
+final DBAIToolHelper dbHelper = DBAIToolHelper();
 
 class UserAndSettings extends StatefulWidget {
   const UserAndSettings({super.key});

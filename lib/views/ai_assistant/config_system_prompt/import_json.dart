@@ -8,7 +8,7 @@ import 'package:uuid/uuid.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_ai_tool_helper.dart';
 
 class SystemPromptJsonImport extends StatefulWidget {
   const SystemPromptJsonImport({super.key});
@@ -18,7 +18,7 @@ class SystemPromptJsonImport extends StatefulWidget {
 }
 
 class _SystemPromptJsonImportState extends State<SystemPromptJsonImport> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBAIToolHelper _dbHelper = DBAIToolHelper();
 
   // 是否在解析json中或导入数据库中
   bool isLoading = false;

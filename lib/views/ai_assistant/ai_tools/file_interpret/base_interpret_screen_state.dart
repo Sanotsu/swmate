@@ -14,7 +14,7 @@ import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../../common/llm_spec/cus_llm_model.dart';
-import '../../../../common/utils/db_tools/db_helper.dart';
+import '../../../../common/utils/db_tools/db_ai_tool_helper.dart';
 import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
 import '../../_chat_screen_parts/chat_list_area.dart';
@@ -29,7 +29,7 @@ import '../../_helper/save_markdown_as_pdf.dart';
 import '../../_helper/save_markdown_as_txt.dart';
 
 abstract class BaseInterpretState<T extends StatefulWidget> extends State<T> {
-  final DBHelper dbHelper = DBHelper();
+  final DBAIToolHelper dbHelper = DBAIToolHelper();
 
   ///
   /// 手动输入文本 相关变量

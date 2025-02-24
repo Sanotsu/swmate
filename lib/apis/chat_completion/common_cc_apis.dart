@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:proste_logger/proste_logger.dart';
 
-import '../../common/utils/db_tools/db_helper.dart';
+import '../../common/utils/db_tools/db_ai_tool_helper.dart';
 import '../../models/chat_competion/com_cc_req.dart';
 import '../../models/chat_competion/com_cc_resp.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
@@ -20,7 +20,7 @@ import '../platform_keys.dart';
 import 'chat_helper.dart';
 
 final l = ProsteLogger();
-final DBHelper _dbHelper = DBHelper();
+final DBAIToolHelper _dbHelper = DBAIToolHelper();
 
 enum PlatUrl {
   tencentCCUrl,

@@ -8,7 +8,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_life_tool_helper.dart';
 import '../../../common/utils/tools.dart';
 import '../../../models/base_model/dish_state.dart';
 
@@ -23,7 +23,7 @@ class DishModify extends StatefulWidget {
 }
 
 class _DishModifyState extends State<DishModify> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBLifeToolHelper _dbHelper = DBLifeToolHelper();
 
   // 菜品基础信息的formbuilder的表单key
   final _dishFormKey = GlobalKey<FormBuilderState>();

@@ -12,13 +12,20 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../common/components/tool_widget.dart';
 
+import '../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
-import '../../../common/utils/db_tools/ddl_swmate.dart';
+import '../../../common/utils/db_tools/db_ai_tool_helper.dart';
+import '../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
+import '../../../common/utils/db_tools/ddl_brief_ai_tool.dart';
+import '../../../common/utils/db_tools/init_db.dart';
+import '../../../common/utils/db_tools/db_life_tool_helper.dart';
+import '../../../common/utils/db_tools/ddl_ai_tool.dart';
+import '../../../common/utils/db_tools/ddl_life_tool.dart';
 import '../../../common/utils/tools.dart';
 import '../../../models/base_model/brief_accounting_state.dart';
 import '../../../models/base_model/dish_state.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
+import '../../../models/media_generation_history/media_generation_history.dart';
 import '../../../models/text_to_image/com_ig_state.dart';
 
 ///
@@ -40,7 +47,10 @@ class BackupAndRestore extends StatefulWidget {
 }
 
 class _BackupAndRestoreState extends State<BackupAndRestore> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBAIToolHelper _dbHelper = DBAIToolHelper();
+  final DBLifeToolHelper _dbLifeToolHelper = DBLifeToolHelper();
+  final DBBriefAIToolHelper _dbBriefAIToolHelper = DBBriefAIToolHelper();
+  final DBInit _dbInit = DBInit();
 
   bool isLoading = false;
 
@@ -164,7 +174,7 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
     String tempZipPath,
   ) async {
     // 等到所有文件导出，都默认放在同一个文件夹下，所以就不用返回路径了
-    await _dbHelper.exportDatabase();
+    await _dbInit.exportDatabase();
 
     // 创建或检索压缩包临时存放的文件夹
     var tempZipDir = await Directory(tempZipPath).create();
@@ -265,7 +275,7 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
           await _backupDbData(zipName, tempZipDir.path);
 
           // 恢复旧数据之前，删除现有数据库
-          await _dbHelper.deleteDB();
+          await _dbInit.deleteDB();
 
           // 保存恢复的数据(应该检查的？？？)
           await _saveJsonFileDataToDb(jsonFiles);
@@ -375,34 +385,51 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
       var filename = p.basename(file.path).toLowerCase();
 
       // 根据不同文件名，构建不同的数据
-      if (filename == "${SWMateDdl.tableNameOfBillItem}.json") {
-        await _dbHelper.insertBillItemList(
+      if (filename == "${LifeToolDdl.tableNameOfBillItem}.json") {
+        await _dbLifeToolHelper.insertBillItemList(
           jsonMapList.map((e) => BillItem.fromMap(e)).toList(),
         );
-      } else if (filename == "${SWMateDdl.tableNameOfDish}.json") {
-        await _dbHelper.insertDishList(
+      } else if (filename == "${LifeToolDdl.tableNameOfDish}.json") {
+        await _dbLifeToolHelper.insertDishList(
           jsonMapList.map((e) => Dish.fromMap(e)).toList(),
         );
-      } else if (filename == "${SWMateDdl.tableNameOfChatHistory}.json") {
+      } else if (filename == "${AIToolDdl.tableNameOfChatHistory}.json") {
         await _dbHelper.insertChatList(
           jsonMapList.map((e) => ChatHistory.fromMap(e)).toList(),
         );
-      } else if (filename == "${SWMateDdl.tableNameOfGroupChatHistory}.json") {
+      } else if (filename == "${AIToolDdl.tableNameOfGroupChatHistory}.json") {
         await _dbHelper.insertGroupChatList(
           jsonMapList.map((e) => GroupChatHistory.fromMap(e)).toList(),
         );
-      } else if (filename == "${SWMateDdl.tableNameOfIGVGHistory}.json") {
+      } else if (filename == "${AIToolDdl.tableNameOfIGVGHistory}.json") {
         await _dbHelper.insertIGVGResultList(
           jsonMapList.map((e) => LlmIGVGResult.fromMap(e)).toList(),
         );
-      } else if (filename == "${SWMateDdl.tableNameOfCusLlmSpec}.json") {
+      } else if (filename == "${AIToolDdl.tableNameOfCusLlmSpec}.json") {
         await _dbHelper.insertCusLLMSpecList(
           jsonMapList.map((e) => CusLLMSpec.fromMap(e)).toList(),
         );
-      } else if (filename == "${SWMateDdl.tableNameOfCusSysRoleSpec}.json") {
+      } else if (filename == "${AIToolDdl.tableNameOfCusSysRoleSpec}.json") {
         await _dbHelper.insertCusSysRoleSpecList(
           jsonMapList.map((e) => CusSysRoleSpec.fromMap(e)).toList(),
         );
+      } else if (filename ==
+          "${BriefAIToolDdl.tableNameOfBriefChatHistory}.json") {
+        await _dbBriefAIToolHelper.insertBriefChatHistoryList(
+          jsonMapList.map((e) => ChatHistory.fromMap(e)).toList(),
+        );
+      } else if (filename ==
+          "${BriefAIToolDdl.tableNameOfCusBriefLlmSpec}.json") {
+        await _dbBriefAIToolHelper.insertBriefCusLLMSpecList(
+          jsonMapList.map((e) => CusBriefLLMSpec.fromMap(e)).toList(),
+        );
+      } else if (filename ==
+          "${BriefAIToolDdl.tableNameOfMediaGenerationHistory}.json") {
+        for (var element in jsonMapList) {
+          _dbBriefAIToolHelper.insertMediaGenerationHistory(
+            MediaGenerationHistory.fromMap(element),
+          );
+        }
       }
     }
   }

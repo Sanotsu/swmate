@@ -6,7 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_life_tool_helper.dart';
 import '../../../common/utils/tools.dart';
 import '../../../models/base_model/dish_state.dart';
 import 'dish_detail.dart';
@@ -33,7 +33,7 @@ class _DishWheelIndexState extends State<DishWheelIndex>
   List<Dish> randomDishes = [];
   List<String> randomDishLabels = [];
 
-  final DBHelper _dbHelper = DBHelper();
+  final DBLifeToolHelper _dbHelper = DBLifeToolHelper();
 
   // 转盘流控制器
   StreamController<int> streamController = StreamController<int>();

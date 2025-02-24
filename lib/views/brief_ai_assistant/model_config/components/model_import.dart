@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../common/llm_spec/cus_brief_llm_model.dart';
-import '../../../../common/utils/db_tools/db_helper.dart';
+import '../../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 import '../../../../services/model_manager_service.dart';
 
 class ModelImport extends StatefulWidget {
@@ -21,7 +21,7 @@ class ModelImport extends StatefulWidget {
 }
 
 class _ModelImportState extends State<ModelImport> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBBriefAIToolHelper _dbHelper = DBBriefAIToolHelper();
   bool _importing = false;
 
   Future<void> _importFromJson() async {
@@ -58,7 +58,7 @@ class _ModelImportState extends State<ModelImport> {
         return e;
       }).toList();
 
-      await _dbHelper.insertCusBriefLLMSpecList(models);
+      await _dbHelper.insertBriefCusLLMSpecList(models);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

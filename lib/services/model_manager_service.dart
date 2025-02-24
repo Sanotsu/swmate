@@ -1,12 +1,12 @@
 import '../common/constants/default_models.dart';
 import '../common/llm_spec/cus_brief_llm_model.dart';
 import '../common/llm_spec/cus_llm_spec.dart';
-import '../common/utils/db_tools/db_helper.dart';
+import '../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 
 import 'cus_get_storage.dart';
 
 class ModelManagerService {
-  static final DBHelper _dbHelper = DBHelper();
+  static final DBBriefAIToolHelper _dbHelper = DBBriefAIToolHelper();
 
   // 初始化内置模型
   static Future<void> initBuiltinModels() async {
@@ -17,12 +17,12 @@ class ModelManagerService {
     }).toList();
 
     for (final model in models) {
-      final exists = await _dbHelper.queryCusBriefLLMSpecList(
+      final exists = await _dbHelper.queryBriefCusLLMSpecList(
         cusLlmSpecId: model.cusLlmSpecId,
       );
 
       if (exists.isEmpty) {
-        await _dbHelper.insertCusBriefLLMSpecList([model]);
+        await _dbHelper.insertBriefCusLLMSpecList([model]);
       }
     }
   }
@@ -36,17 +36,17 @@ class ModelManagerService {
     }).toList();
 
     // 删除全部内置模型
-    final exists = await _dbHelper.queryCusBriefLLMSpecList(isBuiltin: true);
+    final exists = await _dbHelper.queryBriefCusLLMSpecList(isBuiltin: true);
     for (final model in exists) {
-      await _dbHelper.deleteCusBriefLLMSpecById(model.cusLlmSpecId!);
+      await _dbHelper.deleteBriefCusLLMSpecById(model.cusLlmSpecId!);
     }
 
-    await _dbHelper.insertCusBriefLLMSpecList(models);
+    await _dbHelper.insertBriefCusLLMSpecList(models);
   }
 
   // 获取可用的模型列表(有对应平台 AK 的模型)
   static Future<List<CusBriefLLMSpec>> getAvailableModels() async {
-    final allModels = await _dbHelper.queryCusBriefLLMSpecList();
+    final allModels = await _dbHelper.queryBriefCusLLMSpecList();
     final userKeys = MyGetStorage().getUserAKMap();
 
     return allModels.where((model) {
@@ -139,16 +139,16 @@ class ModelManagerService {
   static Future<bool> deleteUserModel(String modelId) async {
     if (modelId.endsWith('_builtin')) return false;
 
-    await _dbHelper.deleteCusBriefLLMSpecById(modelId);
+    await _dbHelper.deleteBriefCusLLMSpecById(modelId);
     return true;
   }
 
   // 清空用户导入的模型(保留内置模型)
   static Future<void> clearUserModels() async {
-    final models = await _dbHelper.queryCusBriefLLMSpecList();
+    final models = await _dbHelper.queryBriefCusLLMSpecList();
     for (final model in models) {
       if (!model.cusLlmSpecId!.endsWith('_builtin')) {
-        await _dbHelper.deleteCusBriefLLMSpecById(model.cusLlmSpecId!);
+        await _dbHelper.deleteBriefCusLLMSpecById(model.cusLlmSpecId!);
       }
     }
   }
