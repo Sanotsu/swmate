@@ -43,11 +43,6 @@ class ChatMessageItem extends StatelessWidget {
                     style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                   ),
 
-                Text(
-                  DateFormat(constDatetimeFormat).format(message.dateTime),
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-                ),
-
                 // 显示消息内容
                 _buildMessageContent(isUser),
 
@@ -106,6 +101,11 @@ class ChatMessageItem extends StatelessWidget {
         crossAxisAlignment:
             isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
+          if (message.content.trim().isNotEmpty)
+            Text(
+              DateFormat(constDatetimeFormat).format(message.dateTime),
+              style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+            ),
           MarkdownBody(
             data: message.content,
             selectable: true,

@@ -10,6 +10,7 @@ import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/db_tools/db_helper.dart';
 import '../../../models/chat_completions/chat_completion_response.dart';
 import '../../../models/chat_competion/com_cc_state.dart';
+import '../../../services/cus_get_storage.dart';
 import 'components/chat_input.dart';
 import 'components/chat_message_item.dart';
 import 'components/model_filter.dart';
@@ -61,11 +62,18 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   // 添加加载状态标记
   bool _isLoading = true;
 
+  // 默认的页面主体的缩放比例(对话太小了就可以等比放大)
+  // 直接全局缓存，所有使用ChatListArea的地方都改了
+  double _textScaleFactor = 1.0;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initialize();
+
+    // 获取缓存中的正文文本缩放比例
+    _textScaleFactor = MyGetStorage().getChatListAreaScale();
 
     // 监听滚动事件
     _scrollController.addListener(() {
@@ -122,6 +130,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     }
   }
 
+  // 初始化对话
   Future<void> _initializeChat() async {
     final histories = await _dbHelper.queryChatList();
 
@@ -149,6 +158,9 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           _selectedType = _selectedModel!.modelType;
         });
 
+        // 重置内容高度
+        _resetContentHeight();
+
         // 滚动到底部
         _scrollToBottom();
       } else {
@@ -173,6 +185,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     // print('初始化对话: ${_selectedModel?.name}, 消息数: ${_messages.length}');
   }
 
+  // 创建新对话
   void _createNewChat() {
     setState(() {
       _messages = [];
@@ -181,6 +194,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     });
   }
 
+  // 切换模型
   void _handleTypeChanged(LLModelType type) {
     _createNewChat();
 
@@ -193,6 +207,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     });
   }
 
+  // 显示模型选择器
   Future<void> _showModelSelector() async {
     // 获取可用的模型列表
     final filteredModels =
@@ -226,6 +241,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     }
   }
 
+  // 选择历史记录
   Future<void> _handleHistorySelect(ChatHistory history) async {
     setState(() {
       _messages = history.messages;
@@ -239,6 +255,9 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       );
       _selectedType = _selectedModel!.modelType;
     });
+
+    // 重置内容高度
+    _resetContentHeight();
 
     // 滚动到底部
     _scrollToBottom();
@@ -355,6 +374,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     }
   }
 
+  // 发送消息
   Future<void> _handleSendMessage(
     String text, {
     File? image,
@@ -399,6 +419,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     }
   }
 
+  // 重新生成
   Future<void> _handleRegenerate(ChatMessage message) async {
     if (_isStreaming) return;
 
@@ -413,9 +434,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     });
 
     // 重置内容高度
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _lastContentHeight = _scrollController.position.maxScrollExtent;
-    });
+    _resetContentHeight();
 
     try {
       final (stream, cancelFunc) = await ChatService.sendMessage(
@@ -437,22 +456,97 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     }
   }
 
+  // 重置对话列表内容高度(在点击了重新生成、切换了模型、点击了指定历史记录后都应该调用)
+  void _resetContentHeight() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _lastContentHeight = _scrollController.position.maxScrollExtent;
+    });
+  }
+
+  // 滚动到底部
   void _scrollToBottom() {
     // 统一在这里等待布局更新完成，才滚动到底部
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
 
       // print('触发滚动到底部');
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeOut,
-      );
+
+      // 延迟50ms，避免内容高度还没更新
+      Future.delayed(const Duration(milliseconds: 50), () {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOut,
+        );
+      });
 
       setState(() {
         _isUserScrolling = false;
       });
     });
+  }
+
+  // 调整对话列表中显示的文本大小
+  void _adjustTextScale() async {
+    var tempScaleFactor = _textScaleFactor;
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            '调整对话列表中文字大小',
+            style: TextStyle(fontSize: 18.sp),
+          ),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Slider(
+                    value: tempScaleFactor,
+                    min: 0.6,
+                    max: 2.0,
+                    divisions: 14,
+                    label: tempScaleFactor.toStringAsFixed(1),
+                    onChanged: (value) {
+                      setState(() {
+                        tempScaleFactor = value;
+                      });
+                    },
+                  ),
+                  Text(
+                    '当前文字比例: ${tempScaleFactor.toStringAsFixed(1)}',
+                    textScaler: TextScaler.linear(tempScaleFactor),
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              child: const Text('取消'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('确定'),
+              onPressed: () async {
+                // 点击确定时，才把缩放比例存入缓存，并更新当前比例值
+                setState(() {
+                  _textScaleFactor = tempScaleFactor;
+                });
+                await MyGetStorage().setChatListAreaScale(
+                  _textScaleFactor,
+                );
+                if (!context.mounted) return;
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -483,9 +577,13 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           ],
         ),
         actions: [
+          // IconButton(
+          //   icon: const Icon(Icons.add),
+          //   onPressed: _isStreaming ? null : _createNewChat,
+          // ),
           IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _isStreaming ? null : _createNewChat,
+            icon: const Icon(Icons.format_size_outlined),
+            onPressed: _isStreaming ? null : _adjustTextScale,
           ),
           Builder(
             builder: (BuildContext context) {
@@ -520,6 +618,8 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           Column(
             children: [
               SizedBox(height: 5.sp),
+
+              /// 模型选择器
               ModelFilter(
                 models: _modelList,
                 selectedType: _selectedType,
@@ -529,65 +629,47 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                 supportedTypes: [LLModelType.cc, LLModelType.vision],
               ),
               Divider(height: 10.sp),
+
+              /// 消息列表
               Expanded(
-                child: _messages.isEmpty
-                    ? _buildEmptyHint()
-                    : ListView.builder(
-                        controller: _scrollController,
-                        itemCount: _messages.length,
-                        itemBuilder: (context, index) {
-                          final message = _messages[index];
-                          final isAssistant =
-                              message.role == CusRole.assistant.name;
-                          return Column(
-                            children: [
-                              ChatMessageItem(
-                                message: message,
-                                showModelLabel: true,
-                              ),
-                              // 不在流式响应时在助手消息下方显示操作按钮
-                              if (isAssistant && !_isStreaming)
-                                Padding(
-                                  padding: EdgeInsets.only(right: 8.sp),
-                                  child: MessageActions(
-                                    content: message.content,
-                                    onRegenerate: () =>
-                                        _handleRegenerate(message),
-                                    isRegenerating: index == _regeneratingIndex,
-                                    // tokens: message.totalTokens,
-                                  ),
-                                ),
-                            ],
-                          );
-                        },
-                      ),
+                child:
+                    _messages.isEmpty ? _buildEmptyHint() : _buildMessageList(),
               ),
+
+              /// 流式响应时显示进度条
               if (_isStreaming) const LinearProgressIndicator(),
+
+              /// 输入框
               ChatInput(
                 model: _selectedModel,
                 onSend: _handleSendMessage,
                 onCancel: _cancelResponse,
                 isStreaming: _isStreaming,
+                showAddChatButton: _messages.isNotEmpty,
+                showScrollToBottomButton: _showScrollToBottom,
+                onAddChat: _createNewChat,
+                onScrollToBottom: _scrollToBottom,
               ),
             ],
           ),
 
-          // 滚动到底部按钮
-          if (_showScrollToBottom)
-            Positioned(
-              right: 8.sp,
-              bottom: 120.sp, // 调整位置避免遮挡输入框
-              child: FloatingActionButton(
-                mini: true,
-                onPressed: _scrollToBottom,
-                child: const Icon(Icons.arrow_downward),
-              ),
-            ),
+          // /// 滚动到底部按钮(已经放在输入框组件中了)
+          // if (_showScrollToBottom)
+          //   Positioned(
+          //     right: 8.sp,
+          //     bottom: 120.sp, // 调整位置避免遮挡输入框
+          //     child: FloatingActionButton(
+          //       mini: true,
+          //       onPressed: _scrollToBottom,
+          //       child: const Icon(Icons.arrow_downward),
+          //     ),
+          //   ),
         ],
       ),
     );
   }
 
+  // 构建空提示
   Widget _buildEmptyHint() {
     return Padding(
       padding: EdgeInsets.all(32.sp),
@@ -609,6 +691,39 @@ class _BriefChatScreenState extends State<BriefChatScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // 构建消息列表
+  Widget _buildMessageList() {
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaler: TextScaler.linear(_textScaleFactor),
+      ),
+      child: ListView.builder(
+        controller: _scrollController,
+        itemCount: _messages.length,
+        itemBuilder: (context, index) {
+          final message = _messages[index];
+          final isAssistant = message.role == CusRole.assistant.name;
+          return Column(
+            children: [
+              ChatMessageItem(message: message, showModelLabel: true),
+              // 不在流式响应时在助手消息下方显示操作按钮
+              if (isAssistant && !_isStreaming)
+                Padding(
+                  padding: EdgeInsets.only(right: 8.sp),
+                  child: MessageActions(
+                    content: message.content,
+                    onRegenerate: () => _handleRegenerate(message),
+                    isRegenerating: index == _regeneratingIndex,
+                    // tokens: message.totalTokens,
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

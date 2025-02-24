@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -24,12 +25,25 @@ class ChatInput extends StatefulWidget {
   final VoidCallback? onCancel;
   final bool isStreaming;
 
+  // 是否显示新增对话按钮
+  final bool showAddChatButton;
+  // 是否显示滚动到底部的按钮
+  final bool showScrollToBottomButton;
+  // 点击新增对话按钮的回调
+  final VoidCallback? onAddChat;
+  // 点击滚动到底部的按钮的回调
+  final VoidCallback? onScrollToBottom;
+
   const ChatInput({
     super.key,
     required this.model,
     required this.onSend,
     this.onCancel,
     this.isStreaming = false,
+    this.showAddChatButton = true,
+    this.showScrollToBottomButton = true,
+    this.onAddChat,
+    this.onScrollToBottom,
   });
 
   @override
@@ -78,6 +92,41 @@ class _ChatInputState extends State<ChatInput> {
       children: [
         if (_selectedImage != null || _selectedVoice != null)
           _buildPreviewArea(),
+        // 2025-02-24
+        // 如果当前对话不是空，可以显示一个新增对话按钮;
+        // 如果当前对话未滚动到底部，还可以显示一个滚动到底部的按钮
+        // 后续想办法悬浮透明，类似DS？？？
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8.sp),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(width: 48.sp),
+              if (widget.showAddChatButton)
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    // 按钮的尺寸
+                    minimumSize: Size(52.sp, 28.sp),
+                    //  // 边框颜色和边框宽度
+                    side: BorderSide(color: Colors.blue, width: 1.sp),
+                    // 按钮的圆角
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.sp),
+                    ),
+                  ),
+                  icon: Icon(Icons.add_comment_outlined, size: 15.sp),
+                  onPressed: widget.onAddChat,
+                  label: Text('开启新对话', style: TextStyle(fontSize: 12.sp)),
+                ),
+              (widget.showScrollToBottomButton)
+                  ? IconButton(
+                      icon: FaIcon(FontAwesomeIcons.circleArrowDown),
+                      onPressed: widget.onScrollToBottom,
+                    )
+                  : SizedBox(width: 48.sp),
+            ],
+          ),
+        ),
         Container(
           padding: EdgeInsets.all(8.sp),
           child: Column(

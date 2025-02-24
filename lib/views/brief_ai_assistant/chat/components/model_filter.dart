@@ -40,7 +40,33 @@ class ModelFilter extends StatelessWidget {
                 if (count > 0) {
                   return Padding(
                     padding: EdgeInsets.only(right: 8.sp),
+                    // // 自定义 Chip，可以自定义内边距、标签内边距、形状
+                    // child: RawChip(
+                    //   label: Text("${MT_NAME_MAP[type]}($count)"),
+                    //   selected: type == selectedType,
+                    //   onSelected: isStreaming
+                    //       ? null
+                    //       : (_) {
+                    //           onTypeChanged?.call(type);
+                    //           onModelSelect?.call();
+                    //         },
+                    //   // 选中时颜色
+                    //   selectedColor: Theme.of(context).primaryColorLight,
+                    //   // 自定义内边距
+                    //   padding: EdgeInsets.all(4.sp),
+                    //   // 自定义标签内边距
+                    //   labelPadding: EdgeInsets.symmetric(horizontal: 4.sp),
+                    //   // 自定义圆弧
+                    //   shape: RoundedRectangleBorder(
+                    //     borderRadius: BorderRadius.circular(8.sp),
+                    //   ),
+                    // ),
+
+                    // 系统默认 Chip，内边距不够小
                     child: FilterChip(
+                      // padding: EdgeInsets.all(1.sp),
+                      // labelPadding: EdgeInsets.all(1.sp),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       label: Text("${MT_NAME_MAP[type]}($count)"),
                       selected: type == selectedType,
                       onSelected: isStreaming

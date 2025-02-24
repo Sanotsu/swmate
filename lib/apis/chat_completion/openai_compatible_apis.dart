@@ -177,7 +177,7 @@ Future<(Stream<ChatCompletionResponse>, VoidCallback)> getStreamResponse(
           .transform(const LineSplitter())
           .transform(const SseTransformer())
           // 处理每一行数据
-          .listen((event) async {
+          .listen((event) {
         // print(
         //   "【Event】 ${event.id}, ${event.event}, ${event.retry}, ${event.data}",
         // );
