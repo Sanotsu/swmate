@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../../common/constants.dart';
+import '../../common/llm_spec/cus_brief_llm_model.dart';
+import '../../common/llm_spec/cus_llm_spec.dart';
 import 'com_cc_resp.dart';
 
 part 'com_cc_state.g.dart';
@@ -19,14 +21,19 @@ part 'com_cc_state.g.dart';
 /// 对话页面就是包含一系列时间顺序排序后的对话消息的list
 @JsonSerializable(explicitToJson: true)
 class ChatMessage {
-  String messageId; // 每个消息有个ID方便整个对话列表的保存？？？
-  DateTime dateTime; // 时间
+  // 每个消息有个ID方便整个对话列表的保存？？？
+  String messageId;
+  // 时间
+  DateTime dateTime;
   // 2024-07-17 对话模型role和context都存上
-  // 之前有个isFromUser来区分用户和AI助手，但没法保存system，所以直接改为role
   String role;
-  // 2024-07-17 之前是text，现在改为content
   // 2024-08-08 因为流式响应，要追加内容，所以不是final的
-  String content; // 文本内容
+  String content;
+  // 2025-02-25 对于DeepSeekR系列的，还有推理过程，此时对应栏位是reasoning_content
+  String? reasoningContent;
+  // 也一并记录思考的耗时
+  int? thinkingDuration;
+
   // 2024-08-07 输入的文本可能是语言转的，保留语言文件地址
   String? contentVoicePath;
   // 2024-07-22 如果是rag的大模型，还会保存检索的索引
@@ -48,6 +55,8 @@ class ChatMessage {
     required this.dateTime,
     required this.role,
     required this.content,
+    this.reasoningContent,
+    this.thinkingDuration,
     this.contentVoicePath,
     this.quotes,
     this.imageUrl,
@@ -74,6 +83,8 @@ class ChatMessage {
       'dateTime': dateTime,
       'role': role,
       'content': content,
+      'reasoningContent': reasoningContent,
+      'thinkingDuration': thinkingDuration,
       'contentVoicePath': contentVoicePath,
       'quotes': quotes.toString(),
       'imageUrl': imageUrl,
@@ -94,6 +105,8 @@ class ChatMessage {
       dateTime: DateTime.parse(map['dateTime']),
       role: map['role'] as String,
       content: map['content'] as String,
+      reasoningContent: map['reasoningContent'] as String?,
+      thinkingDuration: map['thinkingDuration'] as int?,
       contentVoicePath: map['contentVoicePath'] as String?,
       quotes: map['quotes'] != null
           ? (map['quotes'] as List<dynamic>)
@@ -258,6 +271,97 @@ class ChatHistory {
       "cloudPlatformName": $cloudPlatformName,
       'chatType': $chatType,
       "i2tImagePath": $i2tImagePath,
+      "messages": $messages
+    }
+    ''';
+  }
+}
+
+///
+/// 2025-02-25 新版本改良后的(主要是模型信息、参考图片等栏位)
+/// 对话记录 这个是存入sqlite的表对应的模型
+/// 需要修改的就没有加final
+@JsonSerializable(explicitToJson: true)
+class BriefChatHistory {
+  final String uuid;
+  // 对话标题
+  String title;
+  // 创建时间
+  final DateTime gmtCreate;
+  // 修改时间
+  DateTime gmtModified;
+
+  // 对话历史的消息列表
+  // (视觉模型可以有参考图、参考视频等，但应该放在多轮对话中某一次消息中
+  // 2025-02-25 目前只支持1张图片，没有视频，后续根据API再看情况)
+  List<ChatMessage> messages;
+
+  // 选用对话的模型信息
+  CusBriefLLMSpec llmSpec;
+
+  // 模型的类型，查询历史时可以区分cc、vison等
+  LLModelType modelType;
+
+  BriefChatHistory({
+    required this.uuid,
+    required this.title,
+    required this.gmtCreate,
+    required this.gmtModified,
+    required this.messages,
+    required this.llmSpec,
+    required this.modelType,
+  });
+
+  // 从字符串转
+  factory BriefChatHistory.fromRawJson(String str) =>
+      BriefChatHistory.fromJson(json.decode(str));
+  // 转为字符串
+  String toRawJson() => json.encode(toJson());
+
+  factory BriefChatHistory.fromJson(Map<String, dynamic> srcJson) =>
+      _$BriefChatHistoryFromJson(srcJson);
+
+  Map<String, dynamic> toJson() => _$BriefChatHistoryToJson(this);
+
+  factory BriefChatHistory.fromMap(Map<String, dynamic> map) {
+    return BriefChatHistory(
+      uuid: map['uuid'] as String,
+      title: map['title'] as String,
+      gmtCreate: DateTime.tryParse(map['gmtCreate']) ?? DateTime.now(),
+      gmtModified: DateTime.tryParse(map['gmtModified']) ?? DateTime.now(),
+      messages: (jsonDecode(map['messages'] as String) as List<dynamic>)
+          .map((messageMap) =>
+              ChatMessage.fromMap(messageMap as Map<String, dynamic>))
+          .toList(),
+      modelType: LLModelType.values
+          .firstWhere((e) => e.toString() == map['modelType']),
+      llmSpec: CusBriefLLMSpec.fromJson(json.decode(map['llmSpec'])),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'uuid': uuid,
+      'title': title,
+      'gmtCreate': gmtCreate.toIso8601String(),
+      'gmtModified': gmtModified.toIso8601String(),
+      // 这样应该把List<ChatMessage> 转为了字符串数组，再转为了字符串数组字符串
+      'messages': messages.map((e) => e.toRawJson()).toList().toString(),
+      'llmSpec': llmSpec.toRawJson(),
+      'modelType': modelType.toString(),
+    };
+  }
+
+  @override
+  String toString() {
+    return '''
+    BriefChatHistory { 
+      "uuid": $uuid,
+      "title": $title,
+      "gmtCreate": $gmtCreate,
+      "gmtModified": $gmtModified,
+      "llmSpec": $llmSpec,
+      "modelType": $modelType,
       "messages": $messages
     }
     ''';

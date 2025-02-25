@@ -15,10 +15,8 @@ class BriefAIToolDdl {
       gmtCreate	          TEXT    NOT NULL,
       gmtModified	        TEXT    NOT NULL,
       messages            TEXT    NOT NULL,
-      llmName             TEXT    NOT NULL,
-      cloudPlatformName   TEXT,
       modelType           TEXT    NOT NULL,
-      i2tImagePath        TEXT,
+      llmSpec             TEXT    NOT NULL,
       PRIMARY KEY(uuid)
     );
     """;

@@ -4,9 +4,9 @@ import '../../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
 
 class ChatHistoryDrawer extends StatelessWidget {
-  final List<ChatHistory> histories;
-  final ChatHistory? currentChat;
-  final ValueChanged<ChatHistory> onHistorySelect;
+  final List<BriefChatHistory> histories;
+  final BriefChatHistory? currentChat;
+  final ValueChanged<BriefChatHistory> onHistorySelect;
   final VoidCallback onRefresh;
 
   const ChatHistoryDrawer({
@@ -17,7 +17,7 @@ class ChatHistoryDrawer extends StatelessWidget {
     required this.onRefresh,
   });
 
-  Future<void> _renameChat(BuildContext context, ChatHistory chat) async {
+  Future<void> _renameChat(BuildContext context, BriefChatHistory chat) async {
     final controller = TextEditingController(text: chat.title);
 
     final newTitle = await showDialog<String>(
@@ -58,7 +58,7 @@ class ChatHistoryDrawer extends StatelessWidget {
     }
   }
 
-  Future<void> _deleteChat(BuildContext context, ChatHistory chat) async {
+  Future<void> _deleteChat(BuildContext context, BriefChatHistory chat) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -109,7 +109,7 @@ class ChatHistoryDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildChatHistoryItem(ChatHistory history, bool isSelected) {
+  Widget _buildChatHistoryItem(BriefChatHistory history, bool isSelected) {
     return Builder(
       builder: (context) => ListTile(
         title: Text(

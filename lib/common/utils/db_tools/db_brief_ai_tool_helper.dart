@@ -129,10 +129,10 @@ class DBBriefAIToolHelper {
   ///
 
   // 查询所有对话记录
-  Future<List<ChatHistory>> queryBriefChatHistoryList({
+  Future<List<BriefChatHistory>> queryBriefChatHistoryList({
     String? uuid,
     String? keyword,
-    List<LLModelType>? modelTypes, // 在调用处取枚举，可多个
+    List<LLModelType>? modelTypes,
   }) async {
     Database db = await database;
 
@@ -168,7 +168,7 @@ class DBBriefAIToolHelper {
       orderBy: "gmtModified DESC", // 以修改时间倒序排序
     );
 
-    return rows.map((row) => ChatHistory.fromMap(row)).toList();
+    return rows.map((row) => BriefChatHistory.fromMap(row)).toList();
   }
 
   // 删除单条
@@ -181,7 +181,7 @@ class DBBriefAIToolHelper {
 
   // 新增(只有单个的时候就一个值的数组，理论上不会批量插入,备份恢复除外)
   Future<List<Object?>> insertBriefChatHistoryList(
-      List<ChatHistory> briefChatHistories) async {
+      List<BriefChatHistory> briefChatHistories) async {
     var batch = (await database).batch();
     for (var item in briefChatHistories) {
       batch.insert(
@@ -193,7 +193,7 @@ class DBBriefAIToolHelper {
   }
 
   // 修改单条(只让修改标题其实)
-  Future<int> updateBriefChatHistory(ChatHistory item) async =>
+  Future<int> updateBriefChatHistory(BriefChatHistory item) async =>
       (await database).update(
         BriefAIToolDdl.tableNameOfBriefChatHistory,
         item.toMap(),

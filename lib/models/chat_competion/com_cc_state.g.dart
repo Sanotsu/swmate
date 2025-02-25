@@ -11,6 +11,8 @@ ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => ChatMessage(
       dateTime: DateTime.parse(json['dateTime'] as String),
       role: json['role'] as String,
       content: json['content'] as String,
+      reasoningContent: json['reasoningContent'] as String?,
+      thinkingDuration: (json['thinkingDuration'] as num?)?.toInt(),
       contentVoicePath: json['contentVoicePath'] as String?,
       quotes: (json['quotes'] as List<dynamic>?)
           ?.map((e) => CCQuote.fromJson(e as Map<String, dynamic>))
@@ -28,6 +30,8 @@ Map<String, dynamic> _$ChatMessageToJson(ChatMessage instance) =>
       'dateTime': instance.dateTime.toIso8601String(),
       'role': instance.role,
       'content': instance.content,
+      'reasoningContent': instance.reasoningContent,
+      'thinkingDuration': instance.thinkingDuration,
       'contentVoicePath': instance.contentVoicePath,
       'quotes': instance.quotes?.map((e) => e.toJson()).toList(),
       'imageUrl': instance.imageUrl,
@@ -63,6 +67,44 @@ Map<String, dynamic> _$ChatHistoryToJson(ChatHistory instance) =>
       'chatType': instance.chatType,
       'i2tImagePath': instance.i2tImagePath,
     };
+
+BriefChatHistory _$BriefChatHistoryFromJson(Map<String, dynamic> json) =>
+    BriefChatHistory(
+      uuid: json['uuid'] as String,
+      title: json['title'] as String,
+      gmtCreate: DateTime.parse(json['gmtCreate'] as String),
+      gmtModified: DateTime.parse(json['gmtModified'] as String),
+      messages: (json['messages'] as List<dynamic>)
+          .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      llmSpec:
+          CusBriefLLMSpec.fromJson(json['llmSpec'] as Map<String, dynamic>),
+      modelType: $enumDecode(_$LLModelTypeEnumMap, json['modelType']),
+    );
+
+Map<String, dynamic> _$BriefChatHistoryToJson(BriefChatHistory instance) =>
+    <String, dynamic>{
+      'uuid': instance.uuid,
+      'title': instance.title,
+      'gmtCreate': instance.gmtCreate.toIso8601String(),
+      'gmtModified': instance.gmtModified.toIso8601String(),
+      'messages': instance.messages.map((e) => e.toJson()).toList(),
+      'llmSpec': instance.llmSpec.toJson(),
+      'modelType': _$LLModelTypeEnumMap[instance.modelType]!,
+    };
+
+const _$LLModelTypeEnumMap = {
+  LLModelType.cc: 'cc',
+  LLModelType.vision: 'vision',
+  LLModelType.tti_word: 'tti_word',
+  LLModelType.voice: 'voice',
+  LLModelType.tti: 'tti',
+  LLModelType.iti: 'iti',
+  LLModelType.image: 'image',
+  LLModelType.ttv: 'ttv',
+  LLModelType.itv: 'itv',
+  LLModelType.video: 'video',
+};
 
 GroupChatHistory _$GroupChatHistoryFromJson(Map<String, dynamic> json) =>
     GroupChatHistory(

@@ -44,7 +44,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   // 是否正在流式响应中
   bool _isStreaming = false;
   // 当前对话
-  ChatHistory? _currentChat;
+  BriefChatHistory? _currentChat;
   // 取消响应
   VoidCallback? _cancelResponse;
   // 重新生成索引
@@ -150,9 +150,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           _currentChat = lastChat;
           // 根据历史记录设置模型
           _selectedModel = _modelList.firstWhere(
-            (m) =>
-                m.name == lastChat.llmName &&
-                m.platform.name == lastChat.cloudPlatformName,
+            (m) => m == lastChat.llmSpec,
             orElse: () => _modelList.first,
           );
           _selectedType = _selectedModel!.modelType;
@@ -160,9 +158,6 @@ class _BriefChatScreenState extends State<BriefChatScreen>
 
         // 重置内容高度
         _resetContentHeight();
-
-        // 滚动到底部
-        _scrollToBottom();
       } else {
         // 如果不是今天的对话，创建新对话
         setState(() {
@@ -185,12 +180,14 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     // print('初始化对话: ${_selectedModel?.name}, 消息数: ${_messages.length}');
   }
 
-  // 创建新对话
+  // 创建新对话（不用修改当前选中的平台和模型）
   void _createNewChat() {
     setState(() {
       _messages = [];
       _currentChat = null;
-      // 保持当前选中的平台和模型不变
+
+      // 创建新对话后，重置内容高度
+      _resetContentHeight();
     });
   }
 
@@ -239,28 +236,26 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       // 如果没有点击模型，则使用选定分类的第一个模型
       setState(() => _selectedModel = filteredModels.first);
     }
+
+    // 切换模型后，滚动到底部
+    _resetContentHeight();
   }
 
   // 选择历史记录
-  Future<void> _handleHistorySelect(ChatHistory history) async {
+  Future<void> _handleHistorySelect(BriefChatHistory history) async {
     setState(() {
       _messages = history.messages;
       _currentChat = history;
       // 恢复使用的模型
       _selectedModel = _modelList.firstWhere(
-        (m) =>
-            m.name == history.llmName &&
-            m.platform.name == history.cloudPlatformName,
+        (m) => m == history.llmSpec,
         orElse: () => _modelList.first,
       );
       _selectedType = _selectedModel!.modelType;
+
+      // 重置内容高度
+      _resetContentHeight();
     });
-
-    // 重置内容高度
-    _resetContentHeight();
-
-    // 滚动到底部
-    _scrollToBottom();
   }
 
   // 保存或更新对话历史
@@ -272,6 +267,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
               dateTime: m.dateTime,
               role: m.role,
               content: m.content,
+              reasoningContent: m.reasoningContent,
               imageUrl: m.imageUrl,
               contentVoicePath: m.contentVoicePath,
               modelLabel: m.modelLabel ?? _selectedModel!.name,
@@ -281,15 +277,14 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     if (_currentChat == null) {
       // 新对话，创建新记录
       var title = _messages.last.content;
-      _currentChat = ChatHistory(
+      _currentChat = BriefChatHistory(
         uuid: DateTime.now().toString(),
         title: title.substring(0, title.length > 20 ? 20 : title.length),
         messages: updatedMessages, // 使用更新后的消息列表
         gmtCreate: DateTime.now(),
         gmtModified: DateTime.now(),
-        llmName: _selectedModel!.name,
-        cloudPlatformName: _selectedModel!.platform.name,
-        chatType: LLModelType.cc.name,
+        modelType: _selectedModel!.modelType,
+        llmSpec: _selectedModel!,
       );
       await _dbHelper.insertBriefChatHistoryList([_currentChat!]);
     } else {
@@ -304,27 +299,43 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   Future<void> _handleStreamResponse(
     Stream<ChatCompletionResponse> stream,
   ) async {
+    var startTime = DateTime.now();
+
     try {
       stream.listen(
         (ccr) {
-          if (!mounted) return;
-
           // 不使用choices，使用cusText，统一处理
           final content = ccr.cusText;
+
+          // 对于DeepSeekR系列的，还有推理过程，此时对应栏位是 reasoning_content
+          String reasoningContent =
+              ccr.choices.first.delta?["reasoning_content"] ?? '';
 
           // 检查是否是结束标记(正常结束应该没有DONE，手动终止应该有标识)
           if (content.contains('[手动终止]') ||
               content.toLowerCase().contains('[done]')) {
+            if (!mounted) return;
             setState(() {
               _isStreaming = false;
               _cancelResponse = null;
             });
           }
 
+          if (!mounted) return;
           setState(() {
+            // 如果是深度思考模式，一开始content是没有内容的，内容在reasoning_content中
+            // 直到思考完了，content才会有内容。那么从响应开始，到content开始有内容，就是整个思考事件
+            if (content.trim().isEmpty) {
+              var endTime = DateTime.now();
+              var duration = endTime.difference(startTime);
+              _messages.last.thinkingDuration = duration.inSeconds;
+            }
+
             if (_messages.last.role == CusRole.assistant.name) {
               // 更新现有消息(出错也是正常流，但额外手动的cusText)
-              _messages.last.content += ccr.cusText;
+              _messages.last.content += content;
+              _messages.last.reasoningContent =
+                  (_messages.last.reasoningContent ?? "") + reasoningContent;
               _messages.last.promptTokens = ccr.usage?.promptTokens;
               _messages.last.completionTokens = ccr.usage?.completionTokens;
               _messages.last.totalTokens = ccr.usage?.totalTokens;
@@ -335,6 +346,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                 dateTime: DateTime.now(),
                 role: CusRole.assistant.name,
                 content: content,
+                reasoningContent: reasoningContent,
                 modelLabel: _selectedModel?.name,
               ));
             }
@@ -344,6 +356,10 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           // 在布局更新后检查内容高度变化
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final currentHeight = _scrollController.position.maxScrollExtent;
+
+            print("currentHeight: $currentHeight");
+            print("lastContentHeight: $_lastContentHeight");
+
             if (!_isUserScrolling && currentHeight - _lastContentHeight > 20) {
               // 高度增加超过 20 像素
               _scrollController.jumpTo(currentHeight);
@@ -396,10 +412,17 @@ class _BriefChatScreenState extends State<BriefChatScreen>
         imageUrl: image?.path,
         contentVoicePath: voice?.path,
       ));
+
+      // 在每次添加了对话之后，都把整个对话列表存入对话历史中去
+      _saveChatHistory();
     });
 
     try {
       setState(() => _isStreaming = true);
+
+      // 重置完了顺便滚动到底部
+      _scrollToBottom();
+
       final (stream, cancelFunc) = await ChatService.sendMessage(
         _selectedModel!,
         _messages,
@@ -412,10 +435,6 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     } catch (e) {
       if (!mounted) return;
       commonExceptionDialog(context, "异常提示", "发送消息失败: $e");
-    } finally {
-      if (mounted) {
-        setState(() => _cancelResponse = null);
-      }
     }
   }
 
@@ -429,6 +448,8 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     // 移除当前消息及其之后的所有消息
     setState(() {
       _messages.removeRange(index, _messages.length);
+      // 记录重新生成消息的索引，如果某个大模型响应的消息索引是记录的重新生成消息的索引，
+      // 则表示正在重新生成中，图标显示加载中
       _regeneratingIndex = index;
       _isStreaming = true;
     });
@@ -459,8 +480,13 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   // 重置对话列表内容高度(在点击了重新生成、切换了模型、点击了指定历史记录后都应该调用)
   void _resetContentHeight() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+
       _lastContentHeight = _scrollController.position.maxScrollExtent;
     });
+
+    // 重置完了顺便滚动到底部
+    _scrollToBottom();
   }
 
   // 滚动到底部
@@ -550,7 +576,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   }
 
   // 获取指定分类的历史对话
-  Future<List<ChatHistory>> getHistoryChats() async {
+  Future<List<BriefChatHistory>> getHistoryChats() async {
     return await _dbHelper.queryBriefChatHistoryList();
   }
 
@@ -602,7 +628,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           ),
         ],
       ),
-      endDrawer: FutureBuilder<List<ChatHistory>>(
+      endDrawer: FutureBuilder<List<BriefChatHistory>>(
         future: getHistoryChats(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -618,6 +644,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
             onRefresh: () async {
               // 重新加载聊天历史
               await getHistoryChats();
+              if (!mounted) return;
               setState(() {});
             },
           );
@@ -655,7 +682,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                 onSend: _handleSendMessage,
                 onCancel: _cancelResponse,
                 isStreaming: _isStreaming,
-                showAddChatButton: _messages.isNotEmpty,
+                showAddChatButton: _messages.isNotEmpty && !_isStreaming,
                 showScrollToBottomButton: _showScrollToBottom,
                 onAddChat: _createNewChat,
                 onScrollToBottom: _scrollToBottom,
@@ -727,6 +754,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                   child: MessageActions(
                     content: message.content,
                     onRegenerate: () => _handleRegenerate(message),
+                    // 是否正在重新生成(当前消息是否是重新生成消息)
                     isRegenerating: index == _regeneratingIndex,
                     // tokens: message.totalTokens,
                   ),

@@ -129,7 +129,7 @@ class _BriefImageScreenState
         refImageUrls: [],
         gmtCreate: DateTime.now(),
         llmSpec: selectedModel!,
-        modelType: LLModelType.image,
+        modelType: selectedModel!.modelType,
       );
 
       final requestId = await dbHelper.insertMediaGenerationHistory(history);

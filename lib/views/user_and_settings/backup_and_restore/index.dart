@@ -416,7 +416,7 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
       } else if (filename ==
           "${BriefAIToolDdl.tableNameOfBriefChatHistory}.json") {
         await _dbBriefAIToolHelper.insertBriefChatHistoryList(
-          jsonMapList.map((e) => ChatHistory.fromMap(e)).toList(),
+          jsonMapList.map((e) => BriefChatHistory.fromMap(e)).toList(),
         );
       } else if (filename ==
           "${BriefAIToolDdl.tableNameOfCusBriefLlmSpec}.json") {

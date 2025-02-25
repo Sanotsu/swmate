@@ -30,7 +30,7 @@ class MediaGenerationHistory {
   // 模型的类型，查询历史时可以区分ig、vg、ag等
   LLModelType modelType;
 
-// 用来资源生成的模型信息
+  // 用来资源生成的模型信息
   CusBriefLLMSpec llmSpec;
 
   // 如果先提交任务，后查询任务状态，那么taskId不为空，
