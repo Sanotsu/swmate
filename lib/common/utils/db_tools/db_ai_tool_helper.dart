@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print, constant_identifier_names
+// ignore_for_file: avoid_print,
 
 import 'package:sqflite/sqflite.dart';
 

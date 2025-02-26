@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print, constant_identifier_names
+// ignore_for_file: avoid_print
 
 import 'package:sqflite/sqflite.dart';
 
@@ -518,9 +518,6 @@ class DBLifeToolHelper {
       where.add('breed LIKE ? OR subBreed LIKE ?');
       whereArgs.add(["%$breedKeyword%", "%$breedKeyword%"]);
     }
-
-    print("where $where");
-    print("whereArgs $whereArgs");
 
     final rows = await db.query(
       LifeToolDdl.tableNameOfAnimalBreed,

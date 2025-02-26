@@ -103,6 +103,7 @@ dependencies:
   photo_manager_image_provider: ^2.2.0
   mime: ^2.0.0
   get_thumbnail_video: ^0.7.3
+  flutter_cache_manager: ^3.4.1
 
 dependency_overrides: 
   # 2024-09-18 marquee 依赖的fading_edge_scrollview版本会报错，使用此覆盖
@@ -146,6 +147,7 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/images/covers/
     - assets/aliyun_wanx_styles/
 
   # An image asset can refer to one or more resolution-specific "variants", see

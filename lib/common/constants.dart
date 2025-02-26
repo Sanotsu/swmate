@@ -1,5 +1,5 @@
 // 时间格式化字符串
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, constant_identifier_names
 
 import 'dart:io';
 
@@ -17,9 +17,9 @@ const unknownDateString = '1970-01-01';
 const String placeholderImageUrl = 'assets/images/no_image.png';
 const String brandImageUrl = 'assets/brand.png';
 
-const String aiAssistantCoverUrl = 'assets/aliyun_wanx_styles/人像写真.png';
-const String aiImageCoverUrl = 'assets/aliyun_wanx_styles/摄影.png';
-const String aiVideoCoverUrl = 'assets/aliyun_wanx_styles/动画.jpg';
+const String aiAssistantCoverUrl = 'assets/images/covers/ai_assistant.jpg';
+const String aiImageCoverUrl = 'assets/images/covers/ai_image.jpg';
+const String aiVideoCoverUrl = 'assets/images/covers/ai_video.jpg';
 
 // 数据库分页查询数据的时候，还需要带上一个该表的总数量
 // 还可以按需补入其他属性
@@ -193,4 +193,12 @@ enum CusRole {
   system,
   user,
   assistant,
+}
+
+// 2025-02-25 新版本图片、视频等AI生成资源管理页面，使用mime获取分类时自定义的key枚举
+// 自定义媒体资源分类 custom mime classification
+enum CusMimeCls {
+  IMAGE,
+  VIDEO,
+  AUDIO,
 }

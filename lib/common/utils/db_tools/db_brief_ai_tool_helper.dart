@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print, constant_identifier_names
-
 import 'package:sqflite/sqflite.dart';
 
 import '../../../models/chat_competion/com_cc_state.dart';
@@ -290,16 +288,11 @@ class DBBriefAIToolHelper {
       whereArgs.addAll(modelTypes.map((e) => e.toString()));
     }
 
-    print("where $where");
-    print("whereArgs $whereArgs");
-
     final rows = await db.query(
       BriefAIToolDdl.tableNameOfMediaGenerationHistory,
       where: where.isNotEmpty ? where.join(' AND ') : null,
       whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
     );
-
-    print('<<<<<<<<<<<<<rows: $rows');
 
     return rows.map((row) => MediaGenerationHistory.fromMap(row)).toList();
   }

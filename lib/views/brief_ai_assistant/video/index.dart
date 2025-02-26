@@ -9,8 +9,8 @@ import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/tools.dart';
 import '../../../models/media_generation_history/media_generation_history.dart';
 import '../../../services/video_generation_service.dart';
-import '../../../views/brief_ai_assistant/video/video_manager.dart';
 import '../../../views/brief_ai_assistant/common/media_generation_base.dart';
+import 'mime_video_manager.dart';
 import 'video_player_screen.dart';
 
 class BriefVideoScreen extends MediaGenerationBase {
@@ -72,7 +72,7 @@ class _BriefVideoScreenState
 - 部分模型可以选择是否上传参考图片
 - 视频生成耗时较长，可稍后查询任务状态
 - 生成的视频会自动保存在设备的以下目录:
-  - /SWMate/video_generation
+  - /SWMate/brief_video_generation
 - 视频生成任务记录可以长按删除
 ''';
 
@@ -245,25 +245,6 @@ class _BriefVideoScreenState
     );
   }
 
-  // @override
-  // Widget buildReferenceImagePreview() {
-  //   if (referenceImage == null) return const SizedBox.shrink();
-
-  //   return Padding(
-  //     padding: EdgeInsets.all(8.sp),
-  //     child: Stack(
-  //       children: [
-  //         Image.file(
-  //           referenceImage!,
-  //           height: 100.sp,
-  //           width: 100.sp,
-  //           fit: BoxFit.cover,
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   @override
   Future<void> generate() async {
     if (!checkGeneratePrerequisites()) return;
@@ -332,7 +313,10 @@ class _BriefVideoScreenState
   }
 
   @override
-  Widget buildManagerScreen() => const VideoManagerScreen();
+  // Widget buildManagerScreen() => const VideoManagerScreen();
+
+  // ？？？2025-02-26 参考图片管理的备注
+  Widget buildManagerScreen() => const MimeVideoManager();
 
   @override
   void initState() {

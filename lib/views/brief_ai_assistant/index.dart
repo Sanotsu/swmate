@@ -82,6 +82,27 @@ class _BriefAIToolsState extends State<BriefAITools> {
               imageUrl: aiVideoCoverUrl,
             ),
           ),
+          // Expanded(
+          //   child: CusCoverCard(
+          //     targetPage: const BriefVideoScreen(),
+          //     title: "AI 视频",
+          //     imageUrl: aiVideoCoverUrl,
+          //   ),
+          // ),
+          // Expanded(
+          //   child: CusCoverCard(
+          //     targetPage: const BriefVideoScreen(),
+          //     title: "AI 视频",
+          //     imageUrl: aiVideoCoverUrl,
+          //   ),
+          // ),
+          // Expanded(
+          //   child: CusCoverCard(
+          //     targetPage: const BriefVideoScreen(),
+          //     title: "AI 视频",
+          //     imageUrl: aiVideoCoverUrl,
+          //   ),
+          // ),
         ],
       ),
     );

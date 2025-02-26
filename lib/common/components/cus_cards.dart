@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../constants.dart';
 import '../utils/tools.dart';
 import 'tool_widget.dart';
 
@@ -115,14 +116,14 @@ class CusCoverCard extends StatelessWidget {
         child: Center(
           child: Row(
             children: [
-              SizedBox(width: 25.sp),
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 25.sp),
-                  child: imageUrl != null
-                      ? Image.asset(imageUrl!, fit: BoxFit.contain)
-                      : const SizedBox.shrink(),
+              SizedBox(width: 0.20.sw),
+              SizedBox(
+                height: 0.25.sw,
+                child: Image.asset(
+                  imageUrl ?? brandImageUrl,
+                  fit: BoxFit.contain,
+                  width: 0.20.sw,
+                  height: 0.20.sw,
                 ),
               ),
               SizedBox(width: 25.sp),

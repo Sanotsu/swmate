@@ -8,8 +8,8 @@ import '../../../common/llm_spec/cus_llm_spec.dart';
 import '../../../common/utils/tools.dart';
 import '../../../models/media_generation_history/media_generation_history.dart';
 import '../../../services/image_generation_service.dart';
-import '../../../views/brief_ai_assistant/image/image_manager.dart';
 import '../../../views/brief_ai_assistant/common/media_generation_base.dart';
+import 'mime_image_manager.dart';
 
 class BriefImageScreen extends MediaGenerationBase {
   const BriefImageScreen({super.key});
@@ -70,7 +70,7 @@ class _BriefImageScreenState
 - 文生图耗时较长，**请勿在生成过程中退出**
 - 默认一次生成1张图片
 - 生成的图片会保存在设备的以下目录:
-  - /SWMate/image_generation
+  - /SWMate/brief_image_generation
 ''';
 
   @override
@@ -221,7 +221,14 @@ class _BriefImageScreenState
   }
 
   @override
-  Widget buildManagerScreen() => const ImageManagerScreen();
+  // Widget buildManagerScreen() => const ImageManagerScreen();
+
+  // 2025-02-26 ??? 多次测试，在生成图片并保存后，
+  // 使用photo_manager搜索定位到指定AI生成图片文件夹，并看不到所有的图片。
+  // 可能实际有10张，photo_manager得到6张，原因还在探索。
+  // 暂时使用遍历文件夹中的File List，通过mime库区分媒体资源内容，然后简单预览
+  // 但是媒体资源的信息就差很多，只能得到File的信息而不是原始媒体资源的信息
+  Widget buildManagerScreen() => const MimeImageManager();
 
   @override
   void initState() {

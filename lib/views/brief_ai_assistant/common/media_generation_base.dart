@@ -105,10 +105,12 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
       children: [
         // 选择参考图片按钮
         if (_isShowImageRef()) ...[
-          ElevatedButton.icon(
-            onPressed: isGenerating ? null : pickReferenceImage,
-            icon: const Icon(Icons.image),
-            label: const Text('选择参考图片'),
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: isGenerating ? null : pickReferenceImage,
+              icon: const Icon(Icons.image),
+              label: const Text('选择参考图片'),
+            ),
           ),
           SizedBox(width: 8.sp),
         ],
@@ -143,7 +145,7 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
     if (referenceImage == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: EdgeInsets.all(8.sp),
+      padding: EdgeInsets.all(4.sp),
       child: Stack(
         children: [
           Image.file(
@@ -155,9 +157,9 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
           Positioned(
             right: 0,
             top: 0,
-            child: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => setState(() => referenceImage = null),
+            child: InkWell(
+              child: Icon(Icons.close, size: 20.sp),
+              onTap: () => setState(() => referenceImage = null),
             ),
           ),
         ],
