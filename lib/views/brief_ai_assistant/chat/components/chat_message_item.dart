@@ -32,7 +32,6 @@ class ChatMessageItem extends StatelessWidget {
     // 如果是用户输入，头像显示在右边
     CrossAxisAlignment crossAlignment =
         isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-
     return Container(
       margin: EdgeInsets.all(4.sp),
       child: Column(
@@ -109,10 +108,12 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   // Column布局时，头像和时间戳
-  Widget _buildAvatarAndTimestamp(bool isFromUser) {
+  Widget _buildAvatarAndTimestamp(bool isUser) {
     return Row(
+      mainAxisAlignment:
+          isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
       children: [
-        if (!isFromUser) _buildAvatar(isFromUser),
+        if (!isUser) _buildAvatar(isUser),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 3.sp),
           child: Column(
@@ -120,7 +121,7 @@ class ChatMessageItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 显示模型标签
-              if (!isFromUser && showModelLabel && message.modelLabel != null)
+              if (!isUser && showModelLabel && message.modelLabel != null)
                 Text(
                   message.modelLabel!,
                   style: TextStyle(fontSize: 12.sp, color: Colors.grey),
@@ -135,7 +136,7 @@ class ChatMessageItem extends StatelessWidget {
             ],
           ),
         ),
-        if (isFromUser) _buildAvatar(isFromUser),
+        if (isUser) _buildAvatar(isUser),
       ],
     );
   }
@@ -185,6 +186,7 @@ class ChatMessageItem extends StatelessWidget {
       //         left: isUser ? 34.sp : 0,
       //         right: isUser ? 0 : 34.sp,
       //       ),
+      margin: EdgeInsets.symmetric(vertical: 4.sp),
       padding: EdgeInsets.all(8.sp),
       decoration: BoxDecoration(
         color: bgColor,
@@ -196,8 +198,8 @@ class ChatMessageItem extends StatelessWidget {
         children: [
           if (message.reasoningContent != null &&
               message.reasoningContent!.isNotEmpty)
-            // _buildThinkingProcess(message),
-            _buildThinkingProcessText(message),
+            _buildThinkingProcess(message),
+          // buildThinkingProcessText(message),
           MarkdownBody(
             data: message.content,
             selectable: true,
@@ -234,7 +236,7 @@ class ChatMessageItem extends StatelessWidget {
               : '已深度思考(用时${message.thinkingDuration ?? 0}秒)',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.blue,
+            color: Colors.black54,
             fontSize: 16.sp,
           ),
         ),
@@ -245,7 +247,7 @@ class ChatMessageItem extends StatelessWidget {
             padding: EdgeInsets.only(left: 24.sp),
             child: Text(
               message.reasoningContent ?? '',
-              style: TextStyle(color: Colors.grey, fontSize: 13.5.sp),
+              style: TextStyle(color: Colors.black54, fontSize: 13.5.sp),
             ),
           ),
         ],
@@ -254,66 +256,59 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   // 2025-02-25 深度思考过程直接使用基础组件显示也可以
-  Widget _buildThinkingProcessText(ChatMessage message) {
+  Widget buildThinkingProcessText(ChatMessage message) {
     bool isThinkingExpanded = true;
     return StatefulBuilder(builder: (context, setState) {
-      return GestureDetector(
-        onTap: () {
-          setState(() {
-            isThinkingExpanded = !isThinkingExpanded;
-          });
-        },
-        child: Container(
-          padding: EdgeInsets.only(bottom: 16.sp),
-          // decoration: BoxDecoration(
-          //   color: Colors.green[200],
-          //   borderRadius: BorderRadius.circular(8.sp),
-          // ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    message.content.trim().isEmpty
-                        ? '思考中'
-                        : '已深度思考(用时${message.thinkingDuration ?? 0}秒)',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        isThinkingExpanded = !isThinkingExpanded;
-                      });
-                    },
-                    icon: Icon(
-                      isThinkingExpanded
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                    ),
-                  ),
-                ],
-              ),
-              if (isThinkingExpanded)
-                Padding(
-                  padding: EdgeInsets.only(left: 32.sp),
-                  // child: Text(
-                  //   message.reasoningContent ?? '',
-                  //   style: TextStyle(color: Colors.black54),
-                  // ),
-                  child: MarkdownBody(
-                    data: message.reasoningContent ?? '',
-                    selectable: true,
-                    styleSheet: MarkdownStyleSheet(
-                      p: TextStyle(color: Colors.black54, fontSize: 13.sp),
-                    ),
+      return Container(
+        padding: EdgeInsets.only(bottom: 16.sp),
+        // decoration: BoxDecoration(
+        //   color: Colors.green[200],
+        //   borderRadius: BorderRadius.circular(8.sp),
+        // ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  message.content.trim().isEmpty
+                      ? '思考中'
+                      : '已深度思考(用时${message.thinkingDuration ?? 0}秒)',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
                   ),
                 ),
-            ],
-          ),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      isThinkingExpanded = !isThinkingExpanded;
+                    });
+                  },
+                  icon: Icon(
+                    isThinkingExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                  ),
+                ),
+              ],
+            ),
+            if (isThinkingExpanded)
+              Padding(
+                padding: EdgeInsets.only(left: 32.sp),
+                // child: Text(
+                //   message.reasoningContent ?? '',
+                //   style: TextStyle(color: Colors.black54),
+                // ),
+                child: MarkdownBody(
+                  data: message.reasoningContent ?? '',
+                  selectable: true,
+                  styleSheet: MarkdownStyleSheet(
+                    p: TextStyle(color: Colors.black54, fontSize: 13.sp),
+                  ),
+                ),
+              ),
+          ],
         ),
       );
     });

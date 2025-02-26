@@ -267,6 +267,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
               dateTime: m.dateTime,
               role: m.role,
               content: m.content,
+              thinkingDuration: m.thinkingDuration,
               reasoningContent: m.reasoningContent,
               imageUrl: m.imageUrl,
               contentVoicePath: m.contentVoicePath,
@@ -300,6 +301,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     Stream<ChatCompletionResponse> stream,
   ) async {
     var startTime = DateTime.now();
+    DateTime? endTime;
 
     try {
       stream.listen(
@@ -324,10 +326,11 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           if (!mounted) return;
           setState(() {
             // 如果是深度思考模式，一开始content是没有内容的，内容在reasoning_content中
-            // 直到思考完了，content才会有内容。那么从响应开始，到content开始有内容，就是整个思考事件
-            if (content.trim().isEmpty) {
-              var endTime = DateTime.now();
-              var duration = endTime.difference(startTime);
+            // 直到思考完了，content才会有内容。那么从响应开始，到content开始有内容，就是整个思考时间
+            // 只记录一次，结束时间不为空则已经不是深度思考的响应了
+            if (endTime == null && content.trim().isNotEmpty) {
+              endTime = DateTime.now();
+              var duration = endTime!.difference(startTime);
               _messages.last.thinkingDuration = duration.inSeconds;
             }
 
@@ -356,9 +359,6 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           // 在布局更新后检查内容高度变化
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final currentHeight = _scrollController.position.maxScrollExtent;
-
-            print("currentHeight: $currentHeight");
-            print("lastContentHeight: $_lastContentHeight");
 
             if (!_isUserScrolling && currentHeight - _lastContentHeight > 20) {
               // 高度增加超过 20 像素
