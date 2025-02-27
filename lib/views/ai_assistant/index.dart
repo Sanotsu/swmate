@@ -6,7 +6,7 @@ import '../../apis/_default_system_role_list/default_file_interpret_role_list.da
 import '../../common/components/tool_widget.dart';
 import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
-import '../../common/utils/db_tools/db_helper.dart';
+import '../../common/utils/db_tools/db_ai_tool_helper.dart';
 import '../../services/cus_get_storage.dart';
 import '_componets/custom_entrance_card.dart';
 import '_helper/tools.dart';
@@ -33,7 +33,7 @@ class AIToolIndex extends StatefulWidget {
 }
 
 class _AIToolIndexState extends State<AIToolIndex> {
-  final DBHelper dbHelper = DBHelper();
+  final DBAIToolHelper dbHelper = DBAIToolHelper();
 
   // 默认的页面主体的缩放比例(对话太小了就可以等比放大)
   // 直接全局缓存，所有使用ChatListArea的地方都改了

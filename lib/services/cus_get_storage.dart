@@ -3,6 +3,18 @@ import 'package:get_storage/get_storage.dart';
 final box = GetStorage();
 
 class MyGetStorage {
+  static const String _firstLaunchKey = 'is_first_launch';
+  
+  // 检查是否首次启动
+  bool isFirstLaunch() {
+    return box.read(_firstLaunchKey) == null;
+  }
+
+  // 标记已启动
+  Future<void> markLaunched() async {
+    await box.write(_firstLaunchKey, false);
+  }
+
   // 用户头像地址
   Future<void> setUserAvatarPath(String? flag) async {
     await box.write("user_avatar_path", flag);
@@ -44,4 +56,16 @@ class MyGetStorage {
 
   Map<String, String> getUserAKMap() =>
       Map<String, String>.from(box.read("user_ak_map") ?? {});
+
+  // 清空用户的 API Keys
+  Future<void> clearUserAKMap() async {
+    await box.remove('user_ak_map'); // 直接删除整个 map
+  }
+
+  // 删除单个 API Key
+  Future<void> removeUserAK(String key) async {
+    if (key.startsWith('USER_')) {
+      await box.remove(key);
+    }
+  }
 }

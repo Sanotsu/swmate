@@ -12,7 +12,7 @@ import 'package:month_picker_dialog/month_picker_dialog.dart';
 
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_life_tool_helper.dart';
 import '../../../models/base_model/brief_accounting_state.dart';
 import 'bill_item_modify/index.dart';
 import 'bill_report/index.dart';
@@ -43,7 +43,7 @@ class BillItemIndex extends StatefulWidget {
 }
 
 class _BillItemIndexState extends State<BillItemIndex> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBLifeToolHelper _dbHelper = DBLifeToolHelper();
   // 账单项次的列表滚动控制器
   ScrollController scrollController = ScrollController();
 

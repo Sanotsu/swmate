@@ -3,10 +3,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../apis/hitokoto/hitokoto_apis.dart';
+import '../../common/components/tool_widget.dart';
+import '../../common/llm_spec/cus_brief_llm_model.dart';
+import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
 import '../../models/hitokoto/hitokoto.dart';
+import '../../services/model_manager_service.dart';
+import '../../services/network_service.dart';
 import '../ai_assistant/_componets/custom_entrance_card.dart';
-import '../ai_assistant/index.dart';
+
 import 'accounting/index.dart';
 import 'animal_lover/dog_cat_index.dart';
 import 'anime_top/bangumi_calendar.dart';
@@ -14,8 +19,11 @@ import 'anime_top/mal_top_index.dart';
 import 'food/nutritionix/index.dart';
 import 'food/nutritionix_calculator/index.dart';
 import 'free_dictionary/index.dart';
+import 'news/base_news_page/newsapi_page.dart';
+import 'news/base_news_page/sina_roll_news_page.dart';
 import 'news/daily_60s/index.dart';
 import 'news/momoyu/index.dart';
+import 'news/readhub/index.dart';
 import 'random_dish/dish_wheel_index.dart';
 import 'food/usda_food_data/index.dart';
 import 'waifu_pics/index.dart';
@@ -32,7 +40,6 @@ class LifeToolIndex extends StatefulWidget {
 }
 
 class _LifeToolIndexState extends State<LifeToolIndex> {
-  String? hitokoto;
   Hitokoto? hito;
 
   @override
@@ -43,11 +50,21 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
 
   // 2024-10-17 注意，请求太过频繁会无法使用
   getOneSentence() async {
+    // 如果没网，就不查询一言了
+    bool isNetworkAvailable = await NetworkStatusService().isNetwork();
+
+    if (!mounted) return;
+    if (!isNetworkAvailable) {
+      setState(() {
+        hito = null;
+      });
+      return;
+    }
+
     var a = await getHitokoto();
 
     if (!mounted) return;
     setState(() {
-      hitokoto = "${a.hitokoto ?? ''}——${a.fromWho ?? ''}[${a.from ?? ''}]";
       hito = a;
     });
   }
@@ -63,32 +80,19 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // SizedBox(height: 10.sp),
+          /// 显示一言
           buildHitokoto(),
-          // 滚动显示一行有趣的一言
-          // hitokoto != null
-          //     ? SimpleMarqueeOrText(
-          //         data: hitokoto ?? "",
-          //         velocity: 30,
-          //         style: TextStyle(fontSize: 15.sp),
-          //       )
-          //     : Container(),
-          // 入口按钮
           const Divider(),
+
+          /// 功能入口按钮
           Expanded(
             child: ListView(
               children: [
-                // 这个是直接展示全部
+                /// 这个是直接展示全部
                 // ...buildCardList(context),
-                // 这个是分类的折叠栏
-                buildToolTile(context),
-                const Divider(),
-                buildAnimeTile(),
-                const Divider(),
-                buildNewsTile(),
-                const Divider(),
-                buildFoodTile(),
-                const Divider(),
+
+                // /// 这个是分类的折叠栏
+                ...buildExpansionTileList(context),
               ],
             ),
           ),
@@ -98,7 +102,7 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
   }
 
   Widget buildHitokoto() {
-    return hitokoto != null
+    return hito != null
         ? SizedBox(
             height: 60.sp,
             child: Padding(
@@ -128,72 +132,248 @@ class _LifeToolIndexState extends State<LifeToolIndex> {
               ),
             ),
           )
-        : Container(height: 60.sp);
+        : SizedBox(
+            height: 60.sp,
+            child: Text('<暂无网络>'),
+          );
   }
 }
 
 /// 直接全部平铺展示
 List<Widget> buildCardList(BuildContext context) {
   return [
+    _titleWidget('实用小工具', iconData: Icons.build),
+    ..._toolRows(context),
     const Divider(),
-    titleWidget('实用小工具', iconData: Icons.build),
-    ...toolRows(context),
+    _titleWidget('图片与动漫', iconData: Icons.image),
+    ..._animeRows(context),
     const Divider(),
-    titleWidget('图片与动漫', iconData: Icons.image),
-    ...animeRows(),
+    _titleWidget('摸鱼看新闻', iconData: Icons.newspaper),
+    ..._newsRows(context),
     const Divider(),
-    titleWidget('摸鱼看新闻', iconData: Icons.newspaper),
-    ...newsRows(),
-    const Divider(),
-    titleWidget('饮食和健康', iconData: Icons.set_meal),
-    ...foodRows(),
+    _titleWidget('饮食和健康', iconData: Icons.set_meal),
+    ..._foodRows(context),
   ];
 }
 
-/// 分类的折叠框显示
-buildToolTile(BuildContext context) {
-  return ExpansionTile(
-    // 展开后不显示上下的边框
-    shape: const Border(),
-    // 展开后不显示上下的边框(改为透明色也看不到)
-    // shape: Border.all(color: Colors.transparent),
-    leading: const Icon(Icons.build, color: Colors.green),
-    title: titleWidget('实用工具'),
-    children: toolRows(context),
-  );
+/// 可折叠分类显示
+List<Widget> buildExpansionTileList(BuildContext context) {
+  return [
+    ExpansionTile(
+      // 展开后不显示上下的边框
+      shape: const Border(),
+      // 展开后不显示上下的边框(改为透明色也看不到)
+      // shape: Border.all(color: Colors.transparent),
+      leading: const Icon(Icons.build, color: Colors.green),
+      title: _titleWidget('实用工具'),
+      children: _toolRows(context),
+    ),
+    const Divider(),
+    ExpansionTile(
+      shape: const Border(),
+      leading: const Icon(Icons.image, color: Colors.green),
+      title: _titleWidget('图片动漫'),
+      children: _animeRows(context),
+    ),
+    const Divider(),
+    ExpansionTile(
+      shape: const Border(),
+      leading: const Icon(Icons.newspaper, color: Colors.green),
+      title: _titleWidget('摸鱼新闻'),
+      children: _newsRows(context),
+    ),
+    const Divider(),
+    ExpansionTile(
+      shape: const Border(),
+      leading: const Icon(Icons.set_meal, color: Colors.green),
+      title: _titleWidget('饮食健康'),
+      children: _foodRows(context),
+    ),
+    const Divider(),
+  ];
 }
 
-buildAnimeTile() {
-  return ExpansionTile(
-    // 展开后不显示上下的边框
-    shape: const Border(),
-    leading: const Icon(Icons.image, color: Colors.green),
-    title: titleWidget('图片动漫'),
-    children: animeRows(),
-  );
+/// 具体每种分类的入口
+List<Widget> _toolRows(BuildContext context) {
+  return [
+    _rowWidget([
+      const LifeToolEntranceCard(
+        title: '极简记账',
+        subtitle: "手动记账图表统计",
+        icon: Icons.receipt,
+        targetPage: BillItemIndex(),
+      ),
+      const LifeToolEntranceCard(
+        title: '随机菜品',
+        subtitle: "随机生成一道菜品",
+        icon: Icons.restaurant_menu,
+        targetPage: DishWheelIndex(),
+      ),
+    ]),
+    _rowWidget([
+      LifeToolEntranceCard(
+        title: '猫狗之家',
+        subtitle: "图片识别猫狗品种",
+        icon: FontAwesomeIcons.dog,
+        onTap: () async {
+          await navigateToScreenWithLLModels(
+            context,
+            LLModelType.vision,
+            (llmSpecList) => DogCatLover(
+              llmSpecList: llmSpecList,
+            ),
+            roleType: LLModelType.vision,
+          );
+        },
+      ),
+      LifeToolEntranceCard(
+        title: '英英词典',
+        subtitle: "维基词典单词查询",
+        icon: Icons.newspaper,
+        // targetPage: FreeDictionary(),
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          FreeDictionary(),
+        ),
+      ),
+    ]),
+  ];
 }
 
-buildNewsTile() {
-  return ExpansionTile(
-    // 展开后不显示上下的边框
-    shape: const Border(),
-    leading: const Icon(Icons.newspaper, color: Colors.green),
-    title: titleWidget('摸鱼新闻'),
-    children: newsRows(),
-  );
+List<Widget> _animeRows(BuildContext context) {
+  return [
+    _rowWidget([
+      LifeToolEntranceCard(
+        title: 'BGM动漫资讯',
+        subtitle: "Bangumi番组计划",
+        icon: Icons.leaderboard_outlined,
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          BangumiCalendar(),
+        ),
+      ),
+      LifeToolEntranceCard(
+        title: 'MAL动漫排行',
+        subtitle: "MyAnimeList排行榜",
+        icon: Icons.leaderboard_outlined,
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          MALTop(),
+        ),
+      ),
+    ]),
+    _rowWidget([
+      LifeToolEntranceCard(
+        title: 'WAIFU图片',
+        subtitle: "随机二次元WAIFU",
+        icon: Icons.image,
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          WaifuPicIndex(),
+        ),
+      ),
+      const SizedBox(),
+    ])
+  ];
 }
 
-buildFoodTile() {
-  return ExpansionTile(
-    // 展开后不显示上下的边框
-    shape: const Border(),
-    leading: const Icon(Icons.set_meal, color: Colors.green),
-    title: titleWidget('饮食健康'),
-    children: foodRows(),
-  );
+List<Widget> _newsRows(BuildContext context) {
+  return [
+    _rowWidget([
+      LifeToolEntranceCard(
+        title: '摸摸鱼',
+        subtitle: "聚合新闻摸鱼网站",
+        icon: Icons.newspaper,
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          MomoyuIndex(),
+        ),
+      ),
+      LifeToolEntranceCard(
+        title: 'Readhub',
+        subtitle: "Readhub热门话题",
+        icon: Icons.newspaper,
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          ReadhubIndex(),
+        ),
+      ),
+    ]),
+    _rowWidget([
+      LifeToolEntranceCard(
+        title: '每天60秒',
+        subtitle: "每天60秒读懂世界",
+        icon: Icons.newspaper,
+        // targetPage: Daily60S(),
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          Daily60S(),
+        ),
+      ),
+      LifeToolEntranceCard(
+        title: '国际新闻',
+        subtitle: "NewsAPI新闻资讯",
+        icon: Icons.newspaper,
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          NewsApiPage(),
+        ),
+      ),
+    ]),
+    _rowWidget([
+      LifeToolEntranceCard(
+        title: '新浪新闻',
+        subtitle: "新闻中心滚动新闻",
+        icon: Icons.newspaper,
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          SinaRollNewsPage(),
+        ),
+      ),
+      const SizedBox(),
+    ]),
+  ];
 }
 
-Widget titleWidget(String title, {IconData? iconData}) {
+List<Widget> _foodRows(BuildContext context) {
+  return [
+    _rowWidget([
+      LifeToolEntranceCard(
+        title: "USDA食品",
+        subtitle: "USDA食品数据中心",
+        icon: Icons.food_bank,
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          USDAFoodDataCentral(),
+        ),
+      ),
+      LifeToolEntranceCard(
+        title: "Nutritionix",
+        subtitle: "Nutritionix食品数据",
+        icon: Icons.food_bank,
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          NutritionixFoodCentral(),
+        ),
+      ),
+    ]),
+    _rowWidget([
+      LifeToolEntranceCard(
+        title: "热量计算器",
+        subtitle: "食物热量和运动消耗",
+        icon: Icons.calculate,
+        onTap: () => showNoNetworkOrGoTargetPage(
+          context,
+          NixSimpleCalculator(),
+        ),
+      ),
+      const SizedBox(),
+    ]),
+  ];
+}
+
+// 分类的标题文字组件
+Widget _titleWidget(String title, {IconData? iconData}) {
   return Padding(
     padding: EdgeInsets.all(5.sp),
     child: Row(
@@ -214,128 +394,77 @@ Widget titleWidget(String title, {IconData? iconData}) {
   );
 }
 
-List<Widget> toolRows(BuildContext context) {
-  return [
-    buildRow([
-      const LifeToolEntranceCard(
-        title: '极简记账',
-        subtitle: "手动记账图表统计",
-        icon: Icons.receipt,
-        targetPage: BillItemIndex(),
-      ),
-      const LifeToolEntranceCard(
-        title: '随机菜品',
-        subtitle: "随机生成一道菜品",
-        icon: Icons.restaurant_menu,
-        targetPage: DishWheelIndex(),
-      ),
-    ]),
-    buildRow([
-      LifeToolEntranceCard(
-        title: '猫狗之家',
-        subtitle: "图片识别猫狗品种",
-        icon: FontAwesomeIcons.dog,
-        onTap: () async {
-          await navigateToToolScreen(
-            context,
-            LLModelType.vision,
-            (llmSpecList, cusSysRoleSpecs) => DogCatLover(
-              llmSpecList: llmSpecList,
-            ),
-            roleType: LLModelType.vision,
-          );
-        },
-      ),
-      const LifeToolEntranceCard(
-        title: '英英词典',
-        subtitle: "维基词典单词查询",
-        icon: Icons.newspaper,
-        targetPage: FreeDictionary(),
-      ),
-    ]),
-  ];
-}
-
-List<Widget> animeRows() {
-  return [
-    buildRow([
-      const LifeToolEntranceCard(
-        title: 'BGM动漫资讯',
-        subtitle: "Bangumi番组计划",
-        icon: Icons.leaderboard_outlined,
-        targetPage: BangumiCalendar(),
-      ),
-      const LifeToolEntranceCard(
-        title: 'MAL动漫排行',
-        subtitle: "MyAnimeList排行榜",
-        icon: Icons.leaderboard_outlined,
-        targetPage: MALTop(),
-      ),
-    ]),
-    buildRow([
-      const LifeToolEntranceCard(
-        title: 'WAIFU图片',
-        subtitle: "随机二次元WAIFU",
-        icon: Icons.image,
-        targetPage: WaifuPicIndex(),
-      ),
-      const SizedBox(),
-    ])
-  ];
-}
-
-List<Widget> newsRows() {
-  return [
-    buildRow([
-      const LifeToolEntranceCard(
-        title: '摸摸鱼',
-        subtitle: "聚合新闻摸鱼网站",
-        icon: Icons.newspaper,
-        targetPage: MomoyuIndex(),
-      ),
-      const LifeToolEntranceCard(
-        title: '每天60秒',
-        subtitle: "每天60秒读懂世界",
-        icon: Icons.newspaper,
-        targetPage: Daily60S(),
-      ),
-    ]),
-  ];
-}
-
-List<Widget> foodRows() {
-  return [
-    buildRow([
-      const LifeToolEntranceCard(
-        title: "USDA食品",
-        subtitle: "USDA食品数据中心",
-        icon: Icons.food_bank,
-        targetPage: USDAFoodDataCentral(),
-      ),
-      const LifeToolEntranceCard(
-        title: "Nutritionix",
-        subtitle: "Nutritionix食品数据",
-        icon: Icons.food_bank,
-        targetPage: NutritionixFoodCentral(),
-      ),
-    ]),
-    buildRow([
-      const LifeToolEntranceCard(
-        title: "热量计算器",
-        subtitle: "食物热量和运动消耗",
-        icon: Icons.calculate,
-        targetPage: NixSimpleCalculator(),
-      ),
-      const SizedBox(),
-    ]),
-  ];
-}
-
-Widget buildRow(List<Widget> children) {
+// 分类中的组件入口列表
+Widget _rowWidget(List<Widget> children) {
   return SizedBox(
     height: 80.sp,
     child: Row(
       children: children.map((child) => Expanded(child: child)).toList(),
     ),
   );
+}
+
+/// 卡片在没有网的时候，点击就显示弹窗；有网才跳转到功能页面
+void showNoNetworkOrGoTargetPage(
+  BuildContext context,
+  Widget targetPage,
+) async {
+  bool isNetworkAvailable = await NetworkStatusService().isNetwork();
+
+  if (!context.mounted) return;
+  isNetworkAvailable
+      ? Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => targetPage),
+        )
+      : commonHintDialog(
+          context,
+          "提示",
+          "请联网后使用该功能。",
+          msgFontSize: 15.sp,
+        );
+}
+
+///
+/// 点击智能助手的入口，跳转到子页面
+///
+Future<void> navigateToScreenWithLLModels(
+  BuildContext context,
+  LLModelType modelType,
+  Widget Function(List<CusLLMSpec>) pageBuilder, {
+  LLModelType? roleType,
+}) async {
+  // 获取对话的模型列表(具体逻辑看函数内部)
+  List<CusBriefLLMSpec> llmSpecList =
+      await ModelManagerService.getAvailableModelByTypes([
+    LLModelType.vision,
+  ]);
+
+  // 2025-02-27 因为猫狗之家模块是旧版本的，选择模型等有复用公共组件，所以这里转为CusLLMSpec
+  List<CusLLMSpec> list = llmSpecList
+      .map((e) => CusLLMSpec(
+            e.platform,
+            CusLLM.lingyiwanwu_YiVision,
+            e.model,
+            e.name,
+            e.contextLength,
+            e.isFree,
+            e.inputPrice,
+            e.outputPrice,
+            modelType: e.modelType,
+            costPer: e.costPer,
+          ))
+      .toList();
+
+  if (!context.mounted) return;
+  if (llmSpecList.isEmpty) {
+    return commonHintDialog(context, "提示", "无可用的模型，该功能不可用");
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => pageBuilder(list),
+      ),
+    );
+  }
 }

@@ -11,7 +11,10 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:proste_logger/proste_logger.dart';
 
+import 'services/model_manager_service.dart';
+import 'services/network_service.dart';
 import 'views/home.dart';
+import 'services/cus_get_storage.dart';
 
 GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -42,6 +45,14 @@ class AppCatchError {
         SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
             .then((_) async {
           await GetStorage.init();
+
+          // 只在首次启动时初始化内置模型
+          // if (MyGetStorage().isFirstLaunch()) {
+            await ModelManagerService.initBuiltinModelsTest();
+            await MyGetStorage().markLaunched();
+          // }
+
+          NetworkStatusService().initialize();
           runApp(const SWMateApp());
         });
       },

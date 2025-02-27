@@ -33,26 +33,34 @@ final Map<ApiPlatform, String> CP_NAME_MAP = {
 
 // 大模型的分类，在不同页面可以用作模型的筛选
 enum LLModelType {
-  // CC, // Chat Completions
-  // TTI, // Text To Image
-  // ITI, // Image To Image
-  // 用小写，大写不区分
   cc, // Chat Completions
   vision, // 视觉大模型
-  tti, // Text To Image
   tti_word, // 生成艺术字图片
+  voice, // 语音大模型
+
+  // 图片生成大模型分3种: 单独文生图、单独图生图、文生图生都可以
+  tti, // Text To Image
   iti, // Image To Image
+  image,
+
+  // 视频生成大模型分3种: 单独文生视频、单独图生视频、文生图生都可以
   ttv, // Text To Video
+  itv, // Image To Video
+  video,
 }
 
 // 模型类型对应的中文名
 final Map<LLModelType, String> MT_NAME_MAP = {
   LLModelType.cc: '文本对话',
   LLModelType.vision: '图片解读',
-  LLModelType.tti: '文本生图',
   LLModelType.tti_word: '创意文字',
+  LLModelType.voice: '语音对话',
+  LLModelType.tti: '文本生图',
   LLModelType.iti: '图片生图',
+  LLModelType.image: '图片生成',
   LLModelType.ttv: '文生视频',
+  LLModelType.itv: '图生视频',
+  LLModelType.video: '视频生成',
 };
 
 ///

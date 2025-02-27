@@ -1,210 +1,210 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
-- [SWMate](#swmate)
-- [版本更新](#%E7%89%88%E6%9C%AC%E6%9B%B4%E6%96%B0)
-- [功能介绍](#%E5%8A%9F%E8%83%BD%E4%BB%8B%E7%BB%8D)
-  - [AI 智能助手](#ai-%E6%99%BA%E8%83%BD%E5%8A%A9%E6%89%8B)
-    - [智能对话](#%E6%99%BA%E8%83%BD%E5%AF%B9%E8%AF%9D)
-    - [智能多聊](#%E6%99%BA%E8%83%BD%E5%A4%9A%E8%81%8A)
-    - [文档/图片解读](#%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87%E8%A7%A3%E8%AF%BB)
-    - [文本生图/视频](#%E6%96%87%E6%9C%AC%E7%94%9F%E5%9B%BE%E8%A7%86%E9%A2%91)
-    - [创意文字](#%E5%88%9B%E6%84%8F%E6%96%87%E5%AD%97)
-    - [图片生图](#%E5%9B%BE%E7%89%87%E7%94%9F%E5%9B%BE)
-    - [智能助手补充说明](#%E6%99%BA%E8%83%BD%E5%8A%A9%E6%89%8B%E8%A1%A5%E5%85%85%E8%AF%B4%E6%98%8E)
-  - [生活日常工具](#%E7%94%9F%E6%B4%BB%E6%97%A5%E5%B8%B8%E5%B7%A5%E5%85%B7)
-    - [极简记账](#%E6%9E%81%E7%AE%80%E8%AE%B0%E8%B4%A6)
-    - [随机菜品](#%E9%9A%8F%E6%9C%BA%E8%8F%9C%E5%93%81)
-    - [其他功能（图片动漫、摸鱼新闻、饮食健康等）](#%E5%85%B6%E4%BB%96%E5%8A%9F%E8%83%BD%E5%9B%BE%E7%89%87%E5%8A%A8%E6%BC%AB%E6%91%B8%E9%B1%BC%E6%96%B0%E9%97%BB%E9%A5%AE%E9%A3%9F%E5%81%A5%E5%BA%B7%E7%AD%89)
-  - [用户设置](#%E7%94%A8%E6%88%B7%E8%AE%BE%E7%BD%AE)
-- [其他说明](#%E5%85%B6%E4%BB%96%E8%AF%B4%E6%98%8E)
-  - [开发环境](#%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83)
-  - [仅 Android](#%E4%BB%85-android)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 # SWMate
 
 Smart Work&Life Mate
 
 使用 flutter 开发的一个“智能工作生活类助手”应用。主要包含：
 
-- 以调用各个云平台部署的在线大模型 API 为基底的“**AI 智能助手**”。
-  - [阿里百炼](https://bailian.console.aliyun.com/)
-  - [百度千帆](https://qianfan.cloud.baidu.com/)
-  - [腾讯混元](https://console.cloud.tencent.com/hunyuan)
-  - [零一万物](https://platform.lingyiwanwu.com/)
-  - [智谱 AI](https://open.bigmodel.cn/)
-  - [讯飞星火](https://xinghuo.xfyun.cn/sparkapi)
-  - [硅基流动](https://siliconflow.cn/zh-cn/models)
-  - [无问芯穹](https://cloud.infini-ai.com/platform/ai)
-- 包含实用工具、图片动漫、摸鱼新闻、饮食健康等分类的“**生活日常工具**”。
+- 以调用各个云平台部署的在线大模型 API 为基底的“**AI 智能助手**”，(简称“工具”)。
+  - 2025-02-26 大模型 API 调用**只保留其 HTTP API 兼容 openAI API 结构的**平台和模型，不再兼容其他平台自己定义的 API 结构，具体如下：
+  - 对话模型：
+    - [百度](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Fm2vrveyu)
+    - [阿里](https://help.aliyun.com/zh/model-studio/developer-reference/compatibility-of-openai-with-dashscope)
+    - [腾讯](https://console.cloud.tencent.com/hunyuan/start)
+    - [智谱](https://open.bigmodel.cn/dev/api/normal-model/glm-4)
+    - [零一万物](https://platform.lingyiwanwu.com/docs/api-reference)
+    - [无问芯穹](https://docs.infini-ai.com/gen-studio/api/maas.html#/operations/chatCompletions)
+    - [硅基流动](https://docs.siliconflow.cn/cn/api-reference/chat-completions/chat-completions)
+  - 图片生成：
+    - 阿里云: [图像生成-通义万相 文生图 V2 版](https://help.aliyun.com/zh/model-studio/developer-reference/text-to-image-v2-api-reference)、[文生图 FLUX](https://help.aliyun.com/zh/model-studio/developer-reference/flux/)
+    - 智谱 AI: [CogView](https://open.bigmodel.cn/dev/api/image-model/cogview)
+    - 硅基流动: [创建图片生成请求](https://docs.siliconflow.cn/cn/api-reference/images/images-generations)
+  - 视频生成：
+    - 阿里云: [视频生成-通义万相](https://help.aliyun.com/zh/model-studio/developer-reference/video-generation-wanx/)
+    - 智谱 AI: [CogVideoX](https://open.bigmodel.cn/dev/api/videomodel/cogvideox)
+    - 硅基流动: [创建视频生成请求](https://docs.siliconflow.cn/cn/api-reference/videos/videos_submit)
+- 包含实用工具、图片动漫、摸鱼新闻、饮食健康等分类的“**生活日常工具**”，(简称“生活”)。
   - 实用工具：极简记账、随机菜品、猫狗之家、英英词典
   - 图片动漫：Bangumi 番组计划、MyAnimeList 排行榜、WAIFU 图片
-  - 摸鱼新闻：摸摸鱼、每天 60 秒
+  - 摸鱼新闻：摸摸鱼、Readhub、每天 60 秒、NewsAPI 国际新闻、新浪中心滚动新闻
   - 饮食健康：美国农业部(USDA)食品数据查询、Nutritionix 食品营养素查询、热量计算器
 
-目前只调试了 Android 部分。
+目前只调试了 Android 手机部分。
 
-# 版本更新
+_2025-02-17_
 
-查看 [CHANGELOG](CHANGELOG.md)，**新版本增加的模块和功能也在该 ChangeLog 中简述**。
+当然，如果对 [硅基流动平台](https://siliconflow.cn/zh-cn/models) 感兴趣，还能用下我的邀请码注册，那就更好了，谢谢：
+
+```
+https://cloud.siliconflow.cn/i/tRIcST68
+```
+
+该平台有很多不同的大模型 API 可以调用，比如最新的 DeepSeek、Qwen、Llama、stable-diffusion 等。
+很多轻量级的模型可以免费使用，一些小需求可以节约时间，不必频繁切换。
+
+# 更新说明
+
+查看 [CHANGELOG](CHANGELOG.md)，**新版本改动的模块和功能信息也在该 ChangeLog 中简述**。
 
 # 功能介绍
 
 ## AI 智能助手
 
-目前简单包括了“智能对话”、“智能多聊”、“文档解读”、“图片解读”、“文本生图”、“创意文字”、“图片生图”、“图片生图”、“文生视频”。
+目前简单包括了 AI 助手、AI 绘图、AI 视频。
 
-_其实就是支持查看几个平台大模型 API 调用效果的 demo，因为有多个平台，所以根据模型类型不同切分出不同的功能模块，而没有聚合在一起，实际上没什么客制化功能。_
+- APP 启动首页就是 AI 助手，可以进行常规的聊天、问答、图像识别对话等。
+- 可以切换底部导航栏的“工具”标签，使用 AI 绘图、AI 视频等。
 
-目前(2024-09-29)是兼容了**百度、腾讯、阿里、智谱 AI、零一万物、SiliconFlow、讯飞、无问芯穹 8 个平台的 100 个大模型(含重复)** 的 API 调用。
+### AI 助手
 
-### 智能对话
+AI 助手，就是调用各个平台中的语言大模型 API，进行聊天、问答等；可以切换大模型类别(文本对话、图片理解等)使用特定功能。
 
-智能对话，就是调用各个平台中的语言大模型 API，进行聊天、问答等。
+![助手页面](./_doc/screenshots/brief_version/对话页面.jpg)
 
-![智能对话1](./_doc/screenshots/1-1智能对话1.jpg)
+- 选定使用对话模型类别 -> 选定指定平台部署的指定模型，输入框输入内容，点击“发送”图标，开始聊天
+- 除了打字文本输入，也支持语音(转换文字)输入 _(这个组件后续有时间再优化一下)_
+  - 实际实现是先调用讯飞的语音转写 API，把语音转为了文字，再调用大模型的 API
+  - 直接发送语音就直接是转化后的文字，有可能会识别错，可以在页面中查看转化后的文本，发送文本
+  - 有保存原语音文件在设备本地应用缓存，所以点击可以听原语音
+- 可以查看最近的对话，点击指定对话历史记录，可以继续交流
+  - 历史记录是存在设备本地的 sqlite 数据库中的
+- 如果平台有 DeepSeek R 系列深度思考(默认的)功能，返回中有`reasoning_content`字段，会显示在对话框中当作思考内容。
 
-- ① 可以选择不同的部署模型、提供 API 的云平台
-- ② 可以选择指定云平台的指定模型
-  1.  选的平台和模型之后，就可以进行问答了
-- ③ 可以选定指定的系统角色，完成一些自定义的功能
-  - 比如 system role 设定为翻译器，把输入的内容翻译成特定语言
-  - 选择好平台和模型之后，再选定指定系统角色，就可以调用预定的功能
-  - 系统角色可以自己编写(下详)
-- ④ “分段”和“直出”的区别就在于大模型 API 的流式响应和非流式响应
-  - 流式响应是 SSE ，可以更快看到 API 响应的结果，也可能随时终止(输入框右边的终止按钮)；
-  - 非流式响应就是一次性返回所有数据，等待更久，看到 API 的回复要慢一些
+### AI 绘图/视频
 
-![智能对话2](./_doc/screenshots/1-2智能对话2.jpg)
+![图片视频生成](./_doc/screenshots/brief_version/助手工具.jpg)
 
-- ① 除了打字文本输入，也支持语音(转换文字)输入
-  - 实际实现是先调用讯飞的语音转写，把语音转为了文字，再调用大模型的 API
-  - 直接发送语音就直接是转化后的文字，有可能会识别错，可以在 ① 页面中查看转化后的文本，发送文本
-- ② 有保存原语音文件在设备本地应用缓存，所以点击可以听原语音
-- ③ 每个模型后面有个“信息”图标，可以大致了解该模型的特点
-  - 比如需要高级一点的功能，使用 lite 型的模型可能就不合适
-- ④ 可以查看最近的对话，点击指定对话历史记录，可以继续交流
-  - 历史记录是存在本地的 sqlite 数据库中的
-  - 由于保存了完整的 messages，所以点击指定的历史记录，但又切换了其他平台和模型，理论上还是能继续对话。但为了保持一致，切换了平台和模型时，会强制开启新对话。
+从“工具”页面进入的“AI 助手”，和首页直接显示的唯一区别，就是没有底部导航栏。
 
-分段与直出、选择系统角色(下面的文/图生图、文生视频为提示词)图标、模型说明图标、历史记录图标后续模块若存在，功能都类似，则不重复说明。
+AI 绘图/视频结构和操作类似，所以放在一起说。
 
-### 智能多聊
-
-智能多聊在智能对话的基础上，提供了一个问题可以选择多个模型同时回答，便于选择不同模型中你认为最好的回答。
-
-理论上至少选择一个(就和智能对话一样了)，最多可全选(那回答一个问题可能就等很久，手机上划来划去也不好看)
-
-![2智能多聊](./_doc/screenshots/2智能多聊.jpg)
-
-- ① 点击模型选择按钮，可以选定用于对话的模型，至少 1 个
-  - 由于多选模型，就不用指定平台了，甚至可以看看不同平台部署的同一个模型的效果
-- ② 选择多个模型后，进行问答，可以看到一个用户输入，多个模型回复
-- ③ 当选择的模型数量为 2 时，可以固定上下两个滚动区域查看，更加方便逐行对比模型回复效果
-
-和一些模型对战功能类似，不过这个多聊可以选择任何数量。
-
-但各个模型只会记住自己的上下文，不会获得别的模型的输出。
-
-### 文档/图片解读
-
-文档解读和图片解读类似，就是支持用户上传指定格式文档或图片，然后对文档内容和图片内容进行问答。
-
-- 文档解读是我调用了其他工具先把文档提取了“**纯文本**”，再把提取出的文本喂给了语言对话模型，效果可能一般
-  - 文档中有图片肯定没有用
-  - 文档结构复杂那解析结果肯定不会很好
-- 图片解读是直接调用的“vision”视觉模型的 API，效果更纯粹。
-
-![3文档解读和图片解读](./_doc/screenshots/3文档解读和图片解读.jpg)
-
-- ① 点击“文件上传”图标按钮，选中需要上传的图片或者文件
-- ② 如果是文档，点击“文档解析完成”蓝字，可以在底部弹窗查看文档解析后的纯文本(但不支持改动)
-  - 如果是图片，可以点击进行预览
-- ③④ 对于文档和图片，预设有“翻译”、“总结”、“分析”3 个功能按钮
-  - “翻译”和“总结”其实是有写好大模型的 system prompt 参数，直接使用
-  - 而“分析”就是正常的对文档和图片继续问答，获取任何想要的回复。
-- ⑤ 图片解读可以点击“下载”图标按钮，保存为指定格式文档(txt 或 pdf)
-  - 文档解读和图片解读没有保存到数据库的实现，但为了不浪费，每次调用回复完成，都会自动保存
-    - 默认文档解读是保存为 txt，图片解读是保存为 pdf
-    - 保存为 pdf 主要是为了记录图片
-  - 但每次自动保存都会有弹窗提示。如果图片解读不想保存为 pdf，点击“下载”按钮，可以保存为其他格式
-
-### 文本生图/视频
-
-注意，有些模型是同时支持文本生图和参考图生图的，但为了和其他侧重图片生图的模型，是强行分成了 2 个模块。
-
-文本生图和文本生视频结构和操作类似，所以放在一起说
-
-![4文本生图-文生视频](./_doc/screenshots/4文本生图-文生视频.jpg)
-
-- ① 同样是选择好平台、模型、尺寸、(样式、数量等如果有的话)、提示词等内容，就可以点击“生成图片/视频”按钮，等待生成结果。
-  - 对于生成的图片和视频，都可以简单点击预览、长按保存
-  - 有些图片和视频只会在对应平台的服务器保存 1 天，需要及时手动保存
-- ② 可以点击“预设提示词”查看提示词示例(点击指定预设提示词，会带上正向提示词和反向提示词到输入框)
-- ③ 可以查看文本生图/视频的历史记录
-  - 像阿里云平台的文生图，是先提交 task，再通过 taskId 获取结果，这样可以在生成过程中不小心取消了还能重新查询结果(历史记录中的“是否完成”栏位)
-  - 但 SiliconFlow、智谱 AI 等平台是一次性响应的，没得到生成的图片关闭遮罩了就看不到了。
-- ④ 点击指定记录的详情，可以看到当时图片和使用的提示词等信息
-
-### 创意文字
-
-创意文字是阿里云平台的“锦书”模型，支持“字体纹理生成”、“字体变形”、“百家姓生成”。
-
-具体使用和文本生图类似，不再赘述。
-
-![5创意文字](./_doc/screenshots/5创意文字.jpg)
-
-### 图片生图
-
-图片生图和文本生图/视频、创意文字也类似，不再赘述。
-
-![6图片生图](./_doc/screenshots/6图片生图.jpg)
+- 同样是选择好平台部署的模型、尺寸，输入提示词后，点击“生成”按钮，等待生成结果。
+  - 部分模型可以选择参考图
+  - 文生图大部分是直接返回图片 url，所以在未返回前请勿退出
+  - 视频生成是先提交 task，再通过 taskId 获取结果。task 状态会保存在数据库，可以手动刷新查看生成进度
+    - 视频生成任务记录长按可删除，但已保存到设备的视频，删除任务时不会删除。
+  - 对于生成的图片和视频，默认会保存在本地(因为返回的 url 时效都比较短)
+- 可以查看 AI 绘图/视频的历史资源
+  - AI 绘图/视频生成成功之后，会默认保存在设备指定路径，点击右上角媒体资源图标，即可进入资源管理页面
+  - 资源管理页面中，可以对资源进行简单预览、分享、删除等操作
 
 ---
 
-**多模态大模型 API 的一些补充说明**：
+### 补充说明
 
-1. 文生图这里有 SD，但效果体验下来不如 Flux。
-2. 但同样是 FLUX.1-schnell，阿里云平台限免的就支持中文，SiliconFlow 中文效果就差一些了。
-3. 讯飞、通义万相、智谱的 CogView 也是收费的文生图，但效果可能也不是很好。
-4. 不过目前我找到这些平台，部分多模态模型 API 并不开放给个人开发者，需要企业认证，所以可能有些模型没法使用(比如 SiliconFlow 有限免的 CogVideoX-2b 但我这里用不了)。
-   1. 包含语音生成功能的 API 基本都不对个人用户开放(比如豆包)，我对这个需求还是有的
-   2. miniMax 好像支持个人开发者的 Voice Generation(Voice Cloning 不行)，但还没想到实际用途
+![配置和其他工具](./_doc/screenshots/brief_version/导入配置等.jpg)
 
-### 智能助手补充说明
+在对话主页面中，右上角有个调整对话消息文本字体大小的按钮，点击之后在弹窗的 slider 中拖动调整。
 
-![7支持的角色管理模型列表，使用自己的密钥](./_doc/screenshots/7支持的角色管理模型列表，使用自己的密钥.jpg)
+打包好的 apk 是直接使用我个人密钥的一些免费的大模型，都是比较基础的。可以自行导入平台模型和密钥使用自己的资源。
 
-- ① 支持自定义管理系统角色，用于语言模型、文生图提示词等
-- ④ 点击项次可以查看详细、修改，右上角也可以新增、导入 json 文件。
-  - system prompt 写得好，在智能对话中可能有更好的效率。
-- ③ 可以调整对话模型中输入输出的文字比例，觉得太小或者太大可以在这个弹窗的 slider 中拖放(等比例缩放)。
-- ② 目前是兼容了**百度、腾讯、阿里、智谱 AI、零一万物、SiliconFlow、讯飞 7 个平台的 92 个大模型(含重复)** 的 API 调用，
-  - 但打包好的 apk 直接可用的是 5 个平台(除了阿里、零一万物)的 21 个免费的大模型。
-    - 作者的密钥
-  - 如果想使用全部模型，可自行去各个平台充值、获取密钥，在“平台密钥”页面添加指定栏位
-    - **密钥只缓存在本地，事实上，除了调用 API 和加载图片、视频，都没有联网操作**
-    - 不必所有平台都充值、申请，想用哪个平台的模型就用填加那个平台的密钥即可。
-    - 没有密钥就算加载了全部模型，在功能页面的模型选择框中也不会显示
-    - 模型列表可只保留想用的模型，没有充值的平台或者觉得效果差、费用高的模型可以移除，避免误选
+- “导入”入口在“工具”模块右上角，点击“导入导出”图标，进入配置页面。
+- 如果想使用本应用支持的平台中更加强劲的模型，可自行去各个平台充值、获取密钥，再导入密钥和模型 json 文件
+  - **密钥只缓存在本地，事实上，除了调用 API 和加载图片、视频，都没有联网操作**
+  - 想用哪个平台、哪个模型，全都自己导入
+- 平台密钥和模型规格的**固定 json 结构**如下：
 
----
+#### 平台密钥 json 结构
 
-**特别说明**
+```json
+{
+  "USER_LINGYIWANWU_AK": "xxx",
+  "USER_ZHIPU_AK": "xxx",
+  "USER_SILICON_CLOUD_AK": "sk-xxx",
+  "USER_INFINI_GEN_STUDIO_AK": "sk-xxx",
+  "USER_ALIYUN_API_KEY": "sk-xxx",
+  "USER_BAIDU_API_KEY_V2": "xxx",
+  "USER_TENCENT_API_KEY": "xxx",
 
-- “AI 智能助手”的 8 个功能页面都会先查询是否有可用的模型，没找到可用的就点不进去
-- 由于没有后台，这些模型也好、预设角色也好，都在设备本地的 sqlite 里面
-  - 如果你找到了 sqlite 数据库，把里面模型的付费栏位改为免费，说不定也就能用作者的密钥了
-  - 不过作者也不是所有平台都有充值，可能也只有几块钱来测试接口调用，所以最好还是用自己的密钥
-- **代码都是开源的，不必害怕如果用自己的密钥，会泄了露被别人蹭**。
-- 为什么不添加 GPT、Claude 等国际领先模型？
-  - 首先，贵
-  - 其次，官方直连的肯定是不行了，普通使用者还有翻墙的成本
-  - 再次，虽然有代理的，但还是贵(实在有需求，后续可以加)
+  // 讯飞, 语音转写需要
+  "USER_XFYUN_APP_ID": "xxx",
+  "USER_XFYUN_API_SECRET": "xxx",
+  "USER_XFYUN_API_KEY": "xxx",
+
+  // 生活工具中 NUTRITIONIX 食品数据查询需要
+  "USER_NUTRITIONIX_APP_ID": "xxx",
+  "USER_NUTRITIONIX_APP_KEY": "xxx"
+}
+```
+
+- 密钥可以不是所有平台都填，但填写的部分 key 一定要完全一致，否则识别不到就算有导入模型也用不了
+- 讯飞那几个是语音转写需要，NUTRITIONIX 是生活工具中 Nutritionix 平台的食品数据查询需要，现在默认是使用我的账号，没余额了估计就不能用了。
+
+#### 大模型规格 json 结构
+
+```json
+[
+  {
+    "platform": "lingyiwanwu",
+    "model": "yi-lightning",
+    "modelType": "cc",
+    "name": "yi-lightning",
+    "contextLength": 16000,
+    "isFree": false,
+    "inputPrice": 0.99,
+    "outputPrice": 0.99,
+    "gmtRelease": "2024-12-23"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "Pro/black-forest-labs/FLUX.1-schnell",
+    "modelType": "tti",
+    "name": "Pro/FLUX.1-schnell",
+    "isFree": false,
+    "costPer": 0.05,
+    "gmtRelease": "2024-08-01"
+  },
+  {
+    "platform": "<*代码中自定义的平台代号，枚举值>",
+    "model": "<*指定平台中使用的模型代号，必须与API文档中一致，会用于构建http请求>",
+    "modelType": "<*代码中自定义的模型类型代号，枚举值>",
+    "name": "<模型名称，用于显示，随意，可识别出即可>",
+    "contextLength": "<上下文长度>",
+    "isFree": false, // 是否免费
+    "inputPrice": 6, // 输入价格(对话模型)
+    "outputPrice": 6, // 输出价格(对话模型)
+    "costPer": 0.05, // 单次调用价格(绘图/视频模型)
+    "gmtRelease": "<平台中模型发布时间>"
+  }
+  // ……
+]
+```
+
+- platform 枚举值:
+
+```ts
+enum ApiPlatform {
+  baidu, // 百度千帆
+  tencent, // 腾讯混元
+  aliyun, // 阿里云百炼
+  siliconCloud, // 硅基流动
+  lingyiwanwu, // 零一万物
+  zhipu, // 智谱 AI
+  infini, // 无问芯穹的 genStudio
+}
+```
+
+- modelType 枚举值:
+
+```ts
+enum LLModelType {
+  cc, // 文本对话
+  vision, // 图片解读
+  tti, // 文本生图
+  iti, // 图片生图
+  image, // 图片生成(文生图生通用)
+  ttv, // 文生视频
+  itv, // 图生视频
+  video, // 视频生成(文生图生通用)
+}
+```
+
+后续我会放一些整理好的各个平台我常用的大模型规格 json 文件在项目的 **[\_cus_model_jsons](./_cus_model_jsons)** 文件夹中，可以参考使用。
 
 ## 生活日常工具
+
+![生活工具](./_doc/screenshots/brief_version/生活工具.jpg)
+
+生活工具模块有很多实用小工具，大部分是我个人感兴趣或者能找到免费 API 服务的东西。
 
 ### 极简记账
 
@@ -283,7 +283,7 @@ _这个其实是之前(2024-04-09)就单独开发好的 app 了，功能融合�
 
 在`_dishes/HowToCook`中有整理一些菜品的 json 文件，可用直接导入使用。菜品数据来源于 github 的 [Anduin2017/HowToCook](https://github.com/Anduin2017/HowToCook)。
 
-### 其他功能（图片动漫、摸鱼新闻、饮食健康等）
+### 其他生活助手功能
 
 查看 [CHANGELOG](CHANGELOG.md) 查看更多。
 
@@ -293,23 +293,13 @@ _这个其实是之前(2024-04-09)就单独开发好的 app 了，功能融合�
 
 这个模块目前仅有一个"备份恢复"功能。
 
-因为智能助手的对话记录、极简记账的账单条目、随机菜品的菜品列表，都是本地 sqlite 存储的，所以备份就是把 db 中的数据导出成压缩包，恢复就是把压缩包的 json 存入数据库中。
+因为智能助手的对话记录、极简记账的账单条目、随机菜品的菜品列表等，都是本地 sqlite 存储的，所以备份就是把 db 中的数据导出成 json 文件并压缩，恢复就是把压缩包的 json 存入数据库中。
 
 # 其他说明
 
 ## 开发环境
 
 在一个 Windows 7 中使用 Visual Box 7 安装的 Ubuntu20.04 LTS 虚拟机中使用 VSCode 进行开发。
-
-2024-05-27 使用最新 flutter 版本：
-
-```sh
-$ flutter --version
-Flutter 3.22.1 • channel stable • https://github.com/flutter/flutter.git
-Framework • revision a14f74ff3a (4 天前) • 2024-05-22 11:08:21 -0500
-Engine • revision 55eae6864b
-Tools • Dart 3.4.1 • DevTools 2.34.3
-```
 
 2024-11-04 使用最新 flutter 版本：
 
@@ -321,6 +311,16 @@ Engine • revision db49896cf2
 Tools • Dart 3.5.4 • DevTools 2.37.3
 ```
 
+2024-05-27 使用最新 flutter 版本：
+
+```sh
+$ flutter --version
+Flutter 3.22.1 • channel stable • https://github.com/flutter/flutter.git
+Framework • revision a14f74ff3a (4 天前) • 2024-05-22 11:08:21 -0500
+Engine • revision 55eae6864b
+Tools • Dart 3.4.1 • DevTools 2.34.3
+```
+
 ## 仅 Android
 
 **手里没有 IOS 等其他设备，所以相关内容为 0**。
@@ -329,4 +329,4 @@ Tools • Dart 3.5.4 • DevTools 2.37.3
 
 虽然我日常主力机为努比亚 Z60 Ultra(Android 14)，但它和我之前的 Z50 Ultra 一样，[**无法实机开发调试**](https://github.com/flutter/flutter/issues/144999)，所以只有最后打包成 app 后进行使用测试，截图即使用此机器。
 
-安卓平板能跑(在我唯一的平板荣耀平板 5 中安装过)，但很奇怪，主要是字体实际显示效果大小和设计的大小不太一样。
+安卓平板能跑(在我唯一的平板荣耀平板 5 中安装过)。

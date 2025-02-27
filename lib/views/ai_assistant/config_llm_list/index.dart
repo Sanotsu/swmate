@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../common/llm_spec/cus_llm_model.dart';
-import '../../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_ai_tool_helper.dart';
 import '../../../apis/_default_model_list/index.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
@@ -17,7 +17,7 @@ class ModelListIndex extends StatefulWidget {
 }
 
 class _ModelListIndexState extends State<ModelListIndex> {
-  final DBHelper dbHelper = DBHelper();
+  final DBAIToolHelper dbHelper = DBAIToolHelper();
   List<CusLLMSpec> cusLlmSpecs = [];
   List<ApiPlatform> platList = [];
 

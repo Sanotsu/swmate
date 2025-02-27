@@ -8,7 +8,7 @@ import 'package:uuid/uuid.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/llm_spec/cus_llm_model.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_ai_tool_helper.dart';
 
 class SystemPromptDetail extends StatefulWidget {
   // 有传就系统角色就是查看详情和修改，没有传就是新增
@@ -21,7 +21,7 @@ class SystemPromptDetail extends StatefulWidget {
 }
 
 class _SystemPromptDetailState extends State<SystemPromptDetail> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBAIToolHelper _dbHelper = DBAIToolHelper();
 
   final _formKey = GlobalKey<FormBuilderState>();
   bool _isEditing = false;

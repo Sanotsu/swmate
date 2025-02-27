@@ -10,7 +10,7 @@ import '../../../../apis/text_to_image/aliyun_tti_apis.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../../common/utils/db_tools/db_helper.dart';
+import '../../../../common/utils/db_tools/db_ai_tool_helper.dart';
 import '../../../../models/text_to_image/aliyun_tti_resp.dart';
 import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../_componets/cus_platform_and_llm_row.dart';
@@ -67,7 +67,7 @@ abstract class BaseIGScreenState<T extends StatefulWidget> extends State<T>
   // 最后生成的图片地址
   List<String> rstImageUrls = [];
 
-  final DBHelper dbHelper = DBHelper();
+  final DBAIToolHelper dbHelper = DBAIToolHelper();
 
   // 被选中的风格
   String selectedStyle = "";

@@ -10,7 +10,7 @@ import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
 import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../../common/utils/db_tools/db_helper.dart';
+import '../../../../common/utils/db_tools/db_ai_tool_helper.dart';
 import '../../../../models/chat_competion/com_cc_resp.dart';
 import '../../../../models/chat_competion/com_cc_state.dart';
 import '../../_chat_screen_parts/chat_default_question_area.dart';
@@ -37,7 +37,7 @@ class ChatBotGroup extends StatefulWidget {
 }
 
 class _ChatBotGroupState extends State<ChatBotGroup> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBAIToolHelper _dbHelper = DBAIToolHelper();
 
   // 人机对话消息滚动列表
   final ScrollController _scrollController = ScrollController();

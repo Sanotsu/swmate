@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants.dart';
 import '../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../common/utils/db_tools/db_helper.dart';
+import '../../../common/utils/db_tools/db_ai_tool_helper.dart';
 import '../../../models/text_to_image/aliyun_tti_resp.dart';
 import '../../../models/text_to_image/com_ig_state.dart';
 import '../../../models/text_to_video/cogvideox_resp.dart';
@@ -33,7 +33,7 @@ class IGVGHistoryDetail extends StatefulWidget {
 }
 
 class _IGVGHistoryDetailState extends State<IGVGHistoryDetail> {
-  final DBHelper dbHelper = DBHelper();
+  final DBAIToolHelper dbHelper = DBAIToolHelper();
   // 最近对话需要的记录历史对话的变量
   late LlmIGVGResult currentIgvg;
 

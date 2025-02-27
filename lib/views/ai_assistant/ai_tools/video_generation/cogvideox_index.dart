@@ -13,7 +13,7 @@ import '../../../../apis/video_generation/zhipuai_cogvideox_apis.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_llm_model.dart';
 import '../../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../../common/utils/db_tools/db_helper.dart';
+import '../../../../common/utils/db_tools/db_ai_tool_helper.dart';
 import '../../../../common/utils/tools.dart';
 import '../../../../models/text_to_image/com_ig_state.dart';
 import '../../../../models/text_to_video/cogvideox_req.dart';
@@ -45,7 +45,7 @@ class CogVideoXScreen extends StatefulWidget {
 
 class _CogVideoXScreenState extends State<CogVideoXScreen>
     with WidgetsBindingObserver {
-  final DBHelper dbHelper = DBHelper();
+  final DBAIToolHelper dbHelper = DBAIToolHelper();
 
   // 所有支持文生图的模型列表(用于下拉的平台和该平台拥有的模型列表也从这里来)
   late List<CusLLMSpec> llmSpecList;

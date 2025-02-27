@@ -1,56 +1,9 @@
 // ignore_for_file: constant_identifier_names
 
-///
-/// 数据库导出备份、db操作等相关关键字
-/// db_helper、备份恢复页面能用到
-///
-// 导出表文件临时存放的文件夹
-const DB_EXPORT_DIR = "db_export";
-// 导出的表前缀
-const DB_TABLE_PREFIX = "sm_";
+import 'init_db.dart';
 
-/// AI Light Life 数据库中相关表的创建
-class SWMateDdl {
-  // db名称
-  static String databaseName = "embedded_swmate.db";
-
-// 账单条目表
-  static const tableNameOfBillItem = '${DB_TABLE_PREFIX}bill_item';
-
-  static const String ddlForBillItem = """
-    CREATE TABLE $tableNameOfBillItem (
-      bill_item_id  TEXT      NOT NULL,
-      item_type     INTEGER   NOT NULL,
-      date	        TEXT,
-      category      TEXT,
-      item          TEXT      NOT NULL,
-      value         REAL      NOT NULL,
-      gmt_modified  TEXT      NOT NULL,
-      PRIMARY KEY(bill_item_id)
-    );
-    """;
-
-  ///
-  /// 菜品基础表
-  ///
-  static const tableNameOfDish = '${DB_TABLE_PREFIX}dish';
-
-  // 2023-03-10 避免导入时重复导入，还是加一个unique
-  static const String ddlForDish = """
-    CREATE TABLE $tableNameOfDish (
-      dish_id           TEXT      NOT NULL PRIMARY KEY,
-      dish_name         TEXT      NOT NULL,
-      description       TEXT,
-      photos            TEXT,
-      videos            TEXT,
-      tags              TEXT,
-      meal_categories   TEXT,
-      recipe            TEXT,
-      recipe_picture    TEXT,
-      UNIQUE(dish_name,tags)
-    );
-    """;
-
+/// 数据库中【AI工具】相关表的创建
+class AIToolDdl {
   /// 2024-06-01 新增AI对话留存
   static const tableNameOfChatHistory = '${DB_TABLE_PREFIX}chat_history';
 
@@ -161,27 +114,6 @@ class SWMateDdl {
       gmtCreate           TEXT    NOT NULL,
       PRIMARY KEY(cusSysRoleSpecId),
       UNIQUE(label,sysRoleType,name)
-    );
-    """;
-
-  /// 动物的品种，简单保留品种和亚种即可(统一的话就一个品种信息，品种亚种都有则保留有更详细的)
-  /// 2024-09-14 暂时没用到
-  static const tableNameOfAnimalBreed = '${DB_TABLE_PREFIX}animal_breed';
-
-  static const String ddlForAnimalBreed = """
-    CREATE TABLE $tableNameOfAnimalBreed (
-      id                  TEXT    NOT NULL,
-      breed               TEXT    NOT NULL,
-      subBreed            TEXT,
-      temperament         TEXT,
-      origin              TEXT,
-      description         TEXT,
-      lifeSpan            TEXT,
-      altNames            TEXT,
-      wikipediaUrl        TEXT,
-      referenceImageUrl   TEXT,
-      dataSource          TEXT,
-      PRIMARY KEY(id)
     );
     """;
 }

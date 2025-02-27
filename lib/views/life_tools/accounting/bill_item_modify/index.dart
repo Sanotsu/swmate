@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/constants.dart';
-import '../../../../common/utils/db_tools/db_helper.dart';
+import '../../../../common/utils/db_tools/db_life_tool_helper.dart';
 import '../../../../models/base_model/brief_accounting_state.dart';
 
 ///
@@ -30,7 +30,7 @@ class BillEditPage extends StatefulWidget {
 }
 
 class _BillEditPageState extends State<BillEditPage> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBLifeToolHelper _dbHelper = DBLifeToolHelper();
 
   // 表单的全局key
   final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();

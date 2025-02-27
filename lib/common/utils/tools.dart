@@ -171,6 +171,17 @@ String formatFileSize(int bytes, {int decimals = 2}) {
   return '${(bytes / pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
 }
 
+/// 格式化Duration为 HH:MM:SS格式
+formatDurationToString(Duration d) =>
+    d.toString().split('.').first.padLeft(8, "0");
+
+String formatDurationToString2(Duration duration) {
+  String twoDigits(int n) => n.toString().padLeft(2, "0");
+  String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+  String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+  return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+}
+
 /// 保存文本文件到外部存储(如果是pdf等还需要改造，传入保存方法等)
 Future<void> saveTextFileToStorage(
   String text,
@@ -248,16 +259,20 @@ Future<File> saveTtiBase64ImageToLocal(
 }
 
 // 保存文生图的图片到本地
-saveImageToLocal(
+Future<String?> saveImageToLocal(
   String netImageUrl, {
   String? prefix,
   // 指定保存的名称，比如 xxx.png
   String? imageName,
   Directory? dlDir,
+  // 是否显示保存提示
+  bool showSaveHint = true,
 }) async {
 // 首先获取设备外部存储管理权限
   if (!(await requestStoragePermission())) {
-    return EasyLoading.showError("未授权访问设备外部存储，无法保存图片");
+    EasyLoading.showError("未授权访问设备外部存储，无法保存图片");
+
+    return null;
   }
 
   // print("原图片地址---$netImageUrl");
@@ -282,7 +297,10 @@ saveImageToLocal(
     // 传入的前缀有强制带上下划线
     final file = File('${dir.path}/${prefix ?? ""}$imageName');
 
-    EasyLoading.show(status: '【图片保存中...】');
+    if (showSaveHint) {
+      EasyLoading.show(status: '【图片保存中...】');
+    }
+
     var response = await Dio().get(
       netImageUrl,
       options: Options(responseType: ResponseType.bytes),
@@ -290,9 +308,71 @@ saveImageToLocal(
 
     await file.writeAsBytes(response.data);
 
-    EasyLoading.showToast("图片已保存在手机下/${file.path.split("/0/").last}");
+    if (showSaveHint) {
+      EasyLoading.showToast("图片已保存在手机下/${file.path.split("/0/").last}");
+    }
+
+    return file.path;
   } finally {
-    EasyLoading.dismiss();
+    if (showSaveHint) {
+      EasyLoading.dismiss();
+    }
+  }
+
+  // 用这个自定义的，阿里云地址会报403错误，原因不清楚
+  // var respData = await HttpUtils.get(
+  //   path: netImageUrl,
+  //   showLoading: true,
+  //   responseType: CusRespType.bytes,
+  // );
+
+  // await file.writeAsBytes(respData);
+  // EasyLoading.showToast("图片已保存${file.path}");
+}
+
+// 保存文生视频的视频到本地
+Future<String?> saveVideoToLocal(
+  String netVideoUrl, {
+  String? prefix,
+  // 指定保存的名称，比如 xxx.png
+  String? videoName,
+  Directory? dlDir,
+  // 是否显示保存提示
+  bool showSaveHint = true,
+}) async {
+// 首先获取设备外部存储管理权限
+  if (!(await requestStoragePermission())) {
+    EasyLoading.showError("未授权访问设备外部存储，无法保存视频");
+    return null;
+  }
+
+  videoName ??= netVideoUrl.split("?").first.split('/').last;
+
+  try {
+    var dir = dlDir ?? LLM_VG_DIR;
+
+    // 2024-08-17 直接保存文件到指定位置
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    // 2024-09-04 智谱文生视频有一个随机的名称，就只使用它就好(可以避免同一个视频保存了多个)
+    final filePath = '${dir.path}/${prefix ?? ""}$videoName';
+
+    if (showSaveHint) {
+      EasyLoading.show(status: '【视频保存中...】');
+    }
+    await Dio().download(netVideoUrl, filePath);
+
+    // 保存的地址在 /storage/emulated/0/SWMate/…… 前面一节就不显示了
+    if (showSaveHint) {
+      EasyLoading.showToast("视频已保存在手机下/${filePath.split("/0/").last}");
+    }
+
+    return filePath;
+  } finally {
+    if (showSaveHint) {
+      EasyLoading.dismiss();
+    }
   }
 
   // 用这个自定义的，阿里云地址会报403错误，原因不清楚
@@ -481,4 +561,37 @@ String formatTimeAgoEn(String timeString) {
   } else {
     return '${difference.inSeconds} second${difference.inSeconds > 1 ? 's' : ''} ago';
   }
+}
+
+// 把各种时间字符串格式化指定格式的字符串
+String formatDateTimeString(
+  String timeString, {
+  String? formatType,
+}) {
+  if (timeString.isEmpty) return "未知";
+
+  return DateFormat(formatType ?? constDatetimeFormat)
+      .format(DateTime.tryParse(timeString) ?? DateTime.now());
+}
+
+// 10位的时间戳转字符串
+String formatTimestampToString(String? timestamp, {String? format}) {
+  if (timestamp == null || timestamp.isEmpty) {
+    return "";
+  }
+
+  if (timestamp.trim().length == 10) {
+    timestamp = "${timestamp}000";
+  }
+
+  if (timestamp.trim().length != 13) {
+    return "输入的时间戳不是10位或者13位的整数";
+  }
+
+  return DateFormat(format ?? constDatetimeFormat).format(
+    DateTime.fromMillisecondsSinceEpoch(
+      // 如果传入的时间戳字符串转型不对，就使用 1970-01-01 23:59:59 的毫秒数
+      int.tryParse(timestamp) ?? 57599000,
+    ),
+  );
 }
