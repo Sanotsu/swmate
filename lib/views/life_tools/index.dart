@@ -4,11 +4,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../apis/hitokoto/hitokoto_apis.dart';
 import '../../common/components/tool_widget.dart';
+import '../../common/llm_spec/cus_brief_llm_model.dart';
+import '../../common/llm_spec/cus_llm_model.dart';
 import '../../common/llm_spec/cus_llm_spec.dart';
 import '../../models/hitokoto/hitokoto.dart';
+import '../../services/model_manager_service.dart';
 import '../../services/network_service.dart';
 import '../ai_assistant/_componets/custom_entrance_card.dart';
-import '../ai_assistant/index.dart';
+
 import 'accounting/index.dart';
 import 'animal_lover/dog_cat_index.dart';
 import 'anime_top/bangumi_calendar.dart';
@@ -213,10 +216,10 @@ List<Widget> _toolRows(BuildContext context) {
         subtitle: "图片识别猫狗品种",
         icon: FontAwesomeIcons.dog,
         onTap: () async {
-          await navigateToToolScreen(
+          await navigateToScreenWithLLModels(
             context,
             LLModelType.vision,
-            (llmSpecList, cusSysRoleSpecs) => DogCatLover(
+            (llmSpecList) => DogCatLover(
               llmSpecList: llmSpecList,
             ),
             roleType: LLModelType.vision,
@@ -420,4 +423,48 @@ void showNoNetworkOrGoTargetPage(
           "请联网后使用该功能。",
           msgFontSize: 15.sp,
         );
+}
+
+///
+/// 点击智能助手的入口，跳转到子页面
+///
+Future<void> navigateToScreenWithLLModels(
+  BuildContext context,
+  LLModelType modelType,
+  Widget Function(List<CusLLMSpec>) pageBuilder, {
+  LLModelType? roleType,
+}) async {
+  // 获取对话的模型列表(具体逻辑看函数内部)
+  List<CusBriefLLMSpec> llmSpecList =
+      await ModelManagerService.getAvailableModelByTypes([
+    LLModelType.vision,
+  ]);
+
+  // 2025-02-27 因为猫狗之家模块是旧版本的，选择模型等有复用公共组件，所以这里转为CusLLMSpec
+  List<CusLLMSpec> list = llmSpecList
+      .map((e) => CusLLMSpec(
+            e.platform,
+            CusLLM.lingyiwanwu_YiVision,
+            e.model,
+            e.name,
+            e.contextLength,
+            e.isFree,
+            e.inputPrice,
+            e.outputPrice,
+            modelType: e.modelType,
+            costPer: e.costPer,
+          ))
+      .toList();
+
+  if (!context.mounted) return;
+  if (llmSpecList.isEmpty) {
+    return commonHintDialog(context, "提示", "无可用的模型，该功能不可用");
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => pageBuilder(list),
+      ),
+    );
+  }
 }

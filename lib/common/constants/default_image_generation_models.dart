@@ -40,18 +40,6 @@ final defaultImageGenerationModels = [
     gmtCreate: DateTime.now(),
     isBuiltin: true,
   ),
-  CusBriefLLMSpec(
-    ApiPlatform.siliconCloud,
-    'deepseek-ai/Janus-Pro-7B',
-    LLModelType.tti,
-    'Janus-Pro-7B',
-    false,
-    costPer: 0,
-    cusLlmSpecId: 'siliconCloud_janus_pro_7b_builtin',
-    gmtRelease: DateTime.parse('2025-01-28'),
-    gmtCreate: DateTime.now(),
-    isBuiltin: true,
-  ),
 
   /// 智谱AI
   CusBriefLLMSpec(

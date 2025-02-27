@@ -22,11 +22,8 @@ class DBAIToolHelper {
   // 命名的构造函数用于创建DatabaseHelper的实例
   DBAIToolHelper._createInstance();
 
-  // 数据库实例
-  Future<Database>? _databaseFuture;
-
   // 获取数据库实例
-  Future<Database> get database async => _databaseFuture ??= DBInit().database;
+  Future<Database> get database async => DBInit().database;
 
   ///
   ///  Helper 的相关方法

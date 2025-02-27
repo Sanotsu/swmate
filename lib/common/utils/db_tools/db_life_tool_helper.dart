@@ -22,9 +22,8 @@ class DBLifeToolHelper {
   // 命名的构造函数用于创建DatabaseHelper的实例
   DBLifeToolHelper._createInstance();
 
-  // 缓存数据库实例
-  Future<Database>? _databaseFuture;
-  Future<Database> get database async => _databaseFuture ??= DBInit().database;
+  // 获取数据库实例
+  Future<Database> get database async => DBInit().database;
 
   ///***********************************************/
   /// BillItem 的相关操作

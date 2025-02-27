@@ -58,7 +58,9 @@ Future<String> getTextFromAudioFromXFYun(String audioPath) async {
       EasyLoading.dismiss();
 
       // 2024-09-03 这里语言转文字时可能有报错 Bad state: Future already completed
-      completer.complete(transcription);
+      if (!completer.isCompleted) {
+        completer.complete(transcription);
+      }
     },
     onDone: () {
       if (!completer.isCompleted) {

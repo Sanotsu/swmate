@@ -22,9 +22,8 @@ class DBBriefAIToolHelper {
   // 命名的构造函数用于创建DatabaseHelper的实例
   DBBriefAIToolHelper._createInstance();
 
-  // 缓存数据库实例
-  Future<Database>? _databaseFuture;
-  Future<Database> get database async => _databaseFuture ??= DBInit().database;
+  // 获取数据库实例(每次操作都从 DBInit 获取，不缓存)
+  Future<Database> get database async => DBInit().database;
 
   ///
   ///  Helper 的相关方法
