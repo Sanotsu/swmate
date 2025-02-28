@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../../apis/hitokoto/hitokoto_apis.dart';
+import '../../apis/life_tools/hitokoto/hitokoto_apis.dart';
 import '../../common/components/tool_widget.dart';
 import '../../common/llm_spec/cus_brief_llm_model.dart';
-import '../../common/llm_spec/cus_llm_model.dart';
-import '../../common/llm_spec/cus_llm_spec.dart';
-import '../../models/hitokoto/hitokoto.dart';
+import '../../common/llm_spec/constant_llm_enum.dart';
+import '../../models/life_tools/hitokoto/hitokoto.dart';
 import '../../services/model_manager_service.dart';
 import '../../services/network_service.dart';
-import '../ai_assistant/_componets/custom_entrance_card.dart';
+import '../../common/components/custom_entrance_card.dart';
 
 import 'accounting/index.dart';
 import 'animal_lover/dog_cat_index.dart';
@@ -431,7 +430,7 @@ void showNoNetworkOrGoTargetPage(
 Future<void> navigateToScreenWithLLModels(
   BuildContext context,
   LLModelType modelType,
-  Widget Function(List<CusLLMSpec>) pageBuilder, {
+  Widget Function(List<CusBriefLLMSpec>) pageBuilder, {
   LLModelType? roleType,
 }) async {
   // 获取对话的模型列表(具体逻辑看函数内部)
@@ -440,22 +439,6 @@ Future<void> navigateToScreenWithLLModels(
     LLModelType.vision,
   ]);
 
-  // 2025-02-27 因为猫狗之家模块是旧版本的，选择模型等有复用公共组件，所以这里转为CusLLMSpec
-  List<CusLLMSpec> list = llmSpecList
-      .map((e) => CusLLMSpec(
-            e.platform,
-            CusLLM.lingyiwanwu_YiVision,
-            e.model,
-            e.name,
-            e.contextLength,
-            e.isFree,
-            e.inputPrice,
-            e.outputPrice,
-            modelType: e.modelType,
-            costPer: e.costPer,
-          ))
-      .toList();
-
   if (!context.mounted) return;
   if (llmSpecList.isEmpty) {
     return commonHintDialog(context, "提示", "无可用的模型，该功能不可用");
@@ -463,7 +446,7 @@ Future<void> navigateToScreenWithLLModels(
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => pageBuilder(list),
+        builder: (context) => pageBuilder(llmSpecList),
       ),
     );
   }

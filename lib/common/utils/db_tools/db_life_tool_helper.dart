@@ -2,10 +2,10 @@
 
 import 'package:sqflite/sqflite.dart';
 
-import '../../../models/base_model/animal_lover/the_dog_cat_api_breed.dart';
-import '../../../models/base_model/brief_accounting_state.dart';
-import '../../../models/base_model/dish_state.dart';
-import '../../constants.dart';
+import '../../../models/life_tools/animal_lover/the_dog_cat_api_breed.dart';
+import '../../../models/life_tools/brief_accounting_state.dart';
+import '../../../models/life_tools/dish_state.dart';
+import '../../constants/constants.dart';
 import 'init_db.dart';
 import 'ddl_life_tool.dart';
 

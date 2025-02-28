@@ -3,6 +3,7 @@
 import 'init_db.dart';
 
 /// 数据库中【简洁版AI工具】相关表的创建
+/// 2025-02-28 之后AI工具相关都只有简洁版本了
 class BriefAIToolDdl {
   /// 2025-02-24 新版本的对话留存表栏位和旧版本差不多，只是表名不同，不互相干扰
   static const tableNameOfBriefChatHistory =

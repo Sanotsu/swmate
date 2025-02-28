@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
 
-import 'cus_llm_spec.dart';
+import 'constant_llm_enum.dart';
 
 part 'cus_brief_llm_model.g.dart';
 

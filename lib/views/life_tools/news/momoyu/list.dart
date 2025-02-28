@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../apis/news/momoyu_apis.dart';
+import '../../../../apis/life_tools/news/momoyu_apis.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/utils/tools.dart';
-import '../../../../models/news/momoyu_info_resp.dart';
+import '../../../../models/life_tools/news/momoyu_info_resp.dart';
 import '../_components/news_item_container.dart';
 
 class MomoyuListAll extends StatefulWidget {

@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../common/components/tool_widget.dart';
 import '../../../common/utils/db_tools/db_life_tool_helper.dart';
-import '../../../models/base_model/dish_state.dart';
+import '../../../models/life_tools/dish_state.dart';
 
 /// 只支持导入json文件，不再支持文件夹
 class DishJsonImport extends StatefulWidget {

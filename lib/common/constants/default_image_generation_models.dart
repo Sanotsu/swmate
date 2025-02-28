@@ -1,5 +1,5 @@
 import '../llm_spec/cus_brief_llm_model.dart';
-import '../llm_spec/cus_llm_spec.dart';
+import '../llm_spec/constant_llm_enum.dart';
 
 /// 内置的默认模型列表
 final defaultImageGenerationModels = [

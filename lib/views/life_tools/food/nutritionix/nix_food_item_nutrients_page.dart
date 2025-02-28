@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../apis/food/nutritionix/nix_nutrient_enum_list.dart';
-import '../../../../apis/food/nutritionix/nutritionix_apis.dart';
+import '../../../../apis/life_tools/food/nutritionix/nix_nutrient_enum_list.dart';
+import '../../../../apis/life_tools/food/nutritionix/nutritionix_apis.dart';
 import '../../../../common/components/tool_widget.dart';
-import '../../../../common/constants.dart';
-import '../../../../models/food/nutritionix/nix_natural_nutrient_resp.dart';
+import '../../../../common/constants/constants.dart';
+import '../../../../models/life_tools/food/nutritionix/nix_natural_nutrient_resp.dart';
 
 // 食品营养素详情页面
 class NixFoodItemNutrientPage extends StatefulWidget {

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../common/constants.dart';
+import '../../../../common/constants/constants.dart';
 import '../../../../common/utils/tools.dart';
 
 class Daily60S extends StatefulWidget {

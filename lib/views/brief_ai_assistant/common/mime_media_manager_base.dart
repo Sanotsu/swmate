@@ -14,7 +14,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
+import '../../../common/constants/constants.dart';
 
 abstract class MimeMediaManagerBase extends StatefulWidget {
   const MimeMediaManagerBase({super.key});

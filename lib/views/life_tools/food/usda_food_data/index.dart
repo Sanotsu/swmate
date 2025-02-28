@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../apis/food/usda_food_data_central/usda_food_data_apis.dart';
+import '../../../../apis/life_tools/food/usda_food_data_central/usda_food_data_apis.dart';
 import '../../../../common/components/tool_widget.dart';
-import '../../../../common/constants.dart';
-import '../../../../models/food/usda_food_data/usda_food_item.dart';
+import '../../../../common/constants/constants.dart';
+import '../../../../models/life_tools/food/usda_food_data/usda_food_item.dart';
 import '../../anime_top/_components.dart';
 import 'food_item_nutrients.dart';
 

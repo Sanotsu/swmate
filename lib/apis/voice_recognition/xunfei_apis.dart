@@ -4,10 +4,10 @@ import 'dart:async';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-import '../../models/voice_recognition/xunfei_voice_dictation.dart';
+import '../../common/constants/default_models.dart';
+import '../../models/brief_ai_tools/voice_recognition/xunfei_voice_dictation.dart';
 import '../gen_access_token/xfyun_signature.dart';
 import '../get_app_key_helper.dart';
-import '../platform_keys.dart';
 
 const voiceRegUrl = "wss://iat-api.xfyun.cn/v2/iat";
 
@@ -15,8 +15,8 @@ Future<String> getTextFromAudioFromXFYun(String audioPath) async {
   // 生成鉴权url
   var authUrl = genXfyunAssembleAuthUrl(
     voiceRegUrl,
-    getStoredUserKey(SKN.xfyunApiKey.name, XUNFEI_API_KEY),
-    getStoredUserKey(SKN.xfyunApiSecret.name, XUNFEI_API_SECRET),
+    getStoredUserKey("USER_XFYUN_API_KEY", DefaultApiKeys.xfyunApiKey),
+    getStoredUserKey("USER_XFYUN_API_SECRET", DefaultApiKeys.xfyunApiSecret),
     "GET",
   );
 
@@ -78,7 +78,10 @@ Future<String> getTextFromAudioFromXFYun(String audioPath) async {
   // 发送参数
   var params = {
     'common': {
-      'app_id': getStoredUserKey(SKN.xfyunAppId.name, XUNFEI_APP_ID),
+      'app_id': getStoredUserKey(
+        "USER_XFYUN_APP_ID",
+        DefaultApiKeys.xfyunAppId,
+      ),
     },
     'business': {
       // 语种。zh_cn：中文（支持简单的英文识别）

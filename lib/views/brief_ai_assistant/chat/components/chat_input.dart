@@ -13,11 +13,11 @@ import 'package:record/record.dart';
 import '../../../../apis/voice_recognition/xunfei_apis.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_brief_llm_model.dart';
-import '../../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../../common/llm_spec/constant_llm_enum.dart';
 import '../../../../common/utils/tools.dart';
-import '../../../ai_assistant/_componets/sounds_message_button/button_widget/sounds_message_button.dart';
-import '../../../ai_assistant/_componets/sounds_message_button/utils/sounds_recorder_controller.dart';
-import '../../../ai_assistant/_componets/voice_chat_bubble.dart';
+import '../../../../common/components/sounds_message_button/button_widget/sounds_message_button.dart';
+import '../../../../common/components/sounds_message_button/utils/sounds_recorder_controller.dart';
+import '../../../../common/components/voice_chat_bubble.dart';
 
 class ChatInput extends StatefulWidget {
   final CusBriefLLMSpec? model;

@@ -2,27 +2,25 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../apis/animal_lover/random_fact_apis.dart';
-import '../../../apis/animal_lover/thatapi_apis.dart';
+import '../../../apis/life_tools/animal_lover/random_fact_apis.dart';
+import '../../../apis/life_tools/animal_lover/thatapi_apis.dart';
 import '../../../apis/chat_completion/common_cc_apis.dart';
-import '../../../apis/animal_lover/dogceo_apis.dart';
+import '../../../apis/life_tools/animal_lover/dogceo_apis.dart';
 import '../../../common/components/searchable_dropdown.dart';
 import '../../../common/components/simple_marquee_or_text.dart';
 import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
-import '../../../common/llm_spec/cus_llm_model.dart';
-import '../../../common/llm_spec/cus_llm_spec.dart';
-import '../../../common/utils/tools.dart';
-import '../../../models/chat_competion/com_cc_resp.dart';
-import '../../../models/chat_competion/com_cc_state.dart';
-import '../../ai_assistant/_chat_screen_parts/chat_list_area.dart';
-import '../../ai_assistant/_componets/cus_platform_and_llm_row.dart';
-import '../../ai_assistant/_helper/handle_cc_response.dart';
+import '../../../common/constants/constants.dart';
+import '../../../common/llm_spec/cus_brief_llm_model.dart';
+import '../../../common/llm_spec/constant_llm_enum.dart';
+import '../../../models/brief_ai_tools/chat_competion/com_cc_resp.dart';
+import '../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
+import '../../../common/components/chat_list_area.dart';
+import '../../../common/components/cus_platform_and_llm_row.dart';
+import '../../../common/utils/handle_cc_response.dart';
 import 'animal_system_prompt.dart';
 
 ///
@@ -35,7 +33,7 @@ import 'animal_system_prompt.dart';
 ///
 class DogCatLover extends StatefulWidget {
   // 可供挑选的模型列表
-  final List<CusLLMSpec> llmSpecList;
+  final List<CusBriefLLMSpec> llmSpecList;
 
   const DogCatLover({
     super.key,
@@ -84,11 +82,11 @@ class _DogCatLoverState extends State<DogCatLover> {
   /// 用于图片识别时选用视觉大模型
   ///
   // 所有图像识别的模型
-  late List<CusLLMSpec> llmSpecList;
+  late List<CusBriefLLMSpec> llmSpecList;
   // 级联选择效果：云平台-模型名
   late ApiPlatform selectedPlatform;
   // 被选中的模型信息
-  late CusLLMSpec selectedModelSpec;
+  late CusBriefLLMSpec selectedModelSpec;
 
   // 指定品种或获取品种信息使用的大模型，
   // 2024-09-18 目标默认为智谱的免费API，后续再考量是否使用其他的
@@ -174,7 +172,7 @@ class _DogCatLoverState extends State<DogCatLover> {
     });
 
     // 同样的，选中的平台后也随机选择一个模型
-    List<CusLLMSpec> models = widget.llmSpecList
+    List<CusBriefLLMSpec> models = widget.llmSpecList
         .where((spec) => spec.platform == selectedPlatform)
         .toList();
 
@@ -349,67 +347,37 @@ class _DogCatLoverState extends State<DogCatLover> {
         messages.add(systemPrompt);
       });
 
-      // 2024-09-18 如果是使用百度的Fuyu8B，则无法像下面的通用
-      if (selectedModelSpec.cusLlm == CusLLM.baidu_Fuyu_8B) {
-        // 如果是图像理解、但没有传入图片，模拟模型返回异常信息
-        if (animalImages.isEmpty) {
-          EasyLoading.showError("图像理解模式下，必须选择图片");
-          setState(() {
-            isBotThinking = false;
-          });
-          return;
-        }
+      messages.add(ChatMessage(
+        messageId: const Uuid().v4(),
+        role: CusRole.user.name,
+        content: "请识别出图片中的猫或狗的具体品种，并对识别到的物种提供详细的介绍。",
+        dateTime: DateTime.now(),
+      ));
 
-        messages.add(ChatMessage(
-          messageId: const Uuid().v4(),
-          role: CusRole.user.name,
-          content: """Identify the breed and subspecies of dogs or cats 
-in the picture, and then provide a detailed introduction.""",
-          dateTime: DateTime.now(),
-        ));
-
-        tempStream = await baiduCCRespWithCancel(
-          [],
-          prompt:
-              messages.where((e) => e.role == CusRole.user.name).last.content,
-          image: await getBase64FromNetworkImage(animalImages.first),
-          model: selectedModelSpec.model,
-          stream: isStream,
-        );
-      } else {
-        messages.add(ChatMessage(
-          messageId: const Uuid().v4(),
-          role: CusRole.user.name,
-          content: "请识别出图片中的猫或狗的具体品种，并对识别到的物种提供详细的介绍。",
-          dateTime: DateTime.now(),
-        ));
-
-        /// 2024-09-14 实测分析
-        /// 通义千问VL-Max版本识别率最佳，但偶尔返回400错误，多点几次就行,
-        /// VL-PLus效果也一般，和零一万物差不多，但输出也没有按照系统提示词的格式来
-        ///
-        /// 零一万物的Vision不一定能识别对，多问几次可能对的也改成错的了，但输出格式没问题
-        ///
-        /// 智谱AI的 glm-4v-plus 不一定识别的对，glm-4v 听不懂同样的识别指令，只是说“没有修改图片的能力”
-        ///   两者对指定的输出格式也基本没有遵守，而且识别正确率是最差的
-        tempStream = await getCCResponseSWC(
-          messages: messages,
-          // 图像识别的时候选中的模型
-          selectedPlatform: selectedPlatform,
-          selectedModel: selectedModelSpec.model,
-          isStream: isStream,
-          selectedImage: selectedImage,
-          // 如果是选择了本地图片，则不使用url而是使用选中的文件
-          selectedImageUrl: selectedImage != null ? null : animalImages.first,
-          useType: CC_SWC_TYPE.image,
-          onNotImageHint: (error) {
-            commonExceptionDialog(context, "异常提示", error);
-          },
-          onImageError: (error) {
-            commonExceptionDialog(context, "异常提示", error);
-          },
-        );
-      }
+      /// 2024-09-14 实测分析
+      /// 通义千问VL-Max版本识别率最佳，但偶尔返回400错误，多点几次就行,
+      /// VL-PLus效果也一般，和零一万物差不多，但输出也没有按照系统提示词的格式来
+      ///
+      /// 零一万物的Vision不一定能识别对，多问几次可能对的也改成错的了，但输出格式没问题
+      ///
+      /// 智谱AI的 glm-4v-plus 不一定识别的对，glm-4v 听不懂同样的识别指令，只是说“没有修改图片的能力”
+      ///   两者对指定的输出格式也基本没有遵守，而且识别正确率是最差的
+      tempStream = await getCCResponseSWC(
+        messages: messages,
+        // 图像识别的时候选中的模型
+        selectedLlmSpec: selectedModelSpec,
+        isStream: isStream,
+        selectedImage: selectedImage,
+        // 如果是选择了本地图片，则不使用url而是使用选中的文件
+        selectedImageUrl: selectedImage != null ? null : animalImages.first,
+        useType: CC_SWC_TYPE.image,
+        onNotImageHint: (error) {
+          commonExceptionDialog(context, "异常提示", error);
+        },
+        onImageError: (error) {
+          commonExceptionDialog(context, "异常提示", error);
+        },
+      );
     } else {
       setState(() {
         isBotThinking = true;
@@ -433,8 +401,7 @@ in the picture, and then provide a detailed introduction.""",
       tempStream = await getCCResponseSWC(
         messages: messages,
         // 图像识别不同的模型识别效果不一样，但文字介绍由于指定了明确的分类，所以不需要过多模型
-        selectedPlatform: selectedCCPlatform,
-        selectedModel: selectedCCModel,
+        selectedLlmSpec: selectedModelSpec,
         isStream: isStream,
       );
     }
@@ -600,7 +567,7 @@ in the picture, and then provide a detailed introduction.""",
             isStream = index == 0 ? true : false;
           });
         },
-        onPlatformOrModelChanged: (ApiPlatform? cp, CusLLMSpec? llmSpec) {
+        onPlatformOrModelChanged: (ApiPlatform? cp, CusBriefLLMSpec? llmSpec) {
           setState(() {
             selectedPlatform = cp!;
             selectedModelSpec = llmSpec!;

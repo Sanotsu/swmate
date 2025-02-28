@@ -1,6 +1,6 @@
 import '../common/constants/default_models.dart';
 import '../common/llm_spec/cus_brief_llm_model.dart';
-import '../common/llm_spec/cus_llm_spec.dart';
+import '../common/llm_spec/constant_llm_enum.dart';
 import '../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 
 import 'cus_get_storage.dart';

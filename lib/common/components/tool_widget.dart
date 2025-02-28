@@ -18,7 +18,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../constants.dart';
+import '../constants/constants.dart';
 import '../utils/tools.dart';
 
 /// 构建AI对话云平台入口按钮

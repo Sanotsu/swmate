@@ -3,16 +3,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
-import 'package:http/http.dart' as http;
-import '../common/constants.dart';
 import '../common/llm_spec/cus_brief_llm_model.dart';
-import '../common/llm_spec/cus_llm_spec.dart';
-import '../models/chat_completions/chat_completion_response.dart';
-import '../models/chat_competion/com_cc_state.dart';
+import '../common/llm_spec/constant_llm_enum.dart';
+import '../models/brief_ai_tools/chat_completions/chat_completion_response.dart';
+import '../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 import 'dart:io';
 import '../common/constants/default_models.dart';
 import '../services/cus_get_storage.dart';
-import '../models/chat_completions/chat_completion_request.dart';
+import '../models/brief_ai_tools/chat_completions/chat_completion_request.dart';
 import '../apis/chat_completion/openai_compatible_apis.dart';
 
 /// 2025-02-13 改版后所有平台都使用open API兼容的版本，不兼容的就不用了。
@@ -27,6 +25,13 @@ import '../apis/chat_completion/openai_compatible_apis.dart';
 /// 硅基流动 https://docs.siliconflow.cn/cn/api-reference/chat-completions/chat-completions
 
 class ChatService {
+  // 暴露出去
+  static String getBaseUrl(ApiPlatform platform) => _getBaseUrl(platform);
+  static Future<String> getApiKey(CusBriefLLMSpec model) => _getApiKey(model);
+  static Future<Map<String, String>> getHeaders(CusBriefLLMSpec model) =>
+      _getHeaders(model);
+
+  // 私有方法
   static String _getBaseUrl(ApiPlatform platform) {
     switch (platform) {
       case ApiPlatform.lingyiwanwu:
@@ -170,44 +175,5 @@ class ChatService {
     final requestBody = request.toRequestBody(model.platform);
 
     return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
-  }
-
-  // ??? 暂未用到
-  static Future<void> sendVoice(
-    CusBriefLLMSpec model,
-    String voicePath,
-    List<ChatMessage> messages,
-  ) async {
-    final url = '${_getBaseUrl(model.platform)}/audio/transcriptions';
-    final headers = await _getHeaders(model);
-
-    // 创建multipart请求
-    var request = http.MultipartRequest('POST', Uri.parse(url))
-      ..headers.addAll(headers)
-      ..fields['model'] = model.model
-      ..files.add(await http.MultipartFile.fromPath(
-        'file',
-        voicePath,
-      ));
-
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-
-    if (response.statusCode != 200) {
-      throw Exception('语音转写失败: ${response.statusCode}');
-    }
-
-    final transcription = jsonDecode(response.body)['text'];
-
-    // 将转写文本作为新消息发送
-    messages.add(
-      ChatMessage(
-        messageId: DateTime.now().toString(),
-        dateTime: DateTime.now(),
-        role: CusRole.user.name,
-        content: transcription,
-        contentVoicePath: voicePath,
-      ),
-    );
   }
 }

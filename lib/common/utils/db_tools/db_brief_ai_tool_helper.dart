@@ -1,10 +1,10 @@
 import 'package:sqflite/sqflite.dart';
 
-import '../../../models/chat_competion/com_cc_state.dart';
-import '../../../models/media_generation_history/media_generation_history.dart';
+import '../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
+import '../../../models/brief_ai_tools/media_generation_history/media_generation_history.dart';
 
 import '../../llm_spec/cus_brief_llm_model.dart';
-import '../../llm_spec/cus_llm_spec.dart';
+import '../../llm_spec/constant_llm_enum.dart';
 
 import 'init_db.dart';
 import 'ddl_brief_ai_tool.dart';

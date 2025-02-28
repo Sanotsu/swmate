@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import '../../../../common/constants.dart';
-import '../../../../models/chat_competion/com_cc_state.dart';
+import '../../../../common/constants/constants.dart';
+import '../../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 import 'dart:io';
 
-import '../../../ai_assistant/_componets/voice_chat_bubble.dart';
+import '../../../../common/components/voice_chat_bubble.dart';
 
 class ChatMessageItem extends StatelessWidget {
   final ChatMessage message;

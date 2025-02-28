@@ -7,10 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
+import '../../../common/constants/constants.dart';
 import '../../../common/utils/db_tools/db_life_tool_helper.dart';
 import '../../../common/utils/tools.dart';
-import '../../../models/base_model/dish_state.dart';
+import '../../../models/life_tools/dish_state.dart';
 
 class DishModify extends StatefulWidget {
   // 新增菜品不会传，但修改菜品会传

@@ -1,17 +1,33 @@
 import '../llm_spec/cus_brief_llm_model.dart';
-import '../llm_spec/cus_llm_spec.dart';
+import '../llm_spec/constant_llm_enum.dart';
 import 'default_image_generation_models.dart';
 import 'default_video_generation_models.dart';
 
 /// 内置模型的 API Keys (用户不可见和修改)
 // class DefaultApiKeys {
-//   static const baiduApiKey = 'xxxx';
-//   static const siliconCloudAK = 'xxxx';
-//   static const lingyiAK = 'xxxx';
-//   static const zhipuAK = 'xxxx';
-//   static const infiniAK = 'xxxx';
-//   static const aliyunApiKey = 'xxxx';
-//   static const tencentApiKey = 'xxxx';
+//   static const baiduApiKey = 'xxx';
+//   static const siliconCloudAK = 'sk-xxx';
+//   static const lingyiAK = 'xxx';
+//   static const zhipuAK = 'xxx.xxx';
+//   static const infiniAK = 'sk-xxx';
+//   static const aliyunApiKey = 'sk-xxx';
+//   static const tencentApiKey = 'xxx';
+
+//   // 讯飞(语音转文字需要)
+//   static const xfyunAppId = 'xxx';
+//   static const xfyunApiKey = 'xxx';
+//   static const xfyunApiSecret = 'xxx';
+
+//   // NUTRITIONIX的应用编号和密钥
+//   static const nutritionixAppId = 'xxx';
+//   static const nutritionixAppKey = 'xxx';
+
+//   // fat secret api key(没用到)
+//   static const fatSecretClientId = 'xxx';
+//   static const fatSecretClientSecret = 'xxx';
+
+//   // newsapi完整的api key
+//   static const newsApiKey = 'xxx';
 // }
 
 // 内置模型使用的密钥的命名如上即可，这里只是使用了作者的密钥

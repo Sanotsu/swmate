@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../common/components/tool_widget.dart';
-import '../../../../common/constants.dart';
+import '../../../../common/constants/constants.dart';
 
 import '../../anime_top/_components.dart';
 import '../_components/cus_scrollable_category_list.dart';

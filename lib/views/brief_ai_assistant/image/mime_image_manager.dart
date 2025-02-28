@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../../../common/constants.dart';
+import '../../../common/constants/constants.dart';
 import '../common/mime_media_manager_base.dart';
 import 'mime_image_preview.dart';
 

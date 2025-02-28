@@ -3,10 +3,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
-import '../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../common/constants/constants.dart';
+import '../../../common/llm_spec/constant_llm_enum.dart';
 import '../../../common/utils/tools.dart';
-import '../../../models/media_generation_history/media_generation_history.dart';
+import '../../../models/brief_ai_tools/media_generation_history/media_generation_history.dart';
 import '../../../services/image_generation_service.dart';
 import '../../../views/brief_ai_assistant/common/media_generation_base.dart';
 import 'mime_image_manager.dart';

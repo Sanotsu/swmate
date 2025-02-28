@@ -7,7 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_brief_llm_model.dart';
-import '../../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../../common/llm_spec/constant_llm_enum.dart';
 import '../../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 import '../../../../services/model_manager_service.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../common/constants.dart';
+import '../../../../common/constants/constants.dart';
 
 ///
 /// 横向滚动选择新闻分类列表

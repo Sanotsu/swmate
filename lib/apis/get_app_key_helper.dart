@@ -3,38 +3,10 @@
 // SelfKeyName
 import '../services/cus_get_storage.dart';
 
-enum SKN {
-  baiduApiKey,
-  baiduSecretKey,
-  tencentSecretId,
-  tencentSecretKey,
-  aliyunAppId,
-  aliyunApiKey,
-  xfyunAppId,
-  xfyunApiSecret,
-  xfyunApiKey,
-  xfyunSparkLiteApiPassword,
-  xfyunSparkProApiPassword,
-  siliconFlowAK,
-  lingyiwanwuAK,
-  zhipuAK,
-  infiniAK,
-  nutritionixAppId,
-  nutritionixAppKey,
-}
-
 // 从缓存中获取用户自定义的密钥,没取到就用预设的
 String getStoredUserKey(String key, String defaultValue) {
   return MyGetStorage().getUserAKMap()[key] != null &&
           MyGetStorage().getUserAKMap()[key]!.isNotEmpty
       ? MyGetStorage().getUserAKMap()[key]!
       : defaultValue;
-}
-
-// 从缓存中获取用户自定义的密钥(用于判断是否显示付费的模块:有就显示，没有就不显示)
-String? getUserKey(String key) {
-  return MyGetStorage().getUserAKMap()[key] != null &&
-          MyGetStorage().getUserAKMap()[key]!.isNotEmpty
-      ? MyGetStorage().getUserAKMap()[key]!
-      : null;
 }

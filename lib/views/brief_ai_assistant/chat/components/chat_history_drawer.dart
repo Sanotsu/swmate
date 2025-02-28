@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
-import '../../../../models/chat_competion/com_cc_state.dart';
+import '../../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 
 class ChatHistoryDrawer extends StatelessWidget {
   final List<BriefChatHistory> histories;

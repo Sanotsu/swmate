@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../apis/_default_system_role_list/inner_system_prompt.dart';
-import '../../../apis/free_dictionary/free_dictionary_apis.dart';
+import '../../../common/constants/inner_system_prompt.dart';
+import '../../../apis/life_tools/free_dictionary/free_dictionary_apis.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/utils/tools.dart';
-import '../../../models/free_dictionary/free_dictionary_resp.dart';
+import '../../../models/life_tools/free_dictionary/free_dictionary_resp.dart';
 import '../anime_top/_components.dart';
 
 class FreeDictionary extends StatefulWidget {

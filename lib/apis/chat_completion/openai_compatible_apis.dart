@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import '../../common/constants.dart';
+import '../../common/constants/constants.dart';
 import '../../common/utils/dio_client/cus_http_client.dart';
 import '../../common/utils/dio_client/cus_http_request.dart';
 import '../../common/utils/dio_client/interceptor_error.dart';
-import '../../models/chat_completions/chat_completion_response.dart';
+import '../../models/brief_ai_tools/chat_completions/chat_completion_response.dart';
 import 'chat_helper.dart';
 
 /// 处理兼容 OpenAI 规范的响应

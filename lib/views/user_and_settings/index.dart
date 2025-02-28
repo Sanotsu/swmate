@@ -2,21 +2,15 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_view/photo_view.dart';
 
-import '../../apis/_default_model_list/index.dart';
 import '../../common/components/tool_widget.dart';
-import '../../common/constants.dart';
-import '../../common/utils/db_tools/db_ai_tool_helper.dart';
+import '../../common/constants/constants.dart';
 import '../../services/cus_get_storage.dart';
-import '../ai_assistant/_helper/tools.dart';
 import '../home.dart';
 import 'backup_and_restore/index.dart';
-
-final DBAIToolHelper dbHelper = DBAIToolHelper();
 
 class UserAndSettings extends StatefulWidget {
   const UserAndSettings({super.key});
@@ -42,22 +36,6 @@ class _UserAndSettingsState extends State<UserAndSettings> {
     }
   }
 
-  // 长按5秒启动作者测试的模型(但是付费的还是用不了，没有加载作者的密钥)
-  Timer? _timer;
-  void _startTimer() {
-    _timer = Timer(const Duration(seconds: 3), () async {
-      await testInitModelAndSysRole(SELF_MODELS);
-      EasyLoading.showInfo("已启用作者的测试模型列表");
-    });
-  }
-
-  void _cancelTimer() {
-    if (_timer != null) {
-      _timer!.cancel();
-      _timer = null;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // 计算屏幕剩余的高度
@@ -77,11 +55,7 @@ class _UserAndSettingsState extends State<UserAndSettings> {
 
     return Scaffold(
       appBar: AppBar(
-        title: GestureDetector(
-          onLongPressStart: (_) => _startTimer(),
-          onLongPressEnd: (_) => _cancelTimer(),
-          child: const Text('用户设置'),
-        ),
+        title: const Text('用户设置'),
         actions: [
           TextButton(
             onPressed: () {

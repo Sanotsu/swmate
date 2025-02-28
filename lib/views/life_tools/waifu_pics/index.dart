@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../apis/waifu_pic/index.dart';
+import '../../../apis/life_tools/waifu_pic/index.dart';
 import '../../../common/components/searchable_dropdown.dart';
 import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
+import '../../../common/constants/constants.dart';
 
 class WaifuPicIndex extends StatefulWidget {
   const WaifuPicIndex({super.key});

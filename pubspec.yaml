@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.4.0-beta.1
+version: 0.4.1-beta.1
 
 environment:
   sdk: ^3.5.4
@@ -69,23 +69,13 @@ dependencies:
   cached_network_image: ^3.4.1
   carousel_slider: ^5.0.0
   multi_select_flutter: ^4.1.3
-  # 2024-11-04 下面有覆盖，因2.0.3还不支持flutter3.24.x（本项目没有用到？？？）
-  image_gallery_saver: ^2.0.3
   logger: ^2.4.0
   proste_logger: ^1.0.0
   docx_to_text: ^1.0.1
   flutter_charset_detector: ^4.0.0
-  doc_text: ^0.0.1
   syncfusion_flutter_pdf: ^27.1.57
-  html_unescape: ^2.0.0
-  markdown: ^7.2.2
-  pdf: ^3.11.1
-  htmltopdfwidgets: ^1.0.4
-  flutter_client_sse: ^2.0.3
-  http: ^1.2.2
-  month_picker_dialog: ^5.1.3
   syncfusion_flutter_charts: ^27.1.57
-
+  month_picker_dialog: ^5.1.3
   flutter_fortune_wheel: ^1.3.2
   archive: ^3.6.1
   dropdown_button2: ^2.3.9
@@ -96,7 +86,6 @@ dependencies:
   flutter_rating_stars: ^1.1.0
   audioplayers: ^6.1.0
   flutter_typeahead: ^5.2.0
-  flutter_math_fork: ^0.7.3
   record: ^5.2.0
   share_plus: ^10.1.4
   photo_manager: ^3.6.4
@@ -104,17 +93,6 @@ dependencies:
   mime: ^2.0.0
   get_thumbnail_video: ^0.7.3
   flutter_cache_manager: ^3.4.1
-
-dependency_overrides: 
-  # 2024-09-18 marquee 依赖的fading_edge_scrollview版本会报错，使用此覆盖
-  # 参看 https://github.com/mponkin/fading_edge_scrollview/issues/29
-  #  fading_edge_scrollview: ^4.1.1
-  # 2024-11-04 在使用flutter3.24的时候，要用 AGP 8，还没合并到该库的主版本去
-  # https://github.com/hui-z/image_gallery_saver/pull/295
-   image_gallery_saver:
-    git:
-      url: https://github.com/knottx/image_gallery_saver.git
-      ref: knottx-latest
 
 dev_dependencies:
   flutter_test:
@@ -148,7 +126,6 @@ flutter:
     - assets/
     - assets/images/
     - assets/images/covers/
-    - assets/aliyun_wanx_styles/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

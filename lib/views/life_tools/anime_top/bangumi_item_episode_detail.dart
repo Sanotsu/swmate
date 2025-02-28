@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../apis/bangumi/bangumi_apis.dart';
+import '../../../apis/life_tools/bangumi/bangumi_apis.dart';
 import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
-import '../../../models/bangumi/bangumi.dart';
+import '../../../common/constants/constants.dart';
+import '../../../models/life_tools/bangumi/bangumi.dart';
 import '_components.dart';
 import 'bangumi_item_detail.dart';
 
