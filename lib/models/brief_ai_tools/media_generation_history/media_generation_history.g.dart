@@ -64,7 +64,6 @@ Map<String, dynamic> _$MediaGenerationHistoryToJson(
 const _$LLModelTypeEnumMap = {
   LLModelType.cc: 'cc',
   LLModelType.vision: 'vision',
-  LLModelType.tti_word: 'tti_word',
   LLModelType.voice: 'voice',
   LLModelType.tti: 'tti',
   LLModelType.iti: 'iti',

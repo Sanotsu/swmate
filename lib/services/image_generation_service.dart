@@ -57,14 +57,14 @@ class ImageGenerationService {
       String? apiKey;
 
       switch (model.platform) {
-        case ApiPlatform.siliconCloud:
-          apiKey = userKeys['USER_SILICON_CLOUD_AK'];
+        case ApiPlatform.aliyun:
+          apiKey = userKeys[ApiPlatformAKLabel.USER_ALIYUN_API_KEY.name];
           break;
         case ApiPlatform.zhipu:
-          apiKey = userKeys['USER_ZHIPU_AK'];
+          apiKey = userKeys[ApiPlatformAKLabel.USER_ZHIPU_API_KEY.name];
           break;
-        case ApiPlatform.aliyun:
-          apiKey = userKeys['USER_ALIYUN_API_KEY'];
+        case ApiPlatform.siliconCloud:
+          apiKey = userKeys[ApiPlatformAKLabel.USER_SILICON_CLOUD_API_KEY.name];
           break;
 
         default:

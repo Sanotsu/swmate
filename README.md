@@ -7,10 +7,11 @@ Smart Work&Life Mate
 - 以调用各个云平台部署的在线大模型 API 为基底的“**AI 智能助手**”，(简称“工具”)。
   - 2025-02-26 大模型 API 调用**只保留其 HTTP API 兼容 openAI API 结构的**平台和模型，不再兼容其他平台自己定义的 API 结构，具体如下：
   - 对话模型：
-    - [百度](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Fm2vrveyu)
     - [阿里](https://help.aliyun.com/zh/model-studio/developer-reference/compatibility-of-openai-with-dashscope)
+    - [百度](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Fm2vrveyu)
     - [腾讯](https://console.cloud.tencent.com/hunyuan/start)
     - [智谱](https://open.bigmodel.cn/dev/api/normal-model/glm-4)
+    - [深度求索](https://api-docs.deepseek.com/zh-cn/)
     - [零一万物](https://platform.lingyiwanwu.com/docs/api-reference)
     - [无问芯穹](https://docs.infini-ai.com/gen-studio/api/maas.html#/operations/chatCompletions)
     - [硅基流动](https://docs.siliconflow.cn/cn/api-reference/chat-completions/chat-completions)
@@ -105,24 +106,32 @@ AI 绘图/视频结构和操作类似，所以放在一起说。
 
 #### 平台密钥 json 结构
 
+导入平台的密钥的 key 一定要和这个文件中 key 一样，不然匹配不上：
+
 ```json
 {
-  "USER_LINGYIWANWU_AK": "xxx",
-  "USER_ZHIPU_AK": "xxx",
-  "USER_SILICON_CLOUD_AK": "sk-xxx",
-  "USER_INFINI_GEN_STUDIO_AK": "sk-xxx",
   "USER_ALIYUN_API_KEY": "sk-xxx",
   "USER_BAIDU_API_KEY_V2": "xxx",
   "USER_TENCENT_API_KEY": "xxx",
 
+  "USER_DEEPSEEK_API_KEY": "sk-xxx",
+  "USER_LINGYIWANWU_API_KEY": "xxx",
+  "USER_ZHIPU_API_KEY": "xxx",
+
+  "USER_SILICON_CLOUD_API_KEY": "sk-xxx",
+  "USER_INFINI_GEN_STUDIO_API_KEY": "sk-xxx",
+
   // 讯飞, 语音转写需要
   "USER_XFYUN_APP_ID": "xxx",
-  "USER_XFYUN_API_SECRET": "xxx",
   "USER_XFYUN_API_KEY": "xxx",
+  "USER_XFYUN_API_SECRET": "xxx",
 
   // 生活工具中 NUTRITIONIX 食品数据查询需要
   "USER_NUTRITIONIX_APP_ID": "xxx",
-  "USER_NUTRITIONIX_APP_KEY": "xxx"
+  "USER_NUTRITIONIX_APP_KEY": "xxx",
+
+  // newsapi新闻需要
+  "USER_NEWS_API_KEY": "xxx"
 }
 ```
 
@@ -180,6 +189,7 @@ enum ApiPlatform {
   lingyiwanwu, // 零一万物
   zhipu, // 智谱 AI
   infini, // 无问芯穹的 genStudio
+  deepseek, // 深度求索
 }
 ```
 

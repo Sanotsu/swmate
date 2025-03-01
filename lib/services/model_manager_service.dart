@@ -57,20 +57,42 @@ class ModelManagerService {
 
       // 检查用户是否配置了该平台的 AK
       switch (model.platform) {
-        case ApiPlatform.baidu:
-          return userKeys['USER_BAIDU_API_KEY_V2']?.isNotEmpty ?? false;
-        case ApiPlatform.siliconCloud:
-          return userKeys['USER_SILICON_CLOUD_AK']?.isNotEmpty ?? false;
-        case ApiPlatform.lingyiwanwu:
-          return userKeys['USER_LINGYIWANWU_AK']?.isNotEmpty ?? false;
-        case ApiPlatform.zhipu:
-          return userKeys['USER_ZHIPU_AK']?.isNotEmpty ?? false;
-        case ApiPlatform.infini:
-          return userKeys['USER_INFINI_GEN_STUDIO_AK']?.isNotEmpty ?? false;
         case ApiPlatform.aliyun:
-          return userKeys['USER_ALIYUN_API_KEY']?.isNotEmpty ?? false;
+          return userKeys[ApiPlatformAKLabel.USER_ALIYUN_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+        case ApiPlatform.baidu:
+          return userKeys[ApiPlatformAKLabel.USER_BAIDU_API_KEY_V2.name]
+                  ?.isNotEmpty ??
+              false;
         case ApiPlatform.tencent:
-          return userKeys['USER_TENCENT_API_KEY']?.isNotEmpty ?? false;
+          return userKeys[ApiPlatformAKLabel.USER_TENCENT_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+
+        case ApiPlatform.deepseek:
+          return userKeys[ApiPlatformAKLabel.USER_DEEPSEEK_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+        case ApiPlatform.lingyiwanwu:
+          return userKeys[ApiPlatformAKLabel.USER_LINGYIWANWU_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+        case ApiPlatform.zhipu:
+          return userKeys[ApiPlatformAKLabel.USER_ZHIPU_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+
+        case ApiPlatform.siliconCloud:
+          return userKeys[ApiPlatformAKLabel.USER_SILICON_CLOUD_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+        case ApiPlatform.infini:
+          return userKeys[
+                      ApiPlatformAKLabel.USER_INFINI_GEN_STUDIO_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+
         default:
           return false;
       }

@@ -42,12 +42,12 @@ class VideoGenerationService {
     if (model.cusLlmSpecId?.endsWith('_builtin') ?? false) {
       // 使用内置的 API Key
       switch (model.platform) {
-        case ApiPlatform.siliconCloud:
-          return DefaultApiKeys.siliconCloudAK;
-        case ApiPlatform.zhipu:
-          return DefaultApiKeys.zhipuAK;
         case ApiPlatform.aliyun:
           return DefaultApiKeys.aliyunApiKey;
+        case ApiPlatform.zhipu:
+          return DefaultApiKeys.zhipuAK;
+        case ApiPlatform.siliconCloud:
+          return DefaultApiKeys.siliconCloudAK;
         default:
           throw Exception('不支持的平台');
       }
@@ -58,13 +58,13 @@ class VideoGenerationService {
 
       switch (model.platform) {
         case ApiPlatform.siliconCloud:
-          apiKey = userKeys['USER_SILICON_CLOUD_AK'];
+          apiKey = userKeys[ApiPlatformAKLabel.USER_SILICON_CLOUD_API_KEY.name];
           break;
         case ApiPlatform.zhipu:
-          apiKey = userKeys['USER_ZHIPU_AK'];
+          apiKey = userKeys[ApiPlatformAKLabel.USER_ZHIPU_API_KEY.name];
           break;
         case ApiPlatform.aliyun:
-          apiKey = userKeys['USER_ALIYUN_API_KEY'];
+          apiKey = userKeys[ApiPlatformAKLabel.USER_ALIYUN_API_KEY.name];
           break;
 
         default:
