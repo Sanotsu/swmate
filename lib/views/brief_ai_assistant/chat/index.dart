@@ -460,6 +460,10 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     } catch (e) {
       if (!mounted) return;
       commonExceptionDialog(context, "异常提示", "发送消息失败: $e");
+      setState(() {
+        _cancelResponse = null;
+        _isStreaming = false;
+      });
     }
   }
 
@@ -493,6 +497,10 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     } catch (e) {
       if (!mounted) return;
       commonExceptionDialog(context, "异常提示", "重新生成失败: $e");
+      setState(() {
+        _cancelResponse = null;
+        _isStreaming = false;
+      });
     } finally {
       if (mounted) {
         setState(() {
