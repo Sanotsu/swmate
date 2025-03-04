@@ -189,10 +189,17 @@ Future<(Stream<ChatCompletionResponse>, VoidCallback)> getStreamResponse(
             streamController.close();
           }
         } else {
-          final jsonData = json.decode(event.data);
-          final commonRespBody = ChatCompletionResponse.fromJson(jsonData);
-          if (!streamController.isClosed) {
-            streamController.add(commonRespBody);
+          try {
+            final jsonData = json.decode(event.data);
+            final commonRespBody = ChatCompletionResponse.fromJson(jsonData);
+            if (!streamController.isClosed) {
+              streamController.add(commonRespBody);
+            }
+          } catch (e) {
+            debugPrint('解析响应数据出错: $e');
+            debugPrint('event.data: ${event.data}');
+            // 流式响应出错时，继续处理下一行
+            return;
           }
         }
       }, onDone: () {

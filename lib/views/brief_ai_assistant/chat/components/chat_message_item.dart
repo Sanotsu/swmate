@@ -212,8 +212,11 @@ class ChatMessageItem extends StatelessWidget {
               // tableBody: TextStyle(color: Colors.black),
             ),
           ),
-          // 如果是流式加载中(还没有输出内容)，显示一个加载圈
-          if (message.role != CusRole.user.name && message.content.isEmpty)
+          // 如果是流式加载中(但还没有输出内容)，显示一个加载圈
+          if (message.role != CusRole.user.name &&
+              message.content.isEmpty &&
+              (message.reasoningContent != null &&
+                  message.reasoningContent!.isEmpty))
             SizedBox(
               width: 16.sp,
               height: 16.sp,
@@ -227,6 +230,9 @@ class ChatMessageItem extends StatelessWidget {
 
   // DS 的 R 系列有深度思考部分，单独展示
   Widget _buildThinkingProcess(ChatMessage message) {
+    // 创建一个基础的 TextStyle，深度思考的文字颜色和大小
+    final tempStyle = TextStyle(color: Colors.black54, fontSize: 13.5.sp);
+
     return Container(
       padding: EdgeInsets.only(bottom: 8.sp),
       child: ExpansionTile(
@@ -245,9 +251,35 @@ class ChatMessageItem extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(left: 24.sp),
-            child: Text(
-              message.reasoningContent ?? '',
-              style: TextStyle(color: Colors.black54, fontSize: 13.5.sp),
+            // child: Text(
+            //   message.reasoningContent ?? '',
+            //   style: TextStyle(color: Colors.black54, fontSize: 13.5.sp),
+            // ),
+
+            /// 使用 MarkdownBody 显示深度思考内容
+            child: MarkdownBody(
+              data: message.reasoningContent ?? '',
+              selectable: true,
+              styleSheet: MarkdownStyleSheet(
+                // 复用 tempStyle
+                p: tempStyle,
+                h1: tempStyle,
+                h2: tempStyle,
+                h3: tempStyle,
+                h4: tempStyle,
+                h5: tempStyle,
+                h6: tempStyle,
+                strong: tempStyle,
+                em: tempStyle,
+                blockquote: tempStyle,
+                listBullet: tempStyle,
+                tableHead: tempStyle,
+                tableBody: tempStyle,
+                // 隐藏换行线
+                horizontalRuleDecoration: BoxDecoration(
+                  color: Colors.transparent,
+                ),
+              ),
             ),
           ),
         ],

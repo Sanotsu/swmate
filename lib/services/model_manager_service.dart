@@ -38,7 +38,7 @@ class ModelManagerService {
     // 删除全部内置模型
     final exists = await _dbHelper.queryBriefCusLLMSpecList(isBuiltin: true);
     for (final model in exists) {
-      await _dbHelper.deleteBriefCusLLMSpecById(model.cusLlmSpecId!);
+      await _dbHelper.deleteBriefCusLLMSpecById(model.cusLlmSpecId);
     }
 
     await _dbHelper.insertBriefCusLLMSpecList(models);
@@ -50,7 +50,7 @@ class ModelManagerService {
     final userKeys = MyGetStorage().getUserAKMap();
 
     return allModels.where((model) {
-      if (model.cusLlmSpecId?.endsWith('_builtin') ?? false) {
+      if (model.cusLlmSpecId.endsWith('_builtin')) {
         // 内置模型总是可用
         return true;
       }
@@ -169,8 +169,8 @@ class ModelManagerService {
   static Future<void> clearUserModels() async {
     final models = await _dbHelper.queryBriefCusLLMSpecList();
     for (final model in models) {
-      if (!model.cusLlmSpecId!.endsWith('_builtin')) {
-        await _dbHelper.deleteBriefCusLLMSpecById(model.cusLlmSpecId!);
+      if (!model.cusLlmSpecId.endsWith('_builtin')) {
+        await _dbHelper.deleteBriefCusLLMSpecById(model.cusLlmSpecId);
       }
     }
   }

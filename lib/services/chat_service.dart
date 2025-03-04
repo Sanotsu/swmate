@@ -40,7 +40,7 @@ class ChatService {
       case ApiPlatform.baidu:
         return 'https://qianfan.baidubce.com/v2';
       case ApiPlatform.tencent:
-        return 'https://api.hunyuan.cloud.tencent.com/v1/';
+        return 'https://api.hunyuan.cloud.tencent.com/v1';
       case ApiPlatform.deepseek:
         return 'https://api.deepseek.com/v1';
       case ApiPlatform.lingyiwanwu:
@@ -57,12 +57,10 @@ class ChatService {
   }
 
   static Future<String> _getApiKey(CusBriefLLMSpec model) async {
-    if (model.cusLlmSpecId?.endsWith('_builtin') ?? false) {
+    if (model.cusLlmSpecId.endsWith('_builtin')) {
       // 使用内置的 API Key
       // （有免费的模型我才使用自己的ak，自用收费的也自己导入）
       switch (model.platform) {
-        case ApiPlatform.aliyun:
-          return DefaultApiKeys.aliyunApiKey;
         case ApiPlatform.baidu:
           return DefaultApiKeys.baiduApiKey;
         case ApiPlatform.tencent:

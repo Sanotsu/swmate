@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -24,15 +23,7 @@ class ChatInput extends StatefulWidget {
   final Function(String text, {File? image, File? voice}) onSend;
   final VoidCallback? onCancel;
   final bool isStreaming;
-
-  // 是否显示新增对话按钮
-  final bool showAddChatButton;
-  // 是否显示滚动到底部的按钮
-  final bool showScrollToBottomButton;
-  // 点击新增对话按钮的回调
-  final VoidCallback? onAddChat;
-  // 点击滚动到底部的按钮的回调
-  final VoidCallback? onScrollToBottom;
+  final ValueChanged<double>? onHeightChanged;
 
   const ChatInput({
     super.key,
@@ -40,10 +31,7 @@ class ChatInput extends StatefulWidget {
     required this.onSend,
     this.onCancel,
     this.isStreaming = false,
-    this.showAddChatButton = true,
-    this.showScrollToBottomButton = true,
-    this.onAddChat,
-    this.onScrollToBottom,
+    this.onHeightChanged,
   });
 
   @override
@@ -58,6 +46,14 @@ class _ChatInputState extends State<ChatInput> {
   File? _selectedVoice;
   bool _isVoiceMode = false;
   bool _showTools = true;
+  final GlobalKey _containerKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    // 初始化时获取输入框高度，让父组件重新布局
+    _notifyHeightChange();
+  }
 
   Future<bool> _checkPermissions() async {
     if (!(await requestMicrophonePermission())) {
@@ -81,6 +77,18 @@ class _ChatInputState extends State<ChatInput> {
     return true;
   }
 
+  // 通知父组件输入框高度变化，重新布局悬浮按钮
+  void _notifyHeightChange() {
+    // 等待下一帧布局完成后再获取高度
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final RenderBox renderBox =
+          _containerKey.currentContext!.findRenderObject() as RenderBox;
+      final height = renderBox.size.height;
+      print('ChatInput height: $height');
+      widget.onHeightChanged?.call(height);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasVisionAbility = widget.model?.modelType == LLModelType.vision;
@@ -89,6 +97,8 @@ class _ChatInputState extends State<ChatInput> {
         (hasVisionAbility || hasVoiceAbility) && !widget.isStreaming;
 
     return Column(
+      key: _containerKey,
+      mainAxisSize: MainAxisSize.min,
       children: [
         if (_selectedImage != null || _selectedVoice != null)
           _buildPreviewArea(),
@@ -96,40 +106,10 @@ class _ChatInputState extends State<ChatInput> {
         // 如果当前对话不是空，可以显示一个新增对话按钮;
         // 如果当前对话未滚动到底部，还可以显示一个滚动到底部的按钮
         // 后续想办法悬浮透明，类似DS？？？
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8.sp),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(width: 48.sp),
-              if (widget.showAddChatButton)
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    // 按钮的尺寸
-                    minimumSize: Size(52.sp, 28.sp),
-                    //  // 边框颜色和边框宽度
-                    side: BorderSide(color: Colors.blue, width: 1.sp),
-                    // 按钮的圆角
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.sp),
-                    ),
-                  ),
-                  icon: Icon(Icons.add_comment_outlined, size: 15.sp),
-                  onPressed: widget.onAddChat,
-                  label: Text('开启新对话', style: TextStyle(fontSize: 12.sp)),
-                ),
-              (widget.showScrollToBottomButton)
-                  ? IconButton(
-                      icon: FaIcon(FontAwesomeIcons.circleArrowDown),
-                      onPressed: widget.onScrollToBottom,
-                    )
-                  : SizedBox(width: 48.sp),
-            ],
-          ),
-        ),
         Container(
           padding: EdgeInsets.all(8.sp),
           child: Column(
+            // mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
@@ -140,6 +120,8 @@ class _ChatInputState extends State<ChatInput> {
                       ),
                       onPressed: () {
                         setState(() => _showTools = !_showTools);
+                        // 切换工具栏后，重新获取输入框高度，让父组件重新布局
+                        _notifyHeightChange();
                       },
                     ),
                   if (!hasTools) _buildVoiceModeButton(),

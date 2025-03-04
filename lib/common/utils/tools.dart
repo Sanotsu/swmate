@@ -12,6 +12,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:uuid/uuid.dart';
 
 import '../constants/inner_system_prompt.dart';
 import '../../apis/chat_completion/common_cc_apis.dart';
@@ -490,6 +491,7 @@ Future<String> getAITranslation(
     "glm-4-flash",
     true,
     isBuiltin: true,
+    cusLlmSpecId: Uuid().v4(),
   );
 
   // 完全没处理错误情况

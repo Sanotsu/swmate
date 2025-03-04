@@ -103,6 +103,7 @@ const _$LLModelTypeEnumMap = {
   LLModelType.ttv: 'ttv',
   LLModelType.itv: 'itv',
   LLModelType.video: 'video',
+  LLModelType.omni: 'omni',
 };
 
 GroupChatHistory _$GroupChatHistoryFromJson(Map<String, dynamic> json) =>

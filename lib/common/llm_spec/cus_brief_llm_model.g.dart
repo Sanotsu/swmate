@@ -17,7 +17,7 @@ CusBriefLLMSpec _$CusBriefLLMSpecFromJson(Map<String, dynamic> json) =>
       outputPrice: (json['outputPrice'] as num?)?.toDouble(),
       costPer: (json['costPer'] as num?)?.toDouble(),
       contextLength: (json['contextLength'] as num?)?.toInt(),
-      cusLlmSpecId: json['cusLlmSpecId'] as String?,
+      cusLlmSpecId: json['cusLlmSpecId'] as String,
       gmtRelease: json['gmtRelease'] == null
           ? null
           : DateTime.parse(json['gmtRelease'] as String),
@@ -65,4 +65,5 @@ const _$LLModelTypeEnumMap = {
   LLModelType.ttv: 'ttv',
   LLModelType.itv: 'itv',
   LLModelType.video: 'video',
+  LLModelType.omni: 'omni',
 };

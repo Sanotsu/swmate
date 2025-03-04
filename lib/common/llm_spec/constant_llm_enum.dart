@@ -65,6 +65,10 @@ enum LLModelType {
   ttv, // Text To Video
   itv, // Image To Video
   video,
+
+  // 全模态，比如通义千问-Omni-Turbo
+  // 支持文本, 图像，语音，视频输入理解和混合输入理解，具备文本和语音同时流式生成能力
+  omni,
 }
 
 // 模型类型对应的中文名
@@ -78,4 +82,5 @@ final Map<LLModelType, String> MT_NAME_MAP = {
   LLModelType.ttv: '文生视频',
   LLModelType.itv: '图生视频',
   LLModelType.video: '视频生成',
+  LLModelType.omni: '全模态',
 };

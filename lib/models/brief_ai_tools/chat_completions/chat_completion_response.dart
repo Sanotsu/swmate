@@ -11,11 +11,13 @@ class ChatCompletionResponse {
   @JsonKey(readValue: readJsonValue)
   final String id;
 
+  // 2025-03-03 智谱的流式响应没有此栏位
   @JsonKey(readValue: readJsonValue)
-  final String object;
+  final String? object;
 
+  // 2025-03-03 无问芯穹流式响应可能没有此栏位
   @JsonKey(readValue: readJsonValue)
-  final int created;
+  final int? created;
 
   @JsonKey(readValue: readJsonValue)
   final String model;
@@ -37,8 +39,8 @@ class ChatCompletionResponse {
 
   ChatCompletionResponse({
     required this.id,
-    required this.object,
-    required this.created,
+    this.object,
+    this.created,
     required this.model,
     required this.choices,
     this.usage,
@@ -75,8 +77,9 @@ class ChatCompletionResponse {
 
 @JsonSerializable(explicitToJson: true)
 class ChatCompletionChoice {
+  // 2025-03-03 无问芯穹流式响应最后一条choices为空数组
   @JsonKey(readValue: readJsonValue)
-  final int index;
+  final int? index;
 
   // 同步时从这里取
   @JsonKey(readValue: readJsonValue)
@@ -93,7 +96,7 @@ class ChatCompletionChoice {
   final List<Map<String, dynamic>>? toolCalls;
 
   ChatCompletionChoice({
-    required this.index,
+    this.index,
     this.message,
     this.delta,
     this.finishReason,

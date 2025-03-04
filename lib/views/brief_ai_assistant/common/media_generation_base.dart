@@ -254,6 +254,7 @@ abstract class MediaGenerationBaseState<T extends MediaGenerationBase>
       child: buildDropdownButton2<CusBriefLLMSpec?>(
         value: selectedModel,
         items: modelList,
+        height: 48.sp,
         hintLabel: "选择模型",
         alignment: Alignment.centerLeft,
         // labelSize: 12.sp,

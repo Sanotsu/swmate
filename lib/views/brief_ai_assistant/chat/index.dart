@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants/constants.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
@@ -66,6 +68,10 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   // 直接全局缓存，所有使用ChatListArea的地方都改了
   double _textScaleFactor = 1.0;
 
+  // 输入框高度状态(用于悬浮按钮的布局)
+  // 输入框展开收起工具栏时，悬浮按钮(新加对话、滚动到底部)位置需要动态变化，始终在输入框的上方
+  double _inputHeight = 0;
+
   @override
   void initState() {
     super.initState();
@@ -104,7 +110,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
 
     // 流式响应还未完成且不是用户手动滚动，滚动到底部
     if (_isStreaming && !_isUserScrolling) {
-      _scrollToBottom();
+      _resetContentHeight();
     }
   }
 
@@ -149,33 +155,38 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           _messages = lastChat.messages;
           _currentChat = lastChat;
           // 根据历史记录设置模型
-          _selectedModel = _modelList.firstWhere(
-            (m) => m == lastChat.llmSpec,
-            orElse: () => _modelList.first,
-          );
+          _selectedModel = _modelList
+              .where((m) => m.cusLlmSpecId == lastChat.llmSpec.cusLlmSpecId)
+              .firstOrNull;
+
+          // 2025-03-03 如果是今天的对话，但是模型没有找到(比如刚对话完，就删除了模型)
+          // 则使用默认模型，并重置对话
+          if (_selectedModel == null) {
+            _selectedModel = _modelList.first;
+            _createNewChat();
+          }
+
           _selectedType = _selectedModel!.modelType;
         });
-
-        // 重置内容高度
-        _resetContentHeight();
       } else {
         // 如果不是今天的对话，创建新对话
+        _createNewChat();
         setState(() {
-          _messages = [];
-          _currentChat = null;
           _selectedModel = _modelList.first;
           _selectedType = _selectedModel!.modelType;
         });
       }
     } else {
-      // 没有历史记录时，使用默认值
+      // 没有历史记录时，创建新对话
+      _createNewChat();
       setState(() {
-        _messages = [];
-        _currentChat = null;
         _selectedModel = _modelList.first;
         _selectedType = _selectedModel!.modelType;
       });
     }
+
+    // 重置内容高度
+    _resetContentHeight();
 
     // print('初始化对话: ${_selectedModel?.name}, 消息数: ${_messages.length}');
   }
@@ -222,10 +233,14 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => ModelSelector(
-        models: filteredModels,
-        selectedModel: _selectedModel,
-        onModelChanged: (model) => Navigator.pop(context, model),
+      enableDrag: false,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.8,
+        child: ModelSelector(
+          models: filteredModels,
+          selectedModel: _selectedModel,
+          onModelChanged: (model) => Navigator.pop(context, model),
+        ),
       ),
     );
 
@@ -237,8 +252,11 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       setState(() => _selectedModel = filteredModels.first);
     }
 
+    // 2025-03-03 切换模型后也直接重建对话好了？？？此时就不用重置内容高度了
+    _createNewChat();
+
     // 切换模型后，滚动到底部
-    _resetContentHeight();
+    // _resetContentHeight();
   }
 
   // 选择历史记录
@@ -247,10 +265,20 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       _messages = history.messages;
       _currentChat = history;
       // 恢复使用的模型
-      _selectedModel = _modelList.firstWhere(
-        (m) => m == history.llmSpec,
-        orElse: () => _modelList.first,
-      );
+      _selectedModel = _modelList
+          .where((m) => m.cusLlmSpecId == history.llmSpec.cusLlmSpecId)
+          .firstOrNull;
+
+      // 2025-03-03 如果点击历史记录，但是模型没有找到(比如刚对话完，就删除了模型)
+      // 则使用默认模型，并重置对话
+      if (_selectedModel == null) {
+        EasyLoading.showInfo(
+          '该历史对话所用模型已被删除，将使用默认模型构建全新对话。',
+          duration: const Duration(seconds: 5),
+        );
+        _selectedModel = _modelList.first;
+        _createNewChat();
+      }
       _selectedType = _selectedModel!.modelType;
 
       // 重置内容高度
@@ -310,8 +338,9 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           final content = ccr.cusText;
 
           // 对于DeepSeekR系列的，还有推理过程，此时对应栏位是 reasoning_content
-          String reasoningContent =
-              ccr.choices.first.delta?["reasoning_content"] ?? '';
+          String reasoningContent = ccr.choices.isNotEmpty
+              ? (ccr.choices.first.delta?["reasoning_content"] ?? '')
+              : '';
 
           // 检查是否是结束标记(正常结束应该没有DONE，手动终止应该有标识)
           if (content.contains('[手动终止]') ||
@@ -421,7 +450,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       setState(() => _isStreaming = true);
 
       // 重置完了顺便滚动到底部
-      _scrollToBottom();
+      _resetContentHeight();
 
       final (stream, cancelFunc) = await ChatService.sendMessage(
         _selectedModel!,
@@ -653,6 +682,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       body: Stack(
         children: [
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 5.sp),
 
@@ -674,7 +704,22 @@ class _BriefChatScreenState extends State<BriefChatScreen>
               ),
 
               /// 流式响应时显示进度条
-              if (_isStreaming) const LinearProgressIndicator(),
+              if (_isStreaming)
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8.sp,
+                    vertical: 5.sp,
+                  ),
+                  child: SizedBox(
+                    height: 5.sp,
+                    child: LinearProgressIndicator(),
+                  ),
+                  // child: SizedBox(
+                  //   width: 16.sp,
+                  //   height: 16.sp,
+                  //   child: CircularProgressIndicator(strokeWidth: 2.sp),
+                  // ),
+                ),
 
               /// 输入框
               ChatInput(
@@ -682,25 +727,15 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                 onSend: _handleSendMessage,
                 onCancel: _cancelResponse,
                 isStreaming: _isStreaming,
-                showAddChatButton: _messages.isNotEmpty && !_isStreaming,
-                showScrollToBottomButton: _showScrollToBottom,
-                onAddChat: _createNewChat,
-                onScrollToBottom: _scrollToBottom,
+                onHeightChanged: (height) {
+                  setState(() => _inputHeight = height);
+                },
               ),
             ],
           ),
 
-          // /// 滚动到底部按钮(已经放在输入框组件中了)
-          // if (_showScrollToBottom)
-          //   Positioned(
-          //     right: 8.sp,
-          //     bottom: 120.sp, // 调整位置避免遮挡输入框
-          //     child: FloatingActionButton(
-          //       mini: true,
-          //       onPressed: _scrollToBottom,
-          //       child: const Icon(Icons.arrow_downward),
-          //     ),
-          //   ),
+          // 悬浮按钮(前面是显示新加对话按钮，后面显示滚动到底部按钮)
+          _buildFloatingButton(),
         ],
       ),
     );
@@ -766,11 +801,116 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     );
   }
 
+  // 构建消息列表的底部
+  Widget _buildFloatingButton() {
+    return Positioned(
+      left: 0,
+      right: 0,
+      // 悬浮按钮有设定上下间距，所以这里不需要加间距,甚至根据悬浮按钮内部的边距减少尺寸
+      bottom: _inputHeight - 10.sp,
+      child: Container(
+        // 这个边距是和其他对话消息列表等逐渐的间距保持一致
+        padding: EdgeInsets.symmetric(horizontal: 8.sp),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // 图标按钮的默认尺寸是48*48,占位宽度默认48
+            SizedBox(width: 48.sp),
+            if (_messages.isNotEmpty && !_isStreaming)
+              // 新加对话按钮的背景色
+              Padding(
+                // 这里的上下边距，和下面maxHeight的和，要等于默认图标按钮高度的48sp
+                padding: EdgeInsets.symmetric(vertical: 16.sp),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(14.sp),
+                    //
+                  ),
+                  // 限制按钮的最大尺寸
+                  constraints: BoxConstraints(
+                    maxWidth: 124.sp,
+                    maxHeight: 32.sp,
+                  ),
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      // 设置按钮的背景色为透明
+                      backgroundColor: Colors.transparent,
+                      // elevation: 0,
+                      // 按钮的尺寸
+                      // minimumSize: Size(52.sp, 28.sp),
+                      // 按钮的圆角
+                      // shape: RoundedRectangleBorder(
+                      //   borderRadius: BorderRadius.circular(14.sp),
+                      // ),
+                    ),
+                    icon: Icon(
+                      Icons.add_comment_outlined,
+                      size: 15.sp,
+                      color: Colors.white,
+                    ),
+                    onPressed: _createNewChat,
+                    label: Text(
+                      '开启新对话',
+                      style: TextStyle(fontSize: 12.sp, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            if (_showScrollToBottom)
+              // 按钮图标变小，但为了和下方的发送按钮对齐，所以补足占位宽度
+              IconButton(
+                iconSize: 28.sp,
+                icon: FaIcon(
+                  FontAwesomeIcons.circleArrowDown,
+                  color: Colors.black,
+                ),
+                onPressed: _resetContentHeight,
+              ),
+            if (!_showScrollToBottom) SizedBox(width: 48.sp),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _cancelResponse?.call();
     _scrollController.dispose();
     super.dispose();
+  }
+}
+
+class CustomLinearProgressIndicator extends StatelessWidget {
+  final double progress; // 当前进度值（0.0 到 1.0）
+  final Color backgroundColor; // 背景颜色
+  final Color valueColor; // 进度条颜色
+  final double height; // 进度条高度
+  final BorderRadius borderRadius; // 圆角
+
+  const CustomLinearProgressIndicator({
+    super.key,
+    required this.progress,
+    this.backgroundColor = Colors.grey,
+    this.valueColor = Colors.blue,
+    this.height = 8.0,
+    this.borderRadius = const BorderRadius.all(Radius.circular(10)),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: borderRadius, // 设置圆角
+      child: SizedBox(
+        height: height, // 设置高度
+        child: LinearProgressIndicator(
+          value: null, // 当前进度
+          backgroundColor: backgroundColor, // 背景颜色
+          valueColor: AlwaysStoppedAnimation<Color>(valueColor), // 进度条颜色
+        ),
+      ),
+    );
   }
 }

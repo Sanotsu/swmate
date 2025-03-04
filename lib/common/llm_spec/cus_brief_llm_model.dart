@@ -12,12 +12,12 @@ part 'cus_brief_llm_model.g.dart';
 @JsonSerializable(explicitToJson: true)
 class CusBriefLLMSpec {
   // 唯一编号
-  String? cusLlmSpecId;
+  String cusLlmSpecId;
   // 模型所在的云平台
   ApiPlatform platform;
   // 模型字符串(平台API参数的那个model的值)、
   String model;
-  // 模型类型(cc、vision、radio、tti、tti_word、iti、ttv……)
+  // 模型类型(cc、vision、audio、tti、iti、ttv……)
   LLModelType modelType;
   // 用于显示的模型名称
   String name;
@@ -47,7 +47,7 @@ class CusBriefLLMSpec {
     this.outputPrice,
     this.costPer,
     this.contextLength,
-    this.cusLlmSpecId,
+    required this.cusLlmSpecId,
     this.gmtRelease,
     this.gmtCreate,
     this.isBuiltin = false,

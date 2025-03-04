@@ -78,6 +78,7 @@ class _BriefImageScreenState
     return SizedBox(
       width: 90.sp,
       child: buildDropdownButton2<CusLabel?>(
+        height: 48.sp,
         value: _selectedImageSize,
         items: _imageSizeOptions,
         hintLabel: "选择类型",

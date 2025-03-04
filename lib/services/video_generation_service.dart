@@ -39,15 +39,11 @@ class VideoGenerationService {
   }
 
   static Future<String> _getApiKey(CusBriefLLMSpec model) async {
-    if (model.cusLlmSpecId?.endsWith('_builtin') ?? false) {
+    if (model.cusLlmSpecId.endsWith('_builtin')) {
       // 使用内置的 API Key
       switch (model.platform) {
-        case ApiPlatform.aliyun:
-          return DefaultApiKeys.aliyunApiKey;
         case ApiPlatform.zhipu:
           return DefaultApiKeys.zhipuAK;
-        case ApiPlatform.siliconCloud:
-          return DefaultApiKeys.siliconCloudAK;
         default:
           throw Exception('不支持的平台');
       }

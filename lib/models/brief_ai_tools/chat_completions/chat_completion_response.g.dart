@@ -10,8 +10,8 @@ ChatCompletionResponse _$ChatCompletionResponseFromJson(
         Map<String, dynamic> json) =>
     ChatCompletionResponse(
       id: readJsonValue(json, 'id') as String,
-      object: readJsonValue(json, 'object') as String,
-      created: (readJsonValue(json, 'created') as num).toInt(),
+      object: readJsonValue(json, 'object') as String?,
+      created: (readJsonValue(json, 'created') as num?)?.toInt(),
       model: readJsonValue(json, 'model') as String,
       choices: (readJsonValue(json, 'choices') as List<dynamic>)
           .map((e) => ChatCompletionChoice.fromJson(e as Map<String, dynamic>))
@@ -44,7 +44,7 @@ Map<String, dynamic> _$ChatCompletionResponseToJson(
 ChatCompletionChoice _$ChatCompletionChoiceFromJson(
         Map<String, dynamic> json) =>
     ChatCompletionChoice(
-      index: (readJsonValue(json, 'index') as num).toInt(),
+      index: (readJsonValue(json, 'index') as num?)?.toInt(),
       message: readJsonValue(json, 'message') as Map<String, dynamic>?,
       delta: readJsonValue(json, 'delta') as Map<String, dynamic>?,
       finishReason: readJsonValue(json, 'finishReason') as String?,
