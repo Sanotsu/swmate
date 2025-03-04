@@ -1,0 +1,253 @@
+[
+  {
+    "platform": "siliconCloud",
+    "model": "Pro/deepseek-ai/DeepSeek-R1",
+    "modelType": "cc",
+    "name": "DeepSeek-R1(Pro)",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 4,
+    "outputPrice": 16,
+    "gmtRelease": "2025-01-20"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "deepseek-ai/DeepSeek-R1",
+    "modelType": "cc",
+    "name": "DeepSeek-R1",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 4,
+    "outputPrice": 16,
+    "gmtRelease": "2025-01-20"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "Pro/deepseek-ai/DeepSeek-V3",
+    "modelType": "cc",
+    "name": "DeepSeek-V3(Pro)",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 2,
+    "outputPrice": 8,
+    "gmtRelease": "2024-12-26"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "deepseek-ai/DeepSeek-V3",
+    "modelType": "cc",
+    "name": "DeepSeek-V3",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 2,
+    "outputPrice": 8,
+    "gmtRelease": "2024-12-26"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+    "modelType": "cc",
+    "name": "DeepSeek-R1-Distill-Qwen-32B",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 1.26,
+    "outputPrice": 1.26,
+    "gmtRelease": "2025-01-20"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+    "modelType": "cc",
+    "name": "DeepSeek-R1-Distill-Qwen-14B",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 0.7,
+    "outputPrice": 0.7,
+    "gmtRelease": "2025-01-20"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+    "modelType": "cc",
+    "name": "DeepSeek-R1-Distill-Qwen-7B",
+    "contextLength": 32000,
+    "isFree": true,
+    "inputPrice": 0.0,
+    "outputPrice": 0.0,
+    "gmtRelease": "2025-01-20"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+    "modelType": "cc",
+    "name": "DeepSeek-R1-Distill-Qwen-1.5B",
+    "contextLength": 32000,
+    "isFree": true,
+    "inputPrice": 0.0,
+    "outputPrice": 0.0,
+    "gmtRelease": "2025-01-20"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "deepseek-ai/DeepSeek-V2.5",
+    "modelType": "cc",
+    "name": "DeepSeek-V2.5",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 1.33,
+    "outputPrice": 1.33,
+    "gmtRelease": "2024-12-10"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "deepseek-ai/deepseek-vl2",
+    "modelType": "vision",
+    "name": "DeepSeek-VL2",
+    "contextLength": 4000,
+    "isFree": false,
+    "inputPrice": 0.99,
+    "outputPrice": 0.99,
+    "gmtRelease": "2024-12-13"
+  },
+
+  {
+    "platform": "siliconCloud",
+    "model": "Qwen/QVQ-72B-Preview",
+    "modelType": "vision",
+    "name": "QVQ-72B-Preview",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 9.9,
+    "outputPrice": 9.9,
+    "gmtRelease": "2024-12-25"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "Qwen/QVQ-32B-Preview",
+    "modelType": "vision",
+    "name": "QVQ-32B-Preview",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 1.26,
+    "outputPrice": 1.26,
+    "gmtRelease": "2024-11-28"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "Qwen/Qwen2-VL-72B-Instruct",
+    "modelType": "vision",
+    "name": "Qwen2-VL-72B-Instruct",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 4.13,
+    "outputPrice": 4.13,
+    "gmtRelease": "2024-09-17"
+  },
+
+  {
+    "platform": "siliconCloud",
+    "model": "Qwen/Qwen2.5-72B-Instruct-128K",
+    "modelType": "cc",
+    "name": "Qwen2.5-72B-Instruct-128K",
+    "contextLength": 128000,
+    "isFree": false,
+    "inputPrice": 4.13,
+    "outputPrice": 4.13,
+    "gmtRelease": "2024-09-18"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "Qwen/Qwen2.5-72B-Instruct",
+    "modelType": "cc",
+    "name": "Qwen2.5-72B-Instruct",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 4.13,
+    "outputPrice": 4.13,
+    "gmtRelease": "2024-09-18"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "Qwen/Qwen2.5-32B-Instruct",
+    "modelType": "cc",
+    "name": "Qwen2.5-32B-Instruct",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 1.26,
+    "outputPrice": 1.26,
+    "gmtRelease": "2024-09-19"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "Qwen/Qwen2.5-14B-Instruct",
+    "modelType": "cc",
+    "name": "Qwen2.5-14B-Instruct",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 0.7,
+    "outputPrice": 0.7,
+    "gmtRelease": "2024-09-18"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "Qwen/Qwen2.5-7B-Instruct",
+    "modelType": "cc",
+    "name": "Qwen2.5-7B-Instruct(Free)",
+    "contextLength": 32000,
+    "isFree": true,
+    "inputPrice": 0.0,
+    "outputPrice": 0.0,
+    "gmtRelease": "2024-09-18"
+  },
+
+  {
+    "platform": "siliconCloud",
+    "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+    "modelType": "cc",
+    "name": "Qwen2.5-Coder-32B-Instruct",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 1.26,
+    "outputPrice": 1.26,
+    "gmtRelease": "2024-11-11"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+    "modelType": "cc",
+    "name": "Qwen2.5-Coder-7B-Instruct(Free)",
+    "contextLength": 32000,
+    "isFree": true,
+    "inputPrice": 0.0,
+    "outputPrice": 0.0,
+    "gmtRelease": "2024-09-20"
+  },
+
+  {
+    "platform": "siliconCloud",
+    "model": "Kwai-Kolors/Kolors",
+    "modelType": "image",
+    "name": "Kwai-Kolors/Kolors",
+    "isFree": true,
+    "costPer": 0.0,
+    "gmtRelease": "2024-07-06"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "tencent/HunyuanVideo-HD",
+    "modelType": "ttv",
+    "name": "HunyuanVideo-HD",
+    "isFree": false,
+    "costPer": 2.8,
+    "gmtRelease": "2024-12-03"
+  },
+  {
+    "platform": "siliconCloud",
+    "model": "tencent/HunyuanVideo",
+    "modelType": "ttv",
+    "name": "HunyuanVideo",
+    "isFree": false,
+    "costPer": 0.7,
+    "gmtRelease": "2024-12-03"
+  }
+]

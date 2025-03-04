@@ -1,0 +1,21 @@
+{
+  "USER_ALIYUN_API_KEY": "sk-xxx",
+  "USER_BAIDU_API_KEY_V2": "bce-v3/ALTAK-xx/xxx",
+  "USER_TENCENT_API_KEY": "sk-xxx",
+
+  "USER_DEEPSEEK_API_KEY": "sk-xxx",
+  "USER_LINGYIWANWU_API_KEY": "xxx",
+  "USER_ZHIPU_API_KEY": "xxx.xxx",
+
+  "USER_SILICON_CLOUD_API_KEY": "sk-xxx",
+  "USER_INFINI_GEN_STUDIO_API_KEY": "sk-xxx",
+
+  "USER_XFYUN_APP_ID": "xxx",
+  "USER_XFYUN_API_KEY": "xxx",
+  "USER_XFYUN_API_SECRET": "xxx",
+
+  "USER_NUTRITIONIX_APP_ID": "xxx",
+  "USER_NUTRITIONIX_APP_KEY": "xxx",
+
+  "USER_NEWS_API_KEY": "xxx"
+}

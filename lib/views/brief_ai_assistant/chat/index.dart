@@ -707,13 +707,31 @@ class _BriefChatScreenState extends State<BriefChatScreen>
               if (_isStreaming)
                 Padding(
                   padding: EdgeInsets.symmetric(
+                    // 这里需要减去悬浮按钮的宽度，避免遮挡滚动到底部悬浮按钮；再留点间隔避免和按钮紧挨着
+                    // horizontal: 48.sp + 8.sp,
+                    // vertical: 5.sp,
+                    /// 调整位置之后，还是滚动条贯穿屏幕，悬浮按钮放在滚动条上方，和谐一点
                     horizontal: 8.sp,
-                    vertical: 5.sp,
                   ),
-                  child: SizedBox(
-                    height: 5.sp,
-                    child: LinearProgressIndicator(),
+                  child: ClipRRect(
+                    // 设置圆角
+                    borderRadius: BorderRadius.all(Radius.circular(5.sp)),
+                    child: SizedBox(
+                      height: 5.sp, // 设置高度
+                      child: LinearProgressIndicator(
+                        value: null, // 当前进度(null就循环)
+                        backgroundColor: Colors.grey, // 背景颜色
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.blue, // 进度条颜色
+                        ),
+                      ),
+                    ),
                   ),
+
+                  // child: SizedBox(
+                  //   height: 5.sp,
+                  //   child: LinearProgressIndicator(),
+                  // ),
                   // child: SizedBox(
                   //   width: 16.sp,
                   //   height: 16.sp,
@@ -785,13 +803,17 @@ class _BriefChatScreenState extends State<BriefChatScreen>
               // 不在流式响应时在助手消息下方显示操作按钮
               if (isAssistant && !_isStreaming)
                 Padding(
-                  padding: EdgeInsets.only(right: 8.sp),
-                  child: MessageActions(
-                    content: message.content,
-                    onRegenerate: () => _handleRegenerate(message),
-                    // 是否正在重新生成(当前消息是否是重新生成消息)
-                    isRegenerating: index == _regeneratingIndex,
-                    // tokens: message.totalTokens,
+                  // 底部留出一点间距，避免和悬浮按钮重叠
+                  padding: EdgeInsets.only(left: 8.sp, bottom: 48.sp),
+                  child: SizedBox(
+                    height: 20.sp,
+                    child: MessageActions(
+                      content: message.content,
+                      onRegenerate: () => _handleRegenerate(message),
+                      // 是否正在重新生成(当前消息是否是重新生成消息)
+                      isRegenerating: index == _regeneratingIndex,
+                      tokens: message.totalTokens,
+                    ),
                   ),
                 ),
             ],
@@ -807,12 +829,13 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       left: 0,
       right: 0,
       // 悬浮按钮有设定上下间距，所以这里不需要加间距,甚至根据悬浮按钮内部的边距减少尺寸
-      bottom: _inputHeight - 10.sp,
+      bottom: _inputHeight - 5.sp,
       child: Container(
         // 这个边距是和其他对话消息列表等逐渐的间距保持一致
         padding: EdgeInsets.symmetric(horizontal: 8.sp),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // 图标按钮的默认尺寸是48*48,占位宽度默认48
             SizedBox(width: 48.sp),
@@ -860,7 +883,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
             if (_showScrollToBottom)
               // 按钮图标变小，但为了和下方的发送按钮对齐，所以补足占位宽度
               IconButton(
-                iconSize: 28.sp,
+                iconSize: 24.sp,
                 icon: FaIcon(
                   FontAwesomeIcons.circleArrowDown,
                   color: Colors.black,

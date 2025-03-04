@@ -4,14 +4,14 @@ Smart Work&Life Mate
 
 使用 flutter 开发的一个“智能工作生活类助手”应用。主要包含：
 
-- 以调用各个云平台部署的在线大模型 API 为基底的“**AI 智能助手**”，(简称“工具”)。
-  - 2025-02-26 大模型 API 调用**只保留其 HTTP API 兼容 openAI API 结构的**平台和模型，不再兼容其他平台自己定义的 API 结构，具体如下：
+- 以简单参数调用各个云平台部署的在线大模型 API 为基底的“**AI 智能助手**”，(简称“工具”)。
+  - 2025-03-04 大模型 API 调用**只保留其 HTTP API 兼容 openAI API 结构的**平台和模型，不再兼容其他平台自己定义的 API 结构，具体如下：
   - 对话模型：
     - [阿里](https://help.aliyun.com/zh/model-studio/developer-reference/compatibility-of-openai-with-dashscope)
     - [百度](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Fm2vrveyu)
     - [腾讯](https://console.cloud.tencent.com/hunyuan/start)
     - [智谱](https://open.bigmodel.cn/dev/api/normal-model/glm-4)
-    - [深度求索](https://api-docs.deepseek.com/zh-cn/)
+    - [深度求索(DeepSeek)](https://api-docs.deepseek.com/zh-cn/)
     - [零一万物](https://platform.lingyiwanwu.com/docs/api-reference)
     - [无问芯穹](https://docs.infini-ai.com/gen-studio/api/maas.html#/operations/chatCompletions)
     - [硅基流动](https://docs.siliconflow.cn/cn/api-reference/chat-completions/chat-completions)
@@ -66,7 +66,7 @@ AI 助手，就是调用各个平台中的语言大模型 API，进行聊天、�
   - 实际实现是先调用讯飞的语音转写 API，把语音转为了文字，再调用大模型的 API
   - 直接发送语音就直接是转化后的文字，有可能会识别错，可以在页面中查看转化后的文本，发送文本
   - 有保存原语音文件在设备本地应用缓存，所以点击可以听原语音
-- 可以查看最近的对话，点击指定对话历史记录，可以继续交流
+- 可以查看最近的对话（点击对话主页面右上角的历史记录图标），点击指定对话历史记录，可以继续交流
   - 历史记录是存在设备本地的 sqlite 数据库中的
 - 如果平台有 DeepSeek R 系列深度思考(默认的)功能，返回中有`reasoning_content`字段，会显示在对话框中当作思考内容。
 
@@ -102,7 +102,11 @@ AI 绘图/视频结构和操作类似，所以放在一起说。
 - 如果想使用本应用支持的平台中更加强劲的模型，可自行去各个平台充值、获取密钥，再导入密钥和模型 json 文件
   - **密钥只缓存在本地，事实上，除了调用 API 和加载图片、视频，都没有联网操作**
   - 想用哪个平台、哪个模型，全都自己导入
-- 平台密钥和模型规格的**固定 json 结构**如下：
+- 平台密钥和模型规格的**固定 json 结构**见下方
+
+---
+
+**_注意，平台密钥和平台模型规格要同时导入，否则无法正常使用。_**
 
 #### 平台密钥 json 结构
 
@@ -182,14 +186,16 @@ AI 绘图/视频结构和操作类似，所以放在一起说。
 
 ```ts
 enum ApiPlatform {
+  aliyun, // 阿里云百炼
   baidu, // 百度千帆
   tencent, // 腾讯混元
-  aliyun, // 阿里云百炼
-  siliconCloud, // 硅基流动
+
+  deepseek, // 深度求索
   lingyiwanwu, // 零一万物
   zhipu, // 智谱 AI
+
+  siliconCloud, // 硅基流动
   infini, // 无问芯穹的 genStudio
-  deepseek, // 深度求索
 }
 ```
 
@@ -209,6 +215,22 @@ enum LLModelType {
 ```
 
 后续我会放一些整理好的各个平台我常用的大模型规格 json 文件在项目的 **[\_cus_model_jsons](./_cus_model_jsons)** 文件夹中，可以参考使用。
+
+### TODO
+
+2025-03-04 时想到的：
+
+- [ ] AI 工具部分:
+  - [ ] 高级请求参数配置(temperature、max_tokens 等比较常用但暂没支持用户配置)
+  - [ ] 对话消息展示的 Markdown 格式结合 LaTeX
+  - [ ] AI 助手可编辑某个输入对话的消息，并记录对话分支
+  - [ ] 添加角色卡功能，可少量预设，支持用户自行导入
+  - [ ] 一键保存整个对话为 Markdown 文件？
+  - [ ] 多 Agent 的群聊、角色扮演？
+  - [ ] 免费云端数据库用于数据存储？
+  - [ ] 是否简单使用 Nodejs 编写一个后端？
+- [ ] 生活工具部分:
+  - [ ] 一个简单的文本记事本(ToDo)?
 
 ## 生活日常工具
 
@@ -304,6 +326,12 @@ _这个其实是之前(2024-04-09)就单独开发好的 app 了，功能融合�
 这个模块目前仅有一个"备份恢复"功能。
 
 因为智能助手的对话记录、极简记账的账单条目、随机菜品的菜品列表等，都是本地 sqlite 存储的，所以备份就是把 db 中的数据导出成 json 文件并压缩，恢复就是把压缩包的 json 存入数据库中。
+
+**注意**：
+
+- 恢复会清空当前数据库中的数据，请谨慎操作。
+  - 更新或卸载前，推荐先全量备份。
+- 0.4.0 之前的版本数据库表结构和现在不一样，所以不能恢复。
 
 # 其他说明
 

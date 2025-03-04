@@ -128,13 +128,17 @@ class _ModelListState extends State<ModelList> {
         }
       }
 
+      // 默认导入的json文件中是没有模型规格编号的，而该类为必要属性，所以需要先生成一个
+      for (final item in jsonList) {
+        item['cusLlmSpecId'] = const Uuid().v4();
+      }
+
       // 转换为模型列表
       var models =
           jsonList.map((json) => CusBriefLLMSpec.fromJson(json)).toList();
 
       // 设置ID和时间
       models = models.map((e) {
-        e.cusLlmSpecId = const Uuid().v4();
         e.name = !e.isFree ? '【收费】${e.name}' : e.name;
         e.gmtCreate = DateTime.now();
         e.isBuiltin = false; // 用户导入的模型

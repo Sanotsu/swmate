@@ -87,7 +87,7 @@ class DBBriefAIToolHelper {
       BriefAIToolDdl.tableNameOfCusBriefLlmSpec,
       where: where.isNotEmpty ? where.join(' AND ') : null,
       whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
-      orderBy: "gmtCreate ASC",
+      orderBy: "gmtCreate DESC",
     );
 
     return rows.map((row) => CusBriefLLMSpec.fromMap(row)).toList();

@@ -1,0 +1,24 @@
+[
+  {
+    "platform": "lingyiwanwu",
+    "model": "yi-lightning",
+    "modelType": "cc",
+    "name": "yi-lightning",
+    "contextLength": 16000,
+    "isFree": false,
+    "inputPrice": 0.99,
+    "outputPrice": 0.99,
+    "gmtRelease": "2024-12-23"
+  },
+  {
+    "platform": "lingyiwanwu",
+    "model": "yi-vision-v2",
+    "modelType": "vision",
+    "name": "yi-vision-v2",
+    "contextLength": 16000,
+    "isFree": false,
+    "inputPrice": 6,
+    "outputPrice": 6,
+    "gmtRelease": "2024-12-23"
+  }
+]

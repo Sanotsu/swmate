@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -48,11 +46,24 @@ class _ChatInputState extends State<ChatInput> {
   bool _showTools = true;
   final GlobalKey _containerKey = GlobalKey();
 
+  // 添加一个变量记录上次通知给父组件输入框的高度
+  // (高度有变化后才重新通知，避免在didUpdateWidget中重复通知)
+  double _lastNotifiedHeight = 0;
+
   @override
   void initState() {
     super.initState();
-    // 初始化时获取输入框高度，让父组件重新布局
+    // 初始化时获取输入框高度
     _notifyHeightChange();
+  }
+
+  @override
+  void didUpdateWidget(ChatInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 只在模型改变时更新高度，因为模型改变可能影响工具栏状态
+    if (oldWidget.model?.cusLlmSpecId != widget.model?.cusLlmSpecId) {
+      _notifyHeightChange();
+    }
   }
 
   Future<bool> _checkPermissions() async {
@@ -84,8 +95,13 @@ class _ChatInputState extends State<ChatInput> {
       final RenderBox renderBox =
           _containerKey.currentContext!.findRenderObject() as RenderBox;
       final height = renderBox.size.height;
-      print('ChatInput height: $height');
-      widget.onHeightChanged?.call(height);
+
+      // 只在高度真正发生变化时才通知
+      if (height != _lastNotifiedHeight) {
+        // print('ChatInput height changed: $_lastNotifiedHeight -> $height');
+        _lastNotifiedHeight = height;
+        widget.onHeightChanged?.call(height);
+      }
     });
   }
 
@@ -383,7 +399,7 @@ class _ChatInputState extends State<ChatInput> {
           setState(() => _isRecording = true);
         }
       } catch (e) {
-        print('录音失败: $e');
+        debugPrint('录音失败: $e');
       }
     }
   }
