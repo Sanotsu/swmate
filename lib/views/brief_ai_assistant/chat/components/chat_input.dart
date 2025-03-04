@@ -98,7 +98,7 @@ class _ChatInputState extends State<ChatInput> {
 
       // 只在高度真正发生变化时才通知
       if (height != _lastNotifiedHeight) {
-        // print('ChatInput height changed: $_lastNotifiedHeight -> $height');
+        debugPrint('ChatInput height changed: $_lastNotifiedHeight -> $height');
         _lastNotifiedHeight = height;
         widget.onHeightChanged?.call(height);
       }

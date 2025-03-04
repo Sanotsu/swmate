@@ -444,7 +444,7 @@ class _BriefVideoScreenState
       // 未完成任务查询完之后，重新更新UI
       await _queryAllTasks();
     } catch (e) {
-      // print('检查任务状态失败: $e');
+      debugPrint('检查任务状态失败: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

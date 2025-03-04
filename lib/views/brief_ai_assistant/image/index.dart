@@ -282,7 +282,7 @@ class _BriefImageScreenState
             );
           }
         } catch (e) {
-          // print('检查任务状态失败: $e');
+          debugPrint('检查任务状态失败: $e');
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

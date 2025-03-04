@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -47,7 +45,6 @@ class _HomePageState extends State<HomePage> {
       // 点击返回键时暂停返回
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) async {
-        print("didPop-----------$didPop");
         if (didPop) {
           return;
         }

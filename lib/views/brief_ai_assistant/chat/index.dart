@@ -93,8 +93,6 @@ class _BriefChatScreenState extends State<BriefChatScreen>
         _isUserScrolling = false;
       }
 
-      // print('用户滚动: $_isUserScrolling');
-
       // 判断是否显示"滚动到底部"按钮
       setState(() {
         _showScrollToBottom = _scrollController.offset <
@@ -187,8 +185,6 @@ class _BriefChatScreenState extends State<BriefChatScreen>
 
     // 重置内容高度
     _resetContentHeight();
-
-    // print('初始化对话: ${_selectedModel?.name}, 消息数: ${_messages.length}');
   }
 
   // 创建新对话（不用修改当前选中的平台和模型）
@@ -524,8 +520,6 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
 
-      // print('触发滚动到底部');
-
       // 延迟50ms，避免内容高度还没更新
       Future.delayed(const Duration(milliseconds: 50), () {
         _scrollController.animateTo(
@@ -812,7 +806,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                       onRegenerate: () => _handleRegenerate(message),
                       // 是否正在重新生成(当前消息是否是重新生成消息)
                       isRegenerating: index == _regeneratingIndex,
-                      tokens: message.totalTokens,
+                      // tokens: message.totalTokens,
                     ),
                   ),
                 ),

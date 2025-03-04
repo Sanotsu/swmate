@@ -62,10 +62,6 @@ abstract class MediaManagerBaseState<T extends MediaManagerBase>
         ),
       );
 
-      // for (var element in albums) {
-      //   print("相册: ${element.name}");
-      // }
-
       // 查找AI生成的媒体目录
       AssetPathEntity? aiMediaPath;
       List<AssetEntity> media = [];
@@ -131,7 +127,6 @@ abstract class MediaManagerBaseState<T extends MediaManagerBase>
       }
     } catch (e) {
       if (!mounted) return;
-      // print("查询AI绘图历史记录失败: $e");
       commonExceptionDialog(context, "解析AI生成目录失败", e.toString());
     } finally {
       if (mounted) {
