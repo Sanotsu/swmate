@@ -18,7 +18,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../constants.dart';
+import '../constants/constants.dart';
 import '../utils/tools.dart';
 
 /// 构建AI对话云平台入口按钮
@@ -404,6 +404,7 @@ Widget buildImageView(
   // 是否是本地文件地址(暂时没使用到网络地址)
   bool? isFileUrl = false,
   String imagePlaceholder = "请选择图片",
+  String imageErrorHint = "图片异常",
 }) {
   // 如果没有图片数据，直接返回文提示
   if (image == null) {
@@ -444,7 +445,31 @@ Widget buildImageView(
       // 默认显示文件图片
       child: RepaintBoundary(
         child: Center(
-          child: Image(image: imageProvider, fit: BoxFit.scaleDown),
+          child: Image(
+            image: imageProvider,
+            fit: BoxFit.scaleDown,
+            errorBuilder: (context, url, error) => Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(10.sp),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(5.sp),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error, color: Colors.red),
+                    Text(
+                      imageErrorHint,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     ),

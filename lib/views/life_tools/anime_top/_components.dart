@@ -7,7 +7,7 @@ import 'package:flutter_rating_stars/flutter_rating_stars.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
+import '../../../common/constants/constants.dart';
 import '../../../common/utils/tools.dart';
 
 // MAL 可排名的有anime、manga、characters、people，响应的参数不太相似

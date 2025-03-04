@@ -1,0 +1,90 @@
+[
+  {
+    "platform": "infini",
+    "model": "deepseek-r1",
+    "modelType": "cc",
+    "name": "deepseek-r1",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 4,
+    "outputPrice": 16,
+    "gmtRelease": "2025-02-06"
+  },
+  {
+    "platform": "infini",
+    "model": "deepseek-v3",
+    "modelType": "cc",
+    "name": "deepseek-v3",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 2,
+    "outputPrice": 8,
+    "gmtRelease": "2025-02-07"
+  },
+  {
+    "platform": "lingyiwanwu",
+    "model": "deepseek-r1-distill-qwen-32b",
+    "modelType": "cc",
+    "name": "deepseek-r1-distill-qwen-32b",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 0,
+    "outputPrice": 0,
+    "gmtRelease": "2025-01-21"
+  },
+  {
+    "platform": "infini",
+    "model": "qwq-32b-preview",
+    "modelType": "cc",
+    "name": "qwq-32b-preview",
+    "contextLength": 32,
+    "isFree": false,
+    "inputPrice": 0,
+    "outputPrice": 0,
+    "gmtRelease": "2024-12-02"
+  },
+  {
+    "platform": "infini",
+    "model": "qwen2.5-72b-instruct",
+    "modelType": "cc",
+    "name": "qwen2.5-72b-instruct",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 0,
+    "outputPrice": 0,
+    "gmtRelease": "2024-09-19"
+  },
+  {
+    "platform": "infini",
+    "model": "qwen2.5-32b-instruct",
+    "modelType": "cc",
+    "name": "qwen2.5-32b-instruct",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 0,
+    "outputPrice": 0,
+    "gmtRelease": "2024-09-20"
+  },
+  {
+    "platform": "infini",
+    "model": "qwen2.5-14b-instruct",
+    "modelType": "cc",
+    "name": "qwen2.5-14b-instruct",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 0,
+    "outputPrice": 0,
+    "gmtRelease": "2024-09-20"
+  },
+  {
+    "platform": "infini",
+    "model": "qwen2-72b-instruct",
+    "modelType": "cc",
+    "name": "qwen2-72b-instruct",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 0,
+    "outputPrice": 0,
+    "gmtRelease": "2024-06-12"
+  }
+]

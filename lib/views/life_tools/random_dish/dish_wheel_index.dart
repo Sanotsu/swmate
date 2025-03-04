@@ -5,10 +5,10 @@ import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
+import '../../../common/constants/constants.dart';
 import '../../../common/utils/db_tools/db_life_tool_helper.dart';
 import '../../../common/utils/tools.dart';
-import '../../../models/base_model/dish_state.dart';
+import '../../../models/life_tools/dish_state.dart';
 import 'dish_detail.dart';
 import 'dish_list.dart';
 

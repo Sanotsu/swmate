@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
-import '../../../../apis/news/sina_roll_news_apis.dart';
-import '../../../../common/constants.dart';
+import '../../../../apis/life_tools/news/sina_roll_news_apis.dart';
+import '../../../../common/constants/constants.dart';
 import '../../../../common/utils/dio_client/interceptor_error.dart';
 import '../../../../common/utils/tools.dart';
-import '../../../../models/news/sina_roll_news_resp.dart';
+import '../../../../models/life_tools/news/sina_roll_news_resp.dart';
 import '../_components/cus_news_card.dart';
 import 'base_news_page_state.dart';
 

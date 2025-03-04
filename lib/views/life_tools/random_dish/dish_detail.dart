@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../common/components/tool_widget.dart';
 import '../../../common/utils/db_tools/db_life_tool_helper.dart';
-import '../../../models/base_model/dish_state.dart';
+import '../../../models/life_tools/dish_state.dart';
 import 'dish_modify.dart';
 
 class DishDetail extends StatefulWidget {

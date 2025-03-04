@@ -1,0 +1,46 @@
+[
+  {
+    "platform": "baidu",
+    "model": "ernie-tiny-8k",
+    "modelType": "cc",
+    "name": "ERNIE-Tiny-8K",
+    "contextLength": 8192,
+    "isFree": true,
+    "inputPrice": 0.0,
+    "outputPrice": 0.0,
+    "gmtRelease": "2024-10-10"
+  },
+  {
+    "platform": "baidu",
+    "model": "ernie-lite-8k",
+    "modelType": "cc",
+    "name": "ERNIE-Lite-8K",
+    "contextLength": 8192,
+    "isFree": true,
+    "inputPrice": 0.0,
+    "outputPrice": 0.0,
+    "gmtRelease": "2024-03-08"
+  },
+  {
+    "platform": "baidu",
+    "model": "ernie-speed-8k",
+    "modelType": "cc",
+    "name": "ERNIE-Speed-8K",
+    "contextLength": 8192,
+    "isFree": true,
+    "inputPrice": 0.0,
+    "outputPrice": 0.0,
+    "gmtRelease": "2024-01-11"
+  },
+  {
+    "platform": "baidu",
+    "model": "ernie-speed-128k",
+    "modelType": "cc",
+    "name": "ERNIE-Speed-128K",
+    "contextLength": 128000,
+    "isFree": true,
+    "inputPrice": 0.0,
+    "outputPrice": 0.0,
+    "gmtRelease": "2024-03-14"
+  }
+]

@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../apis/food/nutritionix/nutritionix_apis.dart';
+import '../../../../apis/life_tools/food/nutritionix/nutritionix_apis.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/utils/dio_client/interceptor_error.dart';
-import '../../../../models/food/nutritionix/nix_natural_exercise_resp.dart';
-import '../../../../models/food/nutritionix/nix_natural_nutrient_resp.dart';
+import '../../../../models/life_tools/food/nutritionix/nix_natural_exercise_resp.dart';
+import '../../../../models/life_tools/food/nutritionix/nix_natural_nutrient_resp.dart';
 import '../../../../services/cus_get_storage.dart';
 import 'nix_food_item_nutrients_page.dart';
 

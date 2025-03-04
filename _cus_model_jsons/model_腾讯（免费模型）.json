@@ -1,0 +1,13 @@
+[
+  {
+    "platform": "tencent",
+    "model": "hunyuan-lite",
+    "modelType": "cc",
+    "name": "混元-Lite",
+    "contextLength": 256000,
+    "isFree": true,
+    "inputPrice": 0.0,
+    "outputPrice": 0.0,
+    "gmtRelease": "2024-10-30"
+  }
+]

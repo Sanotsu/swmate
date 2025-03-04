@@ -1,6 +1,6 @@
 import '../common/constants/default_models.dart';
 import '../common/llm_spec/cus_brief_llm_model.dart';
-import '../common/llm_spec/cus_llm_spec.dart';
+import '../common/llm_spec/constant_llm_enum.dart';
 import '../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 
 import 'cus_get_storage.dart';
@@ -38,7 +38,7 @@ class ModelManagerService {
     // 删除全部内置模型
     final exists = await _dbHelper.queryBriefCusLLMSpecList(isBuiltin: true);
     for (final model in exists) {
-      await _dbHelper.deleteBriefCusLLMSpecById(model.cusLlmSpecId!);
+      await _dbHelper.deleteBriefCusLLMSpecById(model.cusLlmSpecId);
     }
 
     await _dbHelper.insertBriefCusLLMSpecList(models);
@@ -50,27 +50,49 @@ class ModelManagerService {
     final userKeys = MyGetStorage().getUserAKMap();
 
     return allModels.where((model) {
-      if (model.cusLlmSpecId?.endsWith('_builtin') ?? false) {
+      if (model.cusLlmSpecId.endsWith('_builtin')) {
         // 内置模型总是可用
         return true;
       }
 
       // 检查用户是否配置了该平台的 AK
       switch (model.platform) {
-        case ApiPlatform.baidu:
-          return userKeys['USER_BAIDU_API_KEY_V2']?.isNotEmpty ?? false;
-        case ApiPlatform.siliconCloud:
-          return userKeys['USER_SILICON_CLOUD_AK']?.isNotEmpty ?? false;
-        case ApiPlatform.lingyiwanwu:
-          return userKeys['USER_LINGYIWANWU_AK']?.isNotEmpty ?? false;
-        case ApiPlatform.zhipu:
-          return userKeys['USER_ZHIPU_AK']?.isNotEmpty ?? false;
-        case ApiPlatform.infini:
-          return userKeys['USER_INFINI_GEN_STUDIO_AK']?.isNotEmpty ?? false;
         case ApiPlatform.aliyun:
-          return userKeys['USER_ALIYUN_API_KEY']?.isNotEmpty ?? false;
+          return userKeys[ApiPlatformAKLabel.USER_ALIYUN_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+        case ApiPlatform.baidu:
+          return userKeys[ApiPlatformAKLabel.USER_BAIDU_API_KEY_V2.name]
+                  ?.isNotEmpty ??
+              false;
         case ApiPlatform.tencent:
-          return userKeys['USER_TENCENT_API_KEY']?.isNotEmpty ?? false;
+          return userKeys[ApiPlatformAKLabel.USER_TENCENT_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+
+        case ApiPlatform.deepseek:
+          return userKeys[ApiPlatformAKLabel.USER_DEEPSEEK_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+        case ApiPlatform.lingyiwanwu:
+          return userKeys[ApiPlatformAKLabel.USER_LINGYIWANWU_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+        case ApiPlatform.zhipu:
+          return userKeys[ApiPlatformAKLabel.USER_ZHIPU_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+
+        case ApiPlatform.siliconCloud:
+          return userKeys[ApiPlatformAKLabel.USER_SILICON_CLOUD_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+        case ApiPlatform.infini:
+          return userKeys[
+                      ApiPlatformAKLabel.USER_INFINI_GEN_STUDIO_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+
         default:
           return false;
       }
@@ -147,8 +169,8 @@ class ModelManagerService {
   static Future<void> clearUserModels() async {
     final models = await _dbHelper.queryBriefCusLLMSpecList();
     for (final model in models) {
-      if (!model.cusLlmSpecId!.endsWith('_builtin')) {
-        await _dbHelper.deleteBriefCusLLMSpecById(model.cusLlmSpecId!);
+      if (!model.cusLlmSpecId.endsWith('_builtin')) {
+        await _dbHelper.deleteBriefCusLLMSpecById(model.cusLlmSpecId);
       }
     }
   }

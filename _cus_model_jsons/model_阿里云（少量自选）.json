@@ -1,0 +1,327 @@
+[
+  {
+    "platform": "aliyun",
+    "model": "qwen-long",
+    "modelType": "cc",
+    "name": "Qwen-Long",
+    "contextLength": 1000000,
+    "isFree": false,
+    "inputPrice": 0.5,
+    "outputPrice": 2,
+    "gmtRelease": "2024-05-20"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-max-latest",
+    "modelType": "cc",
+    "name": "通义千问-Max-Latest",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 2.4,
+    "outputPrice": 9.6,
+    "gmtRelease": "2025-01-27"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-max",
+    "modelType": "cc",
+    "name": "通义千问-Max",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 2.4,
+    "outputPrice": 9.6,
+    "gmtRelease": "2024-10-25"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-plus",
+    "modelType": "cc",
+    "name": "通义千问-Plus",
+    "contextLength": 128000,
+    "isFree": false,
+    "inputPrice": 0.8,
+    "outputPrice": 2,
+    "gmtRelease": "2024-12-20"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-plus-latest",
+    "modelType": "cc",
+    "name": "通义千问-Plus-Latest",
+    "contextLength": 128000,
+    "isFree": false,
+    "inputPrice": 0.8,
+    "outputPrice": 2,
+    "gmtRelease": "2025-01-27"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-turbo",
+    "modelType": "cc",
+    "name": "通义千问-Turbo",
+    "contextLength": 1000000,
+    "isFree": false,
+    "inputPrice": 0.3,
+    "outputPrice": 0.6,
+    "gmtRelease": "2024-12-20"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-turbo-latest",
+    "modelType": "cc",
+    "name": "通义千问-Turbo-Latest",
+    "contextLength": 1000000,
+    "isFree": false,
+    "inputPrice": 0.3,
+    "outputPrice": 0.6,
+    "gmtRelease": "2025-03-03"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwq-32b-preview",
+    "modelType": "cc",
+    "name": "通义千问-QwQ-32B-Preview",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 2,
+    "outputPrice": 6,
+    "gmtRelease": "2024-11-28"
+  },
+
+  {
+    "platform": "aliyun",
+    "model": "qvq-72b-preview",
+    "modelType": "vision",
+    "name": "通义千问-QVQ-72B-Preview",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 12,
+    "outputPrice": 36,
+    "gmtRelease": "2025-02-28"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-vl-max",
+    "modelType": "vision",
+    "name": "通义千问VL-Max",
+    "contextLength": 32000,
+    "isFree": false,
+    "inputPrice": 3,
+    "outputPrice": 9,
+    "gmtRelease": "2024-12-20"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-vl-max-latest",
+    "modelType": "vision",
+    "name": "通义千问VL-Max-Latest",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 3,
+    "outputPrice": 9,
+    "gmtRelease": "2025-02-05"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-vl-plus",
+    "modelType": "vision",
+    "name": "通义千问VL-Plus",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 1.5,
+    "outputPrice": 4.5,
+    "gmtRelease": "2024-09-13"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-vl-plus-latest",
+    "modelType": "vision",
+    "name": "通义千问VL-Plus-Latest",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 1.5,
+    "outputPrice": 4.5,
+    "gmtRelease": "2025-02-05"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-vl-ocr",
+    "modelType": "vision",
+    "name": "通义千问VL-OCR",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 5,
+    "outputPrice": 5,
+    "gmtRelease": "2024-11-14"
+  },
+  {
+    "platform": "aliyun",
+    "model": "qwen-vl-ocr-latest",
+    "modelType": "vision",
+    "name": "通义千问VL-OCR-Latest",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 5,
+    "outputPrice": 5,
+    "gmtRelease": "2024-11-14"
+  },
+
+  {
+    "platform": "aliyun",
+    "model": "wanx2.1-i2v-turbo",
+    "modelType": "itv",
+    "name": "通义万相-图生视频2.1-Turbo",
+    "isFree": false,
+    "costPer": 1.2,
+    "gmtRelease": "2025-02-27"
+  },
+  {
+    "platform": "aliyun",
+    "model": "wanx2.1-i2v-plus",
+    "modelType": "itv",
+    "name": "通义万相-图生视频2.1-Plus",
+    "isFree": false,
+    "costPer": 3.5,
+    "gmtRelease": "2025-02-27"
+  },
+  {
+    "platform": "aliyun",
+    "model": "wanx2.1-t2v-turbo",
+    "modelType": "ttv",
+    "name": "通义万相-文生视频2.1-Turbo",
+    "isFree": false,
+    "costPer": 1.2,
+    "gmtRelease": "2025-01-09"
+  },
+  {
+    "platform": "aliyun",
+    "model": "wanx2.1-t2v-plus",
+    "modelType": "ttv",
+    "name": "通义万相-文生视频2.1-Plus",
+    "isFree": false,
+    "costPer": 3.5,
+    "gmtRelease": "2025-01-09"
+  },
+  {
+    "platform": "aliyun",
+    "model": "wanx2.1-t2i-turbo",
+    "modelType": "tti",
+    "name": "通义万相-文生图2.1-Turbo",
+    "isFree": false,
+    "costPer": 0.14,
+    "gmtRelease": "2025-01-09"
+  },
+  {
+    "platform": "aliyun",
+    "model": "wanx2.1-t2i-plus",
+    "modelType": "tti",
+    "name": "通义万相-文生图2.1-Plus",
+    "isFree": false,
+    "costPer": 0.2,
+    "gmtRelease": "2025-01-09"
+  },
+  {
+    "platform": "aliyun",
+    "model": "wanx2.0-t2i-turbo",
+    "modelType": "tti",
+    "name": "通义万相-文生图2.0-Turbo",
+    "isFree": false,
+    "costPer": 0.04,
+    "gmtRelease": "2025-01-20"
+  },
+
+  {
+    "platform": "aliyun",
+    "model": "deepseek-r1",
+    "modelType": "cc",
+    "name": "DeepSeek-R1",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 4,
+    "outputPrice": 16,
+    "gmtRelease": "2025-01-17"
+  },
+  {
+    "platform": "aliyun",
+    "model": "deepseek-v3",
+    "modelType": "cc",
+    "name": "DeepSeek-V3",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 2,
+    "outputPrice": 8,
+    "gmtRelease": "2025-01-17"
+  },
+  {
+    "platform": "aliyun",
+    "model": "deepseek-r1-distill-qwen-7b",
+    "modelType": "cc",
+    "name": "DeepSeek-R1-Distill-Qwen-7B",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 0.5,
+    "outputPrice": 1,
+    "gmtRelease": "2025-02-05"
+  },
+  {
+    "platform": "aliyun",
+    "model": "deepseek-r1-distill-qwen-14b",
+    "modelType": "cc",
+    "name": "DeepSeek-R1-Distill-Qwen-14B",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 1,
+    "outputPrice": 3,
+    "gmtRelease": "2025-02-05"
+  },
+  {
+    "platform": "aliyun",
+    "model": "deepseek-r1-distill-qwen-32b",
+    "modelType": "cc",
+    "name": "DeepSeek-R1-Distill-Qwen-32B",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 2,
+    "outputPrice": 6,
+    "gmtRelease": "2025-02-05"
+  },
+  {
+    "platform": "aliyun",
+    "model": "deepseek-r1-distill-llama-70b",
+    "modelType": "cc",
+    "name": "DeepSeek-R1-Distill-Llama-70B",
+    "contextLength": 64000,
+    "isFree": false,
+    "inputPrice": 4,
+    "outputPrice": 16,
+    "gmtRelease": "2025-02-05"
+  },
+
+  {
+    "platform": "aliyun",
+    "model": "flux-schnell",
+    "modelType": "tti",
+    "name": "FLUX-schnell",
+    "isFree": false,
+    "costPer": 0.1,
+    "gmtRelease": "2024-08-07"
+  },
+  {
+    "platform": "aliyun",
+    "model": "flux-dev",
+    "modelType": "tti",
+    "name": "FLUX-dev",
+    "isFree": false,
+    "costPer": 0.1,
+    "gmtRelease": "2024-08-07"
+  },
+  {
+    "platform": "aliyun",
+    "model": "flux-merged",
+    "modelType": "tti",
+    "name": "FLUX-merged",
+    "isFree": false,
+    "costPer": 0.1,
+    "gmtRelease": "2024-08-22"
+  }
+]

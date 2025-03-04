@@ -7,7 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_brief_llm_model.dart';
-import '../../../../common/llm_spec/cus_llm_spec.dart';
+import '../../../../common/llm_spec/constant_llm_enum.dart';
 import '../../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 import '../../../../services/model_manager_service.dart';
 
@@ -23,6 +23,8 @@ class _ModelListState extends State<ModelList> {
   List<CusBriefLLMSpec> _models = [];
   bool _isLoading = true;
   bool _isImporting = false;
+  int _sortColumnIndex = 0; // 当前排序的列索引
+  bool _sortAscending = true; // 是否升序
 
   @override
   void initState() {
@@ -69,7 +71,7 @@ class _ModelListState extends State<ModelList> {
     );
 
     if (confirm == true) {
-      await ModelManagerService.deleteUserModel(model.cusLlmSpecId!);
+      await ModelManagerService.deleteUserModel(model.cusLlmSpecId);
       if (mounted) {
         _loadModels();
       }
@@ -126,24 +128,45 @@ class _ModelListState extends State<ModelList> {
         }
       }
 
+      // 默认导入的json文件中是没有模型规格编号的，而该类为必要属性，所以需要先生成一个
+      for (final item in jsonList) {
+        item['cusLlmSpecId'] = const Uuid().v4();
+      }
+
       // 转换为模型列表
       var models =
           jsonList.map((json) => CusBriefLLMSpec.fromJson(json)).toList();
 
       // 设置ID和时间
       models = models.map((e) {
-        e.cusLlmSpecId = const Uuid().v4();
         e.name = !e.isFree ? '【收费】${e.name}' : e.name;
         e.gmtCreate = DateTime.now();
         e.isBuiltin = false; // 用户导入的模型
         return e;
       }).toList();
 
-      await _dbHelper.insertBriefCusLLMSpecList(models);
+      // 查询是否存在同名模型
+      List<CusBriefLLMSpec> duplicateModels = [];
+      final existModels = await _dbHelper.queryBriefCusLLMSpecList();
+      for (final model in models) {
+        if (existModels.any(
+          (e) => e.platform == model.platform && e.model == model.model,
+        )) {
+          duplicateModels.add(model);
+        } else {
+          await _dbHelper.insertBriefCusLLMSpecList([model]);
+        }
+      }
+
+      // await _dbHelper.insertBriefCusLLMSpecList(models);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('成功导入 ${models.length} 个模型')),
+      commonHintDialog(
+        context,
+        '导入成功',
+        """成功导入 ${models.length} 个模型，
+          \n其中 ${duplicateModels.length} 个模型名称已存在，
+          \n实际导入 ${models.length - duplicateModels.length} 个模型。""",
       );
 
       _loadModels();
@@ -156,6 +179,29 @@ class _ModelListState extends State<ModelList> {
     } finally {
       setState(() => _isImporting = false);
     }
+  }
+
+  /// 排序方法
+  /// [getField] 获取排序的值
+  /// [columnIndex] 列索引
+  /// [ascending] 是否升序
+  void _sort<T>(
+    Comparable<T> Function(CusBriefLLMSpec d) getField,
+    int columnIndex,
+    bool ascending,
+  ) {
+    setState(() {
+      _sortColumnIndex = columnIndex;
+      _sortAscending = ascending;
+
+      _models.sort((a, b) {
+        final aValue = getField(a);
+        final bValue = getField(b);
+        return ascending
+            ? Comparable.compare(aValue, bValue)
+            : Comparable.compare(bValue, aValue);
+      });
+    });
   }
 
   @override
@@ -186,7 +232,14 @@ class _ModelListState extends State<ModelList> {
                 onPressed: () => _clearAllKeys(context),
               ),
               if (_isImporting)
-                const CircularProgressIndicator()
+                Padding(
+                  padding: EdgeInsets.only(right: 16.sp),
+                  child: SizedBox(
+                    width: 16.sp,
+                    height: 16.sp,
+                    child: CircularProgressIndicator(strokeWidth: 2.sp),
+                  ),
+                )
               else
                 IconButton(
                   icon: const Icon(Icons.upload_file_outlined),
@@ -197,18 +250,69 @@ class _ModelListState extends State<ModelList> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              dataRowMinHeight: 15.sp, // 设置行高范围
+              sortColumnIndex: _sortColumnIndex,
+              sortAscending: _sortAscending,
+              dataRowMinHeight: 15.sp,
               dataRowMaxHeight: 50.sp,
-              headingRowHeight: 50.sp, // 设置表头行高
-              horizontalMargin: 10, // 设置水平边距
+              headingRowHeight: 50.sp,
+              horizontalMargin: 10,
               headingTextStyle: const TextStyle(fontWeight: FontWeight.bold),
-              columnSpacing: 10.sp, // 设置列间距
-              columns: const [
-                DataColumn(label: Text('平台')),
-                DataColumn(label: Text('模型')),
-                DataColumn(label: Text('类型')),
-                DataColumn(label: Text('价格')),
+              columnSpacing: 10.sp,
+              columns: [
                 DataColumn(
+                  label: const Text('平台'),
+                  onSort: (columnIndex, ascending) {
+                    _sort<String>(
+                      (d) => CP_NAME_MAP[d.platform] ?? '',
+                      columnIndex,
+                      ascending,
+                    );
+                  },
+                ),
+                DataColumn(
+                  label: const Text('模型'),
+                  onSort: (columnIndex, ascending) {
+                    _sort<String>(
+                      (d) => d.name,
+                      columnIndex,
+                      ascending,
+                    );
+                  },
+                ),
+                DataColumn(
+                  label: const Text('类型'),
+                  onSort: (columnIndex, ascending) {
+                    _sort<String>(
+                      (d) => d.modelType.name,
+                      columnIndex,
+                      ascending,
+                    );
+                  },
+                ),
+                DataColumn(
+                  label: const Text('付费'),
+                  onSort: (columnIndex, ascending) {
+                    _sort<num>(
+                      (d) => d.isFree ? 1 : 0,
+                      columnIndex,
+                      ascending,
+                    );
+                  },
+                ),
+                DataColumn(
+                  label: const Text('输入+输出+单个'),
+                  onSort: (columnIndex, ascending) {
+                    _sort<num>(
+                      (d) =>
+                          (d.inputPrice ?? 0) +
+                          (d.outputPrice ?? 0) +
+                          (d.costPer ?? 0),
+                      columnIndex,
+                      ascending,
+                    );
+                  },
+                ),
+                const DataColumn(
                   label: Text('操作'),
                   headingRowAlignment: MainAxisAlignment.center,
                 ),
@@ -237,6 +341,11 @@ class _ModelListState extends State<ModelList> {
                     DataCell(Text(_models[index].name)),
                     DataCell(Text(_models[index].modelType.name)),
                     DataCell(Text(_models[index].isFree ? '免费' : '付费')),
+                    DataCell(
+                      Text(
+                        '${_models[index].inputPrice ?? 0} + ${_models[index].outputPrice ?? 0} + ${_models[index].costPer ?? 0}',
+                      ),
+                    ),
                     DataCell(
                       _models[index].isBuiltin
                           ? const SizedBox.shrink()

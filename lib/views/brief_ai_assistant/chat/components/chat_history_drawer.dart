@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../common/llm_spec/constant_llm_enum.dart';
 import '../../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
-import '../../../../models/chat_competion/com_cc_state.dart';
+import '../../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 
 class ChatHistoryDrawer extends StatelessWidget {
   final List<BriefChatHistory> histories;
@@ -91,20 +92,22 @@ class ChatHistoryDrawer extends StatelessWidget {
         borderRadius: BorderRadius.zero,
       ),
       width: 0.75.sw,
-      child: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: histories.length,
-              itemBuilder: (context, index) {
-                final history = histories[index];
-                final isSelected = history.uuid == currentChat?.uuid;
+      child: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: histories.length,
+                itemBuilder: (context, index) {
+                  final history = histories[index];
+                  final isSelected = history.uuid == currentChat?.uuid;
 
-                return _buildChatHistoryItem(history, isSelected);
-              },
+                  return _buildChatHistoryItem(history, isSelected);
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -118,7 +121,7 @@ class ChatHistoryDrawer extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          history.gmtModified.toString().substring(0, 19),
+          "${history.gmtModified.toString().substring(0, 19)}\n${CP_NAME_MAP[history.llmSpec.platform]!} > ${history.llmSpec.name}",
           style: TextStyle(fontSize: 12.sp),
         ),
         selected: isSelected,
@@ -145,7 +148,7 @@ class ChatHistoryDrawer extends StatelessWidget {
             ),
             items: [
               PopupMenuItem(
-                child: const Text('重命名'),
+                child: _buildTextWithIcon(Icons.edit, '重命名', Colors.blue),
                 onTap: () {
                   Future.delayed(Duration.zero, () {
                     if (!context.mounted) return;
@@ -154,10 +157,7 @@ class ChatHistoryDrawer extends StatelessWidget {
                 },
               ),
               PopupMenuItem(
-                child: const Text(
-                  '删除',
-                  style: TextStyle(color: Colors.red),
-                ),
+                child: _buildTextWithIcon(Icons.delete, '删除', Colors.red),
                 onTap: () {
                   Future.delayed(Duration.zero, () {
                     if (!context.mounted) return;
@@ -170,6 +170,18 @@ class ChatHistoryDrawer extends StatelessWidget {
         },
         trailing: isSelected ? const Icon(Icons.check) : null,
       ),
+    );
+  }
+
+  // 重命名、删除按钮，改为带有图标的文本
+  Widget _buildTextWithIcon(IconData icon, String text, Color? color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        Icon(icon, size: 16.sp, color: color),
+        SizedBox(width: 8.sp), // 添加一些间距
+        Text(text, style: TextStyle(fontSize: 14.sp, color: color)),
+      ],
     );
   }
 }

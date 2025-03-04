@@ -1,22 +1,25 @@
 // ignore_for_file: avoid_print
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:uuid/uuid.dart';
 
-import '../../apis/_default_system_role_list/inner_system_prompt.dart';
+import '../constants/inner_system_prompt.dart';
 import '../../apis/chat_completion/common_cc_apis.dart';
-import '../../models/chat_competion/com_cc_resp.dart';
-import '../constants.dart';
-import '../llm_spec/cus_llm_model.dart';
-import '../llm_spec/cus_llm_spec.dart';
+import '../../models/brief_ai_tools/chat_competion/com_cc_resp.dart';
+import '../constants/constants.dart';
+import '../llm_spec/constant_llm_enum.dart';
+import '../llm_spec/cus_brief_llm_model.dart';
 
 /// 请求各种权限
 /// 目前存储类的权限要分安卓版本，所以单独处理
@@ -459,58 +462,42 @@ Future<String?> getImageBase64String(File? image) async {
   return "data:image/png;base64,$tempStr";
 }
 
-///
-/// 将自定义模型系统角色数据导出为指定路径的json文件，
-/// 和把指定路径的json文件导入为自定义模型和角色列表
-///
-void writeListToJsonFile(List<CusLLMSpec> list, String filePath) {
-  final jsonList = list.map((spec) => spec.toMap()).toList();
-  final jsonString = jsonEncode(jsonList);
-  File(filePath).writeAsStringSync(jsonString);
-}
-
-Future<List<CusLLMSpec>> readListFromJsonFile(String filePath) async {
-  final jsonString = await File(filePath).readAsString();
-  final jsonList = jsonDecode(jsonString) as List;
-  return jsonList.map((map) => CusLLMSpec.fromMap(map)).toList();
-}
-
-void writeSysRoleListToJsonFile(List<CusSysRoleSpec> list, String filePath) {
-  final jsonList = list.map((spec) => spec.toMap()).toList();
-  final jsonString = jsonEncode(jsonList);
-  File(filePath).writeAsStringSync(jsonString);
-}
-
-Future<List<CusSysRoleSpec>> readSysRoleListFromJsonFile(
-    String filePath) async {
-  final jsonString = await File(filePath).readAsString();
-  final jsonList = jsonDecode(jsonString) as List;
-  return jsonList.map((map) => CusSysRoleSpec.fromMap(map)).toList();
-}
-
 /// 非常简化，使用文本对话大模型，调用同步响应API，得到翻译结果
+/// 暂时就翻译成英文或者中文
 Future<String> getAITranslation(
   String text, {
-  ApiPlatform? plat,
-  String? model,
-  TargetLanguage? tl,
   String? systemPrompt,
+  TargetLanguage? tl,
 }) async {
+  if (systemPrompt == null && tl == TargetLanguage.english) {
+    systemPrompt = translateToEnglish();
+  } else {
+    systemPrompt = translateToChinese();
+  }
+
   List<CCMessage> msgs = [
     CCMessage(
-      content: systemPrompt ?? translateToChinese(),
+      content: systemPrompt,
       role: CusRole.system.name,
     ),
     CCMessage(content: text, role: CusRole.user.name),
   ];
 
+  // 2025-02-28 这里非常简单的使用指定内嵌的一个模型，理论上这个模型一定在的，也便宜
+  CusBriefLLMSpec model = CusBriefLLMSpec(
+    ApiPlatform.zhipu,
+    "glm-4-flash",
+    LLModelType.cc,
+    "glm-4-flash",
+    true,
+    isBuiltin: true,
+    cusLlmSpecId: Uuid().v4(),
+  );
+
   // 完全没处理错误情况
-  var cc = await useAkCCResp(
+  var cc = await getCCResp(
     msgs,
-    // plat ?? ApiPlatform.siliconCloud,
-    // model ?? "Qwen/Qwen2-7B-Instruct",
-    plat ?? ApiPlatform.zhipu,
-    model ?? "glm-4-flash",
+    model,
     webSearch: false,
   );
   return cc.cusText;
@@ -594,4 +581,52 @@ String formatTimestampToString(String? timestamp, {String? format}) {
       int.tryParse(timestamp) ?? 57599000,
     ),
   );
+}
+
+///
+/// 通用的查询任务状态的方法
+/// 就是先提交了task，然后默认会查询task，这里就是等待查询结果的方法
+/// 2024-09-02 目前阿里云的文生图、智谱的文生视频都会用到
+Future<T?> timedTaskStatus<T>(
+  String taskId,
+  Function onTimeOut,
+  Duration maxWaitDuration,
+  Future<T> Function(String) queryTaskStatus,
+  bool Function(T) isTaskComplete,
+) async {
+  bool isMaxWaitTimeExceeded = false;
+
+  Timer timer = Timer(maxWaitDuration, () {
+    onTimeOut();
+
+    EasyLoading.showError(
+      "生成超时，请稍候重试！",
+      duration: const Duration(seconds: 5),
+    );
+
+    isMaxWaitTimeExceeded = true;
+    debugPrint('任务处理耗时，状态查询终止。');
+  });
+
+  bool isRequestSuccessful = false;
+  while (!isRequestSuccessful && !isMaxWaitTimeExceeded) {
+    try {
+      var result = await queryTaskStatus(taskId);
+
+      if (isTaskComplete(result)) {
+        isRequestSuccessful = true;
+        debugPrint('任务处理完成!');
+        timer.cancel();
+
+        return result;
+      } else {
+        debugPrint('任务还在处理中，请稍候重试……');
+        await Future.delayed(const Duration(seconds: 5));
+      }
+    } catch (e) {
+      debugPrint('发生异常: $e');
+      await Future.delayed(const Duration(seconds: 5));
+    }
+  }
+  return null;
 }

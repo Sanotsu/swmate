@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../apis/chat_completion/common_cc_apis.dart';
-import '../../../apis/jikan/get_jikan_apis.dart';
+import '../../../apis/life_tools/jikan/get_jikan_apis.dart';
 import '../../../common/components/bar_chart_widget.dart';
 import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
-import '../../../models/chat_competion/com_cc_resp.dart';
-import '../../../models/jikan/jikan_related_character_resp.dart';
-import '../../../models/jikan/jikan_statistic.dart';
-import '../../../models/jikan/jikan_data.dart';
+import '../../../common/constants/constants.dart';
+import '../../../models/brief_ai_tools/chat_competion/com_cc_resp.dart';
+import '../../../models/life_tools/jikan/jikan_related_character_resp.dart';
+import '../../../models/life_tools/jikan/jikan_statistic.dart';
+import '../../../models/life_tools/jikan/jikan_data.dart';
 import '_components.dart';
 
 class MALItemDetail extends StatefulWidget {

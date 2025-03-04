@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../apis/bangumi/bangumi_apis.dart';
+import '../../../apis/life_tools/bangumi/bangumi_apis.dart';
 import '../../../common/components/bar_chart_widget.dart';
 import '../../../common/components/tool_widget.dart';
-import '../../../models/bangumi/bangumi.dart';
+import '../../../models/life_tools/bangumi/bangumi.dart';
 import '_components.dart';
 import 'bangumi_item_episode_detail.dart';
 

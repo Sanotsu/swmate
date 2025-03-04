@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import '../../common/constants.dart';
+import '../../common/constants/constants.dart';
 import '../../common/utils/dio_client/cus_http_client.dart';
 import '../../common/utils/dio_client/cus_http_request.dart';
 import '../../common/utils/dio_client/interceptor_error.dart';
-import '../../models/chat_completions/chat_completion_response.dart';
+import '../../models/brief_ai_tools/chat_completions/chat_completion_response.dart';
 import 'chat_helper.dart';
 
 /// 处理兼容 OpenAI 规范的响应
@@ -189,10 +189,17 @@ Future<(Stream<ChatCompletionResponse>, VoidCallback)> getStreamResponse(
             streamController.close();
           }
         } else {
-          final jsonData = json.decode(event.data);
-          final commonRespBody = ChatCompletionResponse.fromJson(jsonData);
-          if (!streamController.isClosed) {
-            streamController.add(commonRespBody);
+          try {
+            final jsonData = json.decode(event.data);
+            final commonRespBody = ChatCompletionResponse.fromJson(jsonData);
+            if (!streamController.isClosed) {
+              streamController.add(commonRespBody);
+            }
+          } catch (e) {
+            debugPrint('解析响应数据出错: $e');
+            debugPrint('event.data: ${event.data}');
+            // 流式响应出错时，继续处理下一行
+            return;
           }
         }
       }, onDone: () {

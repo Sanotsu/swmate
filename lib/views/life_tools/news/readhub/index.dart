@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../apis/news/readhub_apis.dart';
+import '../../../../apis/life_tools/news/readhub_apis.dart';
 import '../../../../common/components/tool_widget.dart';
-import '../../../../common/constants.dart';
+import '../../../../common/constants/constants.dart';
 import '../../../../common/utils/tools.dart';
-import '../../../../models/news/readhub_hot_topic_resp.dart';
+import '../../../../models/life_tools/news/readhub_hot_topic_resp.dart';
 
 ///
 /// 2024-11-06 readhub 只处理热门话题这一个，其他分类暂时不弄了

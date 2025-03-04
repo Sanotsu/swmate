@@ -17,7 +17,7 @@ CusBriefLLMSpec _$CusBriefLLMSpecFromJson(Map<String, dynamic> json) =>
       outputPrice: (json['outputPrice'] as num?)?.toDouble(),
       costPer: (json['costPer'] as num?)?.toDouble(),
       contextLength: (json['contextLength'] as num?)?.toInt(),
-      cusLlmSpecId: json['cusLlmSpecId'] as String?,
+      cusLlmSpecId: json['cusLlmSpecId'] as String,
       gmtRelease: json['gmtRelease'] == null
           ? null
           : DateTime.parse(json['gmtRelease'] as String),
@@ -45,20 +45,19 @@ Map<String, dynamic> _$CusBriefLLMSpecToJson(CusBriefLLMSpec instance) =>
     };
 
 const _$ApiPlatformEnumMap = {
+  ApiPlatform.aliyun: 'aliyun',
   ApiPlatform.baidu: 'baidu',
   ApiPlatform.tencent: 'tencent',
-  ApiPlatform.aliyun: 'aliyun',
-  ApiPlatform.siliconCloud: 'siliconCloud',
+  ApiPlatform.deepseek: 'deepseek',
   ApiPlatform.lingyiwanwu: 'lingyiwanwu',
-  ApiPlatform.xfyun: 'xfyun',
   ApiPlatform.zhipu: 'zhipu',
+  ApiPlatform.siliconCloud: 'siliconCloud',
   ApiPlatform.infini: 'infini',
 };
 
 const _$LLModelTypeEnumMap = {
   LLModelType.cc: 'cc',
   LLModelType.vision: 'vision',
-  LLModelType.tti_word: 'tti_word',
   LLModelType.voice: 'voice',
   LLModelType.tti: 'tti',
   LLModelType.iti: 'iti',
@@ -66,4 +65,5 @@ const _$LLModelTypeEnumMap = {
   LLModelType.ttv: 'ttv',
   LLModelType.itv: 'itv',
   LLModelType.video: 'video',
+  LLModelType.omni: 'omni',
 };

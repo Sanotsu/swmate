@@ -18,45 +18,41 @@ class MessageActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      // 左侧空一个图标的距离
-      padding: EdgeInsets.only(left: 34.sp),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          // 复制按钮
-          IconButton(
-            icon: Icon(Icons.copy_outlined, size: 20.sp),
-            visualDensity: VisualDensity.compact,
-            tooltip: '复制内容',
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: content));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('已复制到剪贴板')),
-              );
-            },
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        // 复制按钮
+        IconButton(
+          icon: Icon(Icons.copy_outlined, size: 20.sp),
+          visualDensity: VisualDensity.compact,
+          tooltip: '复制内容',
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: content));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('已复制到剪贴板')),
+            );
+          },
+        ),
+        // 重新生成按钮
+        IconButton(
+          icon: isRegenerating
+              ? SizedBox(
+                  width: 20.sp,
+                  height: 20.sp,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(Icons.refresh_outlined, size: 20.sp),
+          visualDensity: VisualDensity.compact,
+          tooltip: '重新生成',
+          onPressed: isRegenerating ? null : onRegenerate,
+        ),
+        // token 信息
+        if (tokens != null)
+          Padding(
+            padding: EdgeInsets.only(left: 16.sp),
+            child: Text('$tokens tokens'),
           ),
-          // 重新生成按钮
-          IconButton(
-            icon: isRegenerating
-                ? SizedBox(
-                    width: 20.sp,
-                    height: 20.sp,
-                    child: const CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(Icons.refresh_outlined, size: 20.sp),
-            visualDensity: VisualDensity.compact,
-            tooltip: '重新生成',
-            onPressed: isRegenerating ? null : onRegenerate,
-          ),
-          // token 信息
-          if (tokens != null)
-            Padding(
-              padding: EdgeInsets.only(left: 16.sp),
-              child: Text('$tokens tokens'),
-            ),
-        ],
-      ),
+      ],
     );
   }
 }

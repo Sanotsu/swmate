@@ -13,20 +13,16 @@ import 'package:path_provider/path_provider.dart';
 import '../../../common/components/tool_widget.dart';
 
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
-import '../../../common/llm_spec/cus_llm_model.dart';
-import '../../../common/utils/db_tools/db_ai_tool_helper.dart';
 import '../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 import '../../../common/utils/db_tools/ddl_brief_ai_tool.dart';
 import '../../../common/utils/db_tools/init_db.dart';
 import '../../../common/utils/db_tools/db_life_tool_helper.dart';
-import '../../../common/utils/db_tools/ddl_ai_tool.dart';
 import '../../../common/utils/db_tools/ddl_life_tool.dart';
 import '../../../common/utils/tools.dart';
-import '../../../models/base_model/brief_accounting_state.dart';
-import '../../../models/base_model/dish_state.dart';
-import '../../../models/chat_competion/com_cc_state.dart';
-import '../../../models/media_generation_history/media_generation_history.dart';
-import '../../../models/text_to_image/com_ig_state.dart';
+import '../../../models/life_tools/brief_accounting_state.dart';
+import '../../../models/life_tools/dish_state.dart';
+import '../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
+import '../../../models/brief_ai_tools/media_generation_history/media_generation_history.dart';
 
 ///
 /// 2023-12-26 备份恢复还可以优化，就暂时不做
@@ -47,7 +43,6 @@ class BackupAndRestore extends StatefulWidget {
 }
 
 class _BackupAndRestoreState extends State<BackupAndRestore> {
-  final DBAIToolHelper _dbHelper = DBAIToolHelper();
   final DBLifeToolHelper _dbLifeToolHelper = DBLifeToolHelper();
   final DBBriefAIToolHelper _dbBriefAIToolHelper = DBBriefAIToolHelper();
   final DBInit _dbInit = DBInit();
@@ -392,26 +387,6 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
       } else if (filename == "${LifeToolDdl.tableNameOfDish}.json") {
         await _dbLifeToolHelper.insertDishList(
           jsonMapList.map((e) => Dish.fromMap(e)).toList(),
-        );
-      } else if (filename == "${AIToolDdl.tableNameOfChatHistory}.json") {
-        await _dbHelper.insertChatList(
-          jsonMapList.map((e) => ChatHistory.fromMap(e)).toList(),
-        );
-      } else if (filename == "${AIToolDdl.tableNameOfGroupChatHistory}.json") {
-        await _dbHelper.insertGroupChatList(
-          jsonMapList.map((e) => GroupChatHistory.fromMap(e)).toList(),
-        );
-      } else if (filename == "${AIToolDdl.tableNameOfIGVGHistory}.json") {
-        await _dbHelper.insertIGVGResultList(
-          jsonMapList.map((e) => LlmIGVGResult.fromMap(e)).toList(),
-        );
-      } else if (filename == "${AIToolDdl.tableNameOfCusLlmSpec}.json") {
-        await _dbHelper.insertCusLLMSpecList(
-          jsonMapList.map((e) => CusLLMSpec.fromMap(e)).toList(),
-        );
-      } else if (filename == "${AIToolDdl.tableNameOfCusSysRoleSpec}.json") {
-        await _dbHelper.insertCusSysRoleSpecList(
-          jsonMapList.map((e) => CusSysRoleSpec.fromMap(e)).toList(),
         );
       } else if (filename ==
           "${BriefAIToolDdl.tableNameOfBriefChatHistory}.json") {

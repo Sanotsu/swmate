@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import '../common/constants/default_models.dart';
 import '../common/llm_spec/cus_brief_llm_model.dart';
-import '../common/llm_spec/cus_llm_spec.dart';
+import '../common/llm_spec/constant_llm_enum.dart';
 import '../common/utils/dio_client/cus_http_client.dart';
 import '../common/utils/dio_client/cus_http_request.dart';
-import '../models/video_generation/video_generation_request.dart';
-import '../models/video_generation/video_generation_response.dart';
+import '../models/brief_ai_tools/video_generation/video_generation_request.dart';
+import '../models/brief_ai_tools/video_generation/video_generation_response.dart';
 import 'cus_get_storage.dart';
 
 class VideoGenerationService {
@@ -39,15 +39,11 @@ class VideoGenerationService {
   }
 
   static Future<String> _getApiKey(CusBriefLLMSpec model) async {
-    if (model.cusLlmSpecId?.endsWith('_builtin') ?? false) {
+    if (model.cusLlmSpecId.endsWith('_builtin')) {
       // 使用内置的 API Key
       switch (model.platform) {
-        case ApiPlatform.siliconCloud:
-          return DefaultApiKeys.siliconCloudAK;
         case ApiPlatform.zhipu:
           return DefaultApiKeys.zhipuAK;
-        case ApiPlatform.aliyun:
-          return DefaultApiKeys.aliyunApiKey;
         default:
           throw Exception('不支持的平台');
       }
@@ -58,13 +54,13 @@ class VideoGenerationService {
 
       switch (model.platform) {
         case ApiPlatform.siliconCloud:
-          apiKey = userKeys['USER_SILICON_CLOUD_AK'];
+          apiKey = userKeys[ApiPlatformAKLabel.USER_SILICON_CLOUD_API_KEY.name];
           break;
         case ApiPlatform.zhipu:
-          apiKey = userKeys['USER_ZHIPU_AK'];
+          apiKey = userKeys[ApiPlatformAKLabel.USER_ZHIPU_API_KEY.name];
           break;
         case ApiPlatform.aliyun:
-          apiKey = userKeys['USER_ALIYUN_API_KEY'];
+          apiKey = userKeys[ApiPlatformAKLabel.USER_ALIYUN_API_KEY.name];
           break;
 
         default:

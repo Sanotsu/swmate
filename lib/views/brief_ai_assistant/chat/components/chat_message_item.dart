@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import '../../../../common/constants.dart';
-import '../../../../models/chat_competion/com_cc_state.dart';
-import 'dart:io';
+import '../../../../common/components/tool_widget.dart';
+import '../../../../common/constants/constants.dart';
+import '../../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 
-import '../../../ai_assistant/_componets/voice_chat_bubble.dart';
+import '../../../../common/components/voice_chat_bubble.dart';
 
 class ChatMessageItem extends StatelessWidget {
   final ChatMessage message;
@@ -55,14 +55,14 @@ class ChatMessageItem extends StatelessWidget {
             _buildVoicePlayer(),
 
           // 显示图片
-          if (message.imageUrl != null) _buildImage(),
+          if (message.imageUrl != null) _buildImage(context),
         ],
       ),
     );
   }
 
   // 头像消息体旁边，Row布局，显示文本内容没那么宽
-  Widget buildHorizontalAvatar(bool isUser) {
+  Widget buildHorizontalAvatar(bool isUser, BuildContext context) {
     return Container(
       margin: EdgeInsets.all(4.sp),
       child: Row(
@@ -97,7 +97,7 @@ class ChatMessageItem extends StatelessWidget {
                   _buildVoicePlayer(),
 
                 // 显示图片
-                if (message.imageUrl != null) _buildImage(),
+                if (message.imageUrl != null) _buildImage(context),
               ],
             ),
           ),
@@ -212,8 +212,11 @@ class ChatMessageItem extends StatelessWidget {
               // tableBody: TextStyle(color: Colors.black),
             ),
           ),
-          // 如果是流式加载中(还没有输出内容)，显示一个加载圈
-          if (message.role != CusRole.user.name && message.content.isEmpty)
+          // 如果是流式加载中(但还没有输出内容)，显示一个加载圈
+          if (message.role != CusRole.user.name &&
+              message.content.isEmpty &&
+              (message.reasoningContent != null &&
+                  message.reasoningContent!.isEmpty))
             SizedBox(
               width: 16.sp,
               height: 16.sp,
@@ -227,6 +230,9 @@ class ChatMessageItem extends StatelessWidget {
 
   // DS 的 R 系列有深度思考部分，单独展示
   Widget _buildThinkingProcess(ChatMessage message) {
+    // 创建一个基础的 TextStyle，深度思考的文字颜色和大小
+    final tempStyle = TextStyle(color: Colors.black54, fontSize: 13.5.sp);
+
     return Container(
       padding: EdgeInsets.only(bottom: 8.sp),
       child: ExpansionTile(
@@ -245,9 +251,35 @@ class ChatMessageItem extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(left: 24.sp),
-            child: Text(
-              message.reasoningContent ?? '',
-              style: TextStyle(color: Colors.black54, fontSize: 13.5.sp),
+            // child: Text(
+            //   message.reasoningContent ?? '',
+            //   style: TextStyle(color: Colors.black54, fontSize: 13.5.sp),
+            // ),
+
+            /// 使用 MarkdownBody 显示深度思考内容
+            child: MarkdownBody(
+              data: message.reasoningContent ?? '',
+              selectable: true,
+              styleSheet: MarkdownStyleSheet(
+                // 复用 tempStyle
+                p: tempStyle,
+                h1: tempStyle,
+                h2: tempStyle,
+                h3: tempStyle,
+                h4: tempStyle,
+                h5: tempStyle,
+                h6: tempStyle,
+                strong: tempStyle,
+                em: tempStyle,
+                blockquote: tempStyle,
+                listBullet: tempStyle,
+                tableHead: tempStyle,
+                tableBody: tempStyle,
+                // 隐藏换行线
+                horizontalRuleDecoration: BoxDecoration(
+                  color: Colors.transparent,
+                ),
+              ),
             ),
           ),
         ],
@@ -352,26 +384,36 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   // 简单的图片预览
-  Widget _buildImage() {
+  Widget _buildImage(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(top: 8.sp),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.sp),
-        child: message.imageUrl!.startsWith('http')
-            ? Image.network(
-                message.imageUrl!,
-                width: 0.25.sw,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(child: CircularProgressIndicator());
-                },
-              )
-            : Image.file(
-                File(message.imageUrl!),
-                width: 0.25.sw,
-                fit: BoxFit.cover,
-              ),
+        // child: message.imageUrl!.startsWith('http')
+        //     ? Image.network(
+        //         message.imageUrl!,
+        //         width: 0.25.sw,
+        //         fit: BoxFit.cover,
+        //         loadingBuilder: (context, child, loadingProgress) {
+        //           if (loadingProgress == null) return child;
+        //           return Center(child: CircularProgressIndicator());
+        //         },
+        //       )
+        //     : Image.file(
+        //         File(message.imageUrl!),
+        //         width: 0.25.sw,
+        //         fit: BoxFit.cover,
+        //       ),
+
+        child: SizedBox(
+          width: 0.3.sw,
+          child: buildImageView(
+            message.imageUrl!,
+            context,
+            isFileUrl: true,
+            imageErrorHint: '图片异常，请开启新对话',
+          ),
+        ),
       ),
     );
   }

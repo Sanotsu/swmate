@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
-import '../../../../apis/food/nutritionix/nutritionix_apis.dart';
+import '../../../../apis/life_tools/food/nutritionix/nutritionix_apis.dart';
 import '../../../../common/components/tool_widget.dart';
-import '../../../../models/food/nutritionix/nix_search_instant_resp.dart';
+import '../../../../models/life_tools/food/nutritionix/nix_search_instant_resp.dart';
 import 'nix_food_item_nutrients_page.dart';
 import 'nix_natural_language_query.dart';
 

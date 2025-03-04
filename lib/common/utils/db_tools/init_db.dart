@@ -8,7 +8,6 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'ddl_ai_tool.dart';
 import 'ddl_brief_ai_tool.dart';
 import 'ddl_life_tool.dart';
 
@@ -70,11 +69,6 @@ class DBInit {
     print("开始创建表 _createDb……");
 
     await db.transaction((txn) async {
-      txn.execute(AIToolDdl.ddlForChatHistory);
-      txn.execute(AIToolDdl.ddlForGroupChatHistory);
-      txn.execute(AIToolDdl.ddlForIGVGHistory);
-      txn.execute(AIToolDdl.ddlForCusLlmSpec);
-      txn.execute(AIToolDdl.ddlForCusSySroleSpec);
       txn.execute(LifeToolDdl.ddlForBillItem);
       txn.execute(LifeToolDdl.ddlForDish);
       txn.execute(LifeToolDdl.ddlForAnimalBreed);

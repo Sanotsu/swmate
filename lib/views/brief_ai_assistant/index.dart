@@ -4,8 +4,7 @@ import 'package:swmate/views/brief_ai_assistant/chat/index.dart';
 
 import '../../common/components/cus_cards.dart';
 
-import '../../common/constants.dart';
-import '../ai_assistant/index.dart';
+import '../../common/constants/constants.dart';
 import 'image/index.dart';
 import 'model_config/index.dart';
 import 'video/index.dart';
@@ -36,15 +35,6 @@ class _BriefAIToolsState extends State<BriefAITools> {
               );
             },
             icon: const Icon(Icons.import_export),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AIToolIndex()),
-              );
-            },
-            child: Text("旧版"),
           ),
         ],
       ),

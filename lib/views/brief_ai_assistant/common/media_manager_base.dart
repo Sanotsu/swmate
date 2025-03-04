@@ -9,7 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import '../../../common/components/tool_widget.dart';
-import '../../../common/constants.dart';
+import '../../../common/constants/constants.dart';
 import 'mime_media_manager_base.dart';
 
 abstract class MediaManagerBase extends StatefulWidget {
@@ -61,10 +61,6 @@ abstract class MediaManagerBaseState<T extends MediaManagerBase>
           orders: [OrderOption(type: OrderOptionType.createDate, asc: false)],
         ),
       );
-
-      // for (var element in albums) {
-      //   print("相册: ${element.name}");
-      // }
 
       // 查找AI生成的媒体目录
       AssetPathEntity? aiMediaPath;
@@ -131,7 +127,6 @@ abstract class MediaManagerBaseState<T extends MediaManagerBase>
       }
     } catch (e) {
       if (!mounted) return;
-      // print("查询AI绘图历史记录失败: $e");
       commonExceptionDialog(context, "解析AI生成目录失败", e.toString());
     } finally {
       if (mounted) {

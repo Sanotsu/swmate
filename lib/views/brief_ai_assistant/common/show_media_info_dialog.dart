@@ -5,7 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart';
 
-import '../../../common/constants.dart';
+import '../../../common/constants/constants.dart';
 import '../../../common/utils/tools.dart';
 
 showMediaInfoDialog(AssetEntity entity, BuildContext context) {
