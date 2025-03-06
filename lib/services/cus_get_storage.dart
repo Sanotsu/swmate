@@ -1,10 +1,12 @@
 import 'package:get_storage/get_storage.dart';
 
+import '../common/llm_spec/cus_brief_llm_model.dart';
+
 final box = GetStorage();
 
 class MyGetStorage {
   static const String _firstLaunchKey = 'is_first_launch';
-  
+
   // 检查是否首次启动
   bool isFirstLaunch() {
     return box.read(_firstLaunchKey) == null;
@@ -67,5 +69,41 @@ class MyGetStorage {
     if (key.startsWith('USER_')) {
       await box.remove(key);
     }
+  }
+
+  // 大模型高级选项的启用状态
+  Future<void> setAdvancedOptionsEnabled(
+    CusBriefLLMSpec model,
+    bool enabled,
+  ) async {
+    await box.write(
+      "advanced_options_enabled_${model.platform.name}_${model.modelType.name}",
+      enabled,
+    );
+  }
+
+  bool getAdvancedOptionsEnabled(CusBriefLLMSpec model) =>
+      box.read(
+          "advanced_options_enabled_${model.platform.name}_${model.modelType.name}") ??
+      false;
+
+  // 高级选项的参数值
+  Future<void> setAdvancedOptions(
+    CusBriefLLMSpec model,
+    Map<String, dynamic>? options,
+  ) async {
+    final key =
+        "advanced_options_${model.platform.name}_${model.modelType.name}";
+    if (options != null) {
+      await box.write(key, options);
+    } else {
+      await box.remove(key);
+    }
+  }
+
+  Map<String, dynamic>? getAdvancedOptions(CusBriefLLMSpec model) {
+    final data = box.read(
+        "advanced_options_${model.platform.name}_${model.modelType.name}");
+    return data != null ? Map<String, dynamic>.from(data) : null;
   }
 }

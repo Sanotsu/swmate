@@ -10,6 +10,7 @@ import '../common/constants/default_models.dart';
 import '../services/cus_get_storage.dart';
 import '../models/brief_ai_tools/chat_completions/chat_completion_request.dart';
 import '../apis/chat_completion/openai_compatible_apis.dart';
+import '../common/constants/advanced_options_presets.dart';
 
 /// 2025-02-13 改版后所有平台都使用open API兼容的版本，不兼容的就不用了。
 ///     讯飞每个模型的AK都单独的，太麻烦了，而且效果并不出类拔萃，放弃支持它平台的调用了
@@ -134,6 +135,7 @@ class ChatService {
     File? image,
     File? voice,
     bool stream = true,
+    Map<String, dynamic>? advancedOptions,
   }) async {
     final headers = await _getHeaders(model);
     final baseUrl = "${_getBaseUrl(model.platform)}/chat/completions";
@@ -158,15 +160,25 @@ class ChatService {
       }
     }).toList();
 
+    // 处理高级参数
+    Map<String, dynamic>? additionalParams;
+    if (advancedOptions != null) {
+      additionalParams = AdvancedOptionsManager.buildAdvancedParams(
+        advancedOptions,
+        model.platform,
+      );
+    }
+
     final request = ChatCompletionRequest(
       model: model.model,
       messages: messagesList,
       stream: stream,
-      temperature: 0.7,
+      additionalParams: additionalParams,
     );
 
-    final requestBody = request.toRequestBody(model.platform);
+    final requestBody = request.toRequestBody();
 
+    print('请求体: $requestBody');
     return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
   }
 }

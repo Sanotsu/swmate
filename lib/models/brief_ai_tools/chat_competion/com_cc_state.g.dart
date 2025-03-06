@@ -96,13 +96,14 @@ Map<String, dynamic> _$BriefChatHistoryToJson(BriefChatHistory instance) =>
 const _$LLModelTypeEnumMap = {
   LLModelType.cc: 'cc',
   LLModelType.vision: 'vision',
-  LLModelType.voice: 'voice',
+  LLModelType.reasoner: 'reasoner',
   LLModelType.tti: 'tti',
   LLModelType.iti: 'iti',
   LLModelType.image: 'image',
   LLModelType.ttv: 'ttv',
   LLModelType.itv: 'itv',
   LLModelType.video: 'video',
+  LLModelType.voice: 'voice',
   LLModelType.omni: 'omni',
 };
 

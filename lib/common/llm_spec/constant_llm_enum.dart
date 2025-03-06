@@ -54,7 +54,8 @@ final Map<ApiPlatform, String> CP_NAME_MAP = {
 enum LLModelType {
   cc, // Chat Completions
   vision, // 视觉大模型
-  voice, // 语音大模型
+  // 2025-03-06 推理模型(深度思考)有思考过程，且支持的参数和对话模型差异很大，所以单独分类
+  reasoner,
 
   // 图片生成大模型分3种: 单独文生图、单独图生图、文生图生都可以
   tti, // Text To Image
@@ -66,6 +67,9 @@ enum LLModelType {
   itv, // Image To Video
   video,
 
+  // 语音大模型
+  voice,
+
   // 全模态，比如通义千问-Omni-Turbo
   // 支持文本, 图像，语音，视频输入理解和混合输入理解，具备文本和语音同时流式生成能力
   omni,
@@ -75,12 +79,13 @@ enum LLModelType {
 final Map<LLModelType, String> MT_NAME_MAP = {
   LLModelType.cc: '文本对话',
   LLModelType.vision: '图片解读',
-  LLModelType.voice: '语音对话',
+  LLModelType.reasoner: '深度思考',
   LLModelType.tti: '文本生图',
   LLModelType.iti: '图片生图',
   LLModelType.image: '图片生成',
   LLModelType.ttv: '文生视频',
   LLModelType.itv: '图生视频',
   LLModelType.video: '视频生成',
+  LLModelType.voice: '语音对话',
   LLModelType.omni: '全模态',
 };

@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../../common/components/simple_marquee_or_text.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants/constants.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
@@ -21,6 +22,7 @@ import '../../../services/chat_service.dart';
 import 'components/chat_history_drawer.dart';
 import 'components/message_actions.dart';
 import '../../../services/model_manager_service.dart';
+import '../../../common/utils/advanced_options_utils.dart';
 
 class BriefChatScreen extends StatefulWidget {
   const BriefChatScreen({super.key});
@@ -72,6 +74,10 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   // 输入框展开收起工具栏时，悬浮按钮(新加对话、滚动到底部)位置需要动态变化，始终在输入框的上方
   double _inputHeight = 0;
 
+  // 添加高级参数状态
+  bool _advancedEnabled = false;
+  Map<String, dynamic>? _advancedOptions;
+
   @override
   void initState() {
     super.initState();
@@ -80,6 +86,15 @@ class _BriefChatScreenState extends State<BriefChatScreen>
 
     // 获取缓存中的正文文本缩放比例
     _textScaleFactor = MyGetStorage().getChatListAreaScale();
+
+    // 获取缓存的高级选项配置
+    if (_selectedModel != null) {
+      _advancedEnabled =
+          MyGetStorage().getAdvancedOptionsEnabled(_selectedModel!);
+      if (_advancedEnabled) {
+        _advancedOptions = MyGetStorage().getAdvancedOptions(_selectedModel!);
+      }
+    }
 
     // 监听滚动事件
     _scrollController.addListener(() {
@@ -120,6 +135,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           await ModelManagerService.getAvailableModelByTypes([
         LLModelType.cc,
         LLModelType.vision,
+        LLModelType.reasoner,
       ]);
 
       if (!mounted) return;
@@ -193,18 +209,21 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       _messages = [];
       _currentChat = null;
 
+      // 开启新对话后，没有对话列表，所以不显示滚动到底部按钮
+      _showScrollToBottom = false;
+
       // 创建新对话后，重置内容高度
       _resetContentHeight();
     });
   }
 
-  // 切换模型
+  // 切换模型类型
   void _handleTypeChanged(LLModelType type) {
-    _createNewChat();
-
     setState(() {
       _selectedType = type;
+
       // 如果当前选中的模型不是新类型的，则清空选择
+      // 因为切换类型时，一定会触发模型选择器，在模型选择的地方有重新创建对话，所以这里不用重新创建
       if (_selectedModel?.modelType != type) {
         _selectedModel = null;
       }
@@ -247,6 +266,13 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       // 如果没有点击模型，则使用选定分类的第一个模型
       setState(() => _selectedModel = filteredModels.first);
     }
+
+    // 选择指定模型后，加载对应类型上次缓存的高级选项配置
+    _advancedEnabled =
+        MyGetStorage().getAdvancedOptionsEnabled(_selectedModel!);
+    _advancedOptions = _advancedEnabled
+        ? MyGetStorage().getAdvancedOptions(_selectedModel!)
+        : null;
 
     // 2025-03-03 切换模型后也直接重建对话好了？？？此时就不用重置内容高度了
     _createNewChat();
@@ -427,6 +453,12 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       return;
     }
 
+    // 2025-03-06 实测，如果指定返回类型为json对象，必须在用户消息中明确告知“按JSON格式回复”，否则会报错
+    if (_advancedEnabled &&
+        _advancedOptions?["response_format"] == "json_object") {
+      text = "$text(请严格按照json格式输出)";
+    }
+
     // 添加用户消息
     setState(() {
       _messages.add(ChatMessage(
@@ -453,6 +485,8 @@ class _BriefChatScreenState extends State<BriefChatScreen>
         _messages,
         image: image,
         voice: voice,
+        // 只有启用了高级选项才传递参数
+        advancedOptions: _advancedEnabled ? _advancedOptions : null,
       );
       _cancelResponse = cancelFunc;
       if (!mounted) return;
@@ -490,6 +524,8 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       final (stream, cancelFunc) = await ChatService.sendMessage(
         _selectedModel!,
         _messages,
+        // 只在启用时传入高级参数
+        advancedOptions: _advancedEnabled ? _advancedOptions : null,
       );
       _cancelResponse = cancelFunc;
       if (!mounted) return;
@@ -611,6 +647,34 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     return await _dbHelper.queryBriefChatHistoryList();
   }
 
+  // 显示高级选项弹窗
+  Future<void> _showAdvancedOptions() async {
+    if (_selectedModel == null) return;
+
+    final result = await AdvancedOptionsUtils.showAdvancedOptions(
+      context: context,
+      platform: _selectedModel!.platform,
+      modelType: _selectedModel!.modelType,
+      currentEnabled: _advancedEnabled,
+      currentOptions: _advancedOptions ?? {},
+    );
+
+    if (result != null) {
+      setState(() {
+        _advancedEnabled = result.enabled;
+        _advancedOptions = result.enabled ? result.options : null;
+      });
+
+      // 保存到缓存
+      await MyGetStorage()
+          .setAdvancedOptionsEnabled(_selectedModel!, result.enabled);
+      await MyGetStorage().setAdvancedOptions(
+        _selectedModel!,
+        result.enabled ? result.options : null,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -628,21 +692,36 @@ class _BriefChatScreenState extends State<BriefChatScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          children: [
-            Text(
+        // title: Column(
+        //   children: [
+        //     Text(
+        //       "${CP_NAME_MAP[_selectedModel?.platform]} > ${_selectedModel?.model}",
+        //       style: TextStyle(fontSize: 14.sp, color: Colors.blue),
+        //       maxLines: 2,
+        //       overflow: TextOverflow.ellipsis,
+        //     ),
+        //   ],
+        // ),
+        title: SimpleMarqueeOrText(
+          data:
               "${CP_NAME_MAP[_selectedModel?.platform]} > ${_selectedModel?.model}",
-              style: TextStyle(fontSize: 14.sp, color: Colors.blue),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+          velocity: 30,
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+          ),
         ),
         actions: [
-          // IconButton(
-          //   icon: const Icon(Icons.add),
-          //   onPressed: _isStreaming ? null : _createNewChat,
-          // ),
+          // 更多参数按钮
+          IconButton(
+            icon: Icon(
+              Icons.settings,
+              color: _advancedEnabled ? Theme.of(context).primaryColor : null,
+            ),
+            tooltip: '更多参数',
+            onPressed: _isStreaming ? null : _showAdvancedOptions,
+          ),
           IconButton(
             icon: const Icon(Icons.format_size_outlined),
             onPressed: _isStreaming ? null : _adjustTextScale,
@@ -695,7 +774,11 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                 onTypeChanged: _isStreaming ? null : _handleTypeChanged,
                 onModelSelect: _isStreaming ? null : _showModelSelector,
                 isStreaming: _isStreaming,
-                supportedTypes: [LLModelType.cc, LLModelType.vision],
+                supportedTypes: [
+                  LLModelType.cc,
+                  LLModelType.vision,
+                  LLModelType.reasoner
+                ],
               ),
               Divider(height: 10.sp),
 
@@ -709,9 +792,6 @@ class _BriefChatScreenState extends State<BriefChatScreen>
               if (_isStreaming)
                 Padding(
                   padding: EdgeInsets.symmetric(
-                    // 这里需要减去悬浮按钮的宽度，避免遮挡滚动到底部悬浮按钮；再留点间隔避免和按钮紧挨着
-                    // horizontal: 48.sp + 8.sp,
-                    // vertical: 5.sp,
                     /// 调整位置之后，还是滚动条贯穿屏幕，悬浮按钮放在滚动条上方，和谐一点
                     horizontal: 8.sp,
                   ),
