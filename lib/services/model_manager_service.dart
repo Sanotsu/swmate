@@ -119,7 +119,7 @@ class ModelManagerService {
       }
 
       // 如果 平台名称 相同，再比较 模型名称
-      return a.name.compareTo(b.name);
+      return a.name?.compareTo(b.name ?? b.model) ?? 0;
     });
 
     return list;
@@ -134,22 +134,32 @@ class ModelManagerService {
         orElse: () => throw Exception('不支持的云平台'),
       );
 
-      // 验证必填字段
-      if (json['model'] == null ||
+      // 2025-03-07 字段验证简化一下，就平台、模型、模型类型即可
+      if (json['platform'] == null ||
+          (json['platform'] as String).trim().isEmpty ||
+          json['model'] == null ||
+          (json['model'] as String).trim().isEmpty ||
           json['modelType'] == null ||
-          json['name'] == null ||
-          json['isFree'] == null) {
+          (json['modelType'] as String).trim().isEmpty) {
         return false;
       }
 
-      // 验证价格字段
-      if (json['isFree'] == false) {
-        if ((json['inputPrice'] == null &&
-            json['outputPrice'] == null &&
-            json['costPer'] == null)) {
-          return false;
-        }
-      }
+      // // 验证必填字段
+      // if (json['model'] == null ||
+      //     json['modelType'] == null ||
+      //     json['name'] == null ||
+      //     json['isFree'] == null) {
+      //   return false;
+      // }
+
+      // // 验证价格字段
+      // if (json['isFree'] == false) {
+      //   if ((json['inputPrice'] == null &&
+      //       json['outputPrice'] == null &&
+      //       json['costPer'] == null)) {
+      //     return false;
+      //   }
+      // }
 
       return true;
     } catch (e) {

@@ -144,8 +144,24 @@ AI 绘图/视频结构和操作类似，所以放在一起说。
 
 #### 大模型规格 json 结构
 
+<details>
+
+<summary>大模型规格 json 结构</summary>
+
 ```json
 [
+  {
+    "platform": "<*代码中自定义的平台代号，枚举值>",
+    "model": "<*指定平台中使用的模型代号，必须与API文档中一致，会用于构建http请求>",
+    "modelType": "<*代码中自定义的模型类型代号，枚举值>",
+    "name": "<模型名称，用于显示，随意，可识别出即可>",
+    "contextLength": "<上下文长度>",
+    "isFree": false, // 是否免费
+    "inputPrice": 6, // 输入价格(对话模型)
+    "outputPrice": 6, // 输出价格(对话模型)
+    "costPer": 0.05, // 单次调用价格(绘图/视频模型)
+    "gmtRelease": "<平台中模型发布时间>"
+  },
   {
     "platform": "lingyiwanwu",
     "model": "yi-lightning",
@@ -165,18 +181,33 @@ AI 绘图/视频结构和操作类似，所以放在一起说。
     "isFree": false,
     "costPer": 0.05,
     "gmtRelease": "2024-08-01"
-  },
+  }
+  // ……
+]
+```
+
+</details>
+
+---
+
+2025-03-07 已经简化，必要栏位只需要**平台、模型名、模型类型**即可。
+
+```json
+[
   {
     "platform": "<*代码中自定义的平台代号，枚举值>",
     "model": "<*指定平台中使用的模型代号，必须与API文档中一致，会用于构建http请求>",
-    "modelType": "<*代码中自定义的模型类型代号，枚举值>",
-    "name": "<模型名称，用于显示，随意，可识别出即可>",
-    "contextLength": "<上下文长度>",
-    "isFree": false, // 是否免费
-    "inputPrice": 6, // 输入价格(对话模型)
-    "outputPrice": 6, // 输出价格(对话模型)
-    "costPer": 0.05, // 单次调用价格(绘图/视频模型)
-    "gmtRelease": "<平台中模型发布时间>"
+    "modelType": "<*代码中自定义的模型类型代号，枚举值>"
+  },
+  {
+    "platform": "aliyun",
+    "model": "deepseek-r1",
+    "modelType": "reasoner"
+  },
+  {
+    "platform": "aliyun",
+    "model": "deepseek-v3",
+    "modelType": "cc"
   }
   // ……
 ]
@@ -204,6 +235,7 @@ enum ApiPlatform {
 ```ts
 enum LLModelType {
   cc, // 文本对话
+  reasoner, // 深度思考
   vision, // 图片解读
   tti, // 文本生图
   iti, // 图片生图
@@ -222,6 +254,7 @@ enum LLModelType {
 
 - [ ] AI 工具部分:
   - [ ] 高级请求参数配置(temperature、max_tokens 等比较常用但暂没支持用户配置)
+    - [x] AI 助手模块(对话模块)的更多参数配置
   - [ ] 测试低成本让少量模型可联网搜索
   - [ ] 对话消息展示的 Markdown 格式结合 LaTeX
   - [ ] AI 助手可编辑某个输入对话的消息，并记录对话分支

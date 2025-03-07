@@ -716,7 +716,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           // 更多参数按钮
           IconButton(
             icon: Icon(
-              Icons.settings,
+              Icons.tune,
               color: _advancedEnabled ? Theme.of(context).primaryColor : null,
             ),
             tooltip: '更多参数',

@@ -9,6 +9,7 @@ import '../../../../common/components/tool_widget.dart';
 import '../../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../../common/llm_spec/constant_llm_enum.dart';
 import '../../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
+import '../../../../common/utils/tools.dart';
 import '../../../../services/model_manager_service.dart';
 
 class ModelList extends StatefulWidget {
@@ -79,7 +80,7 @@ class _ModelListState extends State<ModelList> {
   }
 
   // 清除所有自行导入的模型
-  Future<void> _clearAllKeys(BuildContext context) async {
+  Future<void> _clearAllModels(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -139,7 +140,9 @@ class _ModelListState extends State<ModelList> {
 
       // 设置ID和时间
       models = models.map((e) {
-        e.name = !e.isFree ? '【收费】${e.name}' : e.name;
+        e.name = !(e.isFree ?? false)
+            ? '【收费】${e.name ?? capitalizeWords(e.model)}'
+            : (e.name ?? capitalizeWords(e.model));
         e.gmtCreate = DateTime.now();
         e.isBuiltin = false; // 用户导入的模型
         return e;
@@ -172,10 +175,8 @@ class _ModelListState extends State<ModelList> {
       _loadModels();
     } catch (e) {
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('导入失败: $e')),
-      );
+      commonExceptionDialog(context, "导入失败", e.toString());
+      _loadModels();
     } finally {
       setState(() => _isImporting = false);
     }
@@ -229,7 +230,7 @@ class _ModelListState extends State<ModelList> {
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
-                onPressed: () => _clearAllKeys(context),
+                onPressed: () => _clearAllModels(context),
               ),
               if (_isImporting)
                 Padding(
@@ -255,7 +256,7 @@ class _ModelListState extends State<ModelList> {
               dataRowMinHeight: 15.sp,
               dataRowMaxHeight: 50.sp,
               headingRowHeight: 50.sp,
-              horizontalMargin: 10,
+              horizontalMargin: 10.sp,
               headingTextStyle: const TextStyle(fontWeight: FontWeight.bold),
               columnSpacing: 10.sp,
               columns: [
@@ -273,7 +274,7 @@ class _ModelListState extends State<ModelList> {
                   label: const Text('模型'),
                   onSort: (columnIndex, ascending) {
                     _sort<String>(
-                      (d) => d.name,
+                      (d) => d.name ?? d.model,
                       columnIndex,
                       ascending,
                     );
@@ -289,29 +290,19 @@ class _ModelListState extends State<ModelList> {
                     );
                   },
                 ),
-                DataColumn(
-                  label: const Text('付费'),
-                  onSort: (columnIndex, ascending) {
-                    _sort<num>(
-                      (d) => d.isFree ? 1 : 0,
-                      columnIndex,
-                      ascending,
-                    );
-                  },
-                ),
-                DataColumn(
-                  label: const Text('输入+输出+单个'),
-                  onSort: (columnIndex, ascending) {
-                    _sort<num>(
-                      (d) =>
-                          (d.inputPrice ?? 0) +
-                          (d.outputPrice ?? 0) +
-                          (d.costPer ?? 0),
-                      columnIndex,
-                      ascending,
-                    );
-                  },
-                ),
+                // DataColumn(
+                //   label: const Text('输入+输出+单个'),
+                //   onSort: (columnIndex, ascending) {
+                //     _sort<num>(
+                //       (d) =>
+                //           (d.inputPrice ?? 0) +
+                //           (d.outputPrice ?? 0) +
+                //           (d.costPer ?? 0),
+                //       columnIndex,
+                //       ascending,
+                //     );
+                //   },
+                // ),
                 const DataColumn(
                   label: Text('操作'),
                   headingRowAlignment: MainAxisAlignment.center,
@@ -338,14 +329,16 @@ class _ModelListState extends State<ModelList> {
                   }),
                   cells: [
                     DataCell(Text(CP_NAME_MAP[_models[index].platform] ?? '')),
-                    DataCell(Text(_models[index].name)),
+                    DataCell(SizedBox(
+                      width: 0.45.sw,
+                      child: Text(_models[index].model),
+                    )),
                     DataCell(Text(_models[index].modelType.name)),
-                    DataCell(Text(_models[index].isFree ? '免费' : '付费')),
-                    DataCell(
-                      Text(
-                        '${_models[index].inputPrice ?? 0} + ${_models[index].outputPrice ?? 0} + ${_models[index].costPer ?? 0}',
-                      ),
-                    ),
+                    // DataCell(
+                    //   Text(
+                    //     '${_models[index].inputPrice ?? 0} + ${_models[index].outputPrice ?? 0} + ${_models[index].costPer ?? 0}',
+                    //   ),
+                    // ),
                     DataCell(
                       _models[index].isBuiltin
                           ? const SizedBox.shrink()
@@ -382,7 +375,7 @@ class _ModelListState extends State<ModelList> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(model.name),
+                    Text(model.name ?? model.model),
                     TextButton(
                       child: const Text('关闭'),
                       onPressed: () {
@@ -405,7 +398,7 @@ class _ModelListState extends State<ModelList> {
                         Text('模型代号: ${model.model}'),
                         Text('模型名称: ${model.name}'),
                         Text('模型类型: ${MT_NAME_MAP[model.modelType]}'),
-                        Text('是否免费: ${model.isFree ? '是' : '否'}'),
+                        Text('是否免费: ${(model.isFree ?? false) ? '是' : '否'}'),
                         Text('是否内置: ${model.isBuiltin ? '是' : '否'}'),
                         Text('输入价格: ${model.inputPrice ?? '0'}'),
                         Text('输出价格: ${model.outputPrice ?? '0'}'),

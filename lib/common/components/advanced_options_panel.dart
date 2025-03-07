@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -211,6 +213,7 @@ class _AdvancedOptionsPanelState extends State<AdvancedOptionsPanel> {
       children: [
         _buildOptionLabel(option),
         DropdownButton<dynamic>(
+          isExpanded: true,
           value: _options[option.key] ?? option.defaultValue,
           items: option.items?.map((item) {
             return DropdownMenuItem(
@@ -284,6 +287,8 @@ class _AdvancedOptionsPanelState extends State<AdvancedOptionsPanel> {
   Widget _buildOptionLabel(AdvancedOption option) {
     return Tooltip(
       message: option.description ?? '',
+      // textStyle: TextStyle(fontSize: 12.sp),
+      triggerMode: TooltipTriggerMode.tap,
       child: Row(
         children: [
           Text(option.label, style: TextStyle(fontSize: 14.sp)),

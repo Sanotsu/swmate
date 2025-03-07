@@ -103,7 +103,9 @@ const _$LLModelTypeEnumMap = {
   LLModelType.ttv: 'ttv',
   LLModelType.itv: 'itv',
   LLModelType.video: 'video',
-  LLModelType.voice: 'voice',
+  LLModelType.audio: 'audio',
+  LLModelType.asr: 'asr',
+  LLModelType.tts: 'tts',
   LLModelType.omni: 'omni',
 };
 

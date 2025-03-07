@@ -1,4 +1,4 @@
-// ignore_for_file: constant_identifier_names
+// ignore_for_file: constant_identifier_names, avoid_print
 
 import '../components/advanced_options_panel.dart';
 import '../llm_spec/constant_llm_enum.dart';
@@ -212,7 +212,7 @@ class AdvancedOptionsManager {
     ),
     AOEnum.presence_penalty: AdvancedOption(
       key: AOEnum.presence_penalty.name,
-      label: '存在惩罚',
+      label: '存在惩罚(presence_penalty)',
       description: '降低模型谈论相同主题的概率',
       type: OptionType.slider,
       defaultValue: 0.0,
@@ -222,7 +222,7 @@ class AdvancedOptionsManager {
     ),
     AOEnum.frequency_penalty: AdvancedOption(
       key: AOEnum.frequency_penalty.name,
-      label: '频率惩罚',
+      label: '频率惩罚(frequency_penalty)',
       description: '降低模型重复使用相同词汇的概率',
       type: OptionType.slider,
       defaultValue: 0.0,
@@ -314,7 +314,7 @@ class AdvancedOptionsManager {
     LLModelType.iti: [],
     LLModelType.ttv: [],
     LLModelType.itv: [],
-    LLModelType.voice: [],
+    LLModelType.audio: [],
     LLModelType.video: [],
     LLModelType.omni: [],
   };

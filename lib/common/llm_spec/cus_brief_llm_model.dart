@@ -20,9 +20,9 @@ class CusBriefLLMSpec {
   // 模型类型(cc、vision、audio、tti、iti、ttv……)
   LLModelType modelType;
   // 用于显示的模型名称
-  String name;
+  String? name;
   // 是否免费
-  bool isFree;
+  bool? isFree;
   // 每百万token单价，免费没写价格就先写0
   double? inputPrice;
   double? outputPrice;
@@ -40,9 +40,9 @@ class CusBriefLLMSpec {
   CusBriefLLMSpec(
     this.platform,
     this.model,
-    this.modelType,
+    this.modelType, {
     this.name,
-    this.isFree, {
+    this.isFree,
     this.inputPrice,
     this.outputPrice,
     this.costPer,
@@ -69,8 +69,8 @@ class CusBriefLLMSpec {
       ApiPlatform.values.firstWhere((e) => e.toString() == map['platform']),
       map['model'],
       LLModelType.values.firstWhere((e) => e.toString() == map['modelType']),
-      map['name'],
-      map['isFree'] == 1 ? true : false,
+      name: map['name'],
+      isFree: map['isFree'] == 1 ? true : false,
       inputPrice: map['inputPrice'],
       outputPrice: map['outputPrice'],
       costPer: map['costPer'],
@@ -91,7 +91,7 @@ class CusBriefLLMSpec {
       'model': model,
       'modelType': modelType.toString(),
       'name': name,
-      'isFree': isFree ? 1 : 0,
+      'isFree': isFree ?? false ? 1 : 0,
       'inputPrice': inputPrice,
       'outputPrice': outputPrice,
       'costPer': costPer,

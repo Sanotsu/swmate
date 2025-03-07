@@ -68,7 +68,9 @@ enum LLModelType {
   video,
 
   // 语音大模型
-  voice,
+  audio, // 语音对话 (支持语音输入的，然后输出的也是文本、如果输入语音输出语音看omni)
+  asr, // 语音识别
+  tts, // 语音合成
 
   // 全模态，比如通义千问-Omni-Turbo
   // 支持文本, 图像，语音，视频输入理解和混合输入理解，具备文本和语音同时流式生成能力
@@ -86,6 +88,8 @@ final Map<LLModelType, String> MT_NAME_MAP = {
   LLModelType.ttv: '文生视频',
   LLModelType.itv: '图生视频',
   LLModelType.video: '视频生成',
-  LLModelType.voice: '语音对话',
+  LLModelType.audio: '语音对话',
+  LLModelType.asr: '语音识别',
+  LLModelType.tts: '语音合成',
   LLModelType.omni: '全模态',
 };

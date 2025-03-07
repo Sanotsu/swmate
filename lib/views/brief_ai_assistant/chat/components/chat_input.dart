@@ -108,7 +108,7 @@ class _ChatInputState extends State<ChatInput> {
   @override
   Widget build(BuildContext context) {
     final hasVisionAbility = widget.model?.modelType == LLModelType.vision;
-    final hasVoiceAbility = widget.model?.modelType == LLModelType.voice;
+    final hasVoiceAbility = widget.model?.modelType == LLModelType.audio;
     final hasTools =
         (hasVisionAbility || hasVoiceAbility) && !widget.isStreaming;
 
