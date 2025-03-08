@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -7,21 +8,32 @@ import '../../../../common/constants/constants.dart';
 import '../../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 
 import '../../../../common/components/voice_chat_bubble.dart';
+import 'package:flutter/services.dart';
 
-class ChatMessageItem extends StatelessWidget {
+class ChatMessageItem extends StatefulWidget {
+  // 用于展示的消息
   final ChatMessage message;
-  final bool showModelLabel;
+  // 长按消息后，点击了编辑按钮的回调
+  final Function(String)? onEdit;
+  // 长按消息后，点击了重新生成按钮的回调
+  final VoidCallback? onRegenerate;
 
   const ChatMessageItem({
     super.key,
     required this.message,
-    this.showModelLabel = false,
+    this.onEdit,
+    this.onRegenerate,
   });
 
   @override
+  State<ChatMessageItem> createState() => _ChatMessageItemState();
+}
+
+class _ChatMessageItemState extends State<ChatMessageItem> {
+  @override
   Widget build(BuildContext context) {
-    final isUser = message.role == CusRole.user.name ||
-        message.role == CusRole.system.name;
+    final isUser = widget.message.role == CusRole.user.name ||
+        widget.message.role == CusRole.system.name;
 
     // 个人更喜欢顶部头像的布局
     return buildTopAvatar(isUser, context);
@@ -50,58 +62,12 @@ class ChatMessageItem extends StatelessWidget {
           _buildMessageContent(isUser, true),
 
           // 如果是语音输入，显示语言文件，可点击播放
-          if (message.contentVoicePath != null &&
-              message.contentVoicePath!.trim() != "")
+          if (widget.message.contentVoicePath != null &&
+              widget.message.contentVoicePath!.trim() != "")
             _buildVoicePlayer(),
 
           // 显示图片
-          if (message.imageUrl != null) _buildImage(context),
-        ],
-      ),
-    );
-  }
-
-  // 头像消息体旁边，Row布局，显示文本内容没那么宽
-  Widget buildHorizontalAvatar(bool isUser, BuildContext context) {
-    return Container(
-      margin: EdgeInsets.all(4.sp),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        children: [
-          if (!isUser) _buildAvatar(isUser),
-          Flexible(
-            child: Column(
-              crossAxisAlignment:
-                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: [
-                // 显示模型标签
-                if (!isUser && showModelLabel && message.modelLabel != null)
-                  Text(
-                    message.modelLabel!,
-                    style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-                  ),
-                // 显示模型响应时间
-                if (message.content.trim().isNotEmpty)
-                  Text(
-                    DateFormat(constDatetimeFormat).format(message.dateTime),
-                    style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-                  ),
-                // 显示消息内容
-                _buildMessageContent(isUser, false),
-
-                // 如果是语音输入，显示语言文件，可点击播放
-                if (message.contentVoicePath != null &&
-                    message.contentVoicePath!.trim() != "")
-                  _buildVoicePlayer(),
-
-                // 显示图片
-                if (message.imageUrl != null) _buildImage(context),
-              ],
-            ),
-          ),
-          if (isUser) _buildAvatar(isUser),
+          if (widget.message.imageUrl != null) _buildImage(context),
         ],
       ),
     );
@@ -121,16 +87,17 @@ class ChatMessageItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 显示模型标签
-              if (!isUser && showModelLabel && message.modelLabel != null)
+              if (!isUser && widget.message.modelLabel != null)
                 Text(
-                  message.modelLabel!,
+                  widget.message.modelLabel!,
                   style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                 ),
 
               // 显示模型响应时间
-              if (message.content.trim().isNotEmpty)
+              if (widget.message.content.trim().isNotEmpty)
                 Text(
-                  DateFormat(constDatetimeFormat).format(message.dateTime),
+                  DateFormat(constDatetimeFormat)
+                      .format(widget.message.dateTime),
                   style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                 ),
             ],
@@ -161,69 +128,51 @@ class ChatMessageItem extends StatelessWidget {
 
   // 对话消息正文部分
   Widget _buildMessageContent(bool isUser, bool isAvatarTop) {
-    // 所有的文字颜色，暂定用户蓝色AI黑色(系统角色为绿色)
-    // Color textColor = message.role == CusRole.user.name
-    //     ? Colors.blue
-    //     : message.role == CusRole.system.name
-    //         ? Colors.green
-    //         : Colors.black;
-    // Color bgColor = isUser ? Colors.blue.shade100 : Colors.greenAccent.shade100;
-
-    // 用户输入，蓝底白字；AI响应，灰底黑字；深度思考，灰底深灰字
-    Color textColor = message.role == CusRole.user.name
+    Color textColor = widget.message.role == CusRole.user.name
         ? Colors.white
-        : message.role == CusRole.system.name
+        : widget.message.role == CusRole.system.name
             ? Colors.grey
             : Colors.black;
     Color bgColor = isUser ? Colors.blue : Colors.grey.shade100;
 
-    return Container(
-      // margin: isAvatarTop
-      //     ? EdgeInsets.all(0.sp)
-      //     // 34 是图标的宽度，对话正文的两边都空这个宽度，整个多轮的正文显示就是一样宽
-      //     // 如果只是左右空一个，那这个margin可以省略掉(头像在上方这个地方不影响)
-      //     : EdgeInsets.only(
-      //         left: isUser ? 34.sp : 0,
-      //         right: isUser ? 0 : 34.sp,
-      //       ),
-      margin: EdgeInsets.symmetric(vertical: 4.sp),
-      padding: EdgeInsets.all(8.sp),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8.sp),
-      ),
-      child: Column(
-        crossAxisAlignment:
-            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          if (message.reasoningContent != null &&
-              message.reasoningContent!.isNotEmpty)
-            _buildThinkingProcess(message),
-          // buildThinkingProcessText(message),
-          MarkdownBody(
-            data: message.content,
-            selectable: true,
-            styleSheet: MarkdownStyleSheet(
-              p: TextStyle(color: textColor),
-              // code: TextStyle(
-              //   color: Colors.black,
-              //   backgroundColor: Colors.grey.shade200,
-              // ),
-              // tableBody: TextStyle(color: Colors.black),
+    return GestureDetector(
+      onLongPressStart: (LongPressStartDetails details) {
+        HapticFeedback.mediumImpact();
+        _showMessageOptions(context, details.globalPosition, isUser);
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 4.sp),
+        padding: EdgeInsets.all(8.sp),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(8.sp),
+        ),
+        child: Column(
+          crossAxisAlignment:
+              isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            if (widget.message.reasoningContent != null &&
+                widget.message.reasoningContent!.isNotEmpty)
+              _buildThinkingProcess(widget.message),
+            MarkdownBody(
+              data: widget.message.content,
+              // selectable: true,
+              styleSheet: MarkdownStyleSheet(
+                p: TextStyle(color: textColor),
+              ),
             ),
-          ),
-          // 如果是流式加载中(但还没有输出内容)，显示一个加载圈
-          if (message.role != CusRole.user.name &&
-              message.content.isEmpty &&
-              (message.reasoningContent != null &&
-                  message.reasoningContent!.isEmpty))
-            SizedBox(
-              width: 16.sp,
-              height: 16.sp,
-              child: CircularProgressIndicator(strokeWidth: 2.sp),
-            ),
-          if (message.quotes?.isNotEmpty == true) ..._buildQuotes(),
-        ],
+            if (widget.message.role != CusRole.user.name &&
+                widget.message.content.isEmpty &&
+                (widget.message.reasoningContent != null &&
+                    widget.message.reasoningContent!.isEmpty))
+              SizedBox(
+                width: 16.sp,
+                height: 16.sp,
+                child: CircularProgressIndicator(strokeWidth: 2.sp),
+              ),
+            if (widget.message.quotes?.isNotEmpty == true) ..._buildQuotes(),
+          ],
+        ),
       ),
     );
   }
@@ -287,68 +236,9 @@ class ChatMessageItem extends StatelessWidget {
     );
   }
 
-  // 2025-02-25 深度思考过程直接使用基础组件显示也可以
-  Widget buildThinkingProcessText(ChatMessage message) {
-    bool isThinkingExpanded = true;
-    return StatefulBuilder(builder: (context, setState) {
-      return Container(
-        padding: EdgeInsets.only(bottom: 16.sp),
-        // decoration: BoxDecoration(
-        //   color: Colors.green[200],
-        //   borderRadius: BorderRadius.circular(8.sp),
-        // ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  message.content.trim().isEmpty
-                      ? '思考中'
-                      : '已深度思考(用时${message.thinkingDuration ?? 0}秒)',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      isThinkingExpanded = !isThinkingExpanded;
-                    });
-                  },
-                  icon: Icon(
-                    isThinkingExpanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                  ),
-                ),
-              ],
-            ),
-            if (isThinkingExpanded)
-              Padding(
-                padding: EdgeInsets.only(left: 32.sp),
-                // child: Text(
-                //   message.reasoningContent ?? '',
-                //   style: TextStyle(color: Colors.black54),
-                // ),
-                child: MarkdownBody(
-                  data: message.reasoningContent ?? '',
-                  selectable: true,
-                  styleSheet: MarkdownStyleSheet(
-                    p: TextStyle(color: Colors.black54, fontSize: 13.sp),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      );
-    });
-  }
-
   // 如果联网搜索有联网部分，展示链接
   List<Widget> _buildQuotes() {
-    return message.quotes!.map((quote) {
+    return widget.message.quotes!.map((quote) {
       return Container(
         margin: EdgeInsets.only(top: 8.sp),
         padding: EdgeInsets.all(8.sp),
@@ -379,7 +269,7 @@ class ChatMessageItem extends StatelessWidget {
   // 简单的音频播放
   Widget _buildVoicePlayer() {
     return VoiceWaveBubble(
-      path: message.contentVoicePath!,
+      path: widget.message.contentVoicePath!,
     );
   }
 
@@ -389,29 +279,151 @@ class ChatMessageItem extends StatelessWidget {
       margin: EdgeInsets.only(top: 8.sp),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.sp),
-        // child: message.imageUrl!.startsWith('http')
-        //     ? Image.network(
-        //         message.imageUrl!,
-        //         width: 0.25.sw,
-        //         fit: BoxFit.cover,
-        //         loadingBuilder: (context, child, loadingProgress) {
-        //           if (loadingProgress == null) return child;
-        //           return Center(child: CircularProgressIndicator());
-        //         },
-        //       )
-        //     : Image.file(
-        //         File(message.imageUrl!),
-        //         width: 0.25.sw,
-        //         fit: BoxFit.cover,
-        //       ),
-
         child: SizedBox(
           width: 0.3.sw,
           child: buildImageView(
-            message.imageUrl!,
+            widget.message.imageUrl!,
             context,
             isFileUrl: true,
             imageErrorHint: '图片异常，请开启新对话',
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMessageOptions(
+      BuildContext context, Offset tapPosition, bool isUser) {
+    final size = MediaQuery.of(context).size;
+    final menuWidth = 150.sp;
+    final menuHeight = isUser ? 144.sp : 144.sp;
+
+    double left = tapPosition.dx;
+    double top = tapPosition.dy;
+
+    if (left + menuWidth > size.width) {
+      left = size.width - menuWidth;
+    }
+    if (left < 0) {
+      left = 0;
+    }
+
+    if (top + menuHeight > size.height) {
+      top = top - menuHeight;
+    }
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        left,
+        top,
+        left + menuWidth,
+        top + menuHeight,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.sp),
+      ),
+      elevation: 8,
+      items: [
+        PopupMenuItem(
+          height: 40.sp,
+          child: _buildMenuItemWithIcon(
+            icon: Icons.copy,
+            text: '复制',
+            color: Colors.grey,
+          ),
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: widget.message.content));
+            EasyLoading.showToast('已复制到剪贴板');
+          },
+        ),
+        PopupMenuItem(
+          height: 40.sp,
+          child: _buildMenuItemWithIcon(
+            icon: Icons.text_fields,
+            text: '选择文本',
+            color: Colors.blue,
+          ),
+          onTap: () {
+            _showFullScreenText(context);
+          },
+        ),
+        if (isUser)
+          PopupMenuItem(
+            height: 40.sp,
+            child: _buildMenuItemWithIcon(
+              icon: Icons.edit,
+              text: '编辑',
+              color: Colors.orange,
+            ),
+            onTap: () {
+              if (widget.onEdit != null) {
+                widget.onEdit!(widget.message.content);
+              }
+            },
+          )
+        else
+          PopupMenuItem(
+            height: 40.sp,
+            child: _buildMenuItemWithIcon(
+              icon: Icons.refresh,
+              text: '重新生成',
+              color: Colors.green,
+            ),
+            onTap: () {
+              if (widget.onRegenerate != null) {
+                widget.onRegenerate!();
+              }
+            },
+          ),
+      ],
+    );
+  }
+
+  // 优化菜单项样式
+  Widget _buildMenuItemWithIcon({
+    required IconData icon,
+    required String text,
+    Color? color,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center, // 居中对齐
+      children: [
+        Icon(icon, size: 16.sp, color: color),
+        SizedBox(width: 8.sp),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showFullScreenText(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog.fullscreen(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Container(
+              alignment: Alignment.centerRight,
+              child: Text('选择文本', style: TextStyle(fontSize: 18.sp)),
+            ),
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          body: SingleChildScrollView(
+            padding: EdgeInsets.all(16.sp),
+            child: SelectableText(
+              widget.message.content,
+              style: TextStyle(fontSize: 16.sp),
+            ),
           ),
         ),
       ),

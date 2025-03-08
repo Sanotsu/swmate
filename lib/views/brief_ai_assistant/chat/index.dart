@@ -78,6 +78,17 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   bool _advancedEnabled = false;
   Map<String, dynamic>? _advancedOptions;
 
+  // 添加是否在编辑用户消息
+  bool _isEditingUserMsg = false;
+  // 被编辑的用户消息的索引
+  int? _editingIndex;
+
+  // 添加输入框控制器
+  final TextEditingController _inputController = TextEditingController();
+
+  // 添加输入框焦点控制
+  final FocusNode _inputFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -441,7 +452,29 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     }
   }
 
-  // 发送消息
+  // 修改处理编辑消息的方法
+  void _handleEditMessage(String content, int index) {
+    setState(() {
+      _isEditingUserMsg = true;
+      _editingIndex = index;
+      _inputController.text = content;
+    });
+    // 请求焦点，唤起键盘
+    _inputFocusNode.requestFocus();
+  }
+
+  // 修改取消编辑方法
+  void _handleEditCancel() {
+    setState(() {
+      _isEditingUserMsg = false;
+      _editingIndex = null;
+      _inputController.clear();
+    });
+    // 取消焦点，收起键盘
+    _inputFocusNode.unfocus();
+  }
+
+  // 修改发送消息方法
   Future<void> _handleSendMessage(
     String text, {
     File? image,
@@ -453,26 +486,39 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       return;
     }
 
-    // 2025-03-06 实测，如果指定返回类型为json对象，必须在用户消息中明确告知“按JSON格式回复”，否则会报错
+    // 处理JSON格式响应
     if (_advancedEnabled &&
         _advancedOptions?["response_format"] == "json_object") {
       text = "$text(请严格按照json格式输出)";
     }
 
-    // 添加用户消息
-    setState(() {
-      _messages.add(ChatMessage(
-        messageId: DateTime.now().toString(),
-        dateTime: DateTime.now(),
-        role: CusRole.user.name,
-        content: text,
-        imageUrl: image?.path,
-        contentVoicePath: voice?.path,
-      ));
+    // 如果是编辑模式
+    if (_isEditingUserMsg && _editingIndex != null) {
+      setState(() {
+        // 更新消息内容
+        _messages[_editingIndex!].content = text;
+        // 移除该消息之后的所有消息
+        _messages.removeRange(_editingIndex! + 1, _messages.length);
+        // 退出编辑模式
+        _isEditingUserMsg = false;
+        _editingIndex = null;
+      });
+    } else {
+      // 正常添加新消息
+      setState(() {
+        _messages.add(ChatMessage(
+          messageId: DateTime.now().toString(),
+          dateTime: DateTime.now(),
+          role: CusRole.user.name,
+          content: text,
+          imageUrl: image?.path,
+          contentVoicePath: voice?.path,
+        ));
+      });
+    }
 
-      // 在每次添加了对话之后，都把整个对话列表存入对话历史中去
-      _saveChatHistory();
-    });
+    // 保存对话历史
+    _saveChatHistory();
 
     try {
       setState(() => _isStreaming = true);
@@ -824,12 +870,16 @@ class _BriefChatScreenState extends State<BriefChatScreen>
               /// 输入框
               ChatInput(
                 model: _selectedModel,
+                controller: _inputController,
+                focusNode: _inputFocusNode,
                 onSend: _handleSendMessage,
                 onCancel: _cancelResponse,
                 isStreaming: _isStreaming,
                 onHeightChanged: (height) {
                   setState(() => _inputHeight = height);
                 },
+                isEditing: _isEditingUserMsg,
+                onEditCancel: _handleEditCancel,
               ),
             ],
           ),
@@ -867,7 +917,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     );
   }
 
-  // 构建消息列表
+  // 修改消息列表构建方法中的 ChatMessageItem
   Widget _buildMessageList() {
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(
@@ -881,20 +931,24 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           final isAssistant = message.role == CusRole.assistant.name;
           return Column(
             children: [
-              ChatMessageItem(message: message, showModelLabel: true),
-              // 不在流式响应时在助手消息下方显示操作按钮
+              ChatMessageItem(
+                message: message,
+                onEdit: message.role == CusRole.user.name
+                    ? (newContent) => _handleEditMessage(newContent, index)
+                    : null,
+                onRegenerate: message.role == CusRole.assistant.name
+                    ? () => _handleRegenerate(message)
+                    : null,
+              ),
               if (isAssistant && !_isStreaming)
                 Padding(
-                  // 底部留出一点间距，避免和悬浮按钮重叠
                   padding: EdgeInsets.only(left: 8.sp, bottom: 48.sp),
                   child: SizedBox(
                     height: 20.sp,
                     child: MessageActions(
                       content: message.content,
                       onRegenerate: () => _handleRegenerate(message),
-                      // 是否正在重新生成(当前消息是否是重新生成消息)
                       isRegenerating: index == _regeneratingIndex,
-                      // tokens: message.totalTokens,
                     ),
                   ),
                 ),
@@ -982,8 +1036,10 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _cancelResponse?.call();
+    _inputFocusNode.dispose(); // 记得释放焦点
+    _inputController.dispose();
     _scrollController.dispose();
+    _cancelResponse?.call();
     super.dispose();
   }
 }

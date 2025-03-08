@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
@@ -17,19 +18,39 @@ import '../../../../common/components/sounds_message_button/utils/sounds_recorde
 import '../../../../common/components/voice_chat_bubble.dart';
 
 class ChatInput extends StatefulWidget {
+  // 模型规格(根据模型类型判断是否展示一些工具按钮)
   final CusBriefLLMSpec? model;
+  // 发送消息(当文本输入或者选择了图片音频等，调用此方法发送消息)
   final Function(String text, {File? image, File? voice}) onSend;
+  // 取消响应(流式响应过程中，用户点击了终止按钮，调用此方法)
   final VoidCallback? onCancel;
+  // 是否正在流式响应中(如果在响应中，不允许发送、输入文本等操作)
   final bool isStreaming;
+  // 输入框高度变化回调
+  // (切换模型后，可能会展开/收起更多工具栏，导致整个输入区域变化。
+  // 而主页面的悬浮开启新对话、滚动到底部按钮是相对固定在输入框上面一点
+  // 输入框高度变化了，也要通知父组件，让父组件重新布局悬浮按钮)
   final ValueChanged<double>? onHeightChanged;
+  // 输入框控制器(编辑用户信息时直接传入控制器方便赋值到输入框)
+  final TextEditingController controller;
+  // 是否是编辑用户消息(重新编辑用户消息和正常对话输入发送要稍做区别)
+  final bool isEditing;
+  // 取消编辑回调(当取消编辑用户信息时，调用此方法)
+  final VoidCallback? onEditCancel;
+  // 输入框焦点控制(编辑用户消息时自动弹出键盘，取消时收起键盘)
+  final FocusNode? focusNode;
 
   const ChatInput({
     super.key,
     required this.model,
     required this.onSend,
+    required this.controller,
     this.onCancel,
     this.isStreaming = false,
     this.onHeightChanged,
+    this.isEditing = false,
+    this.onEditCancel,
+    this.focusNode,
   });
 
   @override
@@ -37,7 +58,6 @@ class ChatInput extends StatefulWidget {
 }
 
 class _ChatInputState extends State<ChatInput> {
-  final TextEditingController _controller = TextEditingController();
   bool _isRecording = false;
   final _audioRecorder = AudioRecorder();
   File? _selectedImage;
@@ -64,24 +84,28 @@ class _ChatInputState extends State<ChatInput> {
     if (oldWidget.model?.cusLlmSpecId != widget.model?.cusLlmSpecId) {
       _notifyHeightChange();
     }
+    // 当进入编辑模式时,设置输入框内容
+    if (widget.isEditing && !oldWidget.isEditing) {
+      widget.controller.text = widget.controller.text;
+    }
   }
 
   Future<bool> _checkPermissions() async {
     if (!(await requestMicrophonePermission())) {
       if (!mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('未授权语音录制权限，无法语音输入'),
-        ),
+      commonExceptionDialog(
+        context,
+        '未授权语音录制权限',
+        '未授权语音录制权限，无法语音输入',
       );
       return false;
     }
     if (!(await requestStoragePermission())) {
       if (!mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('未授权访问设备外部存储，无法进行语音识别'),
-        ),
+      commonExceptionDialog(
+        context,
+        '未授权访问设备外部存储',
+        '未授权访问设备外部存储，无法进行语音识别',
       );
       return false;
     }
@@ -118,10 +142,6 @@ class _ChatInputState extends State<ChatInput> {
       children: [
         if (_selectedImage != null || _selectedVoice != null)
           _buildPreviewArea(),
-        // 2025-02-24
-        // 如果当前对话不是空，可以显示一个新增对话按钮;
-        // 如果当前对话未滚动到底部，还可以显示一个滚动到底部的按钮
-        // 后续想办法悬浮透明，类似DS？？？
         Container(
           padding: EdgeInsets.all(8.sp),
           child: Column(
@@ -205,16 +225,18 @@ class _ChatInputState extends State<ChatInput> {
                 onChanged: (status) {},
                 onSendSounds: widget.isStreaming
                     ? (type, content) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('等待响应完成或终止后再输入'),
-                          ),
+                        commonExceptionDialog(
+                          context,
+                          '提示',
+                          '等待响应完成或终止后再输入',
                         );
                       }
                     : (type, content) async {
                         if (content.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('请输入消息内容')),
+                          commonExceptionDialog(
+                            context,
+                            '提示',
+                            '请输入消息内容',
                           );
                           return;
                         }
@@ -251,13 +273,23 @@ class _ChatInputState extends State<ChatInput> {
               ),
             )
           : TextField(
-              controller: _controller,
+              controller: widget.controller,
+              focusNode: widget.focusNode,
               enabled: !widget.isStreaming,
               decoration: InputDecoration(
-                hintText: '给智能助手发送消息',
+                hintText: widget.isEditing ? '编辑消息' : '给智能助手发送消息',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.sp),
                 ),
+                prefixIcon: widget.isEditing
+                    ? IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          widget.onEditCancel?.call();
+                          widget.focusNode?.unfocus();
+                        },
+                      )
+                    : null,
               ),
               maxLines: 3,
               minLines: 1,
@@ -376,7 +408,7 @@ class _ChatInputState extends State<ChatInput> {
 
       if (path != null) {
         widget.onSend(
-          _controller.text,
+          widget.controller.text,
           voice: File(path),
         );
       }
@@ -407,20 +439,18 @@ class _ChatInputState extends State<ChatInput> {
   void _sendMessage() {
     unfocusHandle();
 
-    if (_controller.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入消息内容')),
-      );
+    if (widget.controller.text.isEmpty) {
+      EasyLoading.showError('请输入消息内容');
       return;
     }
 
     widget.onSend(
-      _controller.text,
+      widget.controller.text,
       image: _selectedImage,
       voice: _selectedVoice,
     );
 
-    _controller.clear();
+    widget.controller.clear();
     setState(() {
       _selectedImage = null;
       _selectedVoice = null;
@@ -429,7 +459,6 @@ class _ChatInputState extends State<ChatInput> {
 
   @override
   void dispose() {
-    _controller.dispose();
     _audioRecorder.dispose();
     super.dispose();
   }
