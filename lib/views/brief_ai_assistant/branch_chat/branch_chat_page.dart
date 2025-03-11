@@ -1,16 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../common/components/simple_marquee_or_text.dart';
+import '../../../common/components/tool_widget.dart';
+import '../../../common/utils/advanced_options_utils.dart';
 import '../../../models/brief_ai_tools/chat_branch/chat_branch_message.dart';
 import '../../../models/brief_ai_tools/chat_branch/branch_manager.dart';
 import '../../../models/brief_ai_tools/chat_branch/branch_store.dart';
 import '../../../models/brief_ai_tools/chat_branch/chat_branch_session.dart';
+import '../../../services/chat_service.dart';
+import '../../../services/cus_get_storage.dart';
+import '../chat/components/model_filter.dart';
+import '../chat/components/model_selector.dart';
 import 'components/branch_message_item.dart';
 import 'components/branch_tree_dialog.dart';
 import 'components/chat_input_bar.dart';
-import '../../../services/ai_service.dart';
 import 'components/chat_history_drawer.dart';
 import 'package:flutter/services.dart';
 
 import 'components/text_selection_dialog.dart';
+import '../../../common/llm_spec/cus_brief_llm_model.dart';
+import '../../../common/llm_spec/constant_llm_enum.dart';
+import '../../../services/model_manager_service.dart';
 
 class BranchChatPage extends StatefulWidget {
   const BranchChatPage({super.key});
@@ -23,7 +34,6 @@ class _BranchChatPageState extends State<BranchChatPage> {
   final TextEditingController _inputController = TextEditingController();
   final BranchManager _branchManager = BranchManager();
   late final BranchStore _store;
-  final AIService _aiService = AIService();
 
   List<ChatBranchMessage> allMessages = [];
   List<ChatBranchMessage> displayMessages = [];
@@ -32,15 +42,35 @@ class _BranchChatPageState extends State<BranchChatPage> {
   bool isLoading = true;
   bool isStreaming = false;
   String streamingContent = '';
+  String streamingReasoningContent = '';
   ChatBranchMessage? streamingMessage;
   int? _currentSessionId;
   int? regeneratingMessageId;
   bool isNewChat = false;
 
+  // 添加模型相关状态
+  List<CusBriefLLMSpec> _modelList = [];
+  LLModelType _selectedType = LLModelType.cc;
+  CusBriefLLMSpec? _selectedModel;
+
+  // 添加高级参数状态
+  bool _advancedEnabled = false;
+  Map<String, dynamic>? _advancedOptions;
+
   @override
   void initState() {
     super.initState();
     _initStore();
+    _initialize();
+
+    // 获取缓存的高级选项配置
+    if (_selectedModel != null) {
+      _advancedEnabled =
+          MyGetStorage().getAdvancedOptionsEnabled(_selectedModel!);
+      if (_advancedEnabled) {
+        _advancedOptions = MyGetStorage().getAdvancedOptions(_selectedModel!);
+      }
+    }
   }
 
   Future<void> _initStore() async {
@@ -109,12 +139,15 @@ class _BranchChatPageState extends State<BranchChatPage> {
         allMessages = messages;
         displayMessages = [
           ...currentMessages,
-          if (isStreaming && streamingContent.isNotEmpty)
+          if (isStreaming &&
+              (streamingContent.isNotEmpty ||
+                  streamingReasoningContent.isNotEmpty))
             ChatBranchMessage(
               id: 0,
               messageId: 'streaming',
               role: 'assistant',
               content: streamingContent,
+              reasoningContent: streamingReasoningContent,
               createTime: DateTime.now(),
               branchPath: currentBranchPath,
               branchIndex: currentMessages.isEmpty
@@ -134,6 +167,106 @@ class _BranchChatPageState extends State<BranchChatPage> {
     }
   }
 
+  Future<void> _initialize() async {
+    try {
+      // 获取可用模型列表
+      final availableModels =
+          await ModelManagerService.getAvailableModelByTypes([
+        LLModelType.cc,
+        LLModelType.vision,
+        LLModelType.reasoner,
+      ]);
+
+      if (!mounted) return;
+      setState(() {
+        _modelList = availableModels;
+        _selectedModel = availableModels.first;
+        _selectedType = _selectedModel!.modelType;
+      });
+
+      // 初始化会话
+      await _initializeSession();
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _initializeSession() async {
+    if (_currentSessionId == null) {
+      if (!isNewChat) {
+        // 加载最近的会话
+        final sessions = _store.sessionBox.getAll()
+          ..sort((a, b) => b.updateTime.compareTo(a.updateTime));
+
+        if (sessions.isNotEmpty) {
+          final session = sessions.first;
+          setState(() {
+            _currentSessionId = session.id;
+            _selectedModel = session.llmSpec;
+            _selectedType = session.modelType;
+          });
+        } else {
+          setState(() => isNewChat = true);
+        }
+      }
+    } else {
+      // 加载当前会话的模型信息
+      final session = _store.sessionBox.get(_currentSessionId!);
+
+      print("session: ${session?.llmSpec.cusLlmSpecId}");
+
+      if (session != null) {
+        setState(() {
+          _selectedModel = _modelList
+              .where((m) => m.cusLlmSpecId == session.llmSpec.cusLlmSpecId)
+              .firstOrNull;
+
+          if (_selectedModel == null) {
+            _selectedModel = _modelList.first;
+            _createNewChat();
+          }
+
+          _selectedType = _selectedModel!.modelType;
+        });
+      }
+    }
+
+    // 加载消息
+    if (!isNewChat && _currentSessionId != null) {
+      await _loadMessages();
+    }
+  }
+
+  // 显示高级选项弹窗
+  Future<void> _showAdvancedOptions() async {
+    if (_selectedModel == null) return;
+
+    final result = await AdvancedOptionsUtils.showAdvancedOptions(
+      context: context,
+      platform: _selectedModel!.platform,
+      modelType: _selectedModel!.modelType,
+      currentEnabled: _advancedEnabled,
+      currentOptions: _advancedOptions ?? {},
+    );
+
+    if (result != null) {
+      setState(() {
+        _advancedEnabled = result.enabled;
+        _advancedOptions = result.enabled ? result.options : null;
+      });
+
+      // 保存到缓存
+      await MyGetStorage()
+          .setAdvancedOptionsEnabled(_selectedModel!, result.enabled);
+      await MyGetStorage().setAdvancedOptions(
+        _selectedModel!,
+        result.enabled ? result.options : null,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -144,7 +277,16 @@ class _BranchChatPageState extends State<BranchChatPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isNewChat ? '新对话' : '对话'),
+        title: SimpleMarqueeOrText(
+          data:
+              "${CP_NAME_MAP[_selectedModel?.platform]} > ${_selectedModel?.model}",
+          velocity: 30,
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+          ),
+        ),
         actions: [
           if (!isStreaming)
             IconButton(
@@ -155,9 +297,28 @@ class _BranchChatPageState extends State<BranchChatPage> {
             icon: const Icon(Icons.add),
             onPressed: _createNewChat,
           ),
+          // 更多参数按钮
+          IconButton(
+            icon: Icon(
+              Icons.tune,
+              color: _advancedEnabled ? Theme.of(context).primaryColor : null,
+            ),
+            tooltip: '更多参数',
+            onPressed: isStreaming ? null : _showAdvancedOptions,
+          ),
+          Builder(
+            builder: (BuildContext context) {
+              return IconButton(
+                icon: const Icon(Icons.history),
+                onPressed: isStreaming
+                    ? null
+                    : () => Scaffold.of(context).openEndDrawer(),
+              );
+            },
+          ),
         ],
       ),
-      drawer: FutureBuilder<List<ChatBranchSession>>(
+      endDrawer: FutureBuilder<List<ChatBranchSession>>(
         future: _loadSessions(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -178,6 +339,14 @@ class _BranchChatPageState extends State<BranchChatPage> {
       ),
       body: Column(
         children: [
+          // 添加模型过滤器
+          ModelFilter(
+            models: _modelList,
+            selectedType: _selectedType,
+            onTypeChanged: isStreaming ? null : _handleTypeChanged,
+            onModelSelect: isStreaming ? null : _showModelSelector,
+            isStreaming: isStreaming,
+          ),
           Expanded(
             child: _buildChatContent(),
           ),
@@ -349,13 +518,30 @@ class _BranchChatPageState extends State<BranchChatPage> {
   }
 
   Future<void> _handleSendMessage() async {
-    final content = _inputController.text.trim();
+    var content = _inputController.text.trim();
     if (content.isEmpty) return;
+
+    if (!mounted) return;
+    if (_selectedModel == null) {
+      commonExceptionDialog(context, "异常提示", "请先选择一个模型");
+      return;
+    }
+
+    // 处理JSON格式响应
+    if (_advancedEnabled &&
+        _advancedOptions?["response_format"] == "json_object") {
+      content = "$content(请严格按照json格式输出)";
+    }
 
     try {
       if (isNewChat) {
         final title = content.length > 20 ? content.substring(0, 20) : content;
-        final session = await _store.createSession(title);
+
+        final session = await _store.createSession(
+          title,
+          llmSpec: _selectedModel!,
+          modelType: _selectedType,
+        );
         setState(() {
           _currentSessionId = session.id;
           isNewChat = false;
@@ -490,6 +676,7 @@ class _BranchChatPageState extends State<BranchChatPage> {
       setState(() {
         isStreaming = true;
         streamingContent = '';
+        streamingReasoningContent = '';
         // 创建临时的流式消息
         displayMessages = [
           ...contextMessages,
@@ -507,16 +694,34 @@ class _BranchChatPageState extends State<BranchChatPage> {
       });
 
       String finalContent = '';
+      String finalReasoningContent = '';
+      var startTime = DateTime.now();
+      DateTime? endTime;
+      var thinkingDuration = 0;
 
-      final response = await _aiService.generateResponse(
-        messages: contextMessages,
-        modelLabel: message.modelLabel,
+      final response = await ChatService.sendBranchMessage(
+        _selectedModel!,
+        contextMessages,
+        // 只有启用了高级选项才传递参数
+        advancedOptions: _advancedEnabled ? _advancedOptions : null,
         stream: true,
         onStream: (chunk) {
           if (!isStreaming) return;
           setState(() {
-            streamingContent += chunk;
-            finalContent += chunk;
+            streamingContent += chunk.cusText;
+            streamingReasoningContent += chunk.choices.isNotEmpty
+                ? (chunk.choices.first.delta?["reasoning_content"] ?? '')
+                : '';
+            finalContent += chunk.cusText;
+            finalReasoningContent += chunk.choices.isNotEmpty
+                ? (chunk.choices.first.delta?["reasoning_content"] ?? '')
+                : '';
+
+            if (endTime == null && streamingContent.trim().isNotEmpty) {
+              endTime = DateTime.now();
+              thinkingDuration = endTime!.difference(startTime).inSeconds;
+            }
+
             // 更新显示消息列表中的流式消息内容
             displayMessages = [
               ...contextMessages,
@@ -525,6 +730,7 @@ class _BranchChatPageState extends State<BranchChatPage> {
                 messageId: 'streaming',
                 role: 'assistant',
                 content: streamingContent,
+                reasoningContent: streamingReasoningContent,
                 createTime: DateTime.now(),
                 branchPath: newPath, // 使用新的分支路径
                 branchIndex: newBranchIndex,
@@ -540,11 +746,13 @@ class _BranchChatPageState extends State<BranchChatPage> {
       // 创建新的分支消息
       final newMessage = await _store.addMessage(
         session: message.session.target!,
-        content: finalContent.isNotEmpty ? finalContent : response['content'],
+        // 流式的时候有构建finalContent，非流式直接返回的CCR类型,该对象中应该有响应文本cusText
+        content:
+            finalContent.isNotEmpty ? finalContent : response?.cusText ?? '',
         role: 'assistant',
         parent: message.parent.target,
-        reasoningContent: response['reasoningContent'],
-        thinkingDuration: response['thinkingDuration'],
+        reasoningContent: finalReasoningContent,
+        thinkingDuration: thinkingDuration,
         modelLabel: message.modelLabel,
         branchIndex: newBranchIndex,
       );
@@ -582,6 +790,10 @@ class _BranchChatPageState extends State<BranchChatPage> {
 
     String finalContent = '';
     ChatBranchMessage? aiMessage;
+    String finalReasoningContent = '';
+    var startTime = DateTime.now();
+    DateTime? endTime;
+    var thinkingDuration = 0;
 
     try {
       // 获取当前分支的消息，不包括之前可能存在的流式消息
@@ -612,15 +824,29 @@ class _BranchChatPageState extends State<BranchChatPage> {
         displayMessages = [...currentMessages, streamingMessage];
       });
 
-      final response = await _aiService.generateResponse(
-        messages: currentMessages,
-        modelLabel: 'default',
+      final response = await ChatService.sendBranchMessage(
+        _selectedModel!,
+        currentMessages,
+        // 只有启用了高级选项才传递参数
+        advancedOptions: _advancedEnabled ? _advancedOptions : null,
         stream: true,
         onStream: (chunk) {
           if (!isStreaming) return;
           setState(() {
-            streamingContent += chunk;
-            finalContent += chunk;
+            streamingContent += chunk.cusText;
+            streamingReasoningContent += chunk.choices.isNotEmpty
+                ? (chunk.choices.first.delta?["reasoning_content"] ?? '')
+                : '';
+            finalContent += chunk.cusText;
+            finalReasoningContent += chunk.choices.isNotEmpty
+                ? (chunk.choices.first.delta?["reasoning_content"] ?? '')
+                : '';
+
+            if (endTime == null && streamingContent.trim().isNotEmpty) {
+              endTime = DateTime.now();
+              thinkingDuration = endTime!.difference(startTime).inSeconds;
+            }
+
             // 更新流式消息的内容
             streamingMessage.content = streamingContent;
             displayMessages = [...currentMessages, streamingMessage];
@@ -633,11 +859,12 @@ class _BranchChatPageState extends State<BranchChatPage> {
       // 流式响应结束后，保存完整消息
       aiMessage = await _store.addMessage(
         session: _store.sessionBox.get(_currentSessionId!)!,
-        content: finalContent.isNotEmpty ? finalContent : response['content'],
+        content:
+            finalContent.isNotEmpty ? finalContent : response?.cusText ?? '',
         role: 'assistant',
         parent: currentMessages.last,
-        reasoningContent: response['reasoningContent'],
-        thinkingDuration: response['thinkingDuration'],
+        reasoningContent: finalReasoningContent,
+        thinkingDuration: thinkingDuration,
         modelLabel: 'default',
       );
 
@@ -857,6 +1084,21 @@ class _BranchChatPageState extends State<BranchChatPage> {
   }
 
   Future<void> _switchSession(int sessionId) async {
+    final session = _store.sessionBox.get(sessionId);
+
+    if (session == null) {
+      EasyLoading.showInfo(
+        '该历史对话所用模型已被删除，将使用默认模型构建全新对话。',
+        duration: const Duration(seconds: 5),
+      );
+
+      _selectedModel = _modelList.first;
+      _selectedType = _selectedModel!.modelType;
+
+      _createNewChat();
+      return;
+    }
+
     setState(() {
       _currentSessionId = sessionId;
       isNewChat = false;
@@ -865,6 +1107,13 @@ class _BranchChatPageState extends State<BranchChatPage> {
       streamingContent = '';
       currentEditingMessage = null;
       _inputController.clear();
+
+      // 恢复使用的模型
+      _selectedModel = _modelList
+          .where((m) => m.cusLlmSpecId == session.llmSpec.cusLlmSpecId)
+          .firstOrNull;
+
+      _selectedType = _selectedModel!.modelType;
     });
     await _loadMessages();
   }
@@ -901,5 +1150,70 @@ class _BranchChatPageState extends State<BranchChatPage> {
 
       setState(() {}); // 刷新抽屉
     }
+  }
+
+  // 切换模型类型
+  void _handleTypeChanged(LLModelType type) {
+    setState(() {
+      _selectedType = type;
+
+      // 如果当前选中的模型不是新类型的，则清空选择
+      // 因为切换类型时，一定会触发模型选择器，在模型选择的地方有重新创建对话，所以这里不用重新创建
+      if (_selectedModel?.modelType != type) {
+        _selectedModel = null;
+      }
+    });
+  }
+
+  // 显示模型选择器
+  // 显示模型选择器
+  Future<void> _showModelSelector() async {
+    // 获取可用的模型列表
+    final filteredModels =
+        _modelList.where((m) => m.modelType == _selectedType).toList();
+
+    if (filteredModels.isEmpty && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('当前类型没有可用的模型')),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    final model = await showModalBottomSheet<CusBriefLLMSpec>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      enableDrag: false,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.8,
+        child: ModelSelector(
+          models: filteredModels,
+          selectedModel: _selectedModel,
+          onModelChanged: (model) => Navigator.pop(context, model),
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    if (model != null) {
+      setState(() => _selectedModel = model);
+    } else {
+      // 如果没有点击模型，则使用选定分类的第一个模型
+      setState(() => _selectedModel = filteredModels.first);
+    }
+
+    // 选择指定模型后，加载对应类型上次缓存的高级选项配置
+    _advancedEnabled =
+        MyGetStorage().getAdvancedOptionsEnabled(_selectedModel!);
+    _advancedOptions = _advancedEnabled
+        ? MyGetStorage().getAdvancedOptions(_selectedModel!)
+        : null;
+
+    // 2025-03-03 切换模型后也直接重建对话好了？？？此时就不用重置内容高度了
+    _createNewChat();
+
+    // 切换模型后，滚动到底部
+    // _resetContentHeight();
   }
 }

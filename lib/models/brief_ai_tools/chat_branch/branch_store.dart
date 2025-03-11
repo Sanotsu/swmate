@@ -4,6 +4,8 @@ import 'package:path_provider/path_provider.dart';
 import '../../../objectbox.g.dart';
 import 'chat_branch_message.dart';
 import 'chat_branch_session.dart';
+import '../../../common/llm_spec/cus_brief_llm_model.dart';
+import '../../../common/llm_spec/constant_llm_enum.dart';
 
 class BranchStore {
   /// ObjectBox 存储实例
@@ -50,13 +52,17 @@ class BranchStore {
   }
 
   /// 创建新会话
-  Future<ChatBranchSession> createSession(String title) async {
-    final session = ChatBranchSession(
+  Future<ChatBranchSession> createSession(
+    String title, {
+    required CusBriefLLMSpec llmSpec,
+    required LLModelType modelType,
+  }) async {
+    final session = ChatBranchSession.create(
       title: title,
-      createTime: DateTime.now(),
-      updateTime: DateTime.now(),
+      llmSpec: llmSpec,
+      modelType: modelType,
     );
-
+    
     final id = sessionBox.put(session);
     return sessionBox.get(id)!;
   }

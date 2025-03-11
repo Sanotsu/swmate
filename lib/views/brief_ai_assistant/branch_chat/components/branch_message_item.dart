@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../common/constants/constants.dart';
 import '../../../../models/brief_ai_tools/chat_branch/chat_branch_message.dart';
 
 class BranchMessageItem extends StatelessWidget {
@@ -48,6 +51,12 @@ class BranchMessageItem extends StatelessWidget {
         总分支: $totalBranches，
         最大分支: $maxBranchIndex""");
 
+    Color textColor = message.role == CusRole.user.name
+        ? Colors.white
+        : message.role == CusRole.system.name
+            ? Colors.grey
+            : Colors.black;
+
     return GestureDetector(
       onLongPressStart: onLongPress != null
           ? (details) => onLongPress!(message, details)
@@ -68,6 +77,9 @@ class BranchMessageItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (message.role == 'assistant' &&
+                    message.reasoningContent != null)
+                  _buildThinkingProcess(message),
                 if (isRegenerating)
                   const Center(
                     child: Padding(
@@ -80,17 +92,12 @@ class BranchMessageItem extends StatelessWidget {
                     ),
                   )
                 else
-                  Text(message.content),
-                if (message.role == 'assistant' &&
-                    message.reasoningContent != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      message.reasoningContent!,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
+                  // Text(message.content),
+                  MarkdownBody(
+                    data: message.content,
+                    // selectable: true,
+                    styleSheet: MarkdownStyleSheet(
+                      p: TextStyle(color: textColor),
                     ),
                   ),
                 if (message.role == 'assistant')
@@ -156,6 +163,65 @@ class BranchMessageItem extends StatelessWidget {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  // DS 的 R 系列有深度思考部分，单独展示
+  Widget _buildThinkingProcess(ChatBranchMessage message) {
+    // 创建一个基础的 TextStyle，深度思考的文字颜色和大小
+    final tempStyle = TextStyle(color: Colors.black54, fontSize: 13.5.sp);
+
+    return Container(
+      padding: EdgeInsets.only(bottom: 8.sp),
+      child: ExpansionTile(
+        title: Text(
+          message.content.trim().isEmpty
+              ? '思考中'
+              : '已深度思考(用时${message.thinkingDuration ?? 0}秒)',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black54,
+            fontSize: 16.sp,
+          ),
+        ),
+        // 默认展开
+        initiallyExpanded: true,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 24.sp),
+            // child: Text(
+            //   message.reasoningContent ?? '',
+            //   style: TextStyle(color: Colors.black54, fontSize: 13.5.sp),
+            // ),
+
+            /// 使用 MarkdownBody 显示深度思考内容
+            child: MarkdownBody(
+              data: message.reasoningContent ?? '',
+              selectable: true,
+              styleSheet: MarkdownStyleSheet(
+                // 复用 tempStyle
+                p: tempStyle,
+                h1: tempStyle,
+                h2: tempStyle,
+                h3: tempStyle,
+                h4: tempStyle,
+                h5: tempStyle,
+                h6: tempStyle,
+                strong: tempStyle,
+                em: tempStyle,
+                blockquote: tempStyle,
+                listBullet: tempStyle,
+                tableHead: tempStyle,
+                tableBody: tempStyle,
+                // 隐藏换行线
+                horizontalRuleDecoration: BoxDecoration(
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

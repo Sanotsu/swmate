@@ -1,8 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
+import 'package:dio/dio.dart';
+
 import '../common/llm_spec/cus_brief_llm_model.dart';
 import '../common/llm_spec/constant_llm_enum.dart';
+import '../common/utils/dio_client/cus_http_client.dart';
+import '../common/utils/dio_client/cus_http_request.dart';
+import '../models/brief_ai_tools/chat_branch/chat_branch_message.dart';
 import '../models/brief_ai_tools/chat_completions/chat_completion_response.dart';
 import '../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 import 'dart:io';
@@ -180,5 +185,102 @@ class ChatService {
 
     print('请求体: $requestBody');
     return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
+  }
+
+  static Future<ChatCompletionResponse?> sendBranchMessage(
+    CusBriefLLMSpec model,
+    List<ChatBranchMessage> messages, {
+    File? image,
+    File? voice,
+    bool stream = true,
+    Map<String, dynamic>? advancedOptions,
+    void Function(ChatCompletionResponse)? onStream,
+  }) async {
+    final headers = await _getHeaders(model);
+    final baseUrl = "${_getBaseUrl(model.platform)}/chat/completions";
+
+    // 构建消息内容
+    final messagesList = messages.map((m) {
+      if (m.imageUrl != null) {
+        final bytes = File(m.imageUrl!).readAsBytesSync();
+        final base64Image = base64Encode(bytes);
+        return {
+          'role': m.role,
+          'content': [
+            {'type': 'text', 'text': m.content},
+            {
+              'type': 'image_url',
+              'image_url': {'url': 'data:image/jpeg;base64,$base64Image'}
+            }
+          ]
+        };
+      } else {
+        return {'role': m.role, 'content': m.content};
+      }
+    }).toList();
+
+    // 处理高级参数
+    Map<String, dynamic>? additionalParams;
+    if (advancedOptions != null) {
+      additionalParams = AdvancedOptionsManager.buildAdvancedParams(
+        advancedOptions,
+        model.platform,
+      );
+    }
+
+    final request = ChatCompletionRequest(
+      model: model.model,
+      messages: messagesList,
+      stream: stream,
+      additionalParams: additionalParams,
+    );
+
+    final requestBody = request.toRequestBody();
+
+    print('请求体: $requestBody');
+
+    try {
+      final response = await HttpUtils.post(
+        path: baseUrl,
+        method: CusHttpMethod.post,
+        headers: headers,
+        data: requestBody,
+        responseType: stream ? CusRespType.stream : CusRespType.json,
+        showLoading: false,
+        showErrorMessage: false,
+      );
+
+      if (stream && onStream != null) {
+        final responseBody = response as ResponseBody;
+
+        await for (final chunk in responseBody.stream) {
+          String text = utf8.decode(chunk);
+          final lines = text.split('\n');
+
+          for (var line in lines) {
+            if (line.startsWith('data: ')) {
+              String jsonStr = line.substring(6);
+              if (jsonStr.trim() == '[DONE]') continue;
+
+              try {
+                final jsonData = json.decode(jsonStr);
+
+                final commonRespBody =
+                    ChatCompletionResponse.fromJson(jsonData);
+
+                onStream(commonRespBody);
+              } catch (e) {
+                print('解析响应数据出错: $e');
+              }
+            }
+          }
+        }
+        return null;
+      } else {
+        return ChatCompletionResponse.fromJson(response);
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 }
