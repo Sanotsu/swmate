@@ -190,34 +190,12 @@ class ChatService {
   static Future<ChatCompletionResponse?> sendBranchMessage(
     CusBriefLLMSpec model,
     List<ChatBranchMessage> messages, {
-    File? image,
-    File? voice,
     bool stream = true,
     Map<String, dynamic>? advancedOptions,
     void Function(ChatCompletionResponse)? onStream,
   }) async {
     final headers = await _getHeaders(model);
     final baseUrl = "${_getBaseUrl(model.platform)}/chat/completions";
-
-    // 构建消息内容
-    final messagesList = messages.map((m) {
-      if (m.imageUrl != null) {
-        final bytes = File(m.imageUrl!).readAsBytesSync();
-        final base64Image = base64Encode(bytes);
-        return {
-          'role': m.role,
-          'content': [
-            {'type': 'text', 'text': m.content},
-            {
-              'type': 'image_url',
-              'image_url': {'url': 'data:image/jpeg;base64,$base64Image'}
-            }
-          ]
-        };
-      } else {
-        return {'role': m.role, 'content': m.content};
-      }
-    }).toList();
 
     // 处理高级参数
     Map<String, dynamic>? additionalParams;
@@ -230,7 +208,8 @@ class ChatService {
 
     final request = ChatCompletionRequest(
       model: model.model,
-      messages: messagesList,
+      // 构建消息内容(图片、视频、音频等媒体资源的地址都在messages里面了,单独处理为API参数需要的格式)
+      messages: buildAPIContent(messages),
       stream: stream,
       additionalParams: additionalParams,
     );
@@ -283,4 +262,64 @@ class ChatService {
       rethrow;
     }
   }
+}
+
+List<Map<String, dynamic>> buildAPIContent(List<ChatBranchMessage> messages) {
+  final messagesList = messages.map((m) {
+    // 初始化内容列表
+    final contentList = [];
+
+    // 添加文本内容
+    if (m.content.isNotEmpty) {
+      contentList.add({'type': 'text', 'text': m.content});
+    }
+
+    // 处理图片(按逗号分割图片地址)
+    if (m.imagesUrl != null && m.imagesUrl!.trim().isNotEmpty) {
+      final imageUrls = m.imagesUrl!.split(',');
+      for (final url in imageUrls) {
+        final bytes = File(url.trim()).readAsBytesSync();
+        final base64Image = base64Encode(bytes);
+        contentList.add({
+          'type': 'image_url',
+          'image_url': {'url': 'data:image/jpeg;base64,$base64Image'}
+        });
+      }
+    }
+
+    // 暂时不启用
+    // // 处理视频(按逗号分割视频地址)
+    // if (m.videosUrl != null && m.videosUrl!.trim().isNotEmpty) {
+    //   final videoUrls = m.videosUrl!.split(',');
+    //   for (final url in videoUrls) {
+    //     final bytes = File(url.trim()).readAsBytesSync();
+    //     final base64Video = base64Encode(bytes);
+    //     contentList.add({
+    //       'type': 'video_url',
+    //       'video_url': {'url': 'data:video/mp4;base64,$base64Video'}
+    //     });
+    //   }
+    // }
+
+    // // 处理音频(暂时只有单个音频，仅支持mp3格式)
+    // if (m.contentVoicePath != null && m.contentVoicePath!.trim().isNotEmpty) {
+    //   final bytes = File(m.contentVoicePath!).readAsBytesSync();
+    //   final base64Audio = base64Encode(bytes);
+    //   contentList.add({
+    //     'type': 'input_audio',
+    //     'input_audio': {
+    //       'data': 'data:audio/mp3;base64,$base64Audio',
+    //       'format': 'mp3',
+    //     }
+    //   });
+    // }
+
+    // 返回最终的消息结构
+    return {
+      'role': m.role,
+      'content': contentList,
+    };
+  }).toList();
+
+  return messagesList;
 }

@@ -21,102 +21,107 @@ export 'package:objectbox/objectbox.dart'; // so that callers only have to impor
 
 final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
-      id: const obx_int.IdUid(1, 7398916962947393120),
+      id: const obx_int.IdUid(1, 2127030404102637988),
       name: 'ChatBranchMessage',
-      lastPropertyId: const obx_int.IdUid(18, 7585586096969215181),
+      lastPropertyId: const obx_int.IdUid(19, 7514134714972107149),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(1, 663759051357005127),
+            id: const obx_int.IdUid(1, 5034891616928609895),
             name: 'id',
             type: 6,
             flags: 129),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(2, 2533694005057715230),
+            id: const obx_int.IdUid(2, 2078225010397403663),
             name: 'messageId',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(3, 6650378464308053979),
+            id: const obx_int.IdUid(3, 6617092622081884333),
             name: 'role',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(4, 190236776376223537),
+            id: const obx_int.IdUid(4, 3981045080655464759),
             name: 'content',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(5, 2793736958453191432),
+            id: const obx_int.IdUid(5, 8923336397568272232),
             name: 'createTime',
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(6, 612952391890001157),
+            id: const obx_int.IdUid(6, 8968532476732619115),
             name: 'reasoningContent',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(7, 6707361953310579313),
+            id: const obx_int.IdUid(7, 2284934914308616488),
             name: 'thinkingDuration',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(8, 3143775420052005325),
+            id: const obx_int.IdUid(8, 3509371442225998974),
             name: 'contentVoicePath',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(9, 1212526566592745639),
-            name: 'imageUrl',
+            id: const obx_int.IdUid(9, 7071169590072817388),
+            name: 'imagesUrl',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(10, 3403799697500762700),
+            id: const obx_int.IdUid(10, 9217147676745072641),
+            name: 'videosUrl',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(11, 2331499489864592243),
             name: 'promptTokens',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(11, 7845095937442009569),
+            id: const obx_int.IdUid(12, 1573987285589671944),
             name: 'completionTokens',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(12, 421102652505127844),
+            id: const obx_int.IdUid(13, 5508902199833973412),
             name: 'totalTokens',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(13, 8283486010537753908),
+            id: const obx_int.IdUid(14, 1080517223733281097),
             name: 'modelLabel',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(14, 6616749242739648398),
+            id: const obx_int.IdUid(15, 32469552263947423),
             name: 'parentId',
             type: 11,
             flags: 520,
-            indexId: const obx_int.IdUid(1, 3848879351303009376),
+            indexId: const obx_int.IdUid(1, 7971225528498791416),
             relationTarget: 'ChatBranchMessage'),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(15, 7783822287074515140),
+            id: const obx_int.IdUid(16, 3698241616120676122),
             name: 'sessionId',
             type: 11,
             flags: 520,
-            indexId: const obx_int.IdUid(2, 1199805754380849427),
+            indexId: const obx_int.IdUid(2, 7800221060817907772),
             relationTarget: 'ChatBranchSession'),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(16, 4092703744143120199),
+            id: const obx_int.IdUid(17, 7371990953415064768),
             name: 'branchIndex',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(17, 2415142824562793406),
+            id: const obx_int.IdUid(18, 7112531117183920306),
             name: 'depth',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(18, 7585586096969215181),
+            id: const obx_int.IdUid(19, 7514134714972107149),
             name: 'branchPath',
             type: 9,
             flags: 0)
@@ -129,38 +134,38 @@ final _entities = <obx_int.ModelEntity>[
             srcField: 'parent')
       ]),
   obx_int.ModelEntity(
-      id: const obx_int.IdUid(2, 5269213793287580175),
+      id: const obx_int.IdUid(2, 2521936469279171401),
       name: 'ChatBranchSession',
-      lastPropertyId: const obx_int.IdUid(6, 5674310908780275708),
+      lastPropertyId: const obx_int.IdUid(6, 2000424337566661195),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(1, 9088884807686381150),
+            id: const obx_int.IdUid(1, 2889391495391716352),
             name: 'id',
             type: 6,
             flags: 1),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(2, 520426824153187873),
+            id: const obx_int.IdUid(2, 724632911141936513),
             name: 'title',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(3, 4732563075623604951),
+            id: const obx_int.IdUid(3, 3562076757453126373),
             name: 'createTime',
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(4, 2081696311100180812),
+            id: const obx_int.IdUid(4, 7180177199703873029),
             name: 'updateTime',
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(5, 3948570149307031533),
+            id: const obx_int.IdUid(5, 486859509915416663),
             name: 'llmSpecJson',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(6, 5674310908780275708),
+            id: const obx_int.IdUid(6, 2000424337566661195),
             name: 'modelTypeStr',
             type: 9,
             flags: 0)
@@ -209,8 +214,8 @@ Future<obx.Store> openStore(
 obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
       entities: _entities,
-      lastEntityId: const obx_int.IdUid(2, 5269213793287580175),
-      lastIndexId: const obx_int.IdUid(2, 1199805754380849427),
+      lastEntityId: const obx_int.IdUid(2, 2521936469279171401),
+      lastIndexId: const obx_int.IdUid(2, 7800221060817907772),
       lastRelationId: const obx_int.IdUid(0, 0),
       lastSequenceId: const obx_int.IdUid(0, 0),
       retiredEntityUids: const [],
@@ -227,7 +232,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
         toOneRelations: (ChatBranchMessage object) =>
             [object.parent, object.session],
         toManyRelations: (ChatBranchMessage object) => {
-              obx_int.RelInfo<ChatBranchMessage>.toOneBacklink(14, object.id,
+              obx_int.RelInfo<ChatBranchMessage>.toOneBacklink(15, object.id,
                       (ChatBranchMessage srcObject) => srcObject.parent):
                   object.children
             },
@@ -245,14 +250,17 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final contentVoicePathOffset = object.contentVoicePath == null
               ? null
               : fbb.writeString(object.contentVoicePath!);
-          final imageUrlOffset = object.imageUrl == null
+          final imagesUrlOffset = object.imagesUrl == null
               ? null
-              : fbb.writeString(object.imageUrl!);
+              : fbb.writeString(object.imagesUrl!);
+          final videosUrlOffset = object.videosUrl == null
+              ? null
+              : fbb.writeString(object.videosUrl!);
           final modelLabelOffset = object.modelLabel == null
               ? null
               : fbb.writeString(object.modelLabel!);
           final branchPathOffset = fbb.writeString(object.branchPath);
-          fbb.startTable(19);
+          fbb.startTable(20);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, messageIdOffset);
           fbb.addOffset(2, roleOffset);
@@ -261,16 +269,17 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addOffset(5, reasoningContentOffset);
           fbb.addInt64(6, object.thinkingDuration);
           fbb.addOffset(7, contentVoicePathOffset);
-          fbb.addOffset(8, imageUrlOffset);
-          fbb.addInt64(9, object.promptTokens);
-          fbb.addInt64(10, object.completionTokens);
-          fbb.addInt64(11, object.totalTokens);
-          fbb.addOffset(12, modelLabelOffset);
-          fbb.addInt64(13, object.parent.targetId);
-          fbb.addInt64(14, object.session.targetId);
-          fbb.addInt64(15, object.branchIndex);
-          fbb.addInt64(16, object.depth);
-          fbb.addOffset(17, branchPathOffset);
+          fbb.addOffset(8, imagesUrlOffset);
+          fbb.addOffset(9, videosUrlOffset);
+          fbb.addInt64(10, object.promptTokens);
+          fbb.addInt64(11, object.completionTokens);
+          fbb.addInt64(12, object.totalTokens);
+          fbb.addOffset(13, modelLabelOffset);
+          fbb.addInt64(14, object.parent.targetId);
+          fbb.addInt64(15, object.session.targetId);
+          fbb.addInt64(16, object.branchIndex);
+          fbb.addInt64(17, object.depth);
+          fbb.addOffset(18, branchPathOffset);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -288,11 +297,11 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final createTimeParam = DateTime.fromMillisecondsSinceEpoch(
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 12, 0));
           final branchIndexParam =
-              const fb.Int64Reader().vTableGet(buffer, rootOffset, 34, 0);
-          final depthParam =
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 36, 0);
+          final depthParam =
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 38, 0);
           final branchPathParam = const fb.StringReader(asciiOptimization: true)
-              .vTableGet(buffer, rootOffset, 38, '');
+              .vTableGet(buffer, rootOffset, 40, '');
           final reasoningContentParam =
               const fb.StringReader(asciiOptimization: true)
                   .vTableGetNullable(buffer, rootOffset, 14);
@@ -301,16 +310,18 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final contentVoicePathParam =
               const fb.StringReader(asciiOptimization: true)
                   .vTableGetNullable(buffer, rootOffset, 18);
-          final imageUrlParam = const fb.StringReader(asciiOptimization: true)
+          final imagesUrlParam = const fb.StringReader(asciiOptimization: true)
               .vTableGetNullable(buffer, rootOffset, 20);
+          final videosUrlParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGetNullable(buffer, rootOffset, 22);
           final promptTokensParam =
-              const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 22);
-          final completionTokensParam =
               const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 24);
-          final totalTokensParam =
+          final completionTokensParam =
               const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 26);
+          final totalTokensParam =
+              const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 28);
           final modelLabelParam = const fb.StringReader(asciiOptimization: true)
-              .vTableGetNullable(buffer, rootOffset, 28);
+              .vTableGetNullable(buffer, rootOffset, 30);
           final object = ChatBranchMessage(
               id: idParam,
               messageId: messageIdParam,
@@ -323,21 +334,22 @@ obx_int.ModelDefinition getObjectBoxModel() {
               reasoningContent: reasoningContentParam,
               thinkingDuration: thinkingDurationParam,
               contentVoicePath: contentVoicePathParam,
-              imageUrl: imageUrlParam,
+              imagesUrl: imagesUrlParam,
+              videosUrl: videosUrlParam,
               promptTokens: promptTokensParam,
               completionTokens: completionTokensParam,
               totalTokens: totalTokensParam,
               modelLabel: modelLabelParam);
           object.parent.targetId =
-              const fb.Int64Reader().vTableGet(buffer, rootOffset, 30, 0);
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 32, 0);
           object.parent.attach(store);
           object.session.targetId =
-              const fb.Int64Reader().vTableGet(buffer, rootOffset, 32, 0);
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 34, 0);
           object.session.attach(store);
           obx_int.InternalToManyAccess.setRelInfo<ChatBranchMessage>(
               object.children,
               store,
-              obx_int.RelInfo<ChatBranchMessage>.toOneBacklink(14, object.id,
+              obx_int.RelInfo<ChatBranchMessage>.toOneBacklink(15, object.id,
                   (ChatBranchMessage srcObject) => srcObject.parent));
           return object;
         }),
@@ -345,7 +357,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
         model: _entities[1],
         toOneRelations: (ChatBranchSession object) => [],
         toManyRelations: (ChatBranchSession object) => {
-              obx_int.RelInfo<ChatBranchMessage>.toOneBacklink(15, object.id,
+              obx_int.RelInfo<ChatBranchMessage>.toOneBacklink(16, object.id,
                       (ChatBranchMessage srcObject) => srcObject.session):
                   object.messages
             },
@@ -398,7 +410,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           obx_int.InternalToManyAccess.setRelInfo<ChatBranchSession>(
               object.messages,
               store,
-              obx_int.RelInfo<ChatBranchMessage>.toOneBacklink(15, object.id,
+              obx_int.RelInfo<ChatBranchMessage>.toOneBacklink(16, object.id,
                   (ChatBranchMessage srcObject) => srcObject.session));
           return object;
         })
@@ -441,47 +453,51 @@ class ChatBranchMessage_ {
   static final contentVoicePath =
       obx.QueryStringProperty<ChatBranchMessage>(_entities[0].properties[7]);
 
-  /// See [ChatBranchMessage.imageUrl].
-  static final imageUrl =
+  /// See [ChatBranchMessage.imagesUrl].
+  static final imagesUrl =
       obx.QueryStringProperty<ChatBranchMessage>(_entities[0].properties[8]);
+
+  /// See [ChatBranchMessage.videosUrl].
+  static final videosUrl =
+      obx.QueryStringProperty<ChatBranchMessage>(_entities[0].properties[9]);
 
   /// See [ChatBranchMessage.promptTokens].
   static final promptTokens =
-      obx.QueryIntegerProperty<ChatBranchMessage>(_entities[0].properties[9]);
+      obx.QueryIntegerProperty<ChatBranchMessage>(_entities[0].properties[10]);
 
   /// See [ChatBranchMessage.completionTokens].
   static final completionTokens =
-      obx.QueryIntegerProperty<ChatBranchMessage>(_entities[0].properties[10]);
+      obx.QueryIntegerProperty<ChatBranchMessage>(_entities[0].properties[11]);
 
   /// See [ChatBranchMessage.totalTokens].
   static final totalTokens =
-      obx.QueryIntegerProperty<ChatBranchMessage>(_entities[0].properties[11]);
+      obx.QueryIntegerProperty<ChatBranchMessage>(_entities[0].properties[12]);
 
   /// See [ChatBranchMessage.modelLabel].
   static final modelLabel =
-      obx.QueryStringProperty<ChatBranchMessage>(_entities[0].properties[12]);
+      obx.QueryStringProperty<ChatBranchMessage>(_entities[0].properties[13]);
 
   /// See [ChatBranchMessage.parent].
   static final parent =
       obx.QueryRelationToOne<ChatBranchMessage, ChatBranchMessage>(
-          _entities[0].properties[13]);
+          _entities[0].properties[14]);
 
   /// See [ChatBranchMessage.session].
   static final session =
       obx.QueryRelationToOne<ChatBranchMessage, ChatBranchSession>(
-          _entities[0].properties[14]);
+          _entities[0].properties[15]);
 
   /// See [ChatBranchMessage.branchIndex].
   static final branchIndex =
-      obx.QueryIntegerProperty<ChatBranchMessage>(_entities[0].properties[15]);
+      obx.QueryIntegerProperty<ChatBranchMessage>(_entities[0].properties[16]);
 
   /// See [ChatBranchMessage.depth].
   static final depth =
-      obx.QueryIntegerProperty<ChatBranchMessage>(_entities[0].properties[16]);
+      obx.QueryIntegerProperty<ChatBranchMessage>(_entities[0].properties[17]);
 
   /// See [ChatBranchMessage.branchPath].
   static final branchPath =
-      obx.QueryStringProperty<ChatBranchMessage>(_entities[0].properties[17]);
+      obx.QueryStringProperty<ChatBranchMessage>(_entities[0].properties[18]);
 
   /// see [ChatBranchMessage.children]
   static final children =

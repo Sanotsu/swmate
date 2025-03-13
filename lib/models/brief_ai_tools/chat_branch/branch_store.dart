@@ -35,13 +35,13 @@ class BranchStore {
     try {
       final docsDir = await getApplicationDocumentsDirectory();
       final dbDirectory = p.join(docsDir.path, "objectbox", "branch_chat");
-      
+
       // 确保目录存在
       final dir = Directory(dbDirectory);
       if (!dir.existsSync()) {
         dir.createSync(recursive: true);
       }
-      
+
       store = await openStore(directory: dbDirectory);
       messageBox = store.box<ChatBranchMessage>();
       sessionBox = store.box<ChatBranchSession>();
@@ -62,7 +62,7 @@ class BranchStore {
       llmSpec: llmSpec,
       modelType: modelType,
     );
-    
+
     final id = sessionBox.put(session);
     return sessionBox.get(id)!;
   }
@@ -77,6 +77,9 @@ class BranchStore {
     int? thinkingDuration,
     String? modelLabel,
     int? branchIndex,
+    String? contentVoicePath,
+    String? imagesUrl,
+    String? videosUrl,
   }) async {
     try {
       final message = ChatBranchMessage(
@@ -87,6 +90,9 @@ class BranchStore {
         reasoningContent: reasoningContent,
         thinkingDuration: thinkingDuration,
         modelLabel: modelLabel,
+        contentVoicePath: contentVoicePath,
+        imagesUrl: imagesUrl,
+        videosUrl: videosUrl,
       );
 
       if (parent != null) {
@@ -105,8 +111,9 @@ class BranchStore {
 
       final id = messageBox.put(message);
       sessionBox.put(session);
-      
-      print('Added new message with ID: $id, role: $role, branch: ${message.branchPath}');
+
+      print(
+          'Added new message with ID: $id, role: $role, branch: ${message.branchPath}');
       return message;
     } catch (e) {
       print('Error adding message: $e');
@@ -149,7 +156,7 @@ class BranchStore {
   /// 删除消息及其所有子分支
   Future<void> deleteMessageWithBranches(ChatBranchMessage message) async {
     final branchPath = message.branchPath;
-    
+
     final branchMessages = messageBox
         .query(ChatBranchMessage_.branchPath.startsWith(branchPath))
         .build()

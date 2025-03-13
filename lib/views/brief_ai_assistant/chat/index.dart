@@ -14,6 +14,7 @@ import '../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 import '../../../models/brief_ai_tools/chat_completions/chat_completion_response.dart';
 import '../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 import '../../../services/cus_get_storage.dart';
+import '../_chat_components/small_widgets.dart';
 import 'components/chat_input.dart';
 import 'components/chat_message_item.dart';
 import 'components/model_filter.dart';
@@ -831,7 +832,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
               /// 消息列表
               Expanded(
                 child:
-                    _messages.isEmpty ? _buildEmptyHint() : _buildMessageList(),
+                    _messages.isEmpty ? buildEmptyHint() : _buildMessageList(),
               ),
 
               /// 流式响应时显示进度条
@@ -887,32 +888,6 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           // 悬浮按钮(前面是显示新加对话按钮，后面显示滚动到底部按钮)
           _buildFloatingButton(),
         ],
-      ),
-    );
-  }
-
-  // 构建空提示
-  Widget _buildEmptyHint() {
-    return Padding(
-      padding: EdgeInsets.all(32.sp),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.chat, size: 36.sp, color: Colors.blue),
-            Text(
-              '嗨，我是思文',
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              '我可以帮您完成很多任务，让我们开始吧！',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
       ),
     );
   }
