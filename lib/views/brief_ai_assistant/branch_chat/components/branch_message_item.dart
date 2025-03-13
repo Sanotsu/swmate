@@ -11,6 +11,7 @@ import '../../../../models/brief_ai_tools/chat_branch/chat_branch_message.dart';
 class BranchMessageItem extends StatelessWidget {
   // 用于展示的消息
   final ChatBranchMessage message;
+  final bool? isUseBgImage;
 
   // 长按消息后，点击了消息体处的回调
   final Function(ChatBranchMessage, LongPressStartDetails)? onLongPress;
@@ -19,6 +20,7 @@ class BranchMessageItem extends StatelessWidget {
     super.key,
     required this.message,
     this.onLongPress,
+    this.isUseBgImage = false,
   });
 
   @override
@@ -28,6 +30,7 @@ class BranchMessageItem extends StatelessWidget {
 
     return Container(
       margin: EdgeInsets.all(4.sp),
+      color: Colors.transparent,
       child: Column(
         crossAxisAlignment:
             isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -111,7 +114,9 @@ class BranchMessageItem extends StatelessWidget {
   // 对话消息正文部分
   Widget _buildMessageContent(bool isUser) {
     Color textColor = message.role == CusRole.user.name
-        ? Colors.white
+        ? isUseBgImage == true
+            ? Colors.blue
+            : Colors.white
         : message.role == CusRole.system.name
             ? Colors.grey
             : Colors.black;
@@ -121,8 +126,11 @@ class BranchMessageItem extends StatelessWidget {
       margin: EdgeInsets.symmetric(vertical: 4.sp),
       padding: EdgeInsets.all(8.sp),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: isUseBgImage == true ? Colors.transparent : bgColor,
         borderRadius: BorderRadius.circular(8.sp),
+        border: Border.all(
+          color: isUseBgImage == true ? textColor : Colors.transparent,
+        ),
       ),
       child: Column(
         crossAxisAlignment:

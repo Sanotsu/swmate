@@ -183,7 +183,7 @@ class ChatService {
 
     final requestBody = request.toRequestBody();
 
-    print('请求体: $requestBody');
+    print('常规流式响应请求体: $requestBody');
     return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
   }
 
@@ -209,14 +209,14 @@ class ChatService {
     final request = ChatCompletionRequest(
       model: model.model,
       // 构建消息内容(图片、视频、音频等媒体资源的地址都在messages里面了,单独处理为API参数需要的格式)
-      messages: buildAPIContent(messages),
+      messages: _buildAPIContent(messages),
       stream: stream,
       additionalParams: additionalParams,
     );
 
     final requestBody = request.toRequestBody();
 
-    print('请求体: $requestBody');
+    print('分支对话请求体: $requestBody');
 
     try {
       final response = await HttpUtils.post(
@@ -250,6 +250,7 @@ class ChatService {
                 onStream(commonRespBody);
               } catch (e) {
                 print('解析响应数据出错: $e');
+                continue;
               }
             }
           }
@@ -264,7 +265,7 @@ class ChatService {
   }
 }
 
-List<Map<String, dynamic>> buildAPIContent(List<ChatBranchMessage> messages) {
+List<Map<String, dynamic>> _buildAPIContent(List<ChatBranchMessage> messages) {
   final messagesList = messages.map((m) {
     // 初始化内容列表
     final contentList = [];

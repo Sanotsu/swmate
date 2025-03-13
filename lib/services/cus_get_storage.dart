@@ -6,6 +6,8 @@ final box = GetStorage();
 
 class MyGetStorage {
   static const String _firstLaunchKey = 'is_first_launch';
+  static const String _chatBackgroundKey = 'chat_background';
+  static const String _chatBackgroundOpacityKey = 'chat_background_opacity';
 
   // 检查是否首次启动
   bool isFirstLaunch() {
@@ -105,5 +107,25 @@ class MyGetStorage {
     final data = box.read(
         "advanced_options_${model.platform.name}_${model.modelType.name}");
     return data != null ? Map<String, dynamic>.from(data) : null;
+  }
+
+  Future<String?> getChatBackground() async {
+    return box.read(_chatBackgroundKey);
+  }
+
+  Future<void> saveChatBackground(String? path) async {
+    if (path == null || path.isEmpty) {
+      await box.remove(_chatBackgroundKey);
+    } else {
+      await box.write(_chatBackgroundKey, path);
+    }
+  }
+
+  Future<double?> getChatBackgroundOpacity() async {
+    return box.read(_chatBackgroundOpacityKey);
+  }
+
+  Future<void> saveChatBackgroundOpacity(double opacity) async {
+    await box.write(_chatBackgroundOpacityKey, opacity);
   }
 }

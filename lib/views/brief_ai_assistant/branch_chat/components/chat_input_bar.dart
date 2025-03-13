@@ -262,14 +262,15 @@ class _ChatInputBarState extends State<ChatInputBar> {
         Container(
           padding: EdgeInsets.symmetric(vertical: 4.sp),
           decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                blurRadius: 4,
-                offset: const Offset(0, -2),
-              ),
-            ],
+            color: Colors.transparent,
+            // color: Colors.white,
+            // boxShadow: [
+            //   BoxShadow(
+            //     color: Colors.grey.withOpacity(0.2),
+            //     blurRadius: 4,
+            //     offset: const Offset(0, -2),
+            //   ),
+            // ],
           ),
           child: Row(
             children: [
@@ -311,7 +312,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
           Container(
             padding: EdgeInsets.symmetric(vertical: 4.sp),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: Colors.transparent,
               border: Border(
                 top: BorderSide(color: Colors.grey[300]!),
               ),
@@ -468,7 +469,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
       return Container(
         height: 58.sp,
         decoration: BoxDecoration(
-          color: Colors.white,
+          // color: Colors.white,
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.grey, width: 1.sp),
         ),
@@ -520,6 +522,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
         onTap: tool.onTap,
         borderRadius: BorderRadius.circular(8.sp),
         child: Container(
+          color: Colors.transparent,
           padding: EdgeInsets.symmetric(
             horizontal: 12.sp,
             vertical: 6.sp,
