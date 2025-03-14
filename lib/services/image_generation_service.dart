@@ -60,7 +60,7 @@ class ImageGenerationService {
           apiKey = userKeys[ApiPlatformAKLabel.USER_ZHIPU_API_KEY.name];
           break;
         case ApiPlatform.siliconCloud:
-          apiKey = userKeys[ApiPlatformAKLabel.USER_SILICON_CLOUD_API_KEY.name];
+          apiKey = userKeys[ApiPlatformAKLabel.USER_SILICONCLOUD_API_KEY.name];
           break;
 
         default:

@@ -87,3 +87,26 @@ void adjustTextScale(
     },
   );
 }
+
+// 优化菜单项样式
+Widget buildMenuItemWithIcon({
+  required IconData icon,
+  required String text,
+  Color? color,
+}) {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    mainAxisAlignment: MainAxisAlignment.center, // 居中对齐
+    children: [
+      Icon(icon, size: 16.sp, color: color),
+      SizedBox(width: 8.sp),
+      Text(
+        text,
+        style: TextStyle(
+          fontSize: 14.sp,
+          color: color,
+        ),
+      ),
+    ],
+  );
+}

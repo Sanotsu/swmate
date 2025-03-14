@@ -22,6 +22,8 @@ enum ApiPlatform {
 }
 
 // 用户自行导入密钥时，json文件的key
+// 2025-03-14 这里的label，需要完整包含上面平台的枚举值，
+// 否则无法用户单个添加指定平台的模型时，正确识别
 enum ApiPlatformAKLabel {
   // 传统主流多模型平台(自研+第三方)
   USER_ALIYUN_API_KEY,
@@ -34,7 +36,7 @@ enum ApiPlatformAKLabel {
   USER_ZHIPU_API_KEY, // 智谱AI
 
   // 第三方多模型平台(只有第三方)
-  USER_SILICON_CLOUD_API_KEY, // 硅基流动
+  USER_SILICONCLOUD_API_KEY, // 硅基流动
   USER_INFINI_GEN_STUDIO_API_KEY, // 无问芯穹的genStudio
 }
 

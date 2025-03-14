@@ -1,12 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
-import 'package:dio/dio.dart';
 
 import '../common/llm_spec/cus_brief_llm_model.dart';
 import '../common/llm_spec/constant_llm_enum.dart';
-import '../common/utils/dio_client/cus_http_client.dart';
-import '../common/utils/dio_client/cus_http_request.dart';
 import '../models/brief_ai_tools/chat_branch/chat_branch_message.dart';
 import '../models/brief_ai_tools/chat_completions/chat_completion_response.dart';
 import '../models/brief_ai_tools/chat_competion/com_cc_state.dart';
@@ -103,7 +100,7 @@ class ChatService {
           break;
 
         case ApiPlatform.siliconCloud:
-          apiKey = userKeys[ApiPlatformAKLabel.USER_SILICON_CLOUD_API_KEY.name];
+          apiKey = userKeys[ApiPlatformAKLabel.USER_SILICONCLOUD_API_KEY.name];
           break;
         case ApiPlatform.infini:
           apiKey =
@@ -187,12 +184,13 @@ class ChatService {
     return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
   }
 
-  static Future<ChatCompletionResponse?> sendBranchMessage(
+  /// 分支对话发送消息调用大模型API(和常规的类似)
+  static Future<(Stream<ChatCompletionResponse>, VoidCallback)>
+      sendBranchMessage(
     CusBriefLLMSpec model,
     List<ChatBranchMessage> messages, {
     bool stream = true,
     Map<String, dynamic>? advancedOptions,
-    void Function(ChatCompletionResponse)? onStream,
   }) async {
     final headers = await _getHeaders(model);
     final baseUrl = "${_getBaseUrl(model.platform)}/chat/completions";
@@ -208,60 +206,15 @@ class ChatService {
 
     final request = ChatCompletionRequest(
       model: model.model,
-      // 构建消息内容(图片、视频、音频等媒体资源的地址都在messages里面了,单独处理为API参数需要的格式)
       messages: _buildAPIContent(messages),
       stream: stream,
       additionalParams: additionalParams,
     );
 
     final requestBody = request.toRequestBody();
-
     print('分支对话请求体: $requestBody');
 
-    try {
-      final response = await HttpUtils.post(
-        path: baseUrl,
-        method: CusHttpMethod.post,
-        headers: headers,
-        data: requestBody,
-        responseType: stream ? CusRespType.stream : CusRespType.json,
-        showLoading: false,
-        showErrorMessage: false,
-      );
-
-      if (stream && onStream != null) {
-        final responseBody = response as ResponseBody;
-
-        await for (final chunk in responseBody.stream) {
-          String text = utf8.decode(chunk);
-          final lines = text.split('\n');
-
-          for (var line in lines) {
-            if (line.startsWith('data: ')) {
-              String jsonStr = line.substring(6);
-              if (jsonStr.trim() == '[DONE]') continue;
-
-              try {
-                final jsonData = json.decode(jsonStr);
-
-                final commonRespBody =
-                    ChatCompletionResponse.fromJson(jsonData);
-
-                onStream(commonRespBody);
-              } catch (e) {
-                print('解析响应数据出错: $e');
-                continue;
-              }
-            }
-          }
-        }
-        return null;
-      } else {
-        return ChatCompletionResponse.fromJson(response);
-      }
-    } catch (e) {
-      rethrow;
-    }
+    return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
   }
 }
 

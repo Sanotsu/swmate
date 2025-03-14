@@ -56,11 +56,15 @@ class BranchStore {
     String title, {
     required CusBriefLLMSpec llmSpec,
     required LLModelType modelType,
+    DateTime? createTime,
+    DateTime? updateTime,
   }) async {
     final session = ChatBranchSession.create(
       title: title,
       llmSpec: llmSpec,
       modelType: modelType,
+      createTime: createTime,
+      updateTime: updateTime,
     );
 
     final id = sessionBox.put(session);

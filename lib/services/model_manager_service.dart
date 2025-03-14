@@ -84,7 +84,7 @@ class ModelManagerService {
               false;
 
         case ApiPlatform.siliconCloud:
-          return userKeys[ApiPlatformAKLabel.USER_SILICON_CLOUD_API_KEY.name]
+          return userKeys[ApiPlatformAKLabel.USER_SILICONCLOUD_API_KEY.name]
                   ?.isNotEmpty ??
               false;
         case ApiPlatform.infini:

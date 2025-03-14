@@ -42,7 +42,7 @@ final defaultModels = [
   CusBriefLLMSpec(
     ApiPlatform.siliconCloud,
     'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B',
-    LLModelType.cc,
+    LLModelType.reasoner,
     name: 'DeepSeek-R1-Distill-Qwen-7B',
     isFree: true,
     inputPrice: 0,

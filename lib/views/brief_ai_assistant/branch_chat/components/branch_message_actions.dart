@@ -95,12 +95,14 @@ class BranchMessageActions extends StatelessWidget {
             ),
 
           // 如果不是用户消息，但是在重新生成中，则显示加载
-          if (!isUser && isRegenerating)
-            SizedBox(
-              width: 16.sp,
-              height: 16.sp,
-              child: CircularProgressIndicator(strokeWidth: 2.sp),
-            ),
+          // 2025-03-15 这会让对话列表中所有的AI响应消息体的工具栏都显示加载图标。
+          // 理论上应该只是最后一条才对，现在这里不好处理，就改为流式响应中不显示重新生成图标
+          // if (!isUser && isRegenerating)
+          //   SizedBox(
+          //     width: 16.sp,
+          //     height: 16.sp,
+          //     child: CircularProgressIndicator(strokeWidth: 2.sp),
+          //   ),
 
           // 分支切换按钮
           if (showBranchControls && onSwitchBranch != null) ...[

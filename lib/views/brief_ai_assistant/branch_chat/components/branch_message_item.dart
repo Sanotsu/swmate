@@ -167,7 +167,7 @@ class BranchMessageItem extends StatelessWidget {
         title: Text(
           message.content.trim().isEmpty
               ? '思考中'
-              : '已深度思考(用时${message.thinkingDuration ?? 0}秒)',
+              : '已深度思考(用时${(message.thinkingDuration ?? 0) / 1000}秒)',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black54,

@@ -74,11 +74,13 @@ class ChatBranchSession {
     required String title,
     required CusBriefLLMSpec llmSpec,
     required LLModelType modelType,
+    DateTime? createTime,
+    DateTime? updateTime,
   }) {
     final session = ChatBranchSession(
       title: title,
-      createTime: DateTime.now(),
-      updateTime: DateTime.now(),
+      createTime: createTime ?? DateTime.now(),
+      updateTime: updateTime ?? DateTime.now(),
     );
     session.llmSpec = llmSpec;
     session.modelType = modelType;

@@ -1,5 +1,6 @@
 import 'package:get_storage/get_storage.dart';
 
+import '../common/llm_spec/constant_llm_enum.dart';
 import '../common/llm_spec/cus_brief_llm_model.dart';
 
 final box = GetStorage();
@@ -127,5 +128,12 @@ class MyGetStorage {
 
   Future<void> saveChatBackgroundOpacity(double opacity) async {
     await box.write(_chatBackgroundOpacityKey, opacity);
+  }
+
+  /// 更新指定平台的 API Key
+  Future<void> updatePlatformApiKey(ApiPlatformAKLabel label, String apiKey) async {
+    final userKeys = getUserAKMap();
+    userKeys[label.name] = apiKey;
+    await setUserAKMap(userKeys);
   }
 }

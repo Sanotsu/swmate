@@ -120,7 +120,7 @@ AI 绘图/视频结构和操作类似，所以放在一起说。
   "USER_LINGYIWANWU_API_KEY": "xxx",
   "USER_ZHIPU_API_KEY": "xxx",
 
-  "USER_SILICON_CLOUD_API_KEY": "sk-xxx",
+  "USER_SILICONCLOUD_API_KEY": "sk-xxx",
   "USER_INFINI_GEN_STUDIO_API_KEY": "sk-xxx",
 
   // 讯飞, 语音转写需要
