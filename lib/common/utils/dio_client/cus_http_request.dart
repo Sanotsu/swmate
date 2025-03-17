@@ -61,7 +61,7 @@ class HttpRequest {
       ErrorInterceptor(),
       PrettyDioLogger(
         requestHeader: true,
-        // requestBody: true,
+        requestBody: true,
         responseHeader: true,
         responseBody: true,
         // responseBody: false, // 响应太多了，不显示

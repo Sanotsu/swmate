@@ -130,6 +130,7 @@ flutter:
     - assets/images/
     - assets/images/covers/
     - assets/chat_backgrounds/
+    - assets/character_avatars/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

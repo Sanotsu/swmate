@@ -6,6 +6,7 @@ import '../../common/components/cus_cards.dart';
 
 import '../../common/constants/constants.dart';
 import 'branch_chat/branch_chat_page.dart';
+import 'character_chat/character_list_page.dart';
 import 'image/index.dart';
 import 'model_config/index.dart';
 import 'video/index.dart';
@@ -56,6 +57,13 @@ class _BriefAIToolsState extends State<BriefAITools> {
             child: CusCoverCard(
               targetPage: const BranchChatPage(),
               title: "分支对话",
+              imageUrl: aiAssistantCoverUrl,
+            ),
+          ),
+          Expanded(
+            child: CusCoverCard(
+              targetPage: const CharacterListPage(),
+              title: "角色对话",
               imageUrl: aiAssistantCoverUrl,
             ),
           ),

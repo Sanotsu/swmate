@@ -216,6 +216,39 @@ class ChatService {
 
     return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
   }
+
+  /// 角色对话发送消息调用大模型API
+  static Future<(Stream<ChatCompletionResponse>, VoidCallback)>
+      sendCharacterMessage(
+    CusBriefLLMSpec model,
+    List<Map<String, dynamic>> messages, {
+    bool stream = true,
+    Map<String, dynamic>? advancedOptions,
+  }) async {
+    final headers = await _getHeaders(model);
+    final baseUrl = "${_getBaseUrl(model.platform)}/chat/completions";
+
+    // 处理高级参数
+    Map<String, dynamic>? additionalParams;
+    if (advancedOptions != null) {
+      additionalParams = AdvancedOptionsManager.buildAdvancedParams(
+        advancedOptions,
+        model.platform,
+      );
+    }
+
+    final request = ChatCompletionRequest(
+      model: model.model,
+      messages: messages,
+      stream: stream,
+      additionalParams: additionalParams,
+    );
+
+    final requestBody = request.toRequestBody();
+    print('角色对话请求体: $requestBody');
+
+    return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
+  }
 }
 
 List<Map<String, dynamic>> _buildAPIContent(List<ChatBranchMessage> messages) {
