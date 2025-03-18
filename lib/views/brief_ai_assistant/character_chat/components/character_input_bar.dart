@@ -13,6 +13,9 @@ import '../../../../common/llm_spec/constant_llm_enum.dart';
 import '../../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../../common/utils/tools.dart';
 
+///
+/// 和分支对话的ChatInputBar应该是一模一样
+///
 // 定义消息数据类
 class MessageData {
   final String text;
@@ -392,7 +395,6 @@ class _CharacterInputBarState extends State<CharacterInputBar> {
       icon: Icon(
         _isVoiceMode ? Icons.keyboard : Icons.keyboard_voice,
         size: 20.sp,
-        color: Colors.lightBlue,
       ),
       onPressed: widget.isStreaming
           ? null

@@ -131,31 +131,36 @@ class _CharacterListPageState extends State<CharacterListPage> {
 
   Future<void> _handleCharacterTap(CharacterCard character) async {
     await _store.initialize();
-    
+
     final characterSessions = _store.sessions
         .where((s) => s.characters.any((c) => c.id == character.id))
         .toList();
-    
+
     characterSessions.sort((a, b) => b.updateTime.compareTo(a.updateTime));
-    
+
     CharacterChatSession? session;
     if (characterSessions.isNotEmpty) {
       session = characterSessions.first;
+
+      // 更新会话中的角色信息，确保使用最新的角色卡
+      await _store.updateSessionCharacters(session);
+
+      // 重新获取更新后的会话
+      session = _store.sessions.firstWhere((s) => s.id == session!.id);
     } else {
       if (character.preferredModel == null) {
         EasyLoading.showToast('请先为该角色设置偏好模型');
         return;
       }
-      
+
       session = await _store.createSession(
         title: '与${character.name}的对话',
         characters: [character],
         activeModel: character.preferredModel,
       );
     }
-    
+
     if (!mounted) return;
-    
     Navigator.push(
       context,
       MaterialPageRoute(

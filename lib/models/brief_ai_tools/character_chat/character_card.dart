@@ -47,11 +47,11 @@ class CharacterCard {
 
 角色描述: $description
 
-性格特点: $personality
+${personality.trim().isNotEmpty ? '性格特点:$personality' : ''}
 
-场景设定: $scenario
+${scenario.trim().isNotEmpty ? '场景设定:$scenario' : ''}
 
-${exampleDialogue.isNotEmpty ? '对话示例:\n$exampleDialogue' : ''}
+${exampleDialogue.trim().isNotEmpty ? '对话示例:\n$exampleDialogue' : ''}
 
 请始终保持角色设定，用第一人称回应用户的消息。不要提及你是AI或语言模型。
 ''';

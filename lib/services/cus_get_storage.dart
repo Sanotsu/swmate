@@ -9,6 +9,8 @@ class MyGetStorage {
   static const String _firstLaunchKey = 'is_first_launch';
   static const String _chatBackgroundKey = 'chat_background';
   static const String _chatBackgroundOpacityKey = 'chat_background_opacity';
+  static const String _characterChatBackgroundKey = 'character_chat_background';
+  static const String _characterChatBackgroundOpacityKey = 'character_chat_background_opacity';
 
   // 检查是否首次启动
   bool isFirstLaunch() {
@@ -110,6 +112,7 @@ class MyGetStorage {
     return data != null ? Map<String, dynamic>.from(data) : null;
   }
 
+  // 分支对话背景相关方法
   Future<String?> getChatBackground() async {
     return box.read(_chatBackgroundKey);
   }
@@ -128,6 +131,27 @@ class MyGetStorage {
 
   Future<void> saveChatBackgroundOpacity(double opacity) async {
     await box.write(_chatBackgroundOpacityKey, opacity);
+  }
+
+  // 角色对话背景相关方法
+  Future<String?> getCharacterChatBackground() async {
+    return box.read(_characterChatBackgroundKey);
+  }
+
+  Future<void> saveCharacterChatBackground(String? path) async {
+    if (path == null || path.isEmpty) {
+      await box.remove(_characterChatBackgroundKey);
+    } else {
+      await box.write(_characterChatBackgroundKey, path);
+    }
+  }
+
+  Future<double?> getCharacterChatBackgroundOpacity() async {
+    return box.read(_characterChatBackgroundOpacityKey);
+  }
+
+  Future<void> saveCharacterChatBackgroundOpacity(double opacity) async {
+    await box.write(_characterChatBackgroundOpacityKey, opacity);
   }
 
   /// 更新指定平台的 API Key

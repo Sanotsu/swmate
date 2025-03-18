@@ -34,6 +34,7 @@ class _SessionHistoryDrawerState extends State<SessionHistoryDrawer> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      width: 0.8.sw,
       child: Column(
         children: [
           DrawerHeader(
@@ -60,6 +61,8 @@ class _SessionHistoryDrawerState extends State<SessionHistoryDrawer> {
                   SizedBox(height: 10.sp),
                   Text(
                     '${widget.character.name}的对话历史',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18.sp,
@@ -75,10 +78,7 @@ class _SessionHistoryDrawerState extends State<SessionHistoryDrawer> {
                 ? Center(
                     child: Text(
                       '暂无对话历史',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 16.sp, color: Colors.grey),
                     ),
                   )
                 : ListView.builder(

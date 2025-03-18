@@ -118,12 +118,8 @@ class CharacterStore {
   // 更新会话
   Future<CharacterChatSession> updateSession(
       CharacterChatSession session) async {
-    final index = _sessions.indexWhere((s) => s.id == session.id);
-    if (index >= 0) {
-      session.updateTime = DateTime.now();
-      _sessions[index] = session;
-      await _saveSessions();
-    }
+    session.updateTime = DateTime.now();
+    await saveSession(session);
     return session;
   }
 
@@ -289,7 +285,8 @@ class CharacterStore {
   }
 
   // 清空会话消息
-  Future<CharacterChatSession> clearMessages(CharacterChatSession session) async {
+  Future<CharacterChatSession> clearMessages(
+      CharacterChatSession session) async {
     session.messages = [];
     session.updateTime = DateTime.now();
     return await updateSession(session);
@@ -320,5 +317,106 @@ class CharacterStore {
       return await updateSession(session);
     }
     return session;
+  }
+
+  // 更新会话中的角色信息
+  Future<void> updateSessionCharacters(CharacterChatSession session) async {
+    bool hasChanges = false;
+    final updatedCharacters = <CharacterCard>[];
+
+    for (final character in session.characters) {
+      // 查找角色的最新信息
+      final latestCharacter = characters.firstWhere(
+        (c) => c.id == character.id,
+        orElse: () => character, // 如果找不到，保留原始角色信息
+      );
+
+      // 检查角色是否有变化
+      if (_isCharacterChanged(character, latestCharacter)) {
+        hasChanges = true;
+      }
+
+      updatedCharacters.add(latestCharacter);
+    }
+
+    // 只有在角色确实有变化时才更新会话
+    if (hasChanges) {
+      // 更新会话中的角色信息
+      session.characters = updatedCharacters;
+
+      // 保存更新后的会话，但不更新时间戳
+      await _saveSessionWithoutUpdatingTimestamp(session);
+    }
+  }
+
+  // 检查角色是否有变化
+  bool _isCharacterChanged(
+      CharacterCard oldCharacter, CharacterCard newCharacter) {
+    // 比较关键属性
+    return oldCharacter.name != newCharacter.name ||
+        oldCharacter.avatar != newCharacter.avatar ||
+        oldCharacter.description != newCharacter.description ||
+        oldCharacter.personality != newCharacter.personality ||
+        oldCharacter.scenario != newCharacter.scenario ||
+        oldCharacter.firstMessage != newCharacter.firstMessage ||
+        oldCharacter.exampleDialogue != newCharacter.exampleDialogue ||
+        !_areTagsEqual(oldCharacter.tags, newCharacter.tags) ||
+        !_areModelsEqual(
+            oldCharacter.preferredModel, newCharacter.preferredModel);
+  }
+
+  // 比较两个标签列表是否相等
+  bool _areTagsEqual(List<String> tags1, List<String> tags2) {
+    if (tags1.length != tags2.length) return false;
+    for (int i = 0; i < tags1.length; i++) {
+      if (tags1[i] != tags2[i]) return false;
+    }
+    return true;
+  }
+
+  // 比较两个模型是否相等
+  bool _areModelsEqual(CusBriefLLMSpec? model1, CusBriefLLMSpec? model2) {
+    if (model1 == null && model2 == null) return true;
+    if (model1 == null || model2 == null) return false;
+    return model1.cusLlmSpecId == model2.cusLlmSpecId;
+  }
+
+  // 保存会话但不更新时间戳
+  Future<void> _saveSessionWithoutUpdatingTimestamp(
+      CharacterChatSession session) async {
+    // 查找会话在列表中的索引
+    final index = _sessions.indexWhere((s) => s.id == session.id);
+
+    // 如果找到会话，更新它，但保留原始更新时间
+    if (index >= 0) {
+      final originalUpdateTime = _sessions[index].updateTime;
+      session.updateTime = originalUpdateTime; // 保留原始更新时间
+      _sessions[index] = session;
+    } else {
+      // 如果没有找到，添加为新会话
+      _sessions.add(session);
+    }
+
+    // 保存所有会话
+    await _saveSessions();
+  }
+
+  // 保存单个会话
+  Future<void> saveSession(CharacterChatSession session) async {
+    // 查找会话在列表中的索引
+    final index = _sessions.indexWhere((s) => s.id == session.id);
+
+    // 如果找到会话，更新它
+    if (index >= 0) {
+      session.updateTime = DateTime.now();
+      _sessions[index] = session;
+    } else {
+      // 如果没有找到，添加为新会话
+      session.updateTime = DateTime.now();
+      _sessions.add(session);
+    }
+
+    // 保存所有会话
+    await _saveSessions();
   }
 }
