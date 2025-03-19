@@ -1,6 +1,10 @@
-// 构建空提示
+// 构建角色头像,如果区分是本地图片或内部资源图片
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../common/constants/constants.dart';
 
 // 构建空提示
 Widget buildEmptyHint() {
@@ -108,5 +112,62 @@ Widget buildMenuItemWithIcon({
         ),
       ),
     ],
+  );
+}
+
+///
+/// 主要角色对话中用到
+///
+// 构建角色头像
+Image buildAssetOrFileImage(String avatar, {BoxFit fit = BoxFit.scaleDown}) {
+  return avatar.startsWith('assets/')
+      ? buildAssetImage(avatar, fit: fit)
+      : buildFileImage(avatar, fit: fit);
+}
+
+Image buildAssetImage(String path, {BoxFit fit = BoxFit.scaleDown}) {
+  return Image.asset(
+    path,
+    fit: fit,
+    errorBuilder: (context, error, stackTrace) {
+      return Image.asset(placeholderImageUrl, fit: BoxFit.scaleDown);
+    },
+  );
+}
+
+Image buildFileImage(String path, {BoxFit fit = BoxFit.scaleDown}) {
+  return Image.file(
+    File(path),
+    fit: fit,
+    errorBuilder: (context, error, stackTrace) {
+      return Image.asset(placeholderImageUrl, fit: BoxFit.scaleDown);
+    },
+  );
+}
+
+// 获取角色头像的ImageProvider
+ImageProvider? getAvatarProvider(String avatar) {
+  if (avatar.isEmpty) {
+    return null;
+  } else if (avatar.startsWith('assets/')) {
+    return AssetImage(avatar);
+  } else {
+    return FileImage(File(avatar));
+  }
+}
+
+// 构建角色头像，如果图片加载失败，则显示默认头像
+Widget buildCharacterCircleAvatar(
+  String avatar, {
+  double? radius,
+  Widget? child,
+}) {
+  return CircleAvatar(
+    radius: radius ?? 20.sp,
+    backgroundImage: getAvatarProvider(avatar),
+    onBackgroundImageError: (_, __) {
+      print('构建角色头像失败: $avatar');
+    },
+    child: child,
   );
 }

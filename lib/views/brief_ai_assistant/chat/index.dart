@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import '../../../common/components/simple_marquee_or_text.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants/constants.dart';
@@ -14,16 +15,18 @@ import '../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 import '../../../models/brief_ai_tools/chat_completions/chat_completion_response.dart';
 import '../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 import '../../../services/cus_get_storage.dart';
-import '../_chat_components/small_widgets.dart';
+import '../../../services/chat_service.dart';
+import '../../../services/model_manager_service.dart';
+import '../../../common/utils/advanced_options_utils.dart';
+
+import '../_chat_components/_small_tool_widgets.dart';
+
 import 'components/chat_input.dart';
 import 'components/chat_message_item.dart';
 import 'components/model_filter.dart';
 import 'components/model_selector.dart';
-import '../../../services/chat_service.dart';
 import 'components/chat_history_drawer.dart';
 import 'components/message_actions.dart';
-import '../../../services/model_manager_service.dart';
-import '../../../common/utils/advanced_options_utils.dart';
 
 class BriefChatScreen extends StatefulWidget {
   const BriefChatScreen({super.key});

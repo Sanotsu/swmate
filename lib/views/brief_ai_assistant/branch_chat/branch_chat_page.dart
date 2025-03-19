@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -20,7 +18,7 @@ import '../../../models/brief_ai_tools/chat_branch/chat_branch_session.dart';
 import '../../../services/chat_service.dart';
 import '../../../services/cus_get_storage.dart';
 
-import '../_chat_components/small_widgets.dart';
+import '../_chat_components/_small_tool_widgets.dart';
 import '../chat/components/model_selector.dart';
 
 import 'components/branch_message_item.dart';
@@ -132,6 +130,9 @@ class _BranchChatPageState extends State<BranchChatPage>
   void initState() {
     super.initState();
 
+    // 从本地存储加载背景图片设置
+    loadBackgroundSettings();
+
     // 初始化分支存储器
     _initStore();
 
@@ -169,9 +170,6 @@ class _BranchChatPageState extends State<BranchChatPage>
             scrollController.position.maxScrollExtent - 50;
       });
     });
-
-    // 从本地存储加载背景图片设置
-    loadBackgroundSettings();
   }
 
   @override
@@ -515,15 +513,7 @@ class _BranchChatPageState extends State<BranchChatPage>
           Positioned.fill(
             child: Opacity(
               opacity: backgroundOpacity,
-              child: backgroundImage!.startsWith('assets/')
-                  ? Image.asset(
-                      backgroundImage!,
-                      fit: BoxFit.cover,
-                    )
-                  : Image.file(
-                      File(backgroundImage!),
-                      fit: BoxFit.cover,
-                    ),
+              child: buildAssetOrFileImage(backgroundImage!, fit: BoxFit.cover),
             ),
           ),
 

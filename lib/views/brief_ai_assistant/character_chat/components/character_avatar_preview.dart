@@ -1,7 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../models/brief_ai_tools/character_chat/character_card.dart';
+import '../../_chat_components/_small_tool_widgets.dart';
 
 class CharacterAvatarPreview extends StatelessWidget {
   final CharacterCard character;
@@ -48,7 +48,7 @@ class CharacterAvatarPreview extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10.sp),
-            child: _buildCharacterAvatar(character.avatar, fit: BoxFit.cover),
+            child: buildAssetOrFileImage(character.avatar, fit: BoxFit.cover),
           ),
         ),
       ),
@@ -61,9 +61,9 @@ class CharacterAvatarPreview extends StatelessWidget {
 
     // 计算预览窗口的尺寸和位置
     final previewWidth = screenSize.width * 0.66;
-    final previewHeight = screenSize.height * 0.66;
+    final previewHeight = 16 / 9 * previewWidth;
 
-    // 使用Overlay而不是Dialog，以便我们可以自定义位置
+    // 使用Overlay而不是Dialog，以便可以自定义位置
     final overlayState = Overlay.of(context);
 
     // 先声明entry变量
@@ -102,7 +102,7 @@ class CharacterAvatarPreview extends StatelessWidget {
                     child: Padding(
                       // 为上面关闭按钮和下面名称留出空间
                       padding: EdgeInsets.symmetric(vertical: 36.sp),
-                      child: _buildCharacterAvatar(character.avatar),
+                      child: buildAssetOrFileImage(character.avatar),
                     ),
                   ),
 
@@ -135,31 +135,4 @@ class CharacterAvatarPreview extends StatelessWidget {
     // 显示Overlay
     overlayState.insert(entry);
   }
-}
-
-// 构建角色头像,如果区分是本地图片或内部资源图片
-Image _buildCharacterAvatar(String avatar, {BoxFit fit = BoxFit.scaleDown}) {
-  return avatar.startsWith('assets/')
-      ? buildAssetImage(avatar, fit: fit)
-      : buildFileImage(avatar, fit: fit);
-}
-
-Image buildAssetImage(String path, {BoxFit fit = BoxFit.scaleDown}) {
-  return Image.asset(
-    path,
-    fit: fit,
-    errorBuilder: (context, error, stackTrace) {
-      return Icon(Icons.error, color: Colors.red);
-    },
-  );
-}
-
-Image buildFileImage(String path, {BoxFit fit = BoxFit.scaleDown}) {
-  return Image.file(
-    File(path),
-    fit: fit,
-    errorBuilder: (context, error, stackTrace) {
-      return Icon(Icons.error, color: Colors.red);
-    },
-  );
 }

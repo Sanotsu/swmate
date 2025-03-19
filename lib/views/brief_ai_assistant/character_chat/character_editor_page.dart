@@ -3,11 +3,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
+import '../../../common/components/tool_widget.dart';
 import '../../../common/llm_spec/constant_llm_enum.dart';
 import '../../../models/brief_ai_tools/character_chat/character_card.dart';
 import '../../../models/brief_ai_tools/character_chat/character_store.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../services/model_manager_service.dart';
+import '../_chat_components/_small_tool_widgets.dart';
 import 'components/model_selector_dialog.dart';
 
 class CharacterEditorPage extends StatefulWidget {
@@ -87,7 +90,7 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
                 onTap: _pickAvatar,
                 child: CircleAvatar(
                   radius: 50.sp,
-                  backgroundImage: _getAvatarProvider(),
+                  backgroundImage: getAvatarProvider(_avatarPath),
                   child: _avatarPath.isEmpty
                       ? Icon(Icons.add_a_photo, size: 40.sp)
                       : null,
@@ -95,6 +98,11 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
               ),
             ),
             SizedBox(height: 16.sp),
+
+            Padding(
+              padding: EdgeInsets.only(left: 8.sp, bottom: 16.sp),
+              child: Text('角色ID: ${widget.character?.id ?? '<等待创建>'}'),
+            ),
 
             // 基本信息
             TextFormField(
@@ -128,6 +136,22 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
             ),
             SizedBox(height: 16.sp),
 
+            // 模型选择
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade600),
+                borderRadius: BorderRadius.circular(4.sp),
+              ),
+              child: ListTile(
+                title: const Text('偏好模型'),
+                subtitle: Text(_preferredModel?.name ?? '未设置'),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: _selectModel,
+              ),
+            ),
+
+            SizedBox(height: 16.sp),
+
             // 高级设置
             ExpansionTile(
               title: const Text('高级设置'),
@@ -143,7 +167,6 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
                   maxLines: 2,
                 ),
                 SizedBox(height: 16.sp),
-
                 TextFormField(
                   controller: _scenarioController,
                   decoration: const InputDecoration(
@@ -154,7 +177,6 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
                   maxLines: 2,
                 ),
                 SizedBox(height: 16.sp),
-
                 TextFormField(
                   controller: _firstMessageController,
                   decoration: const InputDecoration(
@@ -165,7 +187,6 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
                   maxLines: 2,
                 ),
                 SizedBox(height: 16.sp),
-
                 TextFormField(
                   controller: _exampleDialogueController,
                   decoration: const InputDecoration(
@@ -176,7 +197,6 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
                   maxLines: 4,
                 ),
                 SizedBox(height: 16.sp),
-
                 TextFormField(
                   controller: _tagsController,
                   decoration: const InputDecoration(
@@ -186,30 +206,12 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
                   ),
                 ),
                 SizedBox(height: 16.sp),
-
-                // 模型选择
-                ListTile(
-                  title: const Text('偏好模型'),
-                  subtitle: Text(_preferredModel?.name ?? '未设置'),
-                  trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: _selectModel,
-                ),
               ],
             ),
           ],
         ),
       ),
     );
-  }
-
-  ImageProvider? _getAvatarProvider() {
-    if (_avatarPath.isEmpty) {
-      return null;
-    } else if (_avatarPath.startsWith('assets/')) {
-      return AssetImage(_avatarPath);
-    } else {
-      return FileImage(File(_avatarPath));
-    }
   }
 
   Future<void> _pickAvatar() async {
@@ -292,6 +294,7 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
       } else {
         // 创建新角色
         await store.createCharacter(
+          id: const Uuid().v4(),
           name: _nameController.text,
           avatar: _avatarPath,
           description: _descriptionController.text,
@@ -308,9 +311,7 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
 
       Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('保存失败: $e')),
-      );
+      commonExceptionDialog(context, '保存角色', '保存失败: $e');
     } finally {
       if (mounted) {
         setState(() => isSaving = false);

@@ -1,9 +1,12 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:swmate/common/components/tool_widget.dart';
 import '../../../../models/brief_ai_tools/character_chat/character_chat_session.dart';
 import '../../../../models/brief_ai_tools/character_chat/character_card.dart';
+import '../../_chat_components/_small_tool_widgets.dart';
+import '../../../../models/brief_ai_tools/character_chat/character_store.dart';
+import 'package:file_picker/file_picker.dart';
 
 class SessionHistoryDrawer extends StatefulWidget {
   final List<CharacterChatSession> sessions;
@@ -47,16 +50,9 @@ class _SessionHistoryDrawerState extends State<SessionHistoryDrawer> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircleAvatar(
+                  buildCharacterCircleAvatar(
+                    widget.character.avatar,
                     radius: 30.sp,
-                    backgroundImage:
-                        widget.character.avatar.startsWith('assets/')
-                            ? AssetImage(widget.character.avatar)
-                            : FileImage(File(widget.character.avatar))
-                                as ImageProvider,
-                    onBackgroundImageError: (_, __) {
-                      const Icon(Icons.person);
-                    },
                   ),
                   SizedBox(height: 10.sp),
                   Text(
@@ -71,6 +67,24 @@ class _SessionHistoryDrawerState extends State<SessionHistoryDrawer> {
                   ),
                 ],
               ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.sp, vertical: 8.sp),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.upload),
+                  label: const Text('导出'),
+                  onPressed: _showExportOptionsDialog,
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.download),
+                  label: const Text('导入'),
+                  onPressed: _importSessionHistory,
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -208,6 +222,122 @@ class _SessionHistoryDrawerState extends State<SessionHistoryDrawer> {
       return '昨天 ${DateFormat('HH:mm').format(time)}';
     } else {
       return DateFormat('MM-dd HH:mm').format(time);
+    }
+  }
+
+  // 显示导出选项对话框
+  void _showExportOptionsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('导出选项'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.chat),
+              title: const Text('导出当前会话'),
+              onTap: () {
+                Navigator.pop(context);
+                _exportCurrentSessionHistory();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.chat_bubble_outline),
+              title: const Text('导出所有会话'),
+              onTap: () {
+                Navigator.pop(context);
+                _exportAllSessionsHistory();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 导出当前会话历史
+  Future<void> _exportCurrentSessionHistory() async {
+    try {
+      // 先让用户选择保存位置
+      final directoryResult = await FilePicker.platform.getDirectoryPath();
+      if (directoryResult == null) return; // 用户取消了选择
+
+      final store = CharacterStore();
+      final filePath = await store.exportSessionHistory(
+        widget.currentSession.id,
+        customPath: directoryResult,
+      );
+
+      if (!mounted) return;
+
+      commonHintDialog(context, '导出会话历史', '会话历史已导出到: $filePath');
+    } catch (e) {
+      if (!mounted) return;
+
+      commonExceptionDialog(context, '导出会话历史', '导出失败: $e');
+    }
+  }
+
+  // 导出所有会话历史
+  Future<void> _exportAllSessionsHistory() async {
+    try {
+      // 先让用户选择保存位置
+      final directoryResult = await FilePicker.platform.getDirectoryPath();
+      if (directoryResult == null) return; // 用户取消了选择
+
+      final store = CharacterStore();
+      final filePath = await store.exportAllSessionsHistory(
+        customPath: directoryResult,
+      );
+
+      if (!mounted) return;
+
+      commonHintDialog(context, '导出会话历史', '所有会话历史已导出到: $filePath');
+    } catch (e) {
+      if (!mounted) return;
+
+      commonExceptionDialog(context, '导出会话历史', '导出失败: $e');
+    }
+  }
+
+  // 导入会话历史
+  Future<void> _importSessionHistory() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final filePath = result.files.first.path;
+      if (filePath == null) return;
+
+      final store = CharacterStore();
+      final importResult = await store.importSessionHistory(filePath);
+
+      if (!mounted) return;
+
+      String message;
+      if (importResult.importedSessions > 0) {
+        message = '成功导入 ${importResult.importedSessions} 个会话';
+        if (importResult.skippedSessions > 0) {
+          message += '，跳过 ${importResult.skippedSessions} 个已存在的会话';
+        }
+
+        // 如果有导入的会话，切换到第一个导入的会话
+        if (importResult.firstSession != null) {
+          widget.onSessionSelected(importResult.firstSession!);
+        }
+      } else {
+        message = '没有导入任何会话，所有会话已存在';
+      }
+
+      commonHintDialog(context, '导入会话历史', message);
+    } catch (e) {
+      if (!mounted) return;
+      commonExceptionDialog(context, '导入会话历史', '导入失败: $e');
     }
   }
 }

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'dart:io';
 import 'package:intl/intl.dart';
+import '../../../../common/components/tool_widget.dart';
 import '../../../../common/components/voice_chat_bubble.dart';
 import '../../../../common/constants/constants.dart';
 import '../../../../models/brief_ai_tools/character_chat/character_chat_message.dart';
 import '../../../../models/brief_ai_tools/character_chat/character_card.dart';
+import '../../_chat_components/_small_tool_widgets.dart';
 
 class CharacterMessageItem extends StatelessWidget {
   final CharacterChatMessage message;
@@ -97,29 +98,19 @@ class CharacterMessageItem extends StatelessWidget {
       );
     }
 
-    if (character!.avatar.startsWith('assets/')) {
-      return CircleAvatar(
-        radius: 20.sp,
-        backgroundImage: AssetImage(character!.avatar),
-        onBackgroundImageError: (_, __) {
-          Icon(Icons.person, color: Colors.white);
-        },
-      );
-    } else {
-      return CircleAvatar(
-        radius: 20.sp,
-        backgroundImage: FileImage(File(character!.avatar)),
-        onBackgroundImageError: (_, __) {
-          Icon(Icons.person, color: Colors.white);
-        },
-      );
-    }
+    return buildCharacterCircleAvatar(character!.avatar);
   }
 
   Widget _buildMessageContent(BuildContext context) {
     final isUser = message.role == CusRole.user.name;
 
     List<Widget> list = [];
+
+    // 时间戳一般放在最前面
+    list.add(Text(
+      _formatTime(message.timestamp),
+      style: TextStyle(fontSize: 10.sp),
+    ));
 
     // 文本消息，一般都有
     list.add(
@@ -152,28 +143,18 @@ class CharacterMessageItem extends StatelessWidget {
           spacing: 4.sp,
           runSpacing: 4.sp,
           children: imageUrls.map((url) {
-            return GestureDetector(
-              onTap: () {
-                // 查看大图
-              },
+            return Container(
+              margin: EdgeInsets.only(top: 8.sp),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.sp),
-                child: Image.file(
-                  File(url.trim()),
-                  width: 150.sp,
-                  height: 150.sp,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 150.sp,
-                      height: 150.sp,
-                      color: Colors.grey.withOpacity(0.2),
-                      child: Icon(
-                        Icons.broken_image,
-                        color: Colors.grey,
-                      ),
-                    );
-                  },
+                child: SizedBox(
+                  width: 0.3.sw,
+                  child: buildImageView(
+                    url,
+                    context,
+                    isFileUrl: true,
+                    imageErrorHint: '图片异常，请开启新对话',
+                  ),
                 ),
               ),
             );
@@ -181,15 +162,6 @@ class CharacterMessageItem extends StatelessWidget {
         ),
       );
     }
-
-    // 时间戳一般放在最底部
-    list.addAll([
-      SizedBox(height: 4.sp),
-      Text(
-        _formatTime(message.timestamp),
-        style: TextStyle(fontSize: 10.sp, color: Colors.grey),
-      ),
-    ]);
 
     return Column(
       crossAxisAlignment:

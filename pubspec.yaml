@@ -128,9 +128,9 @@ flutter:
   assets:
     - assets/
     - assets/images/
-    - assets/images/covers/
+    # - assets/images/covers/
     - assets/chat_backgrounds/
-    - assets/character_avatars/
+    - assets/characters/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

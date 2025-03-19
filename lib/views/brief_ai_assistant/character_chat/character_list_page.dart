@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../../common/components/tool_widget.dart';
 import '../../../models/brief_ai_tools/character_chat/character_card.dart';
 import '../../../models/brief_ai_tools/character_chat/character_chat_session.dart';
 import '../../../models/brief_ai_tools/character_chat/character_store.dart';
@@ -59,8 +61,12 @@ class _CharacterListPageState extends State<CharacterListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('角色卡列表'),
+        title: const Text('角色列表'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.import_export),
+            onPressed: _showImportExportDialog,
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: _navigateToCharacterEditor,
@@ -99,7 +105,7 @@ class _CharacterListPageState extends State<CharacterListPage> {
                         padding: EdgeInsets.all(8.sp),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 3 / 5,
+                          childAspectRatio: 6 / 9,
                           crossAxisSpacing: 10.sp,
                           mainAxisSpacing: 10.sp,
                         ),
@@ -149,7 +155,7 @@ class _CharacterListPageState extends State<CharacterListPage> {
       session = _store.sessions.firstWhere((s) => s.id == session!.id);
     } else {
       if (character.preferredModel == null) {
-        EasyLoading.showToast('请先为该角色设置偏好模型');
+        EasyLoading.showToast('请先为该角色设置偏好模型\n长按角色卡点击"编辑角色"');
         return;
       }
 
@@ -206,6 +212,94 @@ class _CharacterListPageState extends State<CharacterListPage> {
     if (confirmed == true) {
       await _store.deleteCharacter(character.id);
       _loadCharacters();
+    }
+  }
+
+  void _showImportExportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('导入/导出'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.upload),
+              title: const Text('导出角色'),
+              onTap: () {
+                Navigator.pop(context);
+                _exportCharacters();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.download),
+              title: const Text('导入角色'),
+              onTap: () {
+                Navigator.pop(context);
+                _importCharacters();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportCharacters() async {
+    try {
+      // 先让用户选择保存位置
+      final directoryResult = await FilePicker.platform.getDirectoryPath();
+      if (directoryResult == null) return; // 用户取消了选择
+
+      final store = CharacterStore();
+      final filePath =
+          await store.exportCharacters(customPath: directoryResult);
+
+      if (!mounted) return;
+
+      commonHintDialog(context, '导出角色', '角色已导出到: $filePath');
+    } catch (e) {
+      if (!mounted) return;
+
+      commonExceptionDialog(context, '导出角色', '导出失败: $e');
+    }
+  }
+
+  Future<void> _importCharacters() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final filePath = result.files.first.path;
+      if (filePath == null) return;
+
+      final store = CharacterStore();
+      final importResult = await store.importCharacters(filePath);
+
+      if (!mounted) return;
+
+      String message;
+      if (importResult.importedCount > 0) {
+        message = '成功导入 ${importResult.importedCount} 个角色';
+        if (importResult.skippedCount > 0) {
+          message += '，跳过 ${importResult.skippedCount} 个已存在的角色';
+        }
+      } else {
+        message = '没有导入任何角色，所有角色已存在';
+      }
+
+      commonHintDialog(context, '导入角色', message);
+
+      // 刷新列表
+      _loadCharacters();
+    } catch (e) {
+      if (!mounted) return;
+
+      commonExceptionDialog(context, '导入角色', '导入失败: $e');
     }
   }
 }

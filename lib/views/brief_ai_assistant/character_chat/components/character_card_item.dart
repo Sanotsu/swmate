@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'dart:io';
 import '../../../../models/brief_ai_tools/character_chat/character_card.dart';
+import '../../_chat_components/_small_tool_widgets.dart';
 
 class CharacterCardItem extends StatelessWidget {
   final CharacterCard character;
@@ -20,13 +20,12 @@ class CharacterCardItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 3,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.sp),
       ),
-      child: InkWell(
+      child: GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12.sp),
+        onLongPress: () => _showContextMenu(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -36,7 +35,7 @@ class CharacterCardItem extends StatelessWidget {
             SizedBox(height: 4.sp),
 
             // 角色信息
-            infoArea(),
+            infoArea(context),
           ],
         ),
       ),
@@ -45,22 +44,22 @@ class CharacterCardItem extends StatelessWidget {
 
   Widget avatarArea() {
     return Expanded(
-      flex: 3,
+      flex: 2,
       child: ClipRRect(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(12.sp),
           topRight: Radius.circular(12.sp),
         ),
-        child: _buildAvatar(),
+        child: buildAssetOrFileImage(character.avatar),
       ),
     );
   }
 
-  Widget infoArea() {
+  Widget infoArea(BuildContext context) {
     return Expanded(
-      flex: 2,
+      flex: 1,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8.sp),
+        padding: EdgeInsets.symmetric(horizontal: 8.sp, vertical: 8.sp),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -102,62 +101,51 @@ class CharacterCardItem extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-
-            // 操作按钮
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.edit, size: 18.sp),
-                  // padding: EdgeInsets.zero,
-                  // constraints: BoxConstraints(),
-                  onPressed: onEdit,
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete, size: 18.sp),
-                  // padding: EdgeInsets.zero,
-                  // constraints: BoxConstraints(),
-                  onPressed: character.isSystem ? null : onDelete,
-                  color: character.isSystem ? Colors.grey : Colors.red,
-                ),
-              ],
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAvatar() {
-    if (character.avatar.startsWith('assets/')) {
-      return Image.asset(
-        character.avatar,
-        fit: BoxFit.cover,
-      );
-    } else if (character.avatar.startsWith('/')) {
-      return Image.file(
-        File(character.avatar),
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: Colors.grey[300],
-            child: Icon(
-              Icons.person,
-              size: 50.sp,
-              color: Colors.grey[600],
-            ),
-          );
-        },
-      );
-    } else {
-      return Container(
-        color: Colors.grey[300],
-        child: Icon(
-          Icons.person,
-          size: 50.sp,
-          color: Colors.grey[600],
+  void _showContextMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero),
+            ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu(
+      context: context,
+      position: position,
+      items: [
+        PopupMenuItem(
+          onTap: onEdit,
+          child: Row(
+            children: [
+              Icon(Icons.edit, color: Theme.of(context).primaryColor),
+              SizedBox(width: 8.sp),
+              Text('编辑角色'),
+            ],
+          ),
         ),
-      );
-    }
+        if (!character.isSystem)
+          PopupMenuItem(
+            onTap: onDelete,
+            child: Row(
+              children: [
+                Icon(Icons.delete, color: Colors.red),
+                SizedBox(width: 8.sp),
+                Text('删除角色'),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 }

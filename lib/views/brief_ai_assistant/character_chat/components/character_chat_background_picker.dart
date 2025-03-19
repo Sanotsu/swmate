@@ -1,8 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../services/cus_get_storage.dart';
+import '../../_chat_components/_small_tool_widgets.dart';
 
 class CharacterChatBackgroundPicker extends StatefulWidget {
   const CharacterChatBackgroundPicker({super.key});
@@ -100,15 +100,10 @@ class _CharacterChatBackgroundPickerState
                       borderRadius: BorderRadius.circular(12.sp),
                       child: Opacity(
                         opacity: _opacity,
-                        child: _selectedBackground!.startsWith('assets/')
-                            ? Image.asset(
-                                _selectedBackground!,
-                                fit: BoxFit.scaleDown,
-                              )
-                            : Image.file(
-                                File(_selectedBackground!),
-                                fit: BoxFit.scaleDown,
-                              ),
+                        child: buildAssetOrFileImage(
+                          _selectedBackground!,
+                          fit: BoxFit.scaleDown,
+                        ),
                       ),
                     ),
                     Center(
