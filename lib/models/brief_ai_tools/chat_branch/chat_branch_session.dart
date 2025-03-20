@@ -29,8 +29,6 @@ class ChatBranchSession {
       try {
         _llmSpec = CusBriefLLMSpec.fromJson(jsonDecode(llmSpecJson!));
       } catch (e) {
-        print('Error decoding llmSpec: $e');
-        print('llmSpecJson: $llmSpecJson');
         rethrow;
       }
     }

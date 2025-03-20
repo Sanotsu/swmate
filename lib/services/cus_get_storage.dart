@@ -135,7 +135,8 @@ class MyGetStorage {
 
   // 角色对话背景相关方法
   Future<String?> getCharacterChatBackground() async {
-    return box.read(_characterChatBackgroundKey);
+    final path = box.read<String>(_characterChatBackgroundKey);
+    return path;
   }
 
   Future<void> saveCharacterChatBackground(String? path) async {
@@ -147,7 +148,8 @@ class MyGetStorage {
   }
 
   Future<double?> getCharacterChatBackgroundOpacity() async {
-    return box.read(_characterChatBackgroundOpacityKey);
+    final opacity = box.read<double>(_characterChatBackgroundOpacityKey);
+    return opacity;
   }
 
   Future<void> saveCharacterChatBackgroundOpacity(double opacity) async {
@@ -159,5 +161,20 @@ class MyGetStorage {
     final userKeys = getUserAKMap();
     userKeys[label.name] = apiKey;
     await setUserAKMap(userKeys);
+  }
+
+  // 缓存的背景图片路径
+  String? _cachedBackground;
+  // 缓存的背景透明度
+  double? _cachedBackgroundOpacity;
+
+  // 获取缓存的背景图片路径
+  String? getCachedBackground() {
+    return _cachedBackground;
+  }
+
+  // 获取缓存的背景透明度
+  double? getCachedBackgroundOpacity() {
+    return _cachedBackgroundOpacity;
   }
 }

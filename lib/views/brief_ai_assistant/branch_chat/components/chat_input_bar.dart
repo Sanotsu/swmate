@@ -189,8 +189,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
         }
       }
     } catch (e) {
-      print('选择图片失败: $e');
-      // 可以添加错误提示
+      if (!mounted) return;
+      commonExceptionDialog(context, '选择图片失败', '选择图片失败: $e');
     }
   }
 

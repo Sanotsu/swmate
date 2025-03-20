@@ -36,7 +36,7 @@ class CharacterAvatarPreview extends StatelessWidget {
           height: height.sp,
           decoration: BoxDecoration(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(12.sp),
+            borderRadius: BorderRadius.circular(2.sp),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -46,9 +46,9 @@ class CharacterAvatarPreview extends StatelessWidget {
             ],
             border: Border.all(color: Colors.white, width: 2.sp),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10.sp),
-            child: buildAssetOrFileImage(character.avatar, fit: BoxFit.cover),
+          child: buildAvatarClipOval(
+            character.avatar,
+            clipBehavior: Clip.none,
           ),
         ),
       ),
@@ -102,7 +102,10 @@ class CharacterAvatarPreview extends StatelessWidget {
                     child: Padding(
                       // 为上面关闭按钮和下面名称留出空间
                       padding: EdgeInsets.symmetric(vertical: 36.sp),
-                      child: buildAssetOrFileImage(character.avatar),
+                      child: buildAvatarClipOval(
+                        character.avatar,
+                        clipBehavior: Clip.none,
+                      ),
                     ),
                   ),
 

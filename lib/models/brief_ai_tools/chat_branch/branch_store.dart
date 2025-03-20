@@ -1,11 +1,14 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:proste_logger/proste_logger.dart';
 import '../../../objectbox.g.dart';
 import 'chat_branch_message.dart';
 import 'chat_branch_session.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../common/llm_spec/constant_llm_enum.dart';
+
+final pl = ProsteLogger();
 
 class BranchStore {
   /// ObjectBox 存储实例
@@ -46,7 +49,7 @@ class BranchStore {
       messageBox = store.box<ChatBranchMessage>();
       sessionBox = store.box<ChatBranchSession>();
     } catch (e) {
-      print('初始化 ObjectBox 失败: $e');
+      pl.e('初始化 ObjectBox 失败: $e');
       rethrow;
     }
   }
@@ -113,14 +116,13 @@ class BranchStore {
       message.session.target = session;
       session.updateTime = DateTime.now();
 
-      final id = messageBox.put(message);
+      // final id = messageBox.put(message);
+      messageBox.put(message);
       sessionBox.put(session);
 
-      print(
-          'Added new message with ID: $id, role: $role, branch: ${message.branchPath}');
+      // pl.i('添加消息 ID: $id, role: $role, 分支: ${message.branchPath}');
       return message;
     } catch (e) {
-      print('Error adding message: $e');
       rethrow;
     }
   }
@@ -132,10 +134,10 @@ class BranchStore {
           .query(ChatBranchMessage_.session.equals(sessionId))
           .build();
       final messages = query.find();
-      print('Found ${messages.length} messages for session $sessionId');
+      // print('记录编号 $sessionId 找到 ${messages.length} 条消息');
       return messages;
     } catch (e) {
-      print('Error getting session messages: $e');
+      pl.e('获取会话消息失败: $e');
       return [];
     }
   }

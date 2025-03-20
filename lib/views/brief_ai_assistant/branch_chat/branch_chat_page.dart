@@ -288,7 +288,10 @@ class _BranchChatPageState extends State<BranchChatPage>
       });
     }
 
-    resetContentHeight();
+    // 延迟执行滚动到底部，确保UI已完全渲染
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      resetContentHeight(times: 2000);
+    });
   }
 
   /// 加载消息
@@ -339,7 +342,7 @@ class _BranchChatPageState extends State<BranchChatPage>
         isLoading = false;
       });
     } catch (e) {
-      print('加载消息失败: $e');
+      pl.e('加载消息失败: $e');
       setState(() {
         isNewChat = true;
         isLoading = false;
@@ -513,7 +516,7 @@ class _BranchChatPageState extends State<BranchChatPage>
           Positioned.fill(
             child: Opacity(
               opacity: backgroundOpacity,
-              child: buildAssetOrFileImage(backgroundImage!, fit: BoxFit.cover),
+              child: buildCusImage(backgroundImage!, fit: BoxFit.cover),
             ),
           ),
 
@@ -699,7 +702,7 @@ class _BranchChatPageState extends State<BranchChatPage>
         EasyLoading.showSuccess('添加模型成功');
       } catch (e) {
         if (mounted) {
-          print('添加模型失败: $e');
+          pl.e('添加模型失败: $e');
           commonExceptionDialog(context, '添加模型失败', e.toString());
         }
       }
@@ -1220,7 +1223,6 @@ class _BranchChatPageState extends State<BranchChatPage>
 
       return aiMessage;
     } catch (e) {
-      print('AI响应生成失败: $e');
       if (!mounted) return null;
       commonExceptionDialog(context, "异常提示", "AI响应生成失败: $e");
 
@@ -1429,7 +1431,6 @@ class _BranchChatPageState extends State<BranchChatPage>
       await loadMessages();
       await _generateAIResponse();
     } catch (e) {
-      print('发送消息失败: $e');
       if (!mounted) return;
       commonExceptionDialog(context, "异常提示", "发送消息失败: $e");
     }
@@ -1490,7 +1491,6 @@ class _BranchChatPageState extends State<BranchChatPage>
         currentEditingMessage = null;
       });
     } catch (e) {
-      print('编辑消息失败: $e');
       if (!mounted) return;
       commonExceptionDialog(context, "异常提示", "编辑消息失败: $e");
     }
@@ -1504,7 +1504,7 @@ class _BranchChatPageState extends State<BranchChatPage>
     );
 
     if (currentMessages.isEmpty) {
-      print('Error: No messages found for branch path: $currentBranchPath');
+      pl.e('当前分支路径没有消息: $currentBranchPath');
       return;
     }
 
@@ -1619,7 +1619,7 @@ class _BranchChatPageState extends State<BranchChatPage>
   ///
   ///******************************************* */
   // 重置对话列表内容高度(在点击了重新生成、切换了模型、点击了指定历史记录后都应该调用)
-  void resetContentHeight() {
+  void resetContentHeight({int? times}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !scrollController.hasClients) return;
 
@@ -1627,11 +1627,11 @@ class _BranchChatPageState extends State<BranchChatPage>
     });
 
     // 重置完了顺便滚动到底部
-    _scrollToBottom();
+    _scrollToBottom(times: times);
   }
 
   // 滚动到底部
-  void _scrollToBottom() {
+  void _scrollToBottom({int? times}) {
     // 统一在这里等待布局更新完成，才滚动到底部
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !scrollController.hasClients) return;
@@ -1640,7 +1640,7 @@ class _BranchChatPageState extends State<BranchChatPage>
       Future.delayed(const Duration(milliseconds: 50), () {
         scrollController.animateTo(
           scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 500),
+          duration: Duration(milliseconds: times ?? 500),
           curve: Curves.easeOut,
         );
       });

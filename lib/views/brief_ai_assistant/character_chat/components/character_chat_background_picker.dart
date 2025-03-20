@@ -100,7 +100,7 @@ class _CharacterChatBackgroundPickerState
                       borderRadius: BorderRadius.circular(12.sp),
                       child: Opacity(
                         opacity: _opacity,
-                        child: buildAssetOrFileImage(
+                        child: buildCusImage(
                           _selectedBackground!,
                           fit: BoxFit.scaleDown,
                         ),

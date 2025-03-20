@@ -119,55 +119,58 @@ Widget buildMenuItemWithIcon({
 /// 主要角色对话中用到
 ///
 // 构建角色头像
-Image buildAssetOrFileImage(String avatar, {BoxFit fit = BoxFit.scaleDown}) {
-  return avatar.startsWith('assets/')
-      ? buildAssetImage(avatar, fit: fit)
-      : buildFileImage(avatar, fit: fit);
+Image buildCusImage(String imageUrl, {BoxFit fit = BoxFit.scaleDown}) {
+  return imageUrl.isEmpty
+      ? Image.asset(defaultAvatarUrl, fit: BoxFit.cover)
+      : imageUrl.startsWith('http')
+          ? buildNetworkImage(imageUrl, fit: fit)
+          : imageUrl.startsWith('assets/')
+              ? buildAssetImage(imageUrl, fit: fit)
+              : buildFileImage(imageUrl, fit: fit);
+}
+
+/// 构建角色头像，如果图片加载失败，则显示默认头像
+/// 支持assets、http、file
+Widget buildAvatarClipOval(
+  String url, {
+  Clip clipBehavior = Clip.antiAlias,
+  BoxFit fit = BoxFit.cover,
+}) {
+  return ClipOval(
+    clipBehavior: clipBehavior,
+    child: buildCusImage(url, fit: fit),
+  );
 }
 
 Image buildAssetImage(String path, {BoxFit fit = BoxFit.scaleDown}) {
-  return Image.asset(
-    path,
-    fit: fit,
-    errorBuilder: (context, error, stackTrace) {
-      return Image.asset(placeholderImageUrl, fit: BoxFit.scaleDown);
-    },
-  );
+  return Image.asset(path, fit: fit, errorBuilder: _cusErrorWidget);
 }
 
 Image buildFileImage(String path, {BoxFit fit = BoxFit.scaleDown}) {
-  return Image.file(
-    File(path),
+  return Image.file(File(path), fit: fit, errorBuilder: _cusErrorWidget);
+}
+
+Image buildNetworkImage(String url, {BoxFit fit = BoxFit.scaleDown}) {
+  return Image.network(
+    url,
     fit: fit,
-    errorBuilder: (context, error, stackTrace) {
-      return Image.asset(placeholderImageUrl, fit: BoxFit.scaleDown);
+    errorBuilder: _cusErrorWidget,
+    loadingBuilder: (context, child, loadingProgress) {
+      if (loadingProgress == null) return child;
+      return Center(
+        child: CircularProgressIndicator(
+          value: loadingProgress.expectedTotalBytes != null
+              ? loadingProgress.cumulativeBytesLoaded /
+                  loadingProgress.expectedTotalBytes!
+              : null,
+        ),
+      );
     },
   );
 }
 
-// 获取角色头像的ImageProvider
-ImageProvider? getAvatarProvider(String avatar) {
-  if (avatar.isEmpty) {
-    return null;
-  } else if (avatar.startsWith('assets/')) {
-    return AssetImage(avatar);
-  } else {
-    return FileImage(File(avatar));
-  }
-}
-
-// 构建角色头像，如果图片加载失败，则显示默认头像
-Widget buildCharacterCircleAvatar(
-  String avatar, {
-  double? radius,
-  Widget? child,
-}) {
-  return CircleAvatar(
-    radius: radius ?? 20.sp,
-    backgroundImage: getAvatarProvider(avatar),
-    onBackgroundImageError: (_, __) {
-      print('构建角色头像失败: $avatar');
-    },
-    child: child,
-  );
+// 提取 errorBuilder 为独立函数
+Widget _cusErrorWidget(
+    BuildContext context, Object error, StackTrace? stackTrace) {
+  return Image.asset(placeholderImageUrl, fit: BoxFit.scaleDown);
 }

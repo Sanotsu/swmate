@@ -50,9 +50,12 @@ class _SessionHistoryDrawerState extends State<SessionHistoryDrawer> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  buildCharacterCircleAvatar(
-                    widget.character.avatar,
-                    radius: 30.sp,
+                  SizedBox(
+                    width: 60.sp,
+                    height: 60.sp,
+                    child: buildAvatarClipOval(
+                      widget.character.avatar,
+                    ),
                   ),
                   SizedBox(height: 10.sp),
                   Text(

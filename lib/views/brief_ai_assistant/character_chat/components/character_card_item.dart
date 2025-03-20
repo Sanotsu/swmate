@@ -50,7 +50,7 @@ class CharacterCardItem extends StatelessWidget {
           topLeft: Radius.circular(12.sp),
           topRight: Radius.circular(12.sp),
         ),
-        child: buildAssetOrFileImage(character.avatar),
+        child: buildAvatarClipOval(character.avatar, clipBehavior: Clip.none),
       ),
     );
   }

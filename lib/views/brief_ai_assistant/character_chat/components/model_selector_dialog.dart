@@ -45,18 +45,17 @@ class _ModelSelectorDialogState extends State<ModelSelectorDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      // 控制边距
+      insetPadding: EdgeInsets.all(10.sp),
       child: Container(
-        width: 0.8.sw,
-        height: 0.7.sh,
+        width: 1.sw,
+        height: 1.sh,
         padding: EdgeInsets.all(8.sp),
         child: Column(
           children: [
             Text(
               '选择模型',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.sp),
 

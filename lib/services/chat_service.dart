@@ -180,7 +180,7 @@ class ChatService {
 
     final requestBody = request.toRequestBody();
 
-    print('常规流式响应请求体: $requestBody');
+    // print('常规流式响应请求体: $requestBody');
     return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
   }
 
@@ -212,7 +212,7 @@ class ChatService {
     );
 
     final requestBody = request.toRequestBody();
-    print('分支对话请求体: $requestBody');
+    // print('分支对话请求体: $requestBody');
 
     return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
   }
@@ -245,7 +245,7 @@ class ChatService {
     );
 
     final requestBody = request.toRequestBody();
-    print('角色对话请求体: $requestBody');
+    // print('角色对话请求体: $requestBody');
 
     return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
   }

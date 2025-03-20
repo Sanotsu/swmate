@@ -137,8 +137,7 @@ class _ChatExportImportPageState extends State<ChatExportImportPage> {
       );
 
       // 3. 获取下载目录并创建文件
-      final fileName =
-          'chat_export_${DateTime.now().millisecondsSinceEpoch}.json';
+      final fileName = '高级助手对话记录_${DateTime.now().millisecondsSinceEpoch}.json';
 
       try {
         // 先尝试使用 FilePicker 选择保存位置
@@ -158,7 +157,8 @@ class _ChatExportImportPageState extends State<ChatExportImportPage> {
           );
         }
       } catch (e) {
-        print('选择目录失败，使用默认下载目录: $e');
+        if (!mounted) return;
+        commonExceptionDialog(context, '选择目录失败', '选择目录失败: $e');
 
         // 如果选择目录失败，则使用默认下载目录
         final directory = await getExternalStorageDirectory();
@@ -175,18 +175,14 @@ class _ChatExportImportPageState extends State<ChatExportImportPage> {
           );
 
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('导出成功：${file.path}')),
-          );
+          commonHintDialog(context, '导出成功', '导出成功：${file.path}');
         } else {
           throw Exception('无法获取存储目录');
         }
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('导出失败: $e')),
-      );
+      commonExceptionDialog(context, '导出失败', '导出失败: $e');
     } finally {
       if (mounted) {
         setState(() => isExporting = false);

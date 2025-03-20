@@ -98,7 +98,11 @@ class CharacterMessageItem extends StatelessWidget {
       );
     }
 
-    return buildCharacterCircleAvatar(character!.avatar);
+    return SizedBox(
+      width: 40.sp,
+      height: 40.sp,
+      child: buildAvatarClipOval(character!.avatar),
+    );
   }
 
   Widget _buildMessageContent(BuildContext context) {
@@ -111,6 +115,11 @@ class CharacterMessageItem extends StatelessWidget {
       _formatTime(message.timestamp),
       style: TextStyle(fontSize: 10.sp),
     ));
+
+    if (message.reasoningContent != null &&
+        message.reasoningContent!.isNotEmpty) {
+      list.add(_buildThinkingProcess(message));
+    }
 
     // 文本消息，一般都有
     list.add(
@@ -182,5 +191,64 @@ class CharacterMessageItem extends StatelessWidget {
     } else {
       return DateFormat('MM-dd HH:mm').format(time);
     }
+  }
+
+  // DS 的 R 系列有深度思考部分，单独展示
+  Widget _buildThinkingProcess(CharacterChatMessage message) {
+    // 创建一个基础的 TextStyle，深度思考的文字颜色和大小
+    final tempStyle = TextStyle(color: Colors.black54, fontSize: 13.5.sp);
+
+    return Container(
+      padding: EdgeInsets.only(bottom: 8.sp),
+      child: ExpansionTile(
+        title: Text(
+          message.content.trim().isEmpty
+              ? '思考中'
+              : '已深度思考(用时${(message.thinkingDuration ?? 0) / 1000}秒)',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black54,
+            fontSize: 16.sp,
+          ),
+        ),
+        // 默认展开
+        initiallyExpanded: true,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 24.sp),
+            // child: Text(
+            //   message.reasoningContent ?? '',
+            //   style: TextStyle(color: Colors.black54, fontSize: 13.5.sp),
+            // ),
+
+            /// 使用 MarkdownBody 显示深度思考内容
+            child: MarkdownBody(
+              data: message.reasoningContent ?? '',
+              selectable: true,
+              styleSheet: MarkdownStyleSheet(
+                // 复用 tempStyle
+                p: tempStyle,
+                h1: tempStyle,
+                h2: tempStyle,
+                h3: tempStyle,
+                h4: tempStyle,
+                h5: tempStyle,
+                h6: tempStyle,
+                strong: tempStyle,
+                em: tempStyle,
+                blockquote: tempStyle,
+                listBullet: tempStyle,
+                tableHead: tempStyle,
+                tableBody: tempStyle,
+                // 隐藏换行线
+                horizontalRuleDecoration: BoxDecoration(
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

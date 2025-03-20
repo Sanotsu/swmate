@@ -85,18 +85,7 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
           padding: EdgeInsets.all(16.sp),
           children: [
             // 头像选择
-            Center(
-              child: GestureDetector(
-                onTap: _pickAvatar,
-                child: CircleAvatar(
-                  radius: 50.sp,
-                  backgroundImage: getAvatarProvider(_avatarPath),
-                  child: _avatarPath.isEmpty
-                      ? Icon(Icons.add_a_photo, size: 40.sp)
-                      : null,
-                ),
-              ),
-            ),
+            _buildAvatarSelector(),
             SizedBox(height: 16.sp),
 
             Padding(
@@ -214,22 +203,132 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
     );
   }
 
-  Future<void> _pickAvatar() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+  Widget _buildAvatarSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        GestureDetector(
+          onTap: _showAvatarOptions,
+          child: Container(
+            width: 80.sp,
+            height: 80.sp,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: buildAvatarClipOval(_avatarPath),
+          ),
+        ),
+        Text(
+          '点击头像选择',
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
+        ),
+      ],
+    );
+  }
 
-    if (pickedFile != null) {
-      // 复制图片到应用目录
-      final appDir = await getApplicationDocumentsDirectory();
-      final fileName =
-          'character_avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final savedImage =
-          await File(pickedFile.path).copy('${appDir.path}/$fileName');
+  void _showAvatarOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.photo_library),
+            title: const Text('相册'),
+            onTap: () {
+              Navigator.pop(context);
+              _pickImageFromGallery();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.camera_alt),
+            title: const Text('拍照'),
+            onTap: () {
+              Navigator.pop(context);
+              _pickImageFromCamera();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.link),
+            title: const Text('网络图片地址'),
+            onTap: () {
+              Navigator.pop(context);
+              _inputNetworkImageUrl();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.image),
+            title: const Text('选择预设头像'),
+            onTap: () {
+              Navigator.pop(context);
+              _showPresetAvatars();
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
-      setState(() {
-        _avatarPath = savedImage.path;
-      });
-    }
+  void _inputNetworkImageUrl() {
+    final textController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('输入网络图片地址'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: textController,
+              decoration: const InputDecoration(
+                hintText: 'https://example.com/image.jpg',
+                labelText: '图片URL',
+              ),
+              keyboardType: TextInputType.url,
+            ),
+            SizedBox(height: 16.sp),
+            // 预览区域
+            if (textController.text.isNotEmpty)
+              Container(
+                width: 100.sp,
+                height: 100.sp,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8.sp),
+                ),
+                child: Image.network(
+                  textController.text,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(
+                        child: Text('图片加载失败',
+                            style: TextStyle(color: Colors.red)));
+                  },
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (textController.text.isNotEmpty) {
+                setState(() {
+                  _avatarPath = textController.text;
+                });
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _selectModel() async {
@@ -316,6 +415,102 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
       if (mounted) {
         setState(() => isSaving = false);
       }
+    }
+  }
+
+  // 显示预设头像
+  void _showPresetAvatars() {
+    final presetAvatars = [
+      'assets/characters/default_avatar.png',
+      // ... 其他本地预设头像
+
+      // 添加一些网络预设头像
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=256&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?q=80&w=256&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=256&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?q=80&w=256&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?q=80&w=256&auto=format&fit=crop',
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('预设头像(示例)'),
+        content: SizedBox(
+          width: 0.8.sw,
+          height: 0.36.sh,
+          child: GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8.sp,
+              mainAxisSpacing: 8.sp,
+            ),
+            itemCount: presetAvatars.length,
+            itemBuilder: (context, index) {
+              final avatar = presetAvatars[index];
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _avatarPath = avatar;
+                  });
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: buildAvatarClipOval(avatar),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 从相册选择图片
+  Future<void> _pickImageFromGallery() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      // 复制图片到应用目录
+      final appDir = await getApplicationDocumentsDirectory();
+      final fileName =
+          'character_avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final savedImage =
+          await File(pickedFile.path).copy('${appDir.path}/$fileName');
+
+      setState(() {
+        _avatarPath = savedImage.path;
+      });
+    }
+  }
+
+  // 使用相机拍照
+  Future<void> _pickImageFromCamera() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      // 复制图片到应用目录
+      final appDir = await getApplicationDocumentsDirectory();
+      final fileName =
+          'character_avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final savedImage =
+          await File(pickedFile.path).copy('${appDir.path}/$fileName');
+
+      setState(() {
+        _avatarPath = savedImage.path;
+      });
     }
   }
 }
