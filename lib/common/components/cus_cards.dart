@@ -24,7 +24,7 @@ buildCoverCard(
 
         if (!context.mounted) return;
         if (!isGranted) {
-          commonExceptionDialog(context, "异常提示", "无存储授权");
+          commonExceptionDialog(context, "异常提示", "无存储访问授权");
         }
 
         if (routeName != null) {
@@ -100,7 +100,7 @@ class CusCoverCard extends StatelessWidget {
 
           if (!context.mounted) return;
           if (!isGranted) {
-            commonExceptionDialog(context, "异常提示", "无存储授权");
+            commonExceptionDialog(context, "异常提示", "无存储访问授权");
           }
 
           if (routeName != null) {

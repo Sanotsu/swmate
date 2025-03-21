@@ -81,7 +81,7 @@ class CharacterCardItem extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(2.sp),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.2),
+                      color: Colors.blue.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4.sp),
                     ),
                     child: Text(

@@ -37,7 +37,7 @@ class _BriefAIToolsState extends State<BriefAITools> {
                   gradient: LinearGradient(
                     colors: [
                       theme.primaryColor,
-                      theme.primaryColor.withOpacity(0.7),
+                      theme.primaryColor.withValues(alpha: 0.7),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -45,7 +45,7 @@ class _BriefAIToolsState extends State<BriefAITools> {
                   borderRadius: BorderRadius.circular(20.sp),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.primaryColor.withOpacity(0.2),
+                      color: theme.primaryColor.withValues(alpha: 0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -91,7 +91,7 @@ class _BriefAIToolsState extends State<BriefAITools> {
                             "让创意与效率并存，探索AI的无限可能",
                             style: TextStyle(
                               fontSize: 14.sp,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                           ),
                         ],
@@ -101,7 +101,7 @@ class _BriefAIToolsState extends State<BriefAITools> {
                       width: 40.sp,
                       height: 40.sp,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(15.sp),
                       ),
                       child: Icon(

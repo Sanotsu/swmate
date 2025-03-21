@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../models/brief_ai_tools/chat_branch/chat_branch_message.dart';
+import '../../../../models/brief_ai_tools/branch_chat/branch_chat_message.dart';
 
 class BranchTreeDialog extends StatefulWidget {
-  final List<ChatBranchMessage> messages;
+  final List<BranchChatMessage> messages;
   final String currentPath;
   final Function(String) onPathSelected;
 
@@ -56,7 +56,7 @@ class _BranchTreeDialogState extends State<BranchTreeDialog> {
                   SizedBox(width: 16.sp),
                   _buildLegendItem(Colors.green, 'AI响应'),
                   SizedBox(width: 16.sp),
-                  _buildLegendItem(Colors.blue.withOpacity(0.1), '当前选中'),
+                  _buildLegendItem(Colors.blue.withValues(alpha: 0.1), '当前选中'),
                 ],
               ),
             ),
@@ -154,7 +154,7 @@ class _BranchTreeDialogState extends State<BranchTreeDialog> {
   }
 
   Widget _buildBranchTree(BuildContext context) {
-    final sortedMessages = List<ChatBranchMessage>.from(widget.messages)
+    final sortedMessages = List<BranchChatMessage>.from(widget.messages)
       ..sort((a, b) => a.createTime.compareTo(b.createTime));
 
     return _buildTreeNode(
@@ -167,8 +167,8 @@ class _BranchTreeDialogState extends State<BranchTreeDialog> {
 
   Widget _buildTreeNode(
     BuildContext context,
-    List<ChatBranchMessage> nodes,
-    List<ChatBranchMessage> allMessages,
+    List<BranchChatMessage> nodes,
+    List<BranchChatMessage> allMessages,
     int depth,
   ) {
     final availableNodes = nodes
@@ -215,8 +215,8 @@ class _BranchTreeDialogState extends State<BranchTreeDialog> {
                     decoration: BoxDecoration(
                       color: node.branchPath == selectedPath
                           ? (node.role == 'user'
-                              ? Colors.blue.withOpacity(0.1)
-                              : Colors.green.withOpacity(0.1))
+                              ? Colors.blue.withValues(alpha: 0.1)
+                              : Colors.green.withValues(alpha: 0.1))
                           : null,
                       border: Border.all(
                         color: node.role == 'user' ? Colors.blue : Colors.green,
@@ -368,13 +368,13 @@ class _BranchTreeDialogState extends State<BranchTreeDialog> {
             padding: EdgeInsets.symmetric(horizontal: 6.sp, vertical: 0.sp),
             decoration: BoxDecoration(
               color: message.role == 'user'
-                  ? Colors.blue.withOpacity(0.1)
-                  : Colors.green.withOpacity(0.1),
+                  ? Colors.blue.withValues(alpha: 0.1)
+                  : Colors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16.sp),
               border: Border.all(
                 color: message.role == 'user'
-                    ? Colors.blue.withOpacity(0.3)
-                    : Colors.green.withOpacity(0.3),
+                    ? Colors.blue.withValues(alpha: 0.3)
+                    : Colors.green.withValues(alpha: 0.3),
               ),
             ),
             child: Text(

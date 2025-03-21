@@ -39,7 +39,7 @@ class CharacterAvatarPreview extends StatelessWidget {
             borderRadius: BorderRadius.circular(2.sp),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 8.sp,
                 offset: Offset(0, 2.sp),
               ),
@@ -77,7 +77,7 @@ class CharacterAvatarPreview extends StatelessWidget {
           GestureDetector(
             onTap: () => entry.remove(),
             child: Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               width: screenSize.width,
               height: screenSize.height,
             ),
@@ -91,7 +91,7 @@ class CharacterAvatarPreview extends StatelessWidget {
               width: previewWidth,
               height: previewHeight,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.only(
                   topRight: Radius.circular(16.sp),
                 ),

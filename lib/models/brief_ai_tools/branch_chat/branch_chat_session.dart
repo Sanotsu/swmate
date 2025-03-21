@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:objectbox/objectbox.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../common/llm_spec/constant_llm_enum.dart';
-import 'chat_branch_message.dart';
+import 'branch_chat_message.dart';
 
 @Entity()
-class ChatBranchSession {
+class BranchChatSession {
   @Id()
   int id;
 
@@ -55,10 +55,10 @@ class ChatBranchSession {
   }
 
   @Backlink('session')
-  final messages = ToMany<ChatBranchMessage>();
+  final messages = ToMany<BranchChatMessage>();
 
   // 添加默认构造函数
-  ChatBranchSession({
+  BranchChatSession({
     this.id = 0,
     required this.title,
     required this.createTime,
@@ -68,14 +68,14 @@ class ChatBranchSession {
   });
 
   // 添加命名构造函数用于创建新会话
-  factory ChatBranchSession.create({
+  factory BranchChatSession.create({
     required String title,
     required CusBriefLLMSpec llmSpec,
     required LLModelType modelType,
     DateTime? createTime,
     DateTime? updateTime,
   }) {
-    final session = ChatBranchSession(
+    final session = BranchChatSession(
       title: title,
       createTime: createTime ?? DateTime.now(),
       updateTime: updateTime ?? DateTime.now(),

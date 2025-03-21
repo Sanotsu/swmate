@@ -3,6 +3,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../common/components/tool_widget.dart';
+import '../../../common/utils/tools.dart';
 import '../../../models/brief_ai_tools/character_chat/character_card.dart';
 import '../../../models/brief_ai_tools/character_chat/character_chat_session.dart';
 import '../../../models/brief_ai_tools/character_chat/character_store.dart';
@@ -215,7 +216,15 @@ class _CharacterListPageState extends State<CharacterListPage> {
     }
   }
 
-  void _showImportExportDialog() {
+  void _showImportExportDialog() async {
+    bool isGranted = await requestStoragePermission();
+
+    if (!mounted) return;
+    if (!isGranted) {
+      commonExceptionDialog(context, "异常提示", "无存储访问授权");
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

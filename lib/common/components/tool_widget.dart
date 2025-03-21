@@ -40,7 +40,7 @@ buildToolEntrance(
         // 添加阴影效果
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2), // 阴影颜色
+            color: Colors.black.withValues(alpha: 0.2), // 阴影颜色
             spreadRadius: 2, // 阴影的大小
             blurRadius: 5, // 阴影的模糊程度
             offset: Offset(0, 2.sp), // 阴影的偏移量
@@ -477,13 +477,13 @@ Widget buildImageView(
 }
 
 // 生成随机颜色
-Color genRandomColor() =>
-    Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0);
+Color genRandomColor() => Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
+    .withValues(alpha: 1.0);
 
 // 生成随机颜色带透明度
 Color genRandomColorWithOpacity({double? opacity}) =>
     Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
-        .withOpacity(opacity ?? math.Random().nextDouble());
+        .withValues(alpha: opacity ?? math.Random().nextDouble());
 
 // 指定长度的随机字符串
 const _chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';

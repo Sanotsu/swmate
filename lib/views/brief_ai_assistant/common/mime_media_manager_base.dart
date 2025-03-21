@@ -278,7 +278,7 @@ abstract class MimeMediaManagerBaseState<T extends MimeMediaManagerBase>
             Image.file(file, fit: BoxFit.cover),
           if (isSelected)
             Container(
-              color: Colors.blue.withOpacity(0.3),
+              color: Colors.blue.withValues(alpha: 0.3),
               alignment: Alignment.center,
               child: Icon(Icons.check_circle, color: Colors.white, size: 30.sp),
             ),

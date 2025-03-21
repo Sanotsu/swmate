@@ -92,9 +92,6 @@ class ModelManagerService {
                       ApiPlatformAKLabel.USER_INFINI_GEN_STUDIO_API_KEY.name]
                   ?.isNotEmpty ??
               false;
-
-        default:
-          return false;
       }
     }).toList();
   }

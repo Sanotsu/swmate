@@ -35,13 +35,18 @@ android {
     namespace = "com.swm.swmate"
     compileSdk = flutter.compileSdkVersion
     // 安卓14(API 34) - java17 - AGP8
-    compileSdkVersion 34
+    // SDK 平台版本说明: https://developer.android.com/tools/releases/platforms?hl=zh-cn
+    // compileSdkVersion 34
     // ndkVersion = flutter.ndkVersion
-    ndkVersion = "26.1.10909125"
+    // ndkVersion = "26.1.10909125"
+
+    // Android 15(API 35)
+    compileSdkVersion 35
+    ndkVersion "27.2.12479018"
 
     compileOptions {
-    sourceCompatibility JavaVersion.VERSION_17
-    targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:swmate/common/components/tool_widget.dart';
+import '../../../../common/utils/tools.dart';
 import '../../../../models/brief_ai_tools/character_chat/character_chat_session.dart';
 import '../../../../models/brief_ai_tools/character_chat/character_card.dart';
 import '../../_chat_components/_small_tool_widgets.dart';
@@ -229,7 +230,15 @@ class _SessionHistoryDrawerState extends State<SessionHistoryDrawer> {
   }
 
   // 显示导出选项对话框
-  void _showExportOptionsDialog() {
+  void _showExportOptionsDialog() async {
+    bool isGranted = await requestStoragePermission();
+
+    if (!mounted) return;
+    if (!isGranted) {
+      commonExceptionDialog(context, "异常提示", "无存储访问授权");
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

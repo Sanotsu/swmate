@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../common/llm_spec/constant_llm_enum.dart';
-import '../../../../models/brief_ai_tools/chat_branch/chat_branch_session.dart';
+import '../../../../models/brief_ai_tools/branch_chat/branch_chat_session.dart';
 
 class ChatHistoryDrawer extends StatelessWidget {
   // 历史对话列表
-  final List<ChatBranchSession> sessions;
+  final List<BranchChatSession> sessions;
   // 当前选中的对话
   final int? currentSessionId;
   // 选中对话的回调
-  final Function(ChatBranchSession) onSessionSelected;
+  final Function(BranchChatSession) onSessionSelected;
   // 删除或重命名对话后，要刷新对话列表
-  final Function(ChatBranchSession, String) onRefresh;
+  final Function(BranchChatSession, String) onRefresh;
 
   const ChatHistoryDrawer({
     super.key,
@@ -65,7 +65,7 @@ class ChatHistoryDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildChatHistoryItem(ChatBranchSession session, bool isSelected) {
+  Widget _buildChatHistoryItem(BranchChatSession session, bool isSelected) {
     return GestureDetector(
       child: Builder(
         builder: (context) => GestureDetector(
@@ -113,7 +113,8 @@ class ChatHistoryDrawer extends StatelessWidget {
               style: TextStyle(fontSize: 12.sp),
             ),
             selected: isSelected,
-            selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
+            selectedTileColor:
+                Theme.of(context).primaryColor.withValues(alpha: 0.1),
             onTap: () {
               onSessionSelected(session);
               Navigator.pop(context);
@@ -140,7 +141,7 @@ class ChatHistoryDrawer extends StatelessWidget {
   // 修改标题
   Future<void> _editSessionTitle(
     BuildContext context,
-    ChatBranchSession session,
+    BranchChatSession session,
   ) async {
     final controller = TextEditingController(text: session.title);
     final newTitle = await showDialog<String>(
@@ -178,7 +179,7 @@ class ChatHistoryDrawer extends StatelessWidget {
   // 删除对话
   Future<void> _deleteSession(
     BuildContext context,
-    ChatBranchSession session,
+    BranchChatSession session,
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,

@@ -197,11 +197,6 @@ class _CharacterInputBarState extends State<CharacterInputBar> {
     }
   }
 
-  // 处理语音输入
-  Future<void> _handleVoiceInput() async {
-    // TODO: 实现语音输入
-  }
-
   // 处理文件上传
   Future<void> _handleFileUpload() async {
     // TODO: 实现文件上传

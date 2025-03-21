@@ -347,7 +347,7 @@ abstract class MediaManagerBaseState<T extends MediaManagerBase>
           ),
           if (isSelected)
             Container(
-              color: Colors.blue.withOpacity(0.3),
+              color: Colors.blue.withValues(alpha: 0.3),
               alignment: Alignment.center,
               child: Icon(Icons.check_circle, color: Colors.white, size: 30.sp),
             ),

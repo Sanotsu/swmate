@@ -257,10 +257,10 @@ https://www.ars.usda.gov/northeast-area/beltsville-md-bhnrc/beltsville-human-nut
                   return Theme.of(context)
                       .colorScheme
                       .primary
-                      .withOpacity(0.08);
+                      .withValues(alpha: 0.08);
                 }
                 if (index.isEven) {
-                  return Colors.grey[500]!.withOpacity(0.3);
+                  return Colors.grey[500]!.withValues(alpha: 0.3);
                 }
                 return null;
               }),

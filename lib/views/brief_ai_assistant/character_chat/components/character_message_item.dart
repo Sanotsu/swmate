@@ -46,8 +46,8 @@ class CharacterMessageItem extends StatelessWidget {
                 padding: EdgeInsets.all(8.sp),
                 decoration: BoxDecoration(
                   color: isUser
-                      ? Theme.of(context).primaryColor.withOpacity(0.1)
-                      : Colors.grey.withOpacity(0.1),
+                      ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                      : Colors.grey.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12.sp),
                 ),
                 child: Column(
@@ -81,7 +81,8 @@ class CharacterMessageItem extends StatelessWidget {
           if (isUser)
             CircleAvatar(
               radius: 20.sp,
-              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+              backgroundColor:
+                  Theme.of(context).primaryColor.withValues(alpha: 0.2),
               child: Icon(Icons.person, color: Theme.of(context).primaryColor),
             ),
         ],
@@ -93,7 +94,7 @@ class CharacterMessageItem extends StatelessWidget {
     if (character == null) {
       return CircleAvatar(
         radius: 20.sp,
-        backgroundColor: Colors.grey.withOpacity(0.2),
+        backgroundColor: Colors.grey.withValues(alpha: 0.2),
         child: Icon(Icons.smart_toy, color: Colors.grey),
       );
     }
@@ -132,7 +133,7 @@ class CharacterMessageItem extends StatelessWidget {
           ),
           code: TextStyle(
             fontSize: 12.sp,
-            backgroundColor: Colors.grey.withOpacity(0.2),
+            backgroundColor: Colors.grey.withValues(alpha: 0.2),
           ),
         ),
       ),

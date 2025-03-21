@@ -13,7 +13,7 @@ class LoadingOverlay {
         return Container(
           width: double.infinity,
           height: double.infinity,
-          color: Colors.black.withOpacity(0.8),
+          color: Colors.black.withValues(alpha: 0.8),
           child: Center(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,

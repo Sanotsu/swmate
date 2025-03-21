@@ -4,7 +4,7 @@ import 'dart:ui';
 
 import '../common/llm_spec/cus_brief_llm_model.dart';
 import '../common/llm_spec/constant_llm_enum.dart';
-import '../models/brief_ai_tools/chat_branch/chat_branch_message.dart';
+import '../models/brief_ai_tools/branch_chat/branch_chat_message.dart';
 import '../models/brief_ai_tools/chat_completions/chat_completion_response.dart';
 import '../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 import 'dart:io';
@@ -52,8 +52,6 @@ class ChatService {
         return 'https://api.siliconflow.cn/v1';
       case ApiPlatform.infini:
         return 'https://cloud.infini-ai.com/maas/v1';
-      default:
-        throw Exception('不支持的平台');
     }
   }
 
@@ -106,8 +104,6 @@ class ChatService {
           apiKey =
               userKeys[ApiPlatformAKLabel.USER_INFINI_GEN_STUDIO_API_KEY.name];
           break;
-        default:
-          throw Exception('不支持的平台');
       }
 
       if (apiKey == null || apiKey.isEmpty) {
@@ -188,7 +184,7 @@ class ChatService {
   static Future<(Stream<ChatCompletionResponse>, VoidCallback)>
       sendBranchMessage(
     CusBriefLLMSpec model,
-    List<ChatBranchMessage> messages, {
+    List<BranchChatMessage> messages, {
     bool stream = true,
     Map<String, dynamic>? advancedOptions,
   }) async {
@@ -251,7 +247,7 @@ class ChatService {
   }
 }
 
-List<Map<String, dynamic>> _buildAPIContent(List<ChatBranchMessage> messages) {
+List<Map<String, dynamic>> _buildAPIContent(List<BranchChatMessage> messages) {
   final messagesList = messages.map((m) {
     // 初始化内容列表
     final contentList = [];

@@ -1,25 +1,29 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'chat_export_data.dart';
+part of 'branch_chat_export_data.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-ChatExportData _$ChatExportDataFromJson(Map<String, dynamic> json) =>
-    ChatExportData(
+BranchChatExportData _$BranchChatExportDataFromJson(
+        Map<String, dynamic> json) =>
+    BranchChatExportData(
       sessions: (json['sessions'] as List<dynamic>)
-          .map((e) => ChatSessionExport.fromJson(e as Map<String, dynamic>))
+          .map((e) =>
+              BranchChatSessionExport.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
-Map<String, dynamic> _$ChatExportDataToJson(ChatExportData instance) =>
+Map<String, dynamic> _$BranchChatExportDataToJson(
+        BranchChatExportData instance) =>
     <String, dynamic>{
       'sessions': instance.sessions.map((e) => e.toJson()).toList(),
     };
 
-ChatSessionExport _$ChatSessionExportFromJson(Map<String, dynamic> json) =>
-    ChatSessionExport(
+BranchChatSessionExport _$BranchChatSessionExportFromJson(
+        Map<String, dynamic> json) =>
+    BranchChatSessionExport(
       id: (json['id'] as num).toInt(),
       title: json['title'] as String,
       createTime: DateTime.parse(json['createTime'] as String),
@@ -28,11 +32,13 @@ ChatSessionExport _$ChatSessionExportFromJson(Map<String, dynamic> json) =>
           CusBriefLLMSpec.fromJson(json['llmSpec'] as Map<String, dynamic>),
       modelType: $enumDecode(_$LLModelTypeEnumMap, json['modelType']),
       messages: (json['messages'] as List<dynamic>)
-          .map((e) => ChatMessageExport.fromJson(e as Map<String, dynamic>))
+          .map((e) =>
+              BranchChatMessageExport.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
-Map<String, dynamic> _$ChatSessionExportToJson(ChatSessionExport instance) =>
+Map<String, dynamic> _$BranchChatSessionExportToJson(
+        BranchChatSessionExport instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
@@ -59,8 +65,9 @@ const _$LLModelTypeEnumMap = {
   LLModelType.omni: 'omni',
 };
 
-ChatMessageExport _$ChatMessageExportFromJson(Map<String, dynamic> json) =>
-    ChatMessageExport(
+BranchChatMessageExport _$BranchChatMessageExportFromJson(
+        Map<String, dynamic> json) =>
+    BranchChatMessageExport(
       messageId: json['messageId'] as String,
       role: json['role'] as String,
       content: json['content'] as String,
@@ -80,7 +87,8 @@ ChatMessageExport _$ChatMessageExportFromJson(Map<String, dynamic> json) =>
       parentMessageId: json['parentMessageId'] as String?,
     );
 
-Map<String, dynamic> _$ChatMessageExportToJson(ChatMessageExport instance) =>
+Map<String, dynamic> _$BranchChatMessageExportToJson(
+        BranchChatMessageExport instance) =>
     <String, dynamic>{
       'messageId': instance.messageId,
       'role': instance.role,

@@ -318,11 +318,11 @@ class _ModelListState extends State<ModelList> {
                       return Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(0.08);
+                          .withValues(alpha: 0.08);
                     }
                     // 但修改偶数行为灰色
                     if (index.isEven) {
-                      return Colors.grey.withOpacity(0.3);
+                      return Colors.grey.withValues(alpha: 0.3);
                     }
                     // 对其他状态和奇数行使用默认值
                     return null;

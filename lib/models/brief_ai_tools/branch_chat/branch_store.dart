@@ -3,8 +3,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:proste_logger/proste_logger.dart';
 import '../../../objectbox.g.dart';
-import 'chat_branch_message.dart';
-import 'chat_branch_session.dart';
+import 'branch_chat_message.dart';
+import 'branch_chat_session.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
 import '../../../common/llm_spec/constant_llm_enum.dart';
 
@@ -15,10 +15,10 @@ class BranchStore {
   late final Store store;
 
   /// 消息 Box
-  late final Box<ChatBranchMessage> messageBox;
+  late final Box<BranchChatMessage> messageBox;
 
   /// 会话 Box
-  late final Box<ChatBranchSession> sessionBox;
+  late final Box<BranchChatSession> sessionBox;
 
   /// 单例实例
   static BranchStore? _instance;
@@ -46,8 +46,8 @@ class BranchStore {
       }
 
       store = await openStore(directory: dbDirectory);
-      messageBox = store.box<ChatBranchMessage>();
-      sessionBox = store.box<ChatBranchSession>();
+      messageBox = store.box<BranchChatMessage>();
+      sessionBox = store.box<BranchChatSession>();
     } catch (e) {
       pl.e('初始化 ObjectBox 失败: $e');
       rethrow;
@@ -55,14 +55,14 @@ class BranchStore {
   }
 
   /// 创建新会话
-  Future<ChatBranchSession> createSession(
+  Future<BranchChatSession> createSession(
     String title, {
     required CusBriefLLMSpec llmSpec,
     required LLModelType modelType,
     DateTime? createTime,
     DateTime? updateTime,
   }) async {
-    final session = ChatBranchSession.create(
+    final session = BranchChatSession.create(
       title: title,
       llmSpec: llmSpec,
       modelType: modelType,
@@ -75,11 +75,11 @@ class BranchStore {
   }
 
   /// 添加新消息
-  Future<ChatBranchMessage> addMessage({
-    required ChatBranchSession session,
+  Future<BranchChatMessage> addMessage({
+    required BranchChatSession session,
     required String content,
     required String role,
-    ChatBranchMessage? parent,
+    BranchChatMessage? parent,
     String? reasoningContent,
     int? thinkingDuration,
     String? modelLabel,
@@ -89,7 +89,7 @@ class BranchStore {
     String? videosUrl,
   }) async {
     try {
-      final message = ChatBranchMessage(
+      final message = BranchChatMessage(
         messageId: DateTime.now().millisecondsSinceEpoch.toString(),
         content: content,
         role: role,
@@ -128,10 +128,10 @@ class BranchStore {
   }
 
   /// 获取会话的所有消息
-  List<ChatBranchMessage> getSessionMessages(int sessionId) {
+  List<BranchChatMessage> getSessionMessages(int sessionId) {
     try {
       final query = messageBox
-          .query(ChatBranchMessage_.session.equals(sessionId))
+          .query(BranchChatMessage_.session.equals(sessionId))
           .build();
       final messages = query.find();
       // print('记录编号 $sessionId 找到 ${messages.length} 条消息');
@@ -143,28 +143,28 @@ class BranchStore {
   }
 
   /// 获取指定分支路径的消息
-  List<ChatBranchMessage> getMessagesByBranchPath(
+  List<BranchChatMessage> getMessagesByBranchPath(
     int sessionId,
     String branchPath,
   ) {
     final query = messageBox
-        .query(ChatBranchMessage_.session.equals(sessionId) &
-            ChatBranchMessage_.branchPath.startsWith(branchPath))
+        .query(BranchChatMessage_.session.equals(sessionId) &
+            BranchChatMessage_.branchPath.startsWith(branchPath))
         .build();
     return query.find()..sort((a, b) => a.createTime.compareTo(b.createTime));
   }
 
   /// 更新消息内容
-  Future<void> updateMessage(ChatBranchMessage message) async {
+  Future<void> updateMessage(BranchChatMessage message) async {
     messageBox.put(message);
   }
 
   /// 删除消息及其所有子分支
-  Future<void> deleteMessageWithBranches(ChatBranchMessage message) async {
+  Future<void> deleteMessageWithBranches(BranchChatMessage message) async {
     final branchPath = message.branchPath;
 
     final branchMessages = messageBox
-        .query(ChatBranchMessage_.branchPath.startsWith(branchPath))
+        .query(BranchChatMessage_.branchPath.startsWith(branchPath))
         .build()
         .find();
 
@@ -178,10 +178,10 @@ class BranchStore {
   }
 
   /// 删除会话及其所有消息
-  Future<void> deleteSession(ChatBranchSession session) async {
+  Future<void> deleteSession(BranchChatSession session) async {
     // 删除会话的所有消息
     final messages = messageBox
-        .query(ChatBranchMessage_.session.equals(session.id))
+        .query(BranchChatMessage_.session.equals(session.id))
         .build()
         .find();
     messageBox.removeMany(messages.map((m) => m.id).toList());

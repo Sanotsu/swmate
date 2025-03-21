@@ -445,11 +445,11 @@ class _DishJsonImportState extends State<DishJsonImport> {
                     return Theme.of(context)
                         .colorScheme
                         .primary
-                        .withOpacity(0.08);
+                        .withValues(alpha: 0.08);
                   }
                   // Even rows will have a grey color.
                   if (index.isEven) {
-                    return Colors.grey.withOpacity(0.3);
+                    return Colors.grey.withValues(alpha: 0.3);
                   }
                   return null; // Use default value for other states and odd rows.
                 }),

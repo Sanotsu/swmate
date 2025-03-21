@@ -15,7 +15,7 @@ import 'services/model_manager_service.dart';
 import 'services/network_service.dart';
 import 'views/home.dart';
 import 'services/cus_get_storage.dart';
-import 'models/brief_ai_tools/chat_branch/branch_store.dart';
+import 'models/brief_ai_tools/branch_chat/branch_store.dart';
 
 GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

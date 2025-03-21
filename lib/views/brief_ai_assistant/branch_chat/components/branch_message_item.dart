@@ -6,15 +6,15 @@ import 'package:intl/intl.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/components/voice_chat_bubble.dart';
 import '../../../../common/constants/constants.dart';
-import '../../../../models/brief_ai_tools/chat_branch/chat_branch_message.dart';
+import '../../../../models/brief_ai_tools/branch_chat/branch_chat_message.dart';
 
 class BranchMessageItem extends StatelessWidget {
   // 用于展示的消息
-  final ChatBranchMessage message;
+  final BranchChatMessage message;
   final bool? isUseBgImage;
 
   // 长按消息后，点击了消息体处的回调
-  final Function(ChatBranchMessage, LongPressStartDetails)? onLongPress;
+  final Function(BranchChatMessage, LongPressStartDetails)? onLongPress;
 
   const BranchMessageItem({
     super.key,
@@ -157,7 +157,7 @@ class BranchMessageItem extends StatelessWidget {
   }
 
   // DS 的 R 系列有深度思考部分，单独展示
-  Widget _buildThinkingProcess(ChatBranchMessage message) {
+  Widget _buildThinkingProcess(BranchChatMessage message) {
     // 创建一个基础的 TextStyle，深度思考的文字颜色和大小
     final tempStyle = TextStyle(color: Colors.black54, fontSize: 13.5.sp);
 

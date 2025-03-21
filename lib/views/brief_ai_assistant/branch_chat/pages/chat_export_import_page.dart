@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:swmate/common/components/tool_widget.dart';
-import '../../../../models/brief_ai_tools/chat_branch/chat_branch_message.dart';
-import '../../../../models/brief_ai_tools/chat_branch/chat_export_data.dart';
-import '../../../../models/brief_ai_tools/chat_branch/branch_store.dart';
+import '../../../../models/brief_ai_tools/branch_chat/branch_chat_message.dart';
+import '../../../../models/brief_ai_tools/branch_chat/branch_chat_export_data.dart';
+import '../../../../models/brief_ai_tools/branch_chat/branch_store.dart';
 
 class ChatExportImportPage extends StatefulWidget {
   const ChatExportImportPage({super.key});
@@ -130,9 +130,9 @@ class _ChatExportImportPageState extends State<ChatExportImportPage> {
       final sessions = store.sessionBox.getAll();
 
       // 2. 转换为导出格式
-      final exportData = ChatExportData(
+      final exportData = BranchChatExportData(
         sessions: sessions
-            .map((session) => ChatSessionExport.fromSession(session))
+            .map((session) => BranchChatSessionExport.fromSession(session))
             .toList(),
       );
 
@@ -207,7 +207,7 @@ class _ChatExportImportPageState extends State<ChatExportImportPage> {
         final jsonData = json.decode(jsonString);
 
         // 3. 解析数据
-        final importData = ChatExportData.fromJson(jsonData);
+        final importData = BranchChatExportData.fromJson(jsonData);
 
         // 4. 导入到数据库
         final store = await BranchStore.create();
@@ -242,7 +242,7 @@ class _ChatExportImportPageState extends State<ChatExportImportPage> {
           );
 
           // 创建消息映射表(用于建立父子关系)
-          final messageMap = <String, ChatBranchMessage>{};
+          final messageMap = <String, BranchChatMessage>{};
 
           // 按深度排序消息，确保父消息先创建
           final sortedMessages = sessionExport.messages.toList()

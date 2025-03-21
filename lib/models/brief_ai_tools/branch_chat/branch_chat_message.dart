@@ -1,8 +1,8 @@
 import 'package:objectbox/objectbox.dart';
-import 'chat_branch_session.dart';
+import 'branch_chat_session.dart';
 
 @Entity()
-class ChatBranchMessage {
+class BranchChatMessage {
   @Id(assignable: true)
   int id;
 
@@ -24,17 +24,17 @@ class ChatBranchMessage {
 
   // 树形结构关系
   @Backlink('parent')
-  final children = ToMany<ChatBranchMessage>();
+  final children = ToMany<BranchChatMessage>();
 
-  final parent = ToOne<ChatBranchMessage>();
-  final session = ToOne<ChatBranchSession>();
+  final parent = ToOne<BranchChatMessage>();
+  final session = ToOne<BranchChatSession>();
 
   // 分支相关
   int branchIndex; // 当前分支在同级分支中的索引
   int depth; // 分支深度，根节点为0
   String branchPath; // 存储从根到当前节点的分支路径，如 "0/1/0"
 
-  ChatBranchMessage({
+  BranchChatMessage({
     this.id = 0,
     required this.messageId,
     required this.role,

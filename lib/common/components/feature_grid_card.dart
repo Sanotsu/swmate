@@ -24,7 +24,7 @@ class FeatureGridCard extends StatelessWidget {
 
     return Card(
       elevation: 3,
-      shadowColor: color.withOpacity(0.3),
+      shadowColor: color.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20.sp),
       ),
@@ -47,7 +47,7 @@ class FeatureGridCard extends StatelessWidget {
                     width: 64.sp,
                     height: 64.sp,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16.sp),
                     ),
                     child: Icon(
@@ -82,7 +82,7 @@ class FeatureGridCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12.sp),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.red.withOpacity(0.3),
+                        color: Colors.red.withValues(alpha: 0.3),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),

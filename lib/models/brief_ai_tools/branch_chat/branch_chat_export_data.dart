@@ -1,34 +1,34 @@
 import 'package:json_annotation/json_annotation.dart';
 import '../../../common/llm_spec/constant_llm_enum.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
-import 'chat_branch_message.dart';
-import 'chat_branch_session.dart';
+import 'branch_chat_message.dart';
+import 'branch_chat_session.dart';
 
-part 'chat_export_data.g.dart';
+part 'branch_chat_export_data.g.dart';
 
 @JsonSerializable(explicitToJson: true)
-class ChatExportData {
-  final List<ChatSessionExport> sessions;
+class BranchChatExportData {
+  final List<BranchChatSessionExport> sessions;
 
-  ChatExportData({required this.sessions});
+  BranchChatExportData({required this.sessions});
 
-  factory ChatExportData.fromJson(Map<String, dynamic> json) =>
-      _$ChatExportDataFromJson(json);
+  factory BranchChatExportData.fromJson(Map<String, dynamic> json) =>
+      _$BranchChatExportDataFromJson(json);
 
-  Map<String, dynamic> toJson() => _$ChatExportDataToJson(this);
+  Map<String, dynamic> toJson() => _$BranchChatExportDataToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
-class ChatSessionExport {
+class BranchChatSessionExport {
   final int id;
   final String title;
   final DateTime createTime;
   final DateTime updateTime;
   final CusBriefLLMSpec llmSpec;
   final LLModelType modelType;
-  final List<ChatMessageExport> messages;
+  final List<BranchChatMessageExport> messages;
 
-  ChatSessionExport({
+  BranchChatSessionExport({
     required this.id,
     required this.title,
     required this.createTime,
@@ -38,8 +38,8 @@ class ChatSessionExport {
     required this.messages,
   });
 
-  factory ChatSessionExport.fromSession(ChatBranchSession session) {
-    return ChatSessionExport(
+  factory BranchChatSessionExport.fromSession(BranchChatSession session) {
+    return BranchChatSessionExport(
       id: session.id,
       title: session.title,
       createTime: session.createTime,
@@ -47,19 +47,19 @@ class ChatSessionExport {
       llmSpec: session.llmSpec,
       modelType: session.modelType,
       messages: session.messages
-          .map((msg) => ChatMessageExport.fromMessage(msg))
+          .map((msg) => BranchChatMessageExport.fromMessage(msg))
           .toList(),
     );
   }
 
-  factory ChatSessionExport.fromJson(Map<String, dynamic> json) =>
-      _$ChatSessionExportFromJson(json);
+  factory BranchChatSessionExport.fromJson(Map<String, dynamic> json) =>
+      _$BranchChatSessionExportFromJson(json);
 
-  Map<String, dynamic> toJson() => _$ChatSessionExportToJson(this);
+  Map<String, dynamic> toJson() => _$BranchChatSessionExportToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
-class ChatMessageExport {
+class BranchChatMessageExport {
   final String messageId;
   final String role;
   final String content;
@@ -78,7 +78,7 @@ class ChatMessageExport {
   final String branchPath;
   final String? parentMessageId;
 
-  ChatMessageExport({
+  BranchChatMessageExport({
     required this.messageId,
     required this.role,
     required this.content,
@@ -98,8 +98,8 @@ class ChatMessageExport {
     this.parentMessageId,
   });
 
-  factory ChatMessageExport.fromMessage(ChatBranchMessage message) {
-    return ChatMessageExport(
+  factory BranchChatMessageExport.fromMessage(BranchChatMessage message) {
+    return BranchChatMessageExport(
       messageId: message.messageId,
       role: message.role,
       content: message.content,
@@ -120,8 +120,8 @@ class ChatMessageExport {
     );
   }
 
-  factory ChatMessageExport.fromJson(Map<String, dynamic> json) =>
-      _$ChatMessageExportFromJson(json);
+  factory BranchChatMessageExport.fromJson(Map<String, dynamic> json) =>
+      _$BranchChatMessageExportFromJson(json);
 
-  Map<String, dynamic> toJson() => _$ChatMessageExportToJson(this);
-} 
+  Map<String, dynamic> toJson() => _$BranchChatMessageExportToJson(this);
+}

@@ -4,109 +4,109 @@
   "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
   "entities": [
     {
-      "id": "1:2127030404102637988",
-      "lastPropertyId": "19:7514134714972107149",
-      "name": "ChatBranchMessage",
+      "id": "1:3047237572509652841",
+      "lastPropertyId": "19:8750989621969680801",
+      "name": "BranchChatMessage",
       "properties": [
         {
-          "id": "1:5034891616928609895",
+          "id": "1:339411572049515704",
           "name": "id",
           "type": 6,
           "flags": 129
         },
         {
-          "id": "2:2078225010397403663",
+          "id": "2:474467149007688409",
           "name": "messageId",
           "type": 9
         },
         {
-          "id": "3:6617092622081884333",
+          "id": "3:4765159438889649011",
           "name": "role",
           "type": 9
         },
         {
-          "id": "4:3981045080655464759",
+          "id": "4:5314958183163449649",
           "name": "content",
           "type": 9
         },
         {
-          "id": "5:8923336397568272232",
+          "id": "5:1425602038126534494",
           "name": "createTime",
           "type": 10
         },
         {
-          "id": "6:8968532476732619115",
+          "id": "6:7317090807679317222",
           "name": "reasoningContent",
           "type": 9
         },
         {
-          "id": "7:2284934914308616488",
+          "id": "7:3745089543038842857",
           "name": "thinkingDuration",
           "type": 6
         },
         {
-          "id": "8:3509371442225998974",
+          "id": "8:47240639300403924",
           "name": "contentVoicePath",
           "type": 9
         },
         {
-          "id": "9:7071169590072817388",
+          "id": "9:8802678901233772595",
           "name": "imagesUrl",
           "type": 9
         },
         {
-          "id": "10:9217147676745072641",
+          "id": "10:3426295208981442202",
           "name": "videosUrl",
           "type": 9
         },
         {
-          "id": "11:2331499489864592243",
+          "id": "11:5013031557870132229",
           "name": "promptTokens",
           "type": 6
         },
         {
-          "id": "12:1573987285589671944",
+          "id": "12:5168818522325420154",
           "name": "completionTokens",
           "type": 6
         },
         {
-          "id": "13:5508902199833973412",
+          "id": "13:6492649705177176682",
           "name": "totalTokens",
           "type": 6
         },
         {
-          "id": "14:1080517223733281097",
+          "id": "14:571814119150973710",
           "name": "modelLabel",
           "type": 9
         },
         {
-          "id": "15:32469552263947423",
+          "id": "15:1671602137236883087",
           "name": "parentId",
           "type": 11,
           "flags": 520,
-          "indexId": "1:7971225528498791416",
-          "relationTarget": "ChatBranchMessage"
+          "indexId": "1:9053290530196191085",
+          "relationTarget": "BranchChatMessage"
         },
         {
-          "id": "16:3698241616120676122",
+          "id": "16:663546448106677417",
           "name": "sessionId",
           "type": 11,
           "flags": 520,
-          "indexId": "2:7800221060817907772",
-          "relationTarget": "ChatBranchSession"
+          "indexId": "2:2481538549836732061",
+          "relationTarget": "BranchChatSession"
         },
         {
-          "id": "17:7371990953415064768",
+          "id": "17:8501721726382971606",
           "name": "branchIndex",
           "type": 6
         },
         {
-          "id": "18:7112531117183920306",
+          "id": "18:4105846931766047246",
           "name": "depth",
           "type": 6
         },
         {
-          "id": "19:7514134714972107149",
+          "id": "19:8750989621969680801",
           "name": "branchPath",
           "type": 9
         }
@@ -114,38 +114,38 @@
       "relations": []
     },
     {
-      "id": "2:2521936469279171401",
-      "lastPropertyId": "6:2000424337566661195",
-      "name": "ChatBranchSession",
+      "id": "2:9136345784127612229",
+      "lastPropertyId": "6:2593827212106411308",
+      "name": "BranchChatSession",
       "properties": [
         {
-          "id": "1:2889391495391716352",
+          "id": "1:3243340140169381156",
           "name": "id",
           "type": 6,
           "flags": 1
         },
         {
-          "id": "2:724632911141936513",
+          "id": "2:3904890940987613341",
           "name": "title",
           "type": 9
         },
         {
-          "id": "3:3562076757453126373",
+          "id": "3:8374268802049978631",
           "name": "createTime",
           "type": 10
         },
         {
-          "id": "4:7180177199703873029",
+          "id": "4:902315130992807966",
           "name": "updateTime",
           "type": 10
         },
         {
-          "id": "5:486859509915416663",
+          "id": "5:6647624877561076107",
           "name": "llmSpecJson",
           "type": 9
         },
         {
-          "id": "6:2000424337566661195",
+          "id": "6:2593827212106411308",
           "name": "modelTypeStr",
           "type": 9
         }
@@ -153,8 +153,8 @@
       "relations": []
     }
   ],
-  "lastEntityId": "2:2521936469279171401",
-  "lastIndexId": "2:7800221060817907772",
+  "lastEntityId": "2:9136345784127612229",
+  "lastIndexId": "2:2481538549836732061",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

@@ -55,7 +55,7 @@ class MomoyuInfoResp<T> {
 }
 
 ///
-/// data 可能是一个 list<MMYCateData> 或者 list<MMYData>
+/// data 可能是一个 list< MMYCateData > 或者 list< MMYData >
 /// 结果列表也用泛型
 ///
 @JsonSerializable(genericArgumentFactories: true, explicitToJson: true)

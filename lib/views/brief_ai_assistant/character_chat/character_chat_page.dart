@@ -1321,41 +1321,35 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
       await for (final response in stream) {
         if (response.choices.isNotEmpty) {
-          final delta = response.choices[0].delta;
-          if (delta != null && delta['content'] != null) {
-            // fullContent += delta['content']!;
+          fullContent += response.cusText;
+          fullReasoningContent += response.choices.isNotEmpty
+              ? (response.choices.first.delta?["reasoning_content"] ?? '')
+              : '';
 
-            fullContent += response.cusText;
-            fullReasoningContent += response.choices.isNotEmpty
-                ? (response.choices.first.delta?["reasoning_content"] ?? '')
-                : '';
+          // 计算思考时间(从发起调用开始，到当流式内容不为空时计算结束)
+          if (endTime == null && fullContent.isNotEmpty) {
+            endTime = DateTime.now();
+            thinkingDuration = endTime.difference(startTime).inMilliseconds;
+          }
 
-            // 计算思考时间(从发起调用开始，到当流式内容不为空时计算结束)
-            if (endTime == null && fullContent.isNotEmpty) {
-              endTime = DateTime.now();
-              thinkingDuration = endTime.difference(startTime).inMilliseconds;
-            }
+          // 更新消息内容
+          await _store.updateMessage(
+            session: _session,
+            message: aiMessage,
+            content: fullContent,
+            reasoningContent: fullReasoningContent,
+            thinkingDuration: thinkingDuration,
+          );
 
-            // 更新消息内容
-            await _store.updateMessage(
-              session: _session,
-              message: aiMessage,
-              content: fullContent,
-              reasoningContent: fullReasoningContent,
-              thinkingDuration: thinkingDuration,
-            );
+          // 更新UI
+          if (mounted) {
+            setState(() {
+              _session = _store.sessions.firstWhere((s) => s.id == _session.id);
+            });
 
-            // 更新UI
-            if (mounted) {
-              setState(() {
-                _session =
-                    _store.sessions.firstWhere((s) => s.id == _session.id);
-              });
-
-              // 如果用户没有手动滚动，则自动滚动到底部
-              if (!isUserScrolling) {
-                resetContentHeight();
-              }
+            // 如果用户没有手动滚动，则自动滚动到底部
+            if (!isUserScrolling) {
+              resetContentHeight();
             }
           }
         }
@@ -1428,7 +1422,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
                 padding: EdgeInsets.symmetric(vertical: 16.sp),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(14.sp),
                     //
                   ),

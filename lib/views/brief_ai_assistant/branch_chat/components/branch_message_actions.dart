@@ -3,13 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../common/constants/constants.dart';
-import '../../../../models/brief_ai_tools/chat_branch/chat_branch_message.dart';
+import '../../../../models/brief_ai_tools/branch_chat/branch_chat_message.dart';
 
 class BranchMessageActions extends StatelessWidget {
   // 当前消息
-  final ChatBranchMessage message;
+  final BranchChatMessage message;
   // 所有消息
-  final List<ChatBranchMessage> messages;
+  final List<BranchChatMessage> messages;
   // 重新生成回调
   final VoidCallback onRegenerate;
   // 是否正在重新生成
@@ -21,7 +21,7 @@ class BranchMessageActions extends StatelessWidget {
   // 总分支数量
   final int totalBranches;
   // 切换分支回调
-  final Function(ChatBranchMessage, int)? onSwitchBranch;
+  final Function(BranchChatMessage, int)? onSwitchBranch;
 
   const BranchMessageActions({
     super.key,
@@ -36,7 +36,7 @@ class BranchMessageActions extends StatelessWidget {
   });
 
   // 获取实际可用的分支数量和索引
-  List<ChatBranchMessage> _getAvailableSiblings() {
+  List<BranchChatMessage> _getAvailableSiblings() {
     if (!hasMultipleBranches) return [message];
 
     // 获取同级分支并按实际索引排序
