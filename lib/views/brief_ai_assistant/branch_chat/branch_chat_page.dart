@@ -23,6 +23,7 @@ import '../../../services/cus_get_storage.dart';
 import '../_chat_components/_small_tool_widgets.dart';
 import '../chat/components/model_selector.dart';
 
+import 'components/branch_chat_background_picker.dart';
 import 'components/branch_message_item.dart';
 import 'components/branch_model_filter.dart';
 import 'components/branch_tree_dialog.dart';
@@ -30,7 +31,7 @@ import 'components/chat_input_bar.dart';
 import 'components/chat_history_drawer.dart';
 import 'components/text_selection_dialog.dart';
 import 'components/branch_message_actions.dart';
-import 'components/chat_background_picker.dart';
+
 import 'pages/add_model_page.dart';
 import 'pages/chat_export_import_page.dart';
 
@@ -52,6 +53,8 @@ class _BranchChatPageState extends State<BranchChatPage>
   final BranchManager branchManager = BranchManager();
   // 分支存储器
   late final BranchStore store;
+  // 缓存存储器
+  final MyGetStorage _storage = MyGetStorage();
 
   // 输入框控制器
   final TextEditingController inputController = TextEditingController();
@@ -354,14 +357,31 @@ class _BranchChatPageState extends State<BranchChatPage>
     resetContentHeight();
   }
 
-  // 加载背景设置
+  // 加载背景设置 - 优化为异步加载并缓存结果
   Future<void> loadBackgroundSettings() async {
-    final savedBg = await MyGetStorage().getChatBackground();
-    final savedOpacity = await MyGetStorage().getChatBackgroundOpacity();
-    setState(() {
-      backgroundImage = savedBg;
-      backgroundOpacity = savedOpacity ?? 0.35;
-    });
+    // 先检查是否已有缓存的背景设置
+    final cachedBackground = _storage.getCachedBackground();
+    final cachedOpacity = _storage.getCachedBackgroundOpacity();
+
+    if (cachedBackground != null || cachedOpacity != null) {
+      // 如果有缓存，先使用缓存值快速渲染
+      setState(() {
+        if (cachedBackground != null) backgroundImage = cachedBackground;
+        if (cachedOpacity != null) backgroundOpacity = cachedOpacity;
+      });
+    }
+
+    // 然后异步加载最新设置
+    final background = await _storage.getBranchChatBackground();
+    final opacity = await _storage.getBranchChatBackgroundOpacity();
+
+    // 只有当值不同时才更新UI
+    if (background != backgroundImage || opacity != backgroundOpacity) {
+      setState(() {
+        backgroundImage = background;
+        backgroundOpacity = opacity ?? 0.2;
+      });
+    }
   }
 
   ///******************************************* */
@@ -433,57 +453,7 @@ class _BranchChatPageState extends State<BranchChatPage>
               ),
 
               /// 流式响应时显示进度条
-              if (isStreaming)
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    /// 调整位置之后，还是滚动条贯穿屏幕，悬浮按钮放在滚动条上方，和谐一点
-                    horizontal: 8.sp,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          // 设置圆角
-                          borderRadius: BorderRadius.all(Radius.circular(5.sp)),
-                          child: SizedBox(
-                            height: 5.sp, // 设置高度
-                            child: LinearProgressIndicator(
-                              value: null, // 当前进度(null就循环)
-                              backgroundColor: Colors.grey, // 背景颜色
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.blue, // 进度条颜色
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.sp),
-                        child: SizedBox(
-                          width: 16.sp,
-                          height: 16.sp,
-                          child: CircularProgressIndicator(strokeWidth: 3.sp),
-                        ),
-                      ),
-                      Expanded(
-                        child: ClipRRect(
-                          // 设置圆角
-                          borderRadius: BorderRadius.all(Radius.circular(5.sp)),
-                          child: SizedBox(
-                            height: 5.sp, // 设置高度
-                            child: LinearProgressIndicator(
-                              value: null, // 当前进度(null就循环)
-                              backgroundColor: Colors.blue, // 背景颜色
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.grey, // 进度条颜色
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              if (isStreaming) buildResponseLoading(),
 
               /// 输入框
               ChatInputBar(
@@ -658,23 +628,37 @@ class _BranchChatPageState extends State<BranchChatPage>
   }
 
   // 更换背景图片
-  Future<void> changeBackground() async {
-    final result = await showModalBottomSheet<String>(
-      context: context,
-      builder: (context) => ChatBackgroundPicker(
-        currentImage: backgroundImage,
-        opacity: backgroundOpacity,
-        onOpacityChanged: (value) async {
-          setState(() => backgroundOpacity = value);
-          await MyGetStorage().saveChatBackgroundOpacity(value);
-        },
-      ),
-    );
+  // Future<void> changeBackground() async {
+  //   final result = await showModalBottomSheet<String>(
+  //     context: context,
+  //     builder: (context) => ChatBackgroundPicker(
+  //       currentImage: backgroundImage,
+  //       opacity: backgroundOpacity,
+  //       onOpacityChanged: (value) async {
+  //         setState(() => backgroundOpacity = value);
+  //         await MyGetStorage().saveChatBackgroundOpacity(value);
+  //       },
+  //     ),
+  //   );
 
-    if (result != null) {
-      setState(() => backgroundImage = result);
-      await MyGetStorage().saveChatBackground(result);
-    }
+  //   if (result != null) {
+  //     setState(() => backgroundImage = result);
+  //     await MyGetStorage().saveChatBackground(result);
+  //   }
+  // }
+
+  void changeBackground() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BranchChatBackgroundPicker(),
+      ),
+    ).then((confirmed) {
+      // 只有在用户点击了确定按钮时才重新加载背景设置
+      if (confirmed == true) {
+        loadBackgroundSettings();
+      }
+    });
   }
 
   // 添加模型按钮点击处理
@@ -948,6 +932,60 @@ class _BranchChatPageState extends State<BranchChatPage>
             ],
           );
         },
+      ),
+    );
+  }
+
+  /// 构建流式生成时的加载指示器
+  Widget buildResponseLoading() {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        /// 调整位置之后，还是滚动条贯穿屏幕，悬浮按钮放在滚动条上方，和谐一点
+        horizontal: 8.sp,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              // 设置圆角
+              borderRadius: BorderRadius.all(Radius.circular(5.sp)),
+              child: SizedBox(
+                height: 5.sp, // 设置高度
+                child: LinearProgressIndicator(
+                  value: null, // 当前进度(null就循环)
+                  backgroundColor: Colors.grey, // 背景颜色
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.blue, // 进度条颜色
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8.sp),
+            child: SizedBox(
+              width: 16.sp,
+              height: 16.sp,
+              child: CircularProgressIndicator(strokeWidth: 3.sp),
+            ),
+          ),
+          Expanded(
+            child: ClipRRect(
+              // 设置圆角
+              borderRadius: BorderRadius.all(Radius.circular(5.sp)),
+              child: SizedBox(
+                height: 5.sp, // 设置高度
+                child: LinearProgressIndicator(
+                  value: null, // 当前进度(null就循环)
+                  backgroundColor: Colors.blue, // 背景颜色
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.grey, // 进度条颜色
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1416,6 +1454,13 @@ class _BranchChatPageState extends State<BranchChatPage>
     }
 
     var content = messageData.text;
+
+    // 2025-03-22 暂时不支持文档处理，也没有将解析后的文档内容作为参数传递
+    // 后续有单独上传文档的需求再更新
+    if (messageData.file != null) {
+      commonExceptionDialog(context, "异常提示", "暂不支持上传文档，后续有需求再更新");
+      return;
+    }
 
     // 处理JSON格式响应
     if (advancedEnabled &&

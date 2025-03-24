@@ -7,10 +7,12 @@ final box = GetStorage();
 
 class MyGetStorage {
   static const String _firstLaunchKey = 'is_first_launch';
-  static const String _chatBackgroundKey = 'chat_background';
-  static const String _chatBackgroundOpacityKey = 'chat_background_opacity';
+  static const String _branchChatBackgroundKey = 'chat_background';
+  static const String _branchChatBackgroundOpacityKey =
+      'chat_background_opacity';
   static const String _characterChatBackgroundKey = 'character_chat_background';
-  static const String _characterChatBackgroundOpacityKey = 'character_chat_background_opacity';
+  static const String _characterChatBackgroundOpacityKey =
+      'character_chat_background_opacity';
 
   // 检查是否首次启动
   bool isFirstLaunch() {
@@ -113,24 +115,24 @@ class MyGetStorage {
   }
 
   // 分支对话背景相关方法
-  Future<String?> getChatBackground() async {
-    return box.read(_chatBackgroundKey);
+  Future<String?> getBranchChatBackground() async {
+    return box.read(_branchChatBackgroundKey);
   }
 
-  Future<void> saveChatBackground(String? path) async {
+  Future<void> saveBranchChatBackground(String? path) async {
     if (path == null || path.isEmpty) {
-      await box.remove(_chatBackgroundKey);
+      await box.remove(_branchChatBackgroundKey);
     } else {
-      await box.write(_chatBackgroundKey, path);
+      await box.write(_branchChatBackgroundKey, path);
     }
   }
 
-  Future<double?> getChatBackgroundOpacity() async {
-    return box.read(_chatBackgroundOpacityKey);
+  Future<double?> getBranchChatBackgroundOpacity() async {
+    return box.read(_branchChatBackgroundOpacityKey);
   }
 
-  Future<void> saveChatBackgroundOpacity(double opacity) async {
-    await box.write(_chatBackgroundOpacityKey, opacity);
+  Future<void> saveBranchChatBackgroundOpacity(double opacity) async {
+    await box.write(_branchChatBackgroundOpacityKey, opacity);
   }
 
   // 角色对话背景相关方法
@@ -157,7 +159,8 @@ class MyGetStorage {
   }
 
   /// 更新指定平台的 API Key
-  Future<void> updatePlatformApiKey(ApiPlatformAKLabel label, String apiKey) async {
+  Future<void> updatePlatformApiKey(
+      ApiPlatformAKLabel label, String apiKey) async {
     final userKeys = getUserAKMap();
     userKeys[label.name] = apiKey;
     await setUserAKMap(userKeys);

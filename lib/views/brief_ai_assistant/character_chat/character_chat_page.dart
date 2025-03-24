@@ -26,7 +26,6 @@ import 'components/character_message_item.dart';
 import 'components/character_input_bar.dart';
 import 'components/model_selector_dialog.dart';
 import 'components/session_history_drawer.dart';
-import 'components/character_chat_background_picker.dart';
 import 'components/character_avatar_preview.dart';
 
 class CharacterChatPage extends StatefulWidget {
@@ -130,26 +129,26 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     });
   }
 
-  // 加载背景设置 - 优化为异步加载并缓存结果
+  // 修改_loadBackgroundSettings方法
   Future<void> _loadBackgroundSettings() async {
-    // 先检查是否已有缓存的背景设置
-    final cachedBackground = _storage.getCachedBackground();
-    final cachedOpacity = _storage.getCachedBackgroundOpacity();
+    // 首先检查主角色是否有专属背景
+    if (_session.characters.isNotEmpty) {
+      final mainCharacter = _session.characters.first;
 
-    if (cachedBackground != null || cachedOpacity != null) {
-      // 如果有缓存，先使用缓存值快速渲染
-      setState(() {
-        if (cachedBackground != null) _backgroundImage = cachedBackground;
-        if (cachedOpacity != null) _backgroundOpacity = cachedOpacity;
-      });
+      if (mainCharacter.background != null) {
+        setState(() {
+          _backgroundImage = mainCharacter.background;
+          _backgroundOpacity = mainCharacter.backgroundOpacity ?? 0.2;
+        });
+        return;
+      }
     }
 
-    // 然后异步加载最新设置
+    // 如果没有专属背景，则加载通用背景设置
     final background = await _storage.getCharacterChatBackground();
     final opacity = await _storage.getCharacterChatBackgroundOpacity();
 
-    // 只有当值不同时才更新UI
-    if (background != _backgroundImage || opacity != _backgroundOpacity) {
+    if (mounted) {
       setState(() {
         _backgroundImage = background;
         _backgroundOpacity = opacity ?? 0.2;
@@ -196,6 +195,13 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       if (!mounted) return;
       commonExceptionDialog(context, '加载所有会话失败', '加载所有会话失败: $e');
     }
+  }
+
+  // 重新加载当前会话
+  void reloadSession() {
+    setState(() {
+      _session = _store.sessions.firstWhere((s) => s.id == _session.id);
+    });
   }
 
   @override
@@ -260,9 +266,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
           data: _session.title,
           velocity: 30,
           width: 0.6.sw,
-          style: TextStyle(
-            fontSize: 18.sp,
-          ),
+          style: TextStyle(fontSize: 18.sp),
         ),
         actions: [
           IconButton(
@@ -291,23 +295,32 @@ class _CharacterChatPageState extends State<CharacterChatPage>
           Column(
             children: [
               // 消息列表
+              // Expanded(
+              //   child: _session.messages.isEmpty
+              //       ? Center(
+              //           child: Text(
+              //             '开始与角色对话吧！',
+              //             style: TextStyle(fontSize: 16.sp, color: Colors.grey),
+              //           ),
+              //         )
+              //       : Stack(
+              //           children: [
+              //             _buildMessageList(),
+
+              //             // 底部加载指示器
+              //             if (_isStreaming) buildResponseLoading(),
+              //           ],
+              //         ),
+              // ),
+
+              // 上面的布局有点问题，悬浮按钮和加载指示器位置不对
               Expanded(
                 child: _session.messages.isEmpty
-                    ? Center(
-                        child: Text(
-                          '开始与角色对话吧！',
-                          style: TextStyle(fontSize: 16.sp, color: Colors.grey),
-                        ),
-                      )
-                    : Stack(
-                        children: [
-                          _buildMessageList(),
-
-                          // 底部加载指示器
-                          if (_isStreaming) buildResponseLoading(),
-                        ],
-                      ),
+                    ? buildEmptyHint()
+                    : _buildMessageList(),
               ),
+              // 底部加载指示器
+              if (_isStreaming) buildResponseLoading(),
 
               // 输入栏
               CharacterInputBar(
@@ -400,14 +413,6 @@ class _CharacterChatPageState extends State<CharacterChatPage>
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.wallpaper),
-                title: const Text('更换背景'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showBackgroundPicker();
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.text_fields),
                 title: const Text('文字大小'),
                 onTap: () {
@@ -428,7 +433,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
                 leading: const Icon(Icons.model_training),
                 title: const Text('选择模型'),
                 subtitle: Text(
-                  _activeModel?.model ?? '未设置',
+                  "${CP_NAME_MAP[_activeModel?.platform]} > ${_activeModel?.model}",
                   style: TextStyle(fontSize: 12.sp),
                 ),
                 onTap: () {
@@ -439,6 +444,11 @@ class _CharacterChatPageState extends State<CharacterChatPage>
               ListTile(
                 leading: const Icon(Icons.people),
                 title: const Text('角色管理'),
+                // 2025-03-22 改变角色后重新加载了当前会话，为什么这里的显示不会更新呢？？？
+                // subtitle: Text(
+                //   _session.characters.map((e) => e.name).join(', '),
+                //   style: TextStyle(fontSize: 12.sp),
+                // ),
                 onTap: _showCharacterManagementDialog,
               ),
               ListTile(
@@ -490,9 +500,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
       // 如果修改的是当前会话，更新标题
       if (session.id == _session.id) {
-        setState(() {
-          _session = _store.sessions.firstWhere((s) => s.id == _session.id);
-        });
+        reloadSession();
       }
     }
   }
@@ -561,9 +569,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
       // 更新会话的活动模型
       await _store.updateSessionModel(_session, result);
-      setState(() {
-        _session = _store.sessions.firstWhere((s) => s.id == _session.id);
-      });
+      reloadSession();
     }
   }
 
@@ -644,7 +650,9 @@ class _CharacterChatPageState extends State<CharacterChatPage>
           ],
         ),
       ),
-    );
+    ).then((value) {
+      reloadSession();
+    });
   }
 
   // 从会话中移除角色
@@ -763,9 +771,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
       // 添加角色到会话
       await _store.addCharacterToSession(_session, selectedCharacter);
-      setState(() {
-        _session = _store.sessions.firstWhere((s) => s.id == _session.id);
-      });
+      reloadSession();
 
       // 添加角色的首条消息
       if (selectedCharacter.firstMessage.isNotEmpty) {
@@ -776,26 +782,9 @@ class _CharacterChatPageState extends State<CharacterChatPage>
           characterId: selectedCharacter.id,
         );
 
-        setState(() {
-          _session = _store.sessions.firstWhere((s) => s.id == _session.id);
-        });
+        reloadSession();
       }
     }
-  }
-
-  // 显示背景选择器
-  void _showBackgroundPicker() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const CharacterChatBackgroundPicker(),
-      ),
-    ).then((confirmed) {
-      // 只有在用户点击了确定按钮时才重新加载背景设置
-      if (confirmed == true) {
-        _loadBackgroundSettings();
-      }
-    });
   }
 
   // 清空当前对话
@@ -820,9 +809,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
     if (confirmed == true) {
       await _store.clearMessages(_session);
-      setState(() {
-        _session = _store.sessions.firstWhere((s) => s.id == _session.id);
-      });
+      reloadSession();
 
       // 添加角色的首条消息
       _addCharacterFirstMessages();
@@ -929,28 +916,23 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
   // 构建响应加载
   Widget buildResponseLoading() {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 8.sp),
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 16.sp,
-                height: 16.sp,
-                child: CircularProgressIndicator(strokeWidth: 2.sp),
-              ),
-              SizedBox(width: 8.sp),
-              Text(
-                '正在生成回复...',
-                style: TextStyle(fontSize: 12.sp, color: Colors.black),
-              ),
-            ],
-          ),
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8.sp),
+      child: Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 16.sp,
+              height: 16.sp,
+              child: CircularProgressIndicator(strokeWidth: 2.sp),
+            ),
+            SizedBox(width: 8.sp),
+            Text(
+              '正在生成回复...',
+              style: TextStyle(fontSize: 12.sp, color: Colors.black),
+            ),
+          ],
         ),
       ),
     );
@@ -1104,9 +1086,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
         content: '',
       );
 
-      setState(() {
-        _session = _store.sessions.firstWhere((s) => s.id == _session.id);
-      });
+      reloadSession();
 
       // 处理AI响应
       await _commonGenerateResponse(character, message);
@@ -1160,8 +1140,8 @@ class _CharacterChatPageState extends State<CharacterChatPage>
         });
       }
 
+      reloadSession();
       setState(() {
-        _session = _store.sessions.firstWhere((s) => s.id == _session.id);
         _isStreaming = true;
       });
 
@@ -1216,8 +1196,8 @@ class _CharacterChatPageState extends State<CharacterChatPage>
         }
       }
 
+      reloadSession();
       setState(() {
-        _session = _store.sessions.firstWhere((s) => s.id == _session.id);
         _inputController.clear();
         _isLoading = false;
         _editingMessage = null;
@@ -1267,9 +1247,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       }
 
       // 刷新会话，确保UI显示所有空消息
-      setState(() {
-        _session = _store.sessions.firstWhere((s) => s.id == _session.id);
-      });
+      reloadSession();
 
       // 为每个角色创建并启动生成任务
       for (var character in _session.characters) {
@@ -1343,9 +1321,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
           // 更新UI
           if (mounted) {
-            setState(() {
-              _session = _store.sessions.firstWhere((s) => s.id == _session.id);
-            });
+            reloadSession();
 
             // 如果用户没有手动滚动，则自动滚动到底部
             if (!isUserScrolling) {
@@ -1366,9 +1342,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
       // 刷新会话
       if (!mounted) return;
-      setState(() {
-        _session = _store.sessions.firstWhere((s) => s.id == _session.id);
-      });
+      reloadSession();
     }
   }
 
@@ -1492,9 +1466,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       }
     }
 
-    setState(() {
-      _session = _store.sessions.firstWhere((s) => s.id == _session.id);
-    });
+    reloadSession();
   }
 
   /// 准备聊天历史(用于构建调用大模型API的请求参数)
@@ -1619,28 +1591,29 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       return Container(color: Colors.transparent);
     }
 
-    // 使用FadeInImage或Image.memory来优化图片加载
-    return Opacity(
-      opacity: _backgroundOpacity,
-      child: _backgroundImage!.startsWith('assets/')
-          ? Image.asset(
-              _backgroundImage!,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-              // 使用缓存图片
-              cacheWidth: MediaQuery.of(context).size.width.toInt(),
-              cacheHeight: MediaQuery.of(context).size.height.toInt(),
-            )
-          : Image.file(
-              File(_backgroundImage!),
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-              // 使用缓存图片
-              cacheWidth: MediaQuery.of(context).size.width.toInt(),
-              cacheHeight: MediaQuery.of(context).size.height.toInt(),
-            ),
+    return Positioned.fill(
+      child: Opacity(
+        opacity: _backgroundOpacity,
+        child: buildCusImage(_backgroundImage!, fit: BoxFit.cover),
+      ),
     );
+
+    // 使用FadeInImage或Image.memory来优化图片加载
+    // return Opacity(
+    //   opacity: _backgroundOpacity,
+    //   child: _backgroundImage!.startsWith('assets/')
+    //       ? Image.asset(
+    //           _backgroundImage!,
+    //           fit: BoxFit.cover,
+    //           width: double.infinity,
+    //           height: double.infinity,
+    //         )
+    //       : Image.file(
+    //           File(_backgroundImage!),
+    //           fit: BoxFit.cover,
+    //           width: double.infinity,
+    //           height: double.infinity,
+    //         ),
+    // );
   }
 }

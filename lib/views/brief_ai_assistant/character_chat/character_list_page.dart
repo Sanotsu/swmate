@@ -7,9 +7,11 @@ import '../../../common/utils/tools.dart';
 import '../../../models/brief_ai_tools/character_chat/character_card.dart';
 import '../../../models/brief_ai_tools/character_chat/character_chat_session.dart';
 import '../../../models/brief_ai_tools/character_chat/character_store.dart';
+import '../../../services/cus_get_storage.dart';
 import 'components/character_card_item.dart';
 import 'character_chat_page.dart';
 import 'character_editor_page.dart';
+import 'components/character_chat_background_picker.dart';
 
 class CharacterListPage extends StatefulWidget {
   const CharacterListPage({super.key});
@@ -64,6 +66,10 @@ class _CharacterListPageState extends State<CharacterListPage> {
       appBar: AppBar(
         title: const Text('角色列表'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.wallpaper),
+            onPressed: _showBackgroundPicker,
+          ),
           IconButton(
             icon: const Icon(Icons.import_export),
             onPressed: _showImportExportDialog,
@@ -310,5 +316,25 @@ class _CharacterListPageState extends State<CharacterListPage> {
 
       commonExceptionDialog(context, '导入角色', '导入失败: $e');
     }
+  }
+
+  // 显示背景选择器
+  void _showBackgroundPicker() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CharacterChatBackgroundPicker(),
+      ),
+    ).then((confirmed) async {
+      // 只有在用户点击了确定按钮时才重新加载背景设置
+      if (confirmed == true) {
+        // 存储器
+        final MyGetStorage storage = MyGetStorage();
+
+        // 如果没有专属背景，则加载通用背景设置
+        await storage.getCharacterChatBackground();
+        await storage.getCharacterChatBackgroundOpacity();
+      }
+    });
   }
 }

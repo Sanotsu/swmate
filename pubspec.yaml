@@ -72,7 +72,7 @@ dependencies:
   easy_refresh: ^3.4.0
   multi_select_flutter: ^4.1.3   # 2022-11-27
   flutter_markdown: ^ 0.7.6+2
-  docx_to_text: ^1.0.1  # 2023-07-18
+
 
   # 增强
   json_annotation: ^4.9.0
@@ -84,6 +84,8 @@ dependencies:
   flutter_easyloading: ^3.0.5
   flutter_typeahead: ^5.2.0
   flutter_charset_detector: ^5.0.0
+  doc_text: ^0.0.1 # 2024-02-22
+  docx_to_text: ^1.0.1  # 2023-07-18
   
   # 2025-03-21 表单组件和文件选择有依赖冲突，无法使用最新版本
   flutter_form_builder: ^9.7.0  

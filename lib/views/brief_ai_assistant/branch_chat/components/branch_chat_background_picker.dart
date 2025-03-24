@@ -4,16 +4,21 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../services/cus_get_storage.dart';
 import '../../_chat_components/_small_tool_widgets.dart';
 
-class CharacterChatBackgroundPicker extends StatefulWidget {
-  const CharacterChatBackgroundPicker({super.key});
+///
+/// 2025-03-22
+/// 代码和CharacterChatBackgroundPicker.dart一样的，
+/// 很多重复的组件只是为了模块独立，等到所有功能稳定后会重构合并
+///
+class BranchChatBackgroundPicker extends StatefulWidget {
+  const BranchChatBackgroundPicker({super.key});
 
   @override
-  State<CharacterChatBackgroundPicker> createState() =>
-      _CharacterChatBackgroundPickerState();
+  State<BranchChatBackgroundPicker> createState() =>
+      _BranchChatBackgroundPickerState();
 }
 
-class _CharacterChatBackgroundPickerState
-    extends State<CharacterChatBackgroundPicker> {
+class _BranchChatBackgroundPickerState
+    extends State<BranchChatBackgroundPicker> {
   final MyGetStorage _storage = MyGetStorage();
   String? _selectedBackground;
   double _opacity = 0.2;
@@ -35,8 +40,8 @@ class _CharacterChatBackgroundPickerState
   }
 
   Future<void> _loadSettings() async {
-    final background = await _storage.getCharacterChatBackground();
-    final opacity = await _storage.getCharacterChatBackgroundOpacity();
+    final background = await _storage.getBranchChatBackground();
+    final opacity = await _storage.getBranchChatBackgroundOpacity();
 
     setState(() {
       _selectedBackground = background;
@@ -58,13 +63,13 @@ class _CharacterChatBackgroundPickerState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('角色通用背景'),
+        title: const Text('选择背景'),
         actions: [
           TextButton(
             onPressed: () {
               // 取消操作，恢复初始设置
-              _storage.saveCharacterChatBackground(_initialBackground);
-              _storage.saveCharacterChatBackgroundOpacity(_initialOpacity);
+              _storage.saveBranchChatBackground(_initialBackground);
+              _storage.saveBranchChatBackgroundOpacity(_initialOpacity);
               Navigator.pop(context);
             },
             child: const Text('取消'),
@@ -287,10 +292,10 @@ class _CharacterChatBackgroundPickerState
   }
 
   Future<void> _saveBackground(String? path) async {
-    await _storage.saveCharacterChatBackground(path);
+    await _storage.saveBranchChatBackground(path);
   }
 
   Future<void> _saveOpacity(double opacity) async {
-    await _storage.saveCharacterChatBackgroundOpacity(opacity);
+    await _storage.saveBranchChatBackgroundOpacity(opacity);
   }
 }

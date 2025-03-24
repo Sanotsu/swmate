@@ -21,107 +21,107 @@ export 'package:objectbox/objectbox.dart'; // so that callers only have to impor
 
 final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
-      id: const obx_int.IdUid(1, 3047237572509652841),
+      id: const obx_int.IdUid(1, 1600098421769901398),
       name: 'BranchChatMessage',
-      lastPropertyId: const obx_int.IdUid(19, 8750989621969680801),
+      lastPropertyId: const obx_int.IdUid(19, 8515457605055974883),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(1, 339411572049515704),
+            id: const obx_int.IdUid(1, 8983211629156687646),
             name: 'id',
             type: 6,
             flags: 129),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(2, 474467149007688409),
+            id: const obx_int.IdUid(2, 6751250780516416273),
             name: 'messageId',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(3, 4765159438889649011),
+            id: const obx_int.IdUid(3, 1504642098605754060),
             name: 'role',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(4, 5314958183163449649),
+            id: const obx_int.IdUid(4, 6627735788071936690),
             name: 'content',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(5, 1425602038126534494),
+            id: const obx_int.IdUid(5, 1397185265534076974),
             name: 'createTime',
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(6, 7317090807679317222),
+            id: const obx_int.IdUid(6, 9206374833114282395),
             name: 'reasoningContent',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(7, 3745089543038842857),
+            id: const obx_int.IdUid(7, 995398938882819392),
             name: 'thinkingDuration',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(8, 47240639300403924),
+            id: const obx_int.IdUid(8, 2729459773560826740),
             name: 'contentVoicePath',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(9, 8802678901233772595),
+            id: const obx_int.IdUid(9, 2585399218944116387),
             name: 'imagesUrl',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(10, 3426295208981442202),
+            id: const obx_int.IdUid(10, 3813834099888048141),
             name: 'videosUrl',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(11, 5013031557870132229),
+            id: const obx_int.IdUid(11, 3047127720008226903),
             name: 'promptTokens',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(12, 5168818522325420154),
+            id: const obx_int.IdUid(12, 422383780072472737),
             name: 'completionTokens',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(13, 6492649705177176682),
+            id: const obx_int.IdUid(13, 402898807078806543),
             name: 'totalTokens',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(14, 571814119150973710),
+            id: const obx_int.IdUid(14, 5053942555026868725),
             name: 'modelLabel',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(15, 1671602137236883087),
+            id: const obx_int.IdUid(15, 7032169252771105711),
             name: 'parentId',
             type: 11,
             flags: 520,
-            indexId: const obx_int.IdUid(1, 9053290530196191085),
+            indexId: const obx_int.IdUid(1, 4538922651485586918),
             relationTarget: 'BranchChatMessage'),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(16, 663546448106677417),
+            id: const obx_int.IdUid(16, 1848962225748010839),
             name: 'sessionId',
             type: 11,
             flags: 520,
-            indexId: const obx_int.IdUid(2, 2481538549836732061),
+            indexId: const obx_int.IdUid(2, 6456466090668539432),
             relationTarget: 'BranchChatSession'),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(17, 8501721726382971606),
+            id: const obx_int.IdUid(17, 1514865920880149820),
             name: 'branchIndex',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(18, 4105846931766047246),
+            id: const obx_int.IdUid(18, 3139673790242945671),
             name: 'depth',
             type: 6,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(19, 8750989621969680801),
+            id: const obx_int.IdUid(19, 8515457605055974883),
             name: 'branchPath',
             type: 9,
             flags: 0)
@@ -134,38 +134,38 @@ final _entities = <obx_int.ModelEntity>[
             srcField: 'parent')
       ]),
   obx_int.ModelEntity(
-      id: const obx_int.IdUid(2, 9136345784127612229),
+      id: const obx_int.IdUid(2, 6726974038046424701),
       name: 'BranchChatSession',
-      lastPropertyId: const obx_int.IdUid(6, 2593827212106411308),
+      lastPropertyId: const obx_int.IdUid(6, 1306154742200352151),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(1, 3243340140169381156),
+            id: const obx_int.IdUid(1, 8404646226650786518),
             name: 'id',
             type: 6,
             flags: 1),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(2, 3904890940987613341),
+            id: const obx_int.IdUid(2, 6990398678140175614),
             name: 'title',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(3, 8374268802049978631),
+            id: const obx_int.IdUid(3, 8806248600614798703),
             name: 'createTime',
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(4, 902315130992807966),
+            id: const obx_int.IdUid(4, 1265598941730525934),
             name: 'updateTime',
             type: 10,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(5, 6647624877561076107),
+            id: const obx_int.IdUid(5, 8354589670465085692),
             name: 'llmSpecJson',
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(6, 2593827212106411308),
+            id: const obx_int.IdUid(6, 1306154742200352151),
             name: 'modelTypeStr',
             type: 9,
             flags: 0)
@@ -214,8 +214,8 @@ Future<obx.Store> openStore(
 obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
       entities: _entities,
-      lastEntityId: const obx_int.IdUid(2, 9136345784127612229),
-      lastIndexId: const obx_int.IdUid(2, 2481538549836732061),
+      lastEntityId: const obx_int.IdUid(2, 6726974038046424701),
+      lastIndexId: const obx_int.IdUid(2, 6456466090668539432),
       lastRelationId: const obx_int.IdUid(0, 0),
       lastSequenceId: const obx_int.IdUid(0, 0),
       retiredEntityUids: const [],

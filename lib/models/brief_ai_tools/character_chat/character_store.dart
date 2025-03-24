@@ -42,7 +42,7 @@ class CharacterStore {
 
   // 创建新角色卡
   // 系统角色卡固定id，避免用户导入消息后因为角色id变化导致历史记录匹配不上
-  Future<CharacterCard> createCharacter({
+  Future<CharacterCard> _createDefaultCharacter({
     required String id,
     required String name,
     required String avatar,
@@ -69,6 +69,12 @@ class CharacterStore {
       isSystem: isSystem,
     );
 
+    _characters.add(character);
+    await _saveCharacters();
+    return character;
+  }
+
+  Future<CharacterCard> createCharacter(CharacterCard character) async {
     _characters.add(character);
     await _saveCharacters();
     return character;
@@ -348,6 +354,8 @@ class CharacterStore {
     // 比较关键属性
     return oldCharacter.name != newCharacter.name ||
         oldCharacter.avatar != newCharacter.avatar ||
+        oldCharacter.background != newCharacter.background ||
+        oldCharacter.backgroundOpacity != newCharacter.backgroundOpacity ||
         oldCharacter.description != newCharacter.description ||
         oldCharacter.personality != newCharacter.personality ||
         oldCharacter.scenario != newCharacter.scenario ||
@@ -416,7 +424,7 @@ class CharacterStore {
   // 创建默认角色卡
   Future<void> _createToolCharacters() async {
     // 图像识别专家
-    await createCharacter(
+    await _createDefaultCharacter(
       id: identityHashCode("图像分析师").toString(),
       name: '图像分析师',
       avatar: 'http://img.sccnn.com/bimg/337/39878.jpg',
@@ -435,7 +443,7 @@ class CharacterStore {
 
   // 创建虚拟角色卡
   Future<void> _createVirtualCharacters() async {
-    await createCharacter(
+    await _createDefaultCharacter(
       id: identityHashCode("齐天大圣孙悟空").toString(),
       name: '齐天大圣孙悟空',
       avatar:
