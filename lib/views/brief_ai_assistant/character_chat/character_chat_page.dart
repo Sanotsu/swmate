@@ -22,12 +22,18 @@ import '../../../services/model_manager_service.dart';
 import '../../../../services/cus_get_storage.dart';
 
 import '../_chat_components/_small_tool_widgets.dart';
+import '../_chat_components/chat_input_bar.dart';
+import '../_chat_components/text_selection_dialog.dart';
 import 'components/character_message_item.dart';
-import 'components/character_input_bar.dart';
 import 'components/model_selector_dialog.dart';
-import 'components/session_history_drawer.dart';
+import 'components/character_chat_history_drawer.dart';
 import 'components/character_avatar_preview.dart';
 
+///
+/// 角色对话主页面
+///
+/// 除非是某个函数内部使用且不再全局其他地方也能使用的方法设为私有，其他都不加下划线
+///
 class CharacterChatPage extends StatefulWidget {
   final CharacterChatSession session;
 
@@ -40,14 +46,14 @@ class CharacterChatPage extends StatefulWidget {
 class _CharacterChatPageState extends State<CharacterChatPage>
     with WidgetsBindingObserver {
   // 角色存储器
-  final CharacterStore _store = CharacterStore();
+  final CharacterStore store = CharacterStore();
   // 存储器
-  final MyGetStorage _storage = MyGetStorage();
+  final MyGetStorage storage = MyGetStorage();
 
   // 输入框控制器
-  final TextEditingController _inputController = TextEditingController();
+  final TextEditingController inputController = TextEditingController();
   // 焦点节点
-  final FocusNode _focusNode = FocusNode();
+  final FocusNode inputFocusNode = FocusNode();
   // 全局key
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -55,29 +61,26 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   double textScaleFactor = 1.0;
 
   // 会话
-  late CharacterChatSession _session;
-  // 所有会话
-  List<CharacterChatSession> _allSessions = [];
+  late CharacterChatSession currentSession;
+  // 所有该角色为主要角色的会话
+  List<CharacterChatSession> allSessions = [];
   // 是否加载中
-  bool _isLoading = false;
+  bool isLoading = false;
   // 是否流式加载中
-  bool _isStreaming = false;
+  bool isStreaming = false;
   // 当前模型
-  CusBriefLLMSpec? _activeModel;
+  CusBriefLLMSpec? activeModel;
   // 取消生成回调
-  VoidCallback? _cancelGeneration;
+  VoidCallback? cancelResponse;
 
   // 标记是否是新创建的空会话
-  bool _isNewEmptySession = false;
+  bool isNewEmptySession = false;
 
   // 编辑消息相关
-  CharacterChatMessage? _editingMessage;
-
-  // 消息体长按位置
-  Offset _tapPosition = Offset.zero;
+  CharacterChatMessage? currentEditingMessage;
 
   // 对话列表滚动控制器
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController scrollController = ScrollController();
   // 是否显示"滚动到底部"按钮
   bool showScrollToBottom = false;
   // 是否用户手动滚动
@@ -90,9 +93,9 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   double inputHeight = 0;
 
   // 背景图片
-  String? _backgroundImage;
+  String? backgroundImage;
   // 背景图片透明度
-  double _backgroundOpacity = 0.2;
+  double backgroundOpacity = 0.2;
 
   @override
   void initState() {
@@ -100,7 +103,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
     // 使用Future.microtask延迟加载非关键UI组件
     Future.microtask(() {
-      _loadBackgroundSettings();
+      loadBackgroundSettings();
     });
 
     // 初始化会话（这是必须立即执行的）
@@ -110,11 +113,11 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     textScaleFactor = MyGetStorage().getChatListAreaScale();
 
     // 监听滚动事件
-    _scrollController.addListener(() {
+    scrollController.addListener(() {
       // 判断用户是否正在手动滚动
-      if (_scrollController.position.userScrollDirection ==
+      if (scrollController.position.userScrollDirection ==
               ScrollDirection.reverse ||
-          _scrollController.position.userScrollDirection ==
+          scrollController.position.userScrollDirection ==
               ScrollDirection.forward) {
         isUserScrolling = true;
       } else {
@@ -123,55 +126,57 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
       // 判断是否显示"滚动到底部"按钮
       setState(() {
-        showScrollToBottom = _scrollController.offset <
-            _scrollController.position.maxScrollExtent - 50;
+        showScrollToBottom = scrollController.offset <
+            scrollController.position.maxScrollExtent - 50;
       });
     });
   }
 
-  // 修改_loadBackgroundSettings方法
-  Future<void> _loadBackgroundSettings() async {
+  // 加载背景设置
+  Future<void> loadBackgroundSettings() async {
     // 首先检查主角色是否有专属背景
-    if (_session.characters.isNotEmpty) {
-      final mainCharacter = _session.characters.first;
+    if (currentSession.characters.isNotEmpty) {
+      final mainCharacter = currentSession.characters.first;
 
       if (mainCharacter.background != null) {
         setState(() {
-          _backgroundImage = mainCharacter.background;
-          _backgroundOpacity = mainCharacter.backgroundOpacity ?? 0.2;
+          backgroundImage = mainCharacter.background;
+          backgroundOpacity = mainCharacter.backgroundOpacity ?? 0.2;
         });
         return;
       }
     }
 
     // 如果没有专属背景，则加载通用背景设置
-    final background = await _storage.getCharacterChatBackground();
-    final opacity = await _storage.getCharacterChatBackgroundOpacity();
+    final background = await storage.getCharacterChatBackground();
+    final opacity = await storage.getCharacterChatBackgroundOpacity();
 
     if (mounted) {
       setState(() {
-        _backgroundImage = background;
-        _backgroundOpacity = opacity ?? 0.2;
+        backgroundImage = background;
+        backgroundOpacity = opacity ?? 0.2;
       });
     }
   }
 
-  // 初始化会话 - 优化为分步加载
+  // 初始化会话
   void initSession() {
-    _session = widget.session;
-    _activeModel =
-        _session.activeModel ?? _session.characters.first.preferredModel;
+    setState(() {
+      currentSession = widget.session;
+      activeModel = currentSession.activeModel ??
+          currentSession.characters.first.preferredModel;
 
-    // 检查是否是新创建的空会话
-    _isNewEmptySession = _session.messages.isEmpty;
+      // 检查是否是新创建的空会话
+      isNewEmptySession = currentSession.messages.isEmpty;
+    });
 
     // 使用Future.delayed让UI先渲染，再加载其他会话
     Future.delayed(const Duration(milliseconds: 100), () {
-      _loadAllSessions();
+      loadAllSessions();
     });
 
     // 如果没有首条消息，添加角色的首条消息
-    if (_session.messages.isEmpty) {
+    if (currentSession.messages.isEmpty) {
       _addCharacterFirstMessages();
     }
 
@@ -181,13 +186,19 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     });
   }
 
-  // 异步加载所有会话（可能较慢）
-  Future<void> _loadAllSessions() async {
+  // 加载所有该角色为主要角色的会话
+  Future<void> loadAllSessions() async {
     try {
-      await _store.initialize();
+      await store.initialize();
+      if (!mounted) return;
       setState(() {
-        _allSessions = _store.sessions
-            .where((s) => s.characters.isNotEmpty && s.messages.isNotEmpty)
+        allSessions = store.sessions
+            .where((s) =>
+                // 2025-03-26 不过滤消息为空的，点击新建对话时会删除为空的会话
+                // s.characters.isNotEmpty &&
+                // s.messages.isNotEmpty &&
+                s.characters.any((c) => c.id == _currentCharacter.id) &&
+                s.characters.first.id == _currentCharacter.id)
             .toList()
           ..sort((a, b) => b.updateTime.compareTo(a.updateTime));
       });
@@ -200,20 +211,21 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   // 重新加载当前会话
   void reloadSession() {
     setState(() {
-      _session = _store.sessions.firstWhere((s) => s.id == _session.id);
+      currentSession =
+          store.sessions.firstWhere((s) => s.id == currentSession.id);
     });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _scrollController.dispose();
-    _inputController.dispose();
-    _focusNode.dispose();
+    scrollController.dispose();
+    inputController.dispose();
+    inputFocusNode.dispose();
 
     // 如果是新创建的空会话且用户没有输入任何内容，则删除该会话
-    if (_isNewEmptySession && _session.messages.isEmpty) {
-      _store.deleteSession(_session.id);
+    if (isNewEmptySession && currentSession.messages.isEmpty) {
+      store.deleteSession(currentSession.id);
     }
 
     super.dispose();
@@ -225,15 +237,15 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     super.didChangeMetrics();
 
     // 流式响应还未完成且不是用户手动滚动，滚动到底部
-    if (_isStreaming && !isUserScrolling) {
+    if (isStreaming && !isUserScrolling) {
       resetContentHeight();
     }
   }
 
   // 获取当前角色
   CharacterCard get _currentCharacter {
-    return _session.characters.isNotEmpty
-        ? _session.characters.first
+    return currentSession.characters.isNotEmpty
+        ? currentSession.characters.first
         : CharacterCard(
             id: 'default',
             name: '智能助手',
@@ -241,13 +253,6 @@ class _CharacterChatPageState extends State<CharacterChatPage>
             avatar: 'assets/images/assistant.png',
             tags: [],
           );
-  }
-
-  // 过滤出当前角色的所有会话
-  List<CharacterChatSession> get _filteredSessions {
-    return _allSessions
-        .where((s) => s.characters.any((c) => c.id == _currentCharacter.id))
-        .toList();
   }
 
   ///******************************************* */
@@ -263,7 +268,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: SimpleMarqueeOrText(
-          data: _session.title,
+          data: currentSession.title,
           velocity: 30,
           width: 0.6.sw,
           style: TextStyle(fontSize: 18.sp),
@@ -277,61 +282,45 @@ class _CharacterChatPageState extends State<CharacterChatPage>
             tooltip: '历史记录',
           ),
           IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _showSessionSettings,
+            icon: const Icon(Icons.more_horiz_sharp),
+            onPressed: showSessionSettings,
           ),
         ],
       ),
-      endDrawer: SessionHistoryDrawer(
-        sessions: _filteredSessions,
-        currentSession: _session,
+      endDrawer: CharacterChatHistoryDrawer(
+        sessions: allSessions,
+        currentSession: currentSession,
         character: _currentCharacter,
-        onSessionSelected: _handleSessionSelected,
+        onSessionSelected: handleSessionSelected,
         onSessionAction: _handleSessionAction,
-        onNewSession: _prepareNewSession,
+        onNewSession: prepareNewSession,
       ),
       body: Stack(
         children: [
           Column(
             children: [
-              // 消息列表
-              // Expanded(
-              //   child: _session.messages.isEmpty
-              //       ? Center(
-              //           child: Text(
-              //             '开始与角色对话吧！',
-              //             style: TextStyle(fontSize: 16.sp, color: Colors.grey),
-              //           ),
-              //         )
-              //       : Stack(
-              //           children: [
-              //             _buildMessageList(),
-
-              //             // 底部加载指示器
-              //             if (_isStreaming) buildResponseLoading(),
-              //           ],
-              //         ),
-              // ),
-
-              // 上面的布局有点问题，悬浮按钮和加载指示器位置不对
+              // 对话列表
               Expanded(
-                child: _session.messages.isEmpty
-                    ? buildEmptyHint()
-                    : _buildMessageList(),
+                child: currentSession.messages.isEmpty
+                    ? buildEmptyMessageHint()
+                    : buildMessageList(),
               ),
+
               // 底部加载指示器
-              if (_isStreaming) buildResponseLoading(),
+              if (isStreaming) buildResponseLoading(),
 
               // 输入栏
-              CharacterInputBar(
-                controller: _inputController,
-                onSend: _handleSendMessage,
-                onCancel: _editingMessage != null ? _cancelEditing : null,
-                isEditing: _editingMessage != null,
-                isStreaming: _isStreaming,
-                onStop: _isStreaming ? _stopGeneration : null,
-                focusNode: _focusNode,
-                model: _activeModel,
+              ChatInputBar(
+                controller: inputController,
+                onSend: handleSendMessage,
+                onCancel: currentEditingMessage != null
+                    ? handleCancelEditUserMessage
+                    : null,
+                isEditing: currentEditingMessage != null,
+                isStreaming: isStreaming,
+                onStop: isStreaming ? handleStopStreaming : null,
+                focusNode: inputFocusNode,
+                model: activeModel,
                 onHeightChanged: (height) {
                   setState(() => inputHeight = height);
                 },
@@ -346,7 +335,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     return Stack(
       children: [
         // 背景图片
-        _buildBackground(),
+        buildBackground(),
 
         // 主页面
         mainScaffold,
@@ -365,7 +354,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   ///******************************************* */
 
   // 显示会话设置菜单
-  void _showSessionSettings() {
+  void showSessionSettings() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -401,7 +390,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
                 title: const Text('编辑标题'),
                 onTap: () {
                   Navigator.pop(context);
-                  _editSessionTitle(_session);
+                  editSessionTitle(currentSession);
                 },
               ),
               ListTile(
@@ -409,7 +398,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
                 title: const Text('新建对话'),
                 onTap: () {
                   Navigator.pop(context);
-                  _prepareNewSession();
+                  prepareNewSession();
                 },
               ),
               ListTile(
@@ -433,12 +422,12 @@ class _CharacterChatPageState extends State<CharacterChatPage>
                 leading: const Icon(Icons.model_training),
                 title: const Text('选择模型'),
                 subtitle: Text(
-                  "${CP_NAME_MAP[_activeModel?.platform]} > ${_activeModel?.model}",
+                  "${CP_NAME_MAP[activeModel?.platform]} > ${activeModel?.model}",
                   style: TextStyle(fontSize: 12.sp),
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  _selectModel();
+                  selectModel();
                 },
               ),
               ListTile(
@@ -449,14 +438,14 @@ class _CharacterChatPageState extends State<CharacterChatPage>
                 //   _session.characters.map((e) => e.name).join(', '),
                 //   style: TextStyle(fontSize: 12.sp),
                 // ),
-                onTap: _showCharacterManagementDialog,
+                onTap: showCharacterManagementDialog,
               ),
               ListTile(
                 leading: const Icon(Icons.delete_sweep),
                 title: const Text('清空对话'),
                 onTap: () {
                   Navigator.pop(context);
-                  _clearMessages();
+                  clearMessages();
                 },
               ),
             ],
@@ -467,7 +456,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   }
 
   // 编辑会话标题
-  Future<void> _editSessionTitle(CharacterChatSession session) async {
+  Future<void> editSessionTitle(CharacterChatSession session) async {
     final controller = TextEditingController(text: session.title);
 
     final newTitle = await showDialog<String>(
@@ -495,26 +484,27 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     );
 
     if (newTitle != null && newTitle.isNotEmpty) {
-      await _store.updateSessionTitle(session, newTitle);
-      await _loadAllSessions();
+      await store.updateSessionTitle(session, newTitle);
+      await loadAllSessions();
 
       // 如果修改的是当前会话，更新标题
-      if (session.id == _session.id) {
+      if (session.id == currentSession.id) {
         reloadSession();
       }
     }
   }
 
-  // 准备新会话（不立即创建，等待用户输入）
-  void _prepareNewSession() {
+  // 准备新会话
+  void prepareNewSession() {
     // 如果当前已经是空会话，不需要创建新的
-    if (_session.messages.isEmpty ||
-        (_session.messages.length == 1 &&
-            _session.messages.first.role == 'assistant')) {
+    if (currentSession.messages.isEmpty ||
+        (currentSession.messages
+            .where((m) => m.role == CusRole.user.name)
+            .isEmpty)) {
       return;
     }
 
-    // 创建一个临时会话对象，但不保存到数据库
+    // 判断当前角色是否设置了偏好模型
     final character = _currentCharacter;
 
     if (character.preferredModel == null) {
@@ -522,8 +512,16 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       return;
     }
 
+    // 2025-03-26 如果当前角色的会话记录中有消息为空的会话，则删除该会话
+    final emptySession = allSessions.where((s) => s.messages.isEmpty);
+    if (emptySession.isNotEmpty) {
+      for (var session in emptySession) {
+        store.deleteSession(session.id);
+      }
+    }
+
     // 创建新会话
-    _store
+    store
         .createSession(
       title: '与${character.name}的对话',
       characters: [character],
@@ -531,17 +529,17 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     )
         .then((newSession) {
       // 标记为新创建的空会话
-      _isNewEmptySession = true;
+      isNewEmptySession = true;
 
       // 切换到新会话
-      _handleSessionSelected(newSession);
+      handleSessionSelected(newSession);
     });
 
     resetContentHeight();
   }
 
   // 选择模型
-  Future<void> _selectModel() async {
+  Future<void> selectModel() async {
     final availableModels = await ModelManagerService.getAvailableModelByTypes([
       LLModelType.cc,
       LLModelType.vision,
@@ -549,7 +547,6 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     ]);
 
     if (!mounted) return;
-
     final result = await showModalBottomSheet<CusBriefLLMSpec>(
       context: context,
       isScrollControlled: true,
@@ -557,24 +554,24 @@ class _CharacterChatPageState extends State<CharacterChatPage>
         height: MediaQuery.of(context).size.height * 0.8,
         child: ModelSelectorDialog(
           models: availableModels,
-          selectedModel: _activeModel,
+          selectedModel: activeModel,
         ),
       ),
     );
 
     if (result != null) {
       setState(() {
-        _activeModel = result;
+        activeModel = result;
       });
 
       // 更新会话的活动模型
-      await _store.updateSessionModel(_session, result);
+      await store.updateSessionModel(currentSession, result);
       reloadSession();
     }
   }
 
   // 显示角色管理对话框
-  void _showCharacterManagementDialog() {
+  void showCharacterManagementDialog() {
     var title = Padding(
       padding: EdgeInsets.all(20.sp),
       child: Row(
@@ -587,7 +584,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.add_circle_outline, color: Colors.green),
-            onPressed: _addCharacterToSession,
+            onPressed: addCharacterToSession,
           ),
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -597,7 +594,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       ),
     );
 
-    var list = _session.characters.map((character) {
+    var list = currentSession.characters.map((character) {
       return ListTile(
         leading: SizedBox(
           width: 40.sp,
@@ -605,13 +602,13 @@ class _CharacterChatPageState extends State<CharacterChatPage>
           child: buildAvatarClipOval(character.avatar),
         ),
         title: Text(character.name),
-        trailing: _session.characters.length > 1
+        trailing: currentSession.characters.length > 1
             ? IconButton(
                 icon: const Icon(
                   Icons.remove_circle_outline,
                   color: Colors.red,
                 ),
-                onPressed: () => _removeCharacterFromSession(character),
+                onPressed: () => removeCharacterFromSession(character),
               )
             : null, // 如果只有一个角色，不显示移除按钮
       );
@@ -640,7 +637,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
                       ),
                       title: const Text('添加角色'),
                       onTap: () {
-                        _addCharacterToSession();
+                        addCharacterToSession();
                       },
                     ),
                   ],
@@ -656,7 +653,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   }
 
   // 从会话中移除角色
-  Future<void> _removeCharacterFromSession(CharacterCard character) async {
+  Future<void> removeCharacterFromSession(CharacterCard character) async {
     try {
       // 确认对话框
       final confirmed = await showDialog<bool>(
@@ -688,18 +685,18 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       EasyLoading.show(status: '移除中...');
 
       // 从会话中移除角色
-      final updatedSession = await _store.removeCharacterFromSession(
-        _session,
+      final updatedSession = await store.removeCharacterFromSession(
+        currentSession,
         character.id,
       );
 
       // 更新当前会话
       setState(() {
-        _session = updatedSession;
+        currentSession = updatedSession;
 
         // 如果当前活跃模型是被移除角色的偏好模型，则切换到第一个角色的偏好模型
-        if (_activeModel == character.preferredModel) {
-          _activeModel = _session.characters.first.preferredModel;
+        if (activeModel == character.preferredModel) {
+          activeModel = currentSession.characters.first.preferredModel;
         }
       });
 
@@ -714,13 +711,13 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   }
 
   // 添加角色到会话
-  Future<void> _addCharacterToSession() async {
+  Future<void> addCharacterToSession() async {
     // 获取所有角色
-    final allCharacters = _store.characters;
+    final allCharacters = store.characters;
 
     // 过滤掉已经在会话中的角色
     final availableCharacters = allCharacters
-        .where((c) => !_session.characters.any((sc) => sc.id == c.id))
+        .where((c) => !currentSession.characters.any((sc) => sc.id == c.id))
         .toList();
 
     if (availableCharacters.isEmpty) {
@@ -770,15 +767,15 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       if (mounted) Navigator.pop(context);
 
       // 添加角色到会话
-      await _store.addCharacterToSession(_session, selectedCharacter);
+      await store.addCharacterToSession(currentSession, selectedCharacter);
       reloadSession();
 
       // 添加角色的首条消息
       if (selectedCharacter.firstMessage.isNotEmpty) {
-        await _store.addMessage(
-          session: _session,
+        await store.addMessage(
+          session: currentSession,
           content: selectedCharacter.firstMessage,
-          role: 'assistant',
+          role: CusRole.assistant.name,
           characterId: selectedCharacter.id,
         );
 
@@ -788,7 +785,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   }
 
   // 清空当前对话
-  Future<void> _clearMessages() async {
+  Future<void> clearMessages() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -808,7 +805,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     );
 
     if (confirmed == true) {
-      await _store.clearMessages(_session);
+      await store.clearMessages(currentSession);
       reloadSession();
 
       // 添加角色的首条消息
@@ -823,37 +820,37 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   ///******************************************* */
 
   // 切换到另一个会话
-  Future<void> _handleSessionSelected(CharacterChatSession session) async {
+  Future<void> handleSessionSelected(CharacterChatSession session) async {
     // 更新会话中的角色信息，确保使用最新的角色卡
-    await _store.updateSessionCharacters(session);
+    await store.updateSessionCharacters(session);
 
     // 重新获取更新后的会话
-    session = _store.sessions.firstWhere((s) => s.id == session.id);
+    session = store.sessions.firstWhere((s) => s.id == session.id);
 
     setState(() {
-      _session = session;
-      _activeModel =
+      currentSession = session;
+      activeModel =
           session.activeModel ?? session.characters.first.preferredModel;
-      _editingMessage = null;
-      _isStreaming = false;
-      _cancelGeneration = null;
+      currentEditingMessage = null;
+      isStreaming = false;
+      cancelResponse = null;
     });
 
-    _inputController.clear();
+    inputController.clear();
     resetContentHeight();
   }
 
   // 长按抽屉中会话列表项，处理会话操作
   void _handleSessionAction(CharacterChatSession session, String action) {
     if (action == 'edit') {
-      _editSessionTitle(session);
+      editSessionTitle(session);
     } else if (action == 'delete') {
-      _deleteSession(session);
+      deleteSession(session);
     }
   }
 
   // 删除会话
-  Future<void> _deleteSession(CharacterChatSession session) async {
+  Future<void> deleteSession(CharacterChatSession session) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -874,16 +871,16 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
     if (confirmed == true) {
       // 如果删除的是当前会话，需要切换到另一个会话
-      final isCurrentSession = session.id == _session.id;
+      final isCurrentSession = session.id == currentSession.id;
 
-      await _store.deleteSession(session.id);
-      await _loadAllSessions();
+      await store.deleteSession(session.id);
+      await loadAllSessions();
 
-      if (isCurrentSession && _allSessions.isNotEmpty) {
-        _handleSessionSelected(_allSessions.first);
+      if (isCurrentSession && allSessions.isNotEmpty) {
+        handleSessionSelected(allSessions.first);
       } else if (isCurrentSession) {
         // 如果没有其他会话，创建一个新的空会话
-        _prepareNewSession();
+        prepareNewSession();
       }
     }
   }
@@ -894,21 +891,65 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   ///
   ///******************************************* */
 
+  /// 构建空提示
+  Widget buildEmptyMessageHint() {
+    // 查找对应的角色
+    CharacterCard? character;
+    if (currentSession.characters.isNotEmpty) {
+      character = currentSession.characters.first;
+    }
+
+    return Padding(
+      padding: EdgeInsets.all(8.sp),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 60.sp,
+              height: 60.sp,
+              child: buildAvatarClipOval(character?.avatar ?? ''),
+            ),
+            Text(
+              '嗨，我是${character?.name}',
+              style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w500),
+            ),
+            Text('让我们开始聊天吧！'),
+          ],
+        ),
+      ),
+    );
+  }
+
   // 构建消息列表
-  Widget _buildMessageList() {
+  Widget buildMessageList() {
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(
         textScaler: TextScaler.linear(textScaleFactor),
       ),
       child: ListView.builder(
-        controller: _scrollController,
-        padding: EdgeInsets.only(bottom: 60.sp, top: 16.sp),
-        itemCount: _session.messages.length,
+        controller: scrollController,
+        // 列表底部留一点高度，避免工具按钮和悬浮按钮重叠
+        padding: EdgeInsets.only(bottom: 50.sp),
+        itemCount: currentSession.messages.length,
         // 使用cacheExtent提前渲染一些项，使滚动更流畅
         cacheExtent: 1000.0,
         itemBuilder: (context, index) {
-          final message = _session.messages[index];
-          return _buildMessageItem(message);
+          final message = currentSession.messages[index];
+
+          // 查找对应的角色
+          CharacterCard? character;
+          if (message.characterId != null) {
+            character = currentSession.characters
+                .where((c) => c.id == message.characterId)
+                .firstOrNull;
+          }
+
+          return CharacterMessageItem(
+            message: message,
+            character: character,
+            onLongPress: showMessageOptions,
+          );
         },
       ),
     );
@@ -938,88 +979,68 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     );
   }
 
-  // 构建消息列表项
-  Widget _buildMessageItem(CharacterChatMessage message) {
-    // 查找对应的角色
-    CharacterCard? character;
-    if (message.characterId != null) {
-      character = _session.characters
-          .where((c) => c.id == message.characterId)
-          .firstOrNull;
-    }
-
-    return GestureDetector(
-      onTapDown: (details) {
-        _tapPosition = details.globalPosition;
-      },
-      child: CharacterMessageItem(
-        message: message,
-        character: character,
-        onLongPress: _handleMessageLongPress,
-      ),
-    );
-  }
-
   // 处理消息长按事件
-  void _handleMessageLongPress(CharacterChatMessage message) async {
-    // 只有用户消息可以编辑
-    final bool canEdit = message.role == CusRole.user.name;
-    // 只有AI消息可以重新生成
-    final bool canRegenerate = message.role == CusRole.assistant.name;
+  void showMessageOptions(
+    CharacterChatMessage message,
+    LongPressStartDetails details,
+  ) async {
+    // 添加振动反馈
+    HapticFeedback.mediumImpact();
 
-    // 获取点击位置的RenderBox
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+    // 只有用户消息可以编辑
+    final bool isUser = message.role == CusRole.user.name;
+    // 只有AI消息可以重新生成
+    final bool isAssistant = message.role == CusRole.assistant.name;
+
+    // 获取点击位置
+    final Offset overlayPosition = details.globalPosition;
 
     // 显示弹出菜单
     final result = await showMenu<String>(
       context: context,
-      position: RelativeRect.fromRect(
-        _tapPosition & const Size(40, 40), // 点击位置和大小
-        Offset.zero & overlay.size, // 整个屏幕的大小
+      position: RelativeRect.fromLTRB(
+        overlayPosition.dx,
+        overlayPosition.dy,
+        overlayPosition.dx + 200,
+        overlayPosition.dy + 100,
       ),
       items: [
         PopupMenuItem<String>(
           value: 'copy',
-          child: Row(
-            children: [
-              Icon(Icons.copy, size: 20.sp),
-              SizedBox(width: 8.sp),
-              const Text('复制'),
-            ],
+          child: buildMenuItemWithIcon(
+            icon: Icons.copy,
+            text: '复制文本',
           ),
         ),
-        if (canEdit)
+        PopupMenuItem<String>(
+          value: 'select',
+          child: buildMenuItemWithIcon(
+            icon: Icons.text_fields,
+            text: '选择文本',
+          ),
+        ),
+        if (isUser)
           PopupMenuItem<String>(
             value: 'edit',
-            child: Row(
-              children: [
-                Icon(Icons.edit, size: 20.sp),
-                SizedBox(width: 8.sp),
-                const Text('编辑'),
-              ],
+            child: buildMenuItemWithIcon(
+              icon: Icons.edit,
+              text: '编辑消息',
             ),
           ),
-        if (canEdit)
+        if (isUser)
           PopupMenuItem<String>(
             value: 'resend',
-            child: Row(
-              children: [
-                Icon(Icons.send, size: 20.sp),
-                SizedBox(width: 8.sp),
-                const Text('重新发送'),
-              ],
+            child: buildMenuItemWithIcon(
+              icon: Icons.send,
+              text: '重新发送',
             ),
           ),
-        if (canRegenerate)
+        if (isAssistant)
           PopupMenuItem<String>(
             value: 'regenerate',
-            child: Row(
-              children: [
-                Icon(Icons.refresh, size: 20.sp),
-                SizedBox(width: 8.sp),
-                const Text('重新生成'),
-              ],
+            child: buildMenuItemWithIcon(
+              icon: Icons.refresh,
+              text: '重新生成',
             ),
           ),
       ],
@@ -1029,30 +1050,40 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     if (result == 'copy') {
       Clipboard.setData(ClipboardData(text: message.content));
       EasyLoading.showToast('已复制到剪贴板');
-    } else if (result == 'edit' && canEdit) {
-      _startEditing(message);
-    } else if (result == 'resend' && canEdit) {
-      _resendMessage(message);
-    } else if (result == 'regenerate' && canRegenerate) {
-      _regenerateResponse(message);
+    } else if (result == 'select') {
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        builder: (context) => TextSelectionDialog(
+            text: message.reasoningContent != null &&
+                    message.reasoningContent!.isNotEmpty
+                ? '【推理过程】\n${message.reasoningContent!}\n\n【AI响应】\n${message.content}'
+                : message.content),
+      );
+    } else if (result == 'edit' && isUser) {
+      handleUserMessageEdit(message);
+    } else if (result == 'resend' && isUser) {
+      handleUserMessageResend(message);
+    } else if (result == 'regenerate' && isAssistant) {
+      handleResponseRegenerate(message);
     }
   }
 
   // 开始编辑用户消息
-  void _startEditing(CharacterChatMessage message) {
+  void handleUserMessageEdit(CharacterChatMessage message) {
     setState(() {
-      _editingMessage = message;
-      _inputController.text = message.content;
+      currentEditingMessage = message;
+      inputController.text = message.content;
     });
-    _focusNode.requestFocus();
+    inputFocusNode.requestFocus();
   }
 
   // 重新发送用户消息
-  void _resendMessage(CharacterChatMessage message) {
+  void handleUserMessageResend(CharacterChatMessage message) {
     setState(() {
-      _editingMessage = message;
+      currentEditingMessage = message;
     });
-    _handleSendMessage(
+    handleSendMessage(
       MessageData(
         text: message.content,
         audio: message.contentVoicePath != null
@@ -1064,24 +1095,24 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   }
 
   // 重新生成AI消息
-  Future<void> _regenerateResponse(CharacterChatMessage message) async {
-    if (_isLoading) return;
+  Future<void> handleResponseRegenerate(CharacterChatMessage message) async {
+    if (isLoading) return;
 
     // 找到对应的角色
-    final character = _session.characters
+    final character = currentSession.characters
         .where((c) => c.id == message.characterId)
         .firstOrNull;
     if (character == null) return;
 
     setState(() {
-      _isLoading = true;
-      _isStreaming = true;
+      isLoading = true;
+      isStreaming = true;
     });
 
     try {
       // 更新消息内容为空
-      await _store.updateMessage(
-        session: _session,
+      await store.updateMessage(
+        session: currentSession,
         message: message,
         content: '',
       );
@@ -1094,9 +1125,9 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       EasyLoading.showError('重新生成失败: $e');
     } finally {
       setState(() {
-        _isLoading = false;
-        _isStreaming = false;
-        _cancelGeneration = null;
+        isLoading = false;
+        isStreaming = false;
+        cancelResponse = null;
       });
     }
   }
@@ -1108,44 +1139,42 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   ///******************************************* */
 
   // 处理发送消息
-  Future<void> _handleSendMessage(MessageData messageData) async {
-    if (_isLoading) return;
+  Future<void> handleSendMessage(MessageData messageData) async {
+    if (isLoading) return;
 
     // 如果是编辑模式，调用编辑处理方法
-    if (_editingMessage != null) {
-      await _handleEditMessage(messageData);
+    if (currentEditingMessage != null) {
+      await _processingUserMessage(messageData);
       return;
     }
 
     setState(() {
-      _isLoading = true;
+      isLoading = true;
     });
 
     try {
       // 添加用户消息
-      await _store.addMessage(
-        session: _session,
+      await store.addMessage(
+        session: currentSession,
         content: messageData.text,
-        role: 'user',
+        role: CusRole.user.name,
         contentVoicePath: messageData.audio?.path,
         imagesUrl: messageData.images?.map((img) => img.path).join(','),
       );
 
       // 如果是新创建的空会话，现在已经有内容了，需要刷新会话列表
-      if (_isNewEmptySession) {
-        _isNewEmptySession = false;
-        // 延迟加载会话列表，确保数据库已更新
-        Future.delayed(const Duration(milliseconds: 500), () {
-          _loadAllSessions();
-        });
+      if (isNewEmptySession) {
+        isNewEmptySession = false;
       }
 
+      // 刷新会话列表，确保UI显示最新会话(比如抽屉的最后修改时间)
+      loadAllSessions();
       reloadSession();
       setState(() {
-        _isStreaming = true;
+        isStreaming = true;
       });
 
-      _inputController.clear();
+      inputController.clear();
 
       // 滚动到底部
       resetContentHeight();
@@ -1156,51 +1185,51 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       EasyLoading.showError('发送消息失败: $e');
     } finally {
       setState(() {
-        _isLoading = false;
-        _isStreaming = false;
-        _cancelGeneration = null;
+        isLoading = false;
+        isStreaming = false;
+        cancelResponse = null;
       });
 
       // 清空输入框
-      _inputController.clear();
+      inputController.clear();
     }
   }
 
   // 处理编辑消息
-  Future<void> _handleEditMessage(MessageData messageData) async {
-    if (_editingMessage == null) return;
+  Future<void> _processingUserMessage(MessageData messageData) async {
+    if (currentEditingMessage == null) return;
 
     setState(() {
-      _isLoading = true;
+      isLoading = true;
     });
 
     try {
       // 更新消息内容
-      await _store.updateMessage(
-        session: _session,
-        message: _editingMessage!,
+      await store.updateMessage(
+        session: currentSession,
+        message: currentEditingMessage!,
         content: messageData.text,
       );
 
       // 找到消息在列表中的位置
-      final index =
-          _session.messages.indexWhere((m) => m.id == _editingMessage!.id);
+      final index = currentSession.messages
+          .indexWhere((m) => m.id == currentEditingMessage!.id);
       if (index >= 0) {
         // 删除该消息之后的所有回复
-        final messagesToDelete = _session.messages
-            .where((m) => _session.messages.indexOf(m) > index)
+        final messagesToDelete = currentSession.messages
+            .where((m) => currentSession.messages.indexOf(m) > index)
             .toList();
 
         for (var msg in messagesToDelete) {
-          await _store.deleteMessage(_session, msg);
+          await store.deleteMessage(currentSession, msg);
         }
       }
 
       reloadSession();
       setState(() {
-        _inputController.clear();
-        _isLoading = false;
-        _editingMessage = null;
+        inputController.clear();
+        isLoading = false;
+        currentEditingMessage = null;
       });
 
       // 滚动到底部
@@ -1211,19 +1240,19 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       EasyLoading.showError('编辑消息失败: $e');
     } finally {
       setState(() {
-        _isLoading = false;
-        _editingMessage = null;
+        isLoading = false;
+        currentEditingMessage = null;
       });
 
       // 清空输入框
-      _inputController.clear();
+      inputController.clear();
     }
   }
 
   // 生成AI回复（不添加新的用户消息）
   Future<void> _generateAIResponses() async {
     setState(() {
-      _isStreaming = true;
+      isStreaming = true;
     });
 
     try {
@@ -1233,12 +1262,12 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       // 为每个角色创建一个空消息
       final Map<String, CharacterChatMessage> characterMessages = {};
 
-      for (var character in _session.characters) {
+      for (var character in currentSession.characters) {
         // 创建一个空消息
-        final aiMessage = await _store.addMessage(
-          session: _session,
+        final aiMessage = await store.addMessage(
+          session: currentSession,
           content: '',
-          role: 'assistant',
+          role: CusRole.assistant.name,
           characterId: character.id,
         );
 
@@ -1250,20 +1279,25 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       reloadSession();
 
       // 为每个角色创建并启动生成任务
-      for (var character in _session.characters) {
+      for (var character in currentSession.characters) {
         final task = _commonGenerateResponse(
-            character, characterMessages[character.id]!);
+          character,
+          characterMessages[character.id]!,
+        );
         generationTasks.add(task);
       }
 
       // 等待所有生成任务完成
       await Future.wait(generationTasks);
+
+      // 刷新会话列表，确保UI显示所有空消息
+      loadAllSessions();
     } catch (e) {
       EasyLoading.showError('生成回复失败: $e');
     } finally {
       setState(() {
-        _isStreaming = false;
-        _cancelGeneration = null;
+        isStreaming = false;
+        cancelResponse = null;
       });
 
       // 滚动到底部
@@ -1282,14 +1316,14 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
       // 调用AI服务生成回复
       final (stream, cancelFunc) = await ChatService.sendCharacterMessage(
-        _activeModel ?? character.preferredModel!,
+        activeModel ?? character.preferredModel!,
         history,
         stream: true,
       );
 
       // 保存取消函数
       // 注意：这里只保存最后一个角色的取消函数，如果需要取消所有，需要更复杂的管理
-      _cancelGeneration = cancelFunc;
+      cancelResponse = cancelFunc;
 
       String fullContent = '';
       String fullReasoningContent = '';
@@ -1311,8 +1345,8 @@ class _CharacterChatPageState extends State<CharacterChatPage>
           }
 
           // 更新消息内容
-          await _store.updateMessage(
-            session: _session,
+          await store.updateMessage(
+            session: currentSession,
             message: aiMessage,
             content: fullContent,
             reasoningContent: fullReasoningContent,
@@ -1334,8 +1368,8 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       EasyLoading.showError('生成${character.name}的回复失败: $e');
 
       // 更新消息，显示错误
-      await _store.updateMessage(
-        session: _session,
+      await store.updateMessage(
+        session: currentSession,
         message: aiMessage,
         content: '生成${character.name}的回复失败: $e',
       );
@@ -1347,21 +1381,21 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   }
 
   // 取消编辑用户消息
-  void _cancelEditing() {
+  void handleCancelEditUserMessage() {
     setState(() {
-      _editingMessage = null;
-      _inputController.clear();
+      currentEditingMessage = null;
+      inputController.clear();
     });
   }
 
   // 停止生成
-  void _stopGeneration() {
-    if (_cancelGeneration != null) {
-      _cancelGeneration!();
-      _cancelGeneration = null;
+  void handleStopStreaming() {
+    if (cancelResponse != null) {
+      cancelResponse!();
+      cancelResponse = null;
 
       setState(() {
-        _isStreaming = false;
+        isStreaming = false;
       });
 
       EasyLoading.showToast('已停止生成');
@@ -1379,7 +1413,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
       left: 0,
       right: 0,
       // 悬浮按钮有设定上下间距，根据其他组件布局适当调整位置
-      bottom: _isStreaming ? inputHeight + 5.sp : inputHeight - 5.sp,
+      bottom: isStreaming ? inputHeight + 5.sp : inputHeight - 5.sp,
       child: Container(
         // 新版本输入框为了更多输入内容，左右边距为0
         padding: EdgeInsets.symmetric(horizontal: 0.sp),
@@ -1389,7 +1423,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
           children: [
             // 图标按钮的默认尺寸是48*48,占位宽度默认48
             SizedBox(width: 48.sp),
-            if (_session.messages.isNotEmpty && !_isStreaming)
+            if (currentSession.messages.isNotEmpty && !isStreaming)
               // 新加对话按钮的背景色
               Padding(
                 // 这里的上下边距，和下面maxHeight的和，要等于默认图标按钮高度的48sp
@@ -1422,7 +1456,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
                       size: 15.sp,
                       color: Colors.white,
                     ),
-                    onPressed: _prepareNewSession,
+                    onPressed: prepareNewSession,
                     label: Text(
                       '开启新对话',
                       style: TextStyle(fontSize: 12.sp, color: Colors.white),
@@ -1447,6 +1481,38 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     );
   }
 
+  // 构建背景
+  Widget buildBackground() {
+    if (backgroundImage == null || backgroundImage!.isEmpty) {
+      return Container(color: Colors.transparent);
+    }
+
+    return Positioned.fill(
+      child: Opacity(
+        opacity: backgroundOpacity,
+        child: buildCusImage(backgroundImage!, fit: BoxFit.cover),
+      ),
+    );
+
+    // 使用FadeInImage或Image.memory来优化图片加载
+    // return Opacity(
+    //   opacity: _backgroundOpacity,
+    //   child: _backgroundImage!.startsWith('assets/')
+    //       ? Image.asset(
+    //           _backgroundImage!,
+    //           fit: BoxFit.cover,
+    //           width: double.infinity,
+    //           height: double.infinity,
+    //         )
+    //       : Image.file(
+    //           File(_backgroundImage!),
+    //           fit: BoxFit.cover,
+    //           width: double.infinity,
+    //           height: double.infinity,
+    //         ),
+    // );
+  }
+
   ///******************************************* */
   ///
   /// 其他相关的内容方法
@@ -1455,12 +1521,12 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
   /// 添加角色的首条消息
   Future<void> _addCharacterFirstMessages() async {
-    for (var character in _session.characters) {
+    for (var character in currentSession.characters) {
       if (character.firstMessage.isNotEmpty) {
-        await _store.addMessage(
-          session: _session,
+        await store.addMessage(
+          session: currentSession,
           content: character.firstMessage,
-          role: 'assistant',
+          role: CusRole.assistant.name,
           characterId: character.id,
         );
       }
@@ -1475,12 +1541,12 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
     // 添加系统提示词
     history.add({
-      'role': 'system',
+      'role': CusRole.system.name,
       'content': character.generateSystemPrompt(),
     });
 
     // 添加聊天历史
-    for (var message in _session.messages) {
+    for (var message in currentSession.messages) {
       // 跳过空消息
       if (message.content.isEmpty &&
           message.imagesUrl == null &&
@@ -1488,7 +1554,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
         continue;
       }
 
-      if (message.role == 'user') {
+      if (message.role == CusRole.user.name) {
         // 处理用户消息，可能包含多模态内容
         // if ((message.imagesUrl != null && message.imagesUrl!.isNotEmpty) ||
         //     (message.contentVoicePath != null &&
@@ -1538,21 +1604,21 @@ class _CharacterChatPageState extends State<CharacterChatPage>
           // }
 
           history.add({
-            'role': 'user',
+            'role': CusRole.user.name,
             'content': contentList,
           });
         } else {
           // 纯文本消息
           history.add({
-            'role': 'user',
+            'role': CusRole.user.name,
             'content': message.content,
           });
         }
-      } else if (message.role == 'assistant' &&
+      } else if (message.role == CusRole.assistant.name &&
           message.characterId == character.id) {
         // AI助手的回复通常是纯文本
         history.add({
-          'role': 'assistant',
+          'role': CusRole.assistant.name,
           'content': message.content,
         });
       }
@@ -1564,9 +1630,9 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   // 重置对话列表内容高度(在点击了重新生成、切换了模型、点击了指定历史记录后都应该调用)
   void resetContentHeight({int? times}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
+      if (!mounted || !scrollController.hasClients) return;
 
-      lastContentHeight = _scrollController.position.maxScrollExtent;
+      lastContentHeight = scrollController.position.maxScrollExtent;
     });
 
     // 重置完了顺便滚动到底部
@@ -1575,45 +1641,13 @@ class _CharacterChatPageState extends State<CharacterChatPage>
 
   void _scrollToBottom({int? times}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
           duration: Duration(milliseconds: times ?? 300),
           curve: Curves.easeOut,
         );
       }
     });
-  }
-
-  // 构建背景
-  Widget _buildBackground() {
-    if (_backgroundImage == null) {
-      return Container(color: Colors.transparent);
-    }
-
-    return Positioned.fill(
-      child: Opacity(
-        opacity: _backgroundOpacity,
-        child: buildCusImage(_backgroundImage!, fit: BoxFit.cover),
-      ),
-    );
-
-    // 使用FadeInImage或Image.memory来优化图片加载
-    // return Opacity(
-    //   opacity: _backgroundOpacity,
-    //   child: _backgroundImage!.startsWith('assets/')
-    //       ? Image.asset(
-    //           _backgroundImage!,
-    //           fit: BoxFit.cover,
-    //           width: double.infinity,
-    //           height: double.infinity,
-    //         )
-    //       : Image.file(
-    //           File(_backgroundImage!),
-    //           fit: BoxFit.cover,
-    //           width: double.infinity,
-    //           height: double.infinity,
-    //         ),
-    // );
   }
 }

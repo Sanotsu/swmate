@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../common/constants/constants.dart';
 
@@ -173,4 +174,131 @@ Image buildNetworkImage(String url, {BoxFit fit = BoxFit.scaleDown}) {
 Widget _cusErrorWidget(
     BuildContext context, Object error, StackTrace? stackTrace) {
   return Image.asset(placeholderImageUrl, fit: BoxFit.scaleDown);
+}
+
+// 如果联网搜索有联网部分，展示链接
+List<Widget> buildReferences(List<Map<String, dynamic>>? refs) {
+  return List.generate(
+    refs?.length ?? 0,
+    (index) => GestureDetector(
+      onTap: () =>
+          refs?[index]['url'] != null ? _launchUrl(refs?[index]['url']!) : null,
+      child: Padding(
+        padding: EdgeInsets.only(top: 8.sp),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RichText(
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: '${index + 1}. ${refs?[index]['title']}\t\t\t\t',
+                    style: TextStyle(
+                      color: Colors.lightBlue,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                  TextSpan(
+                    text: refs?[index]['publish_time'] ?? '',
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            // Text(
+            //   '${index + 1}. ${refs?[index]['title']}',
+            //   style: TextStyle(
+            //     fontSize: 12.sp,
+            //     color: Theme.of(context).primaryColor,
+            //   ),
+            //   maxLines: 2,
+            //   overflow: TextOverflow.ellipsis,
+            // ),
+            // Text(
+            //   refs?[index]['publish_time'] ?? '',
+            //   style: TextStyle(fontSize: 12.sp),
+            // ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+// 可展开的联网搜索结果
+Widget buildReferencesExpansionTile(List<Map<String, dynamic>>? refs) {
+  // 构建联网搜索结果的文本
+  buildText(int index) => TextSpan(
+        children: [
+          TextSpan(
+            children: [
+              TextSpan(
+                text: '${index + 1}. ${refs?[index]['title']}\t\t\t\t',
+                style: TextStyle(
+                  color: Colors.lightBlue,
+                  fontSize: 12.sp,
+                ),
+              ),
+              TextSpan(
+                text: refs?[index]['publish_time'] ?? '',
+                style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+              ),
+            ],
+          ),
+        ],
+      );
+
+  return Container(
+    padding: EdgeInsets.only(bottom: 8.sp),
+    child: ExpansionTile(
+      title: Text(
+        '联网搜索结果',
+        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+      ),
+      initiallyExpanded: true,
+      children: List.generate(
+        refs?.length ?? 0,
+        (index) => GestureDetector(
+          onTap: () {
+            if (refs?[index]['url'] != null &&
+                refs![index]['url'].toString().trim().isNotEmpty) {
+              _launchUrl(refs[index]['url']!);
+            } else if (refs?[index]['link'] != null &&
+                refs![index]['link'].toString().trim().isNotEmpty) {
+              _launchUrl(refs[index]['link']!);
+            }
+          },
+          child: Padding(
+            padding: EdgeInsets.only(top: 8.sp),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Builder(
+                  builder: (context) {
+                    // RichText 组件允许在文本中嵌入其他小部件，并应用文本缩放因子。
+                    // 因为richtext无法自动获取到缩放因子，所以需要手动获取全局的文本缩放因子
+                    return RichText(
+                      // 应用文本缩放因子
+                      textScaler: MediaQuery.of(context).textScaler,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      text: buildText(index),
+                    );
+                  },
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Future<void> _launchUrl(String url) async {
+  if (!await launchUrl(Uri.parse(url))) {
+    throw Exception('Could not launch $url');
+  }
 }

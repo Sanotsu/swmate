@@ -46,7 +46,7 @@ class _ModelSelectorDialogState extends State<ModelSelectorDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       // 控制边距
-      insetPadding: EdgeInsets.all(10.sp),
+      insetPadding: EdgeInsets.all(8.sp),
       child: Container(
         width: 1.sw,
         height: 1.sh,

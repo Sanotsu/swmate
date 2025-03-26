@@ -3,12 +3,11 @@ import 'dart:io';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:proste_logger/proste_logger.dart';
+import '../../../common/constants/constants.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
 import 'character_card.dart';
 import 'character_chat_session.dart';
 import 'character_chat_message.dart';
-
-import 'import_result.dart';
 
 final pl = ProsteLogger();
 
@@ -119,7 +118,7 @@ class CharacterStore {
       if (character.firstMessage.isNotEmpty) {
         session.messages.add(CharacterChatMessage(
           content: character.firstMessage,
-          role: 'assistant',
+          role: CusRole.assistant.name,
           characterId: character.id,
         ));
       }
@@ -333,6 +332,10 @@ class CharacterStore {
       // 检查角色是否有变化
       if (_isCharacterChanged(character, latestCharacter)) {
         hasChanges = true;
+        // 更新会话的活动模型
+        if (latestCharacter.preferredModel != null) {
+          await updateSessionModel(session, latestCharacter.preferredModel!);
+        }
       }
 
       updatedCharacters.add(latestCharacter);
@@ -519,7 +522,10 @@ class CharacterStore {
   }
 
   // 导出所有会话历史记录到用户指定位置
-  Future<String> exportAllSessionsHistory({String? customPath}) async {
+  Future<String> exportAllSessionsHistory({
+    String? customPath,
+    String? fileName,
+  }) async {
     try {
       String directoryPath;
       if (customPath != null) {
@@ -530,10 +536,12 @@ class CharacterStore {
       }
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final filePath = '$directoryPath/所有角色对话记录_$timestamp.json';
+      final filePath =
+          "$directoryPath/${fileName ?? '所有角色对话记录_$timestamp.json'}";
       final file = File(filePath);
 
       final jsonList = _sessions.map((s) => s.toJson()).toList();
+
       await file.writeAsString(jsonEncode(jsonList));
 
       return filePath;
@@ -774,4 +782,28 @@ class CharacterStore {
 
     return updatedSession;
   }
+}
+
+class ImportSessionsResult {
+  final int importedSessions;
+  final int skippedSessions;
+  final int importedCharacters;
+  final CharacterChatSession? firstSession;
+
+  ImportSessionsResult({
+    required this.importedSessions,
+    required this.skippedSessions,
+    required this.importedCharacters,
+    this.firstSession,
+  });
+}
+
+class ImportCharactersResult {
+  final int importedCount;
+  final int skippedCount;
+
+  ImportCharactersResult({
+    required this.importedCount,
+    required this.skippedCount,
+  });
 }

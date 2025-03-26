@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class TextSelectionDialog extends StatelessWidget {
   final String text;
@@ -22,25 +24,22 @@ class TextSelectionDialog extends StatelessWidget {
           actions: [
             IconButton(
               icon: const Icon(Icons.copy),
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: text));
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('已复制到剪贴板')),
-                );
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: text));
+                EasyLoading.showToast('已复制到剪贴板');
                 Navigator.pop(context);
               },
             ),
           ],
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.sp),
           child: SelectableText(
             text,
-            style: const TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: 16.sp),
           ),
         ),
       ),
     );
   }
-} 
+}

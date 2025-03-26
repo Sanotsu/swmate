@@ -19,6 +19,11 @@ enum ApiPlatform {
 
   siliconCloud,
   infini,
+
+  // 2025-03-24 火山引擎默认调用和关联应用(比如配置了联网搜索)使用的url不一样
+  // 避免出现冲突，分成两个且互不包含
+  volcengine,
+  volcesBot,
 }
 
 // 用户自行导入密钥时，json文件的key
@@ -38,6 +43,8 @@ enum ApiPlatformAKLabel {
   // 第三方多模型平台(只有第三方)
   USER_SILICONCLOUD_API_KEY, // 硅基流动
   USER_INFINI_GEN_STUDIO_API_KEY, // 无问芯穹的genStudio
+  USER_VOLCENGINE_API_KEY, // 火山引擎
+  USER_VOLCESBOT_API_KEY, // 火山引擎的bot
 }
 
 // 模型对应的中文名
@@ -50,6 +57,8 @@ final Map<ApiPlatform, String> CP_NAME_MAP = {
   ApiPlatform.zhipu: '智谱',
   ApiPlatform.siliconCloud: '硅基流动',
   ApiPlatform.infini: '无问芯穹',
+  ApiPlatform.volcengine: '火山引擎',
+  ApiPlatform.volcesBot: '火山Bot',
 };
 
 // 大模型的分类，在不同页面可以用作模型的筛选

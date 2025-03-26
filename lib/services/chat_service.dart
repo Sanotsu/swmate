@@ -52,6 +52,10 @@ class ChatService {
         return 'https://api.siliconflow.cn/v1';
       case ApiPlatform.infini:
         return 'https://cloud.infini-ai.com/maas/v1';
+      case ApiPlatform.volcengine:
+        return 'https://ark.cn-beijing.volces.com/api/v3';
+      case ApiPlatform.volcesBot:
+        return 'https://ark.cn-beijing.volces.com/api/v3/bots';
     }
   }
 
@@ -103,6 +107,12 @@ class ChatService {
         case ApiPlatform.infini:
           apiKey =
               userKeys[ApiPlatformAKLabel.USER_INFINI_GEN_STUDIO_API_KEY.name];
+          break;
+        case ApiPlatform.volcengine:
+          apiKey = userKeys[ApiPlatformAKLabel.USER_VOLCENGINE_API_KEY.name];
+          break;
+        case ApiPlatform.volcesBot:
+          apiKey = userKeys[ApiPlatformAKLabel.USER_VOLCESBOT_API_KEY.name];
           break;
       }
 
@@ -167,6 +177,18 @@ class ChatService {
       );
     }
 
+    // 2025-03-25 智谱GLM4 支持 web_search
+    if (model.platform == ApiPlatform.zhipu) {
+      additionalParams = {
+        'tools': [
+          {
+            "type": "web_search",
+            "web_search": {"enable": true, "search_result": true}
+          }
+        ]
+      };
+    }
+
     final request = ChatCompletionRequest(
       model: model.model,
       messages: messagesList,
@@ -198,6 +220,23 @@ class ChatService {
         advancedOptions,
         model.platform,
       );
+    }
+
+    // 2025-03-25 文档中智谱AI模型支持 web_search，但实测没有用
+    // 高级的Web-Search-Pro工具0.03元/次，且单独API调用，还要手动处理成输入token处理？
+    if (model.platform == ApiPlatform.zhipu) {
+      additionalParams = {
+        'tools': [
+          {
+            "type": "web_search",
+            "web_search": {
+              "enable": true,
+              "search_result": true,
+              // "search_query": messages.last.content
+            }
+          }
+        ]
+      };
     }
 
     final request = ChatCompletionRequest(
@@ -254,7 +293,15 @@ List<Map<String, dynamic>> _buildAPIContent(List<BranchChatMessage> messages) {
 
     // 添加文本内容
     if (m.content.isNotEmpty) {
-      contentList.add({'type': 'text', 'text': m.content});
+      // 如果只有文本内容，则直接添加
+      if (m.imagesUrl != null || m.videosUrl != null) {
+        contentList.add({'type': 'text', 'text': m.content});
+      } else {
+        return {
+          'role': m.role,
+          'content': m.content,
+        };
+      }
     }
 
     // 处理图片(按逗号分割图片地址)

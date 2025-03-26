@@ -36,10 +36,14 @@ class ChatMessage {
 
   // 2024-08-07 输入的文本可能是语言转的，保留语言文件地址
   String? contentVoicePath;
-  // 2024-07-22 如果是rag的大模型，还会保存检索的索引
-  List<CCQuote>? quotes;
   // 2024-07-17 有可能对话存在输入图片(假如后续一个用户对话中存在图片切来切去，就最后每个问答来回都存上图片)
   String? imageUrl;
+
+  // 2024-07-22 如果是rag的大模型，还会保存检索的索引
+  List<CCQuote>? quotes;
+
+  // 2025-03-24 联网搜索参考内容
+  List<Map<String, dynamic>>? references;
 
   /// 记录对话耗费
   int? promptTokens;
@@ -58,8 +62,9 @@ class ChatMessage {
     this.reasoningContent,
     this.thinkingDuration,
     this.contentVoicePath,
-    this.quotes,
     this.imageUrl,
+    this.quotes,
+    this.references,
     this.promptTokens,
     this.completionTokens,
     this.totalTokens,
@@ -87,6 +92,7 @@ class ChatMessage {
       'thinkingDuration': thinkingDuration,
       'contentVoicePath': contentVoicePath,
       'quotes': quotes.toString(),
+      'references': references.toString(),
       'imageUrl': imageUrl,
       'promptTokens': promptTokens,
       'completionTokens': completionTokens,
@@ -112,6 +118,11 @@ class ChatMessage {
           ? (map['quotes'] as List<dynamic>)
               .map((quoteMap) =>
                   CCQuote.fromMap(quoteMap as Map<String, dynamic>))
+              .toList()
+          : null,
+      references: map['references'] != null
+          ? (map['references'] as List<dynamic>)
+              .map((referenceMap) => referenceMap as Map<String, dynamic>)
               .toList()
           : null,
       imageUrl: map['imageUrl'] as String?,

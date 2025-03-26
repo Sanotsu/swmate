@@ -9,7 +9,7 @@ import '../../_chat_components/_small_tool_widgets.dart';
 import '../../../../models/brief_ai_tools/character_chat/character_store.dart';
 import 'package:file_picker/file_picker.dart';
 
-class SessionHistoryDrawer extends StatefulWidget {
+class CharacterChatHistoryDrawer extends StatefulWidget {
   final List<CharacterChatSession> sessions;
   final CharacterChatSession currentSession;
   final CharacterCard character;
@@ -17,7 +17,7 @@ class SessionHistoryDrawer extends StatefulWidget {
   final Function(CharacterChatSession, String) onSessionAction;
   final VoidCallback onNewSession;
 
-  const SessionHistoryDrawer({
+  const CharacterChatHistoryDrawer({
     super.key,
     required this.sessions,
     required this.currentSession,
@@ -28,10 +28,12 @@ class SessionHistoryDrawer extends StatefulWidget {
   });
 
   @override
-  State<SessionHistoryDrawer> createState() => _SessionHistoryDrawerState();
+  State<CharacterChatHistoryDrawer> createState() =>
+      _CharacterChatHistoryDrawerState();
 }
 
-class _SessionHistoryDrawerState extends State<SessionHistoryDrawer> {
+class _CharacterChatHistoryDrawerState
+    extends State<CharacterChatHistoryDrawer> {
   // 存储点击位置
   Offset _tapPosition = Offset.zero;
 
@@ -109,10 +111,14 @@ class _SessionHistoryDrawerState extends State<SessionHistoryDrawer> {
                       // 获取最后一条消息
                       String lastMessage = '无消息';
                       if (session.messages.isNotEmpty) {
-                        final lastMsg = session.messages.last;
-                        lastMessage = lastMsg.content.length > 30
-                            ? '${lastMsg.content.substring(0, 30)}...'
-                            : lastMsg.content;
+                        // 最后一条消息可能有很多换行符，要替换掉
+                        final lastMsgContent = session.messages.last.content
+                            .replaceAll('\n', ' ')
+                            .replaceAll('\r', ' ');
+
+                        lastMessage = lastMsgContent.length > 30
+                            ? '${lastMsgContent.substring(0, 30)}...'
+                            : lastMsgContent;
                       }
 
                       return GestureDetector(

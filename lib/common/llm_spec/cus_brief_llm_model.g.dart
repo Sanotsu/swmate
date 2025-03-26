@@ -53,6 +53,8 @@ const _$ApiPlatformEnumMap = {
   ApiPlatform.zhipu: 'zhipu',
   ApiPlatform.siliconCloud: 'siliconCloud',
   ApiPlatform.infini: 'infini',
+  ApiPlatform.volcengine: 'volcengine',
+  ApiPlatform.volcesBot: 'volcesBot',
 };
 
 const _$LLModelTypeEnumMap = {

@@ -92,6 +92,14 @@ class ModelManagerService {
                       ApiPlatformAKLabel.USER_INFINI_GEN_STUDIO_API_KEY.name]
                   ?.isNotEmpty ??
               false;
+        case ApiPlatform.volcengine:
+          return userKeys[ApiPlatformAKLabel.USER_VOLCENGINE_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
+        case ApiPlatform.volcesBot:
+          return userKeys[ApiPlatformAKLabel.USER_VOLCESBOT_API_KEY.name]
+                  ?.isNotEmpty ??
+              false;
       }
     }).toList();
   }

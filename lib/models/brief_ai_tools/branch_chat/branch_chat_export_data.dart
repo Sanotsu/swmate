@@ -69,6 +69,7 @@ class BranchChatMessageExport {
   final String? contentVoicePath;
   final String? imagesUrl;
   final String? videosUrl;
+  final List<Map<String, dynamic>>? references;
   final int? promptTokens;
   final int? completionTokens;
   final int? totalTokens;
@@ -88,6 +89,7 @@ class BranchChatMessageExport {
     this.contentVoicePath,
     this.imagesUrl,
     this.videosUrl,
+    this.references,
     this.promptTokens,
     this.completionTokens,
     this.totalTokens,
@@ -109,6 +111,7 @@ class BranchChatMessageExport {
       contentVoicePath: message.contentVoicePath,
       imagesUrl: message.imagesUrl,
       videosUrl: message.videosUrl,
+      references: message.references,
       promptTokens: message.promptTokens,
       completionTokens: message.completionTokens,
       totalTokens: message.totalTokens,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../common/constants/constants.dart';
 import '../../../../models/brief_ai_tools/branch_chat/branch_chat_message.dart';
 
 class BranchTreeDialog extends StatefulWidget {
@@ -214,12 +215,14 @@ class _BranchTreeDialogState extends State<BranchTreeDialog> {
                     ),
                     decoration: BoxDecoration(
                       color: node.branchPath == selectedPath
-                          ? (node.role == 'user'
+                          ? (node.role == CusRole.user.name
                               ? Colors.blue.withValues(alpha: 0.1)
                               : Colors.green.withValues(alpha: 0.1))
                           : null,
                       border: Border.all(
-                        color: node.role == 'user' ? Colors.blue : Colors.green,
+                        color: node.role == CusRole.user.name
+                            ? Colors.blue
+                            : Colors.green,
                         width: 1,
                       ),
                       borderRadius: BorderRadius.circular(8.sp),
@@ -230,19 +233,19 @@ class _BranchTreeDialogState extends State<BranchTreeDialog> {
                         Row(
                           children: [
                             Icon(
-                              node.role == 'user'
+                              node.role == CusRole.user.name
                                   ? Icons.person
                                   : Icons.smart_toy,
                               size: 16.sp,
-                              color: node.role == 'user'
+                              color: node.role == CusRole.user.name
                                   ? Colors.blue
                                   : Colors.green,
                             ),
                             SizedBox(width: 8.sp),
                             Text(
-                              node.role == 'user' ? '用户' : 'AI',
+                              node.role == CusRole.user.name ? '用户' : 'AI',
                               style: TextStyle(
-                                color: node.role == 'user'
+                                color: node.role == CusRole.user.name
                                     ? Colors.blue
                                     : Colors.green,
                                 fontWeight: FontWeight.bold,
@@ -367,12 +370,12 @@ class _BranchTreeDialogState extends State<BranchTreeDialog> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 6.sp, vertical: 0.sp),
             decoration: BoxDecoration(
-              color: message.role == 'user'
+              color: message.role == CusRole.user.name
                   ? Colors.blue.withValues(alpha: 0.1)
                   : Colors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16.sp),
               border: Border.all(
-                color: message.role == 'user'
+                color: message.role == CusRole.user.name
                     ? Colors.blue.withValues(alpha: 0.3)
                     : Colors.green.withValues(alpha: 0.3),
               ),
@@ -382,7 +385,9 @@ class _BranchTreeDialogState extends State<BranchTreeDialog> {
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.bold,
-                color: message.role == 'user' ? Colors.blue : Colors.green,
+                color: message.role == CusRole.user.name
+                    ? Colors.blue
+                    : Colors.green,
               ),
             ),
           ),

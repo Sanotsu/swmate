@@ -20,9 +20,10 @@ ChatCompletionResponse _$ChatCompletionResponseFromJson(
           ? null
           : ChatCompletionUsage.fromJson(
               readJsonValue(json, 'usage') as Map<String, dynamic>),
-      searchResults: (readJsonValue(json, 'searchResults') as List<dynamic>?)
-          ?.map((e) => e as Map<String, dynamic>)
-          .toList(),
+      searchResults:
+          (readReferenceValue(json, 'searchResults') as List<dynamic>?)
+              ?.map((e) => e as Map<String, dynamic>)
+              .toList(),
       systemFingerprint: readJsonValue(json, 'systemFingerprint') as String?,
       cusText: json['cusText'] as String?,
     );

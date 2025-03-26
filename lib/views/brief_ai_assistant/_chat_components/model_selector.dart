@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../common/llm_spec/cus_brief_llm_model.dart';
-import '../../../../common/llm_spec/constant_llm_enum.dart';
+import '../../../common/llm_spec/cus_brief_llm_model.dart';
+import '../../../common/llm_spec/constant_llm_enum.dart';
 
 class ModelSelector extends StatefulWidget {
   final List<CusBriefLLMSpec> models;

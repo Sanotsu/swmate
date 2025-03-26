@@ -14,10 +14,13 @@ ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => ChatMessage(
       reasoningContent: json['reasoningContent'] as String?,
       thinkingDuration: (json['thinkingDuration'] as num?)?.toInt(),
       contentVoicePath: json['contentVoicePath'] as String?,
+      imageUrl: json['imageUrl'] as String?,
       quotes: (json['quotes'] as List<dynamic>?)
           ?.map((e) => CCQuote.fromJson(e as Map<String, dynamic>))
           .toList(),
-      imageUrl: json['imageUrl'] as String?,
+      references: (json['references'] as List<dynamic>?)
+          ?.map((e) => e as Map<String, dynamic>)
+          .toList(),
       promptTokens: (json['promptTokens'] as num?)?.toInt(),
       completionTokens: (json['completionTokens'] as num?)?.toInt(),
       totalTokens: (json['totalTokens'] as num?)?.toInt(),
@@ -33,8 +36,9 @@ Map<String, dynamic> _$ChatMessageToJson(ChatMessage instance) =>
       'reasoningContent': instance.reasoningContent,
       'thinkingDuration': instance.thinkingDuration,
       'contentVoicePath': instance.contentVoicePath,
-      'quotes': instance.quotes?.map((e) => e.toJson()).toList(),
       'imageUrl': instance.imageUrl,
+      'quotes': instance.quotes?.map((e) => e.toJson()).toList(),
+      'references': instance.references,
       'promptTokens': instance.promptTokens,
       'completionTokens': instance.completionTokens,
       'totalTokens': instance.totalTokens,

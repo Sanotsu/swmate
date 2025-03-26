@@ -79,12 +79,15 @@ class _CharacterEditorPageState extends State<CharacterEditorPage> {
     ]);
 
     if (!mounted) return;
-
-    final result = await showDialog<CusBriefLLMSpec>(
+    final result = await showModalBottomSheet<CusBriefLLMSpec>(
       context: context,
-      builder: (context) => ModelSelectorDialog(
-        models: availableModels,
-        selectedModel: _preferredModel,
+      isScrollControlled: true,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.8,
+        child: ModelSelectorDialog(
+          models: availableModels,
+          selectedModel: _preferredModel,
+        ),
       ),
     );
 

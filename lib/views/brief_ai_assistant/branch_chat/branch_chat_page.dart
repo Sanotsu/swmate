@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../common/constants/constants.dart';
 import '../../../common/utils/tools.dart';
 import '../../../services/model_manager_service.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
@@ -21,19 +22,19 @@ import '../../../services/chat_service.dart';
 import '../../../services/cus_get_storage.dart';
 
 import '../_chat_components/_small_tool_widgets.dart';
-import '../chat/components/model_selector.dart';
+import '../_chat_pages/chat_export_import_page.dart';
+import '../_chat_pages/chat_background_picker_page.dart';
+import '../_chat_components/model_filter.dart';
+import '../_chat_components/model_selector.dart';
 
-import 'components/branch_chat_background_picker.dart';
 import 'components/branch_message_item.dart';
-import 'components/branch_model_filter.dart';
 import 'components/branch_tree_dialog.dart';
-import 'components/chat_input_bar.dart';
-import 'components/chat_history_drawer.dart';
-import 'components/text_selection_dialog.dart';
+import '../_chat_components/chat_input_bar.dart';
+import 'components/branch_chat_history_drawer.dart';
+import '../_chat_components/text_selection_dialog.dart';
 import 'components/branch_message_actions.dart';
 
 import 'pages/add_model_page.dart';
-import 'pages/chat_export_import_page.dart';
 
 ///
 /// 分支对话主页面
@@ -54,7 +55,7 @@ class _BranchChatPageState extends State<BranchChatPage>
   // 分支存储器
   late final BranchStore store;
   // 缓存存储器
-  final MyGetStorage _storage = MyGetStorage();
+  final MyGetStorage storage = MyGetStorage();
 
   // 输入框控制器
   final TextEditingController inputController = TextEditingController();
@@ -120,7 +121,7 @@ class _BranchChatPageState extends State<BranchChatPage>
   double backgroundOpacity = 0.35;
 
   // 添加手动终止响应的取消回调
-  VoidCallback? _cancelResponse;
+  VoidCallback? cancelResponse;
 
   // 添加会话列表状态
   List<BranchChatSession> sessionList = [];
@@ -183,7 +184,7 @@ class _BranchChatPageState extends State<BranchChatPage>
     inputFocusNode.dispose();
     inputController.dispose();
     scrollController.dispose();
-    _cancelResponse?.call();
+    cancelResponse?.call();
     super.dispose();
   }
 
@@ -333,7 +334,7 @@ class _BranchChatPageState extends State<BranchChatPage>
             BranchChatMessage(
               id: 0,
               messageId: 'streaming',
-              role: 'assistant',
+              role: CusRole.assistant.name,
               content: streamingContent,
               reasoningContent: streamingReasoningContent,
               createTime: DateTime.now(),
@@ -360,8 +361,8 @@ class _BranchChatPageState extends State<BranchChatPage>
   // 加载背景设置 - 优化为异步加载并缓存结果
   Future<void> loadBackgroundSettings() async {
     // 先检查是否已有缓存的背景设置
-    final cachedBackground = _storage.getCachedBackground();
-    final cachedOpacity = _storage.getCachedBackgroundOpacity();
+    final cachedBackground = storage.getCachedBackground();
+    final cachedOpacity = storage.getCachedBackgroundOpacity();
 
     if (cachedBackground != null || cachedOpacity != null) {
       // 如果有缓存，先使用缓存值快速渲染
@@ -372,8 +373,8 @@ class _BranchChatPageState extends State<BranchChatPage>
     }
 
     // 然后异步加载最新设置
-    final background = await _storage.getBranchChatBackground();
-    final opacity = await _storage.getBranchChatBackgroundOpacity();
+    final background = await storage.getBranchChatBackground();
+    final opacity = await storage.getBranchChatBackgroundOpacity();
 
     // 只有当值不同时才更新UI
     if (background != backgroundImage || opacity != backgroundOpacity) {
@@ -437,19 +438,20 @@ class _BranchChatPageState extends State<BranchChatPage>
           Column(
             children: [
               /// 添加模型过滤器
-              BranchModelFilter(
+              ModelFilter(
                 models: modelList,
                 selectedType: selectedType,
                 onTypeChanged: isStreaming ? null : handleTypeChanged,
                 onModelSelect: isStreaming ? null : showModelSelector,
                 isStreaming: isStreaming,
+                isCusChip: true,
               ),
 
               /// 聊天内容
               Expanded(
                 child: displayMessages.isEmpty
                     ? buildEmptyHint()
-                    : buildChatContent(),
+                    : buildMessageList(),
               ),
 
               /// 流式响应时显示进度条
@@ -484,13 +486,7 @@ class _BranchChatPageState extends State<BranchChatPage>
     return Stack(
       children: [
         // 背景图片(若不需要全屏背景，可在上方scaffold的body中覆盖背景即可)
-        if (backgroundImage != null && backgroundImage!.isNotEmpty)
-          Positioned.fill(
-            child: Opacity(
-              opacity: backgroundOpacity,
-              child: buildCusImage(backgroundImage!, fit: BoxFit.cover),
-            ),
-          ),
+        buildBackground(),
 
         // 主页面
         mainScaffold,
@@ -651,7 +647,10 @@ class _BranchChatPageState extends State<BranchChatPage>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const BranchChatBackgroundPicker(),
+        builder: (context) => ChatBackgroundPickerPage(
+          chatType: 'branch',
+          title: '切换对话背景',
+        ),
       ),
     ).then((confirmed) {
       // 只有在用户点击了确定按钮时才重新加载背景设置
@@ -708,7 +707,9 @@ class _BranchChatPageState extends State<BranchChatPage>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const ChatExportImportPage(),
+        builder: (context) => ChatExportImportPage(
+          chatType: 'branch',
+        ),
       ),
     ).then((_) {
       // 返回后重新加载会话列表
@@ -718,7 +719,7 @@ class _BranchChatPageState extends State<BranchChatPage>
 
   // 修改构建抽屉的方法
   Widget buildChatHistoryDrawer() {
-    return ChatHistoryDrawer(
+    return BranchChatHistoryDrawer(
       sessions: sessionList,
       currentSessionId: currentSessionId,
       onSessionSelected: (session) async {
@@ -875,7 +876,7 @@ class _BranchChatPageState extends State<BranchChatPage>
   ///******************************************* */
 
   /// 构建消息列表
-  Widget buildChatContent() {
+  Widget buildMessageList() {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -886,7 +887,11 @@ class _BranchChatPageState extends State<BranchChatPage>
       ),
       child: ListView.builder(
         controller: scrollController,
+        // 列表底部留一点高度，避免工具按钮和悬浮按钮重叠
+        padding: EdgeInsets.only(bottom: 50.sp),
         itemCount: displayMessages.length,
+        // 使用cacheExtent提前渲染一些项，使滚动更流畅
+        cacheExtent: 1000.0,
         itemBuilder: (context, index) {
           final message = displayMessages[index];
 
@@ -906,7 +911,7 @@ class _BranchChatPageState extends State<BranchChatPage>
               BranchMessageActions(
                 message: message,
                 messages: allMessages,
-                onRegenerate: () => handleRegenerate(message),
+                onRegenerate: () => handleResponseRegenerate(message),
                 hasMultipleBranches: hasMultipleBranches,
                 // 2025-03-12 这里有问题，message.id始终是0。
                 // 理论上，在流式生成中也就当作在重新生成中，重新生成按钮就不可用，改为加载图标
@@ -926,9 +931,6 @@ class _BranchChatPageState extends State<BranchChatPage>
                       ),
                 onSwitchBranch: handleSwitchBranch,
               ),
-
-              /// 最后一条消息留一点高度，避免工具按钮和悬浮按钮重叠
-              if (index == displayMessages.length - 1) SizedBox(height: 50.sp),
             ],
           );
         },
@@ -998,6 +1000,12 @@ class _BranchChatPageState extends State<BranchChatPage>
     // 添加振动反馈
     HapticFeedback.mediumImpact();
 
+    // 只有用户消息可以编辑
+    final bool isUser = message.role == CusRole.user.name;
+    // 只有AI消息可以重新生成
+    final bool isAssistant = message.role == CusRole.assistant.name;
+
+    // 获取点击位置
     final Offset overlayPosition = details.globalPosition;
 
     showMenu<String>(
@@ -1025,7 +1033,7 @@ class _BranchChatPageState extends State<BranchChatPage>
             text: '选择文本',
           ),
         ),
-        if (message.role == 'user')
+        if (isUser)
           PopupMenuItem<String>(
             value: 'edit',
             child: buildMenuItemWithIcon(
@@ -1033,7 +1041,7 @@ class _BranchChatPageState extends State<BranchChatPage>
               text: '编辑消息',
             ),
           ),
-        if (message.role == 'user')
+        if (isUser)
           PopupMenuItem<String>(
             value: 'resend',
             child: buildMenuItemWithIcon(
@@ -1041,7 +1049,7 @@ class _BranchChatPageState extends State<BranchChatPage>
               text: '重新发送',
             ),
           ),
-        if (message.role == 'assistant')
+        if (isAssistant)
           PopupMenuItem<String>(
             value: 'regenerate',
             child: buildMenuItemWithIcon(
@@ -1060,11 +1068,8 @@ class _BranchChatPageState extends State<BranchChatPage>
       ],
     ).then((value) async {
       if (value == 'copy') {
-        await Clipboard.setData(ClipboardData(text: message.content));
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已复制到剪贴板')),
-        );
+        Clipboard.setData(ClipboardData(text: message.content));
+        EasyLoading.showToast('已复制到剪贴板');
       } else if (value == 'select') {
         if (!mounted) return;
         await showDialog(
@@ -1080,7 +1085,7 @@ class _BranchChatPageState extends State<BranchChatPage>
       } else if (value == 'resend') {
         handleUserMessageResend(message);
       } else if (value == 'regenerate') {
-        handleRegenerate(message);
+        handleResponseRegenerate(message);
       } else if (value == 'delete') {
         await handleDeleteBranch(message);
       }
@@ -1114,7 +1119,7 @@ class _BranchChatPageState extends State<BranchChatPage>
   }
 
   /// 重新生成AI响应内容
-  Future<void> handleRegenerate(BranchChatMessage message) async {
+  Future<void> handleResponseRegenerate(BranchChatMessage message) async {
     if (isStreaming) return;
 
     setState(() {
@@ -1194,7 +1199,7 @@ class _BranchChatPageState extends State<BranchChatPage>
         BranchChatMessage(
           id: 0,
           messageId: 'streaming',
-          role: 'assistant',
+          role: CusRole.assistant.name,
           content: '',
           createTime: DateTime.now(),
           branchPath: newBranchPath,
@@ -1210,6 +1215,8 @@ class _BranchChatPageState extends State<BranchChatPage>
     DateTime? endTime;
     var thinkingDuration = 0;
     BranchChatMessage? aiMessage;
+    // 2025-03-24 联网搜索参考内容
+    List<Map<String, dynamic>>? references = [];
 
     try {
       final (stream, cancelFunc) = await ChatService.sendBranchMessage(
@@ -1219,12 +1226,17 @@ class _BranchChatPageState extends State<BranchChatPage>
         stream: true,
       );
 
-      _cancelResponse = cancelFunc;
+      cancelResponse = cancelFunc;
 
       // 处理流式响应的内容(包括正常完成、手动终止和错误响应)
       await for (final chunk in stream) {
         // 更新流式内容和状态
         setState(() {
+          // 2025-03-24 联网搜索参考内容
+          if (chunk.searchResults != null) {
+            references.addAll(chunk.searchResults!);
+          }
+
           // 1. 更新内容
           streamingContent += chunk.cusText;
           streamingReasoningContent += chunk.choices.isNotEmpty
@@ -1247,10 +1259,11 @@ class _BranchChatPageState extends State<BranchChatPage>
             BranchChatMessage(
               id: 0,
               messageId: 'streaming',
-              role: 'assistant',
+              role: CusRole.assistant.name,
               content: streamingContent,
               reasoningContent: streamingReasoningContent,
               thinkingDuration: thinkingDuration,
+              references: references,
               createTime: DateTime.now(),
               branchPath: newBranchPath,
               branchIndex: newBranchIndex,
@@ -1278,10 +1291,11 @@ class _BranchChatPageState extends State<BranchChatPage>
         aiMessage = await store.addMessage(
           session: store.sessionBox.get(currentSessionId!)!,
           content: finalContent,
-          role: 'assistant',
+          role: CusRole.assistant.name,
           parent: parentMessage,
           reasoningContent: finalReasoningContent,
           thinkingDuration: thinkingDuration,
+          references: references,
           modelLabel: parentMessage?.modelLabel ?? selectedModel!.name,
           branchIndex: newBranchIndex,
           // 目前流式响应没有媒体资源，如果有的话，需要在这里添加
@@ -1302,7 +1316,7 @@ class _BranchChatPageState extends State<BranchChatPage>
       aiMessage = await store.addMessage(
         session: store.sessionBox.get(currentSessionId!)!,
         content: errorContent,
-        role: 'assistant',
+        role: CusRole.assistant.name,
         parent: parentMessage,
         thinkingDuration: thinkingDuration,
         modelLabel: parentMessage?.modelLabel ?? selectedModel!.name,
@@ -1316,7 +1330,7 @@ class _BranchChatPageState extends State<BranchChatPage>
           isStreaming = false;
           streamingContent = '';
           streamingReasoningContent = '';
-          _cancelResponse = null;
+          cancelResponse = null;
         });
         // 在 finally 块中重新加载消息，确保无论是正常完成还是手动终止都会重新加载消息
         await loadMessages();
@@ -1418,7 +1432,7 @@ class _BranchChatPageState extends State<BranchChatPage>
           BranchChatMessage(
             id: 0,
             messageId: 'streaming',
-            role: 'assistant',
+            role: CusRole.assistant.name,
             content: streamingContent,
             reasoningContent: streamingReasoningContent,
             createTime: DateTime.now(),
@@ -1483,8 +1497,6 @@ class _BranchChatPageState extends State<BranchChatPage>
         });
       }
 
-      // TODO: 处理图片、音频等媒体文件的上传
-
       // 如果是编译用户输入过的消息，会和直接发送消息有一些区别
       if (currentEditingMessage != null) {
         await _processingUserMessage(currentEditingMessage!, messageData);
@@ -1492,9 +1504,9 @@ class _BranchChatPageState extends State<BranchChatPage>
         await store.addMessage(
           session: store.sessionBox.get(currentSessionId!)!,
           content: content,
-          role: 'user',
+          role: CusRole.user.name,
           parent: displayMessages.isEmpty ? null : displayMessages.last,
-          // 添加媒体文件的存储(有更多类型时就继续处理)
+          // ???添加媒体文件的存储(有更多类型时就继续处理)
           contentVoicePath: messageData.audio?.path,
           imagesUrl: messageData.images?.isNotEmpty == true
               ? messageData.images?.map((i) => i.path).toList().join(',')
@@ -1555,10 +1567,10 @@ class _BranchChatPageState extends State<BranchChatPage>
       await store.addMessage(
         session: store.sessionBox.get(currentSessionId!)!,
         content: content,
-        role: 'user',
+        role: CusRole.user.name,
         parent: message.parent.target,
         branchIndex: newBranchIndex, // 只使用 branchIndex 参数
-        // 添加媒体文件的存储(有更多类型时就继续处理)
+        // ???添加媒体文件的存储(有更多类型时就继续处理)
         contentVoicePath: message.contentVoicePath,
         imagesUrl: message.imagesUrl,
         videosUrl: message.videosUrl,
@@ -1610,8 +1622,8 @@ class _BranchChatPageState extends State<BranchChatPage>
   /// 停止流式生成(用户主动停止)
   void handleStopStreaming() {
     setState(() => isStreaming = false);
-    _cancelResponse?.call();
-    _cancelResponse = null;
+    cancelResponse?.call();
+    cancelResponse = null;
   }
 
   ///******************************************* */
@@ -1688,6 +1700,20 @@ class _BranchChatPageState extends State<BranchChatPage>
             if (!showScrollToBottom) SizedBox(width: 48.sp),
           ],
         ),
+      ),
+    );
+  }
+
+  // 构建背景
+  Widget buildBackground() {
+    if (backgroundImage == null || backgroundImage!.isEmpty) {
+      return Container(color: Colors.transparent);
+    }
+
+    return Positioned.fill(
+      child: Opacity(
+        opacity: backgroundOpacity,
+        child: buildCusImage(backgroundImage!, fit: BoxFit.cover),
       ),
     );
   }

@@ -7,6 +7,7 @@ import '../../../../common/components/tool_widget.dart';
 import '../../../../common/components/voice_chat_bubble.dart';
 import '../../../../common/constants/constants.dart';
 import '../../../../models/brief_ai_tools/branch_chat/branch_chat_message.dart';
+import '../../_chat_components/_small_tool_widgets.dart';
 
 class BranchMessageItem extends StatelessWidget {
   // 用于展示的消息
@@ -136,9 +137,16 @@ class BranchMessageItem extends StatelessWidget {
         crossAxisAlignment:
             isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
+          // 联网搜索结果
+          if (message.references?.isNotEmpty == true)
+            buildReferencesExpansionTile(message.references),
+
+          // 深度思考
           if (message.reasoningContent != null &&
               message.reasoningContent!.isNotEmpty)
             _buildThinkingProcess(message),
+
+          // 常规显示内容
           GestureDetector(
             onLongPressStart: onLongPress != null
                 ? (details) => onLongPress!(message, details)
@@ -168,11 +176,7 @@ class BranchMessageItem extends StatelessWidget {
           message.content.trim().isEmpty
               ? '思考中'
               : '已深度思考(用时${(message.thinkingDuration ?? 0) / 1000}秒)',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black54,
-            fontSize: 16.sp,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
         ),
         // 默认展开
         initiallyExpanded: true,

@@ -12,7 +12,9 @@ import '../../_chat_components/_small_tool_widgets.dart';
 class CharacterMessageItem extends StatelessWidget {
   final CharacterChatMessage message;
   final CharacterCard? character;
-  final Function(CharacterChatMessage)? onLongPress;
+
+  // 长按消息后，点击了消息体处的回调
+  final Function(CharacterChatMessage, LongPressStartDetails)? onLongPress;
 
   const CharacterMessageItem({
     super.key,
@@ -40,8 +42,9 @@ class CharacterMessageItem extends StatelessWidget {
           // 消息内容
           Flexible(
             child: GestureDetector(
-              onLongPress:
-                  onLongPress != null ? () => onLongPress!(message) : null,
+              onLongPressStart: onLongPress != null
+                  ? (details) => onLongPress!(message, details)
+                  : null,
               child: Container(
                 padding: EdgeInsets.all(8.sp),
                 decoration: BoxDecoration(

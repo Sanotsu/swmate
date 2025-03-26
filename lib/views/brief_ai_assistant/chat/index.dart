@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -21,10 +22,11 @@ import '../../../common/utils/advanced_options_utils.dart';
 
 import '../_chat_components/_small_tool_widgets.dart';
 
+import '../_chat_components/text_selection_dialog.dart';
 import 'components/chat_input.dart';
 import 'components/chat_message_item.dart';
-import 'components/model_filter.dart';
-import 'components/model_selector.dart';
+import '../_chat_components/model_filter.dart';
+import '../_chat_components/model_selector.dart';
 import 'components/chat_history_drawer.dart';
 import 'components/message_actions.dart';
 
@@ -332,10 +334,11 @@ class _BriefChatScreenState extends State<BriefChatScreen>
               dateTime: m.dateTime,
               role: m.role,
               content: m.content,
-              thinkingDuration: m.thinkingDuration,
               reasoningContent: m.reasoningContent,
-              imageUrl: m.imageUrl,
+              thinkingDuration: m.thinkingDuration,
               contentVoicePath: m.contentVoicePath,
+              imageUrl: m.imageUrl,
+              references: m.references,
               modelLabel: m.modelLabel ?? _selectedModel!.name,
             ))
         .toList();
@@ -367,6 +370,9 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   ) async {
     var startTime = DateTime.now();
     DateTime? endTime;
+
+    // 2025-03-24 联网搜索参考内容
+    List<Map<String, dynamic>>? references = [];
 
     try {
       stream.listen(
@@ -401,14 +407,22 @@ class _BriefChatScreenState extends State<BriefChatScreen>
             }
 
             if (_messages.last.role == CusRole.assistant.name) {
+              if (ccr.searchResults != null) {
+                references.addAll(ccr.searchResults!);
+              }
+
               // 更新现有消息(出错也是正常流，但额外手动的cusText)
               _messages.last.content += content;
               _messages.last.reasoningContent =
                   (_messages.last.reasoningContent ?? "") + reasoningContent;
+              _messages.last.references = references;
               _messages.last.promptTokens = ccr.usage?.promptTokens;
               _messages.last.completionTokens = ccr.usage?.completionTokens;
               _messages.last.totalTokens = ccr.usage?.totalTokens;
             } else {
+              if (ccr.searchResults != null) {
+                references.addAll(ccr.searchResults!);
+              }
               // 创建新的助手消息
               _messages.add(ChatMessage(
                 messageId: ccr.id,
@@ -417,6 +431,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                 content: content,
                 reasoningContent: reasoningContent,
                 modelLabel: _selectedModel?.name,
+                references: references,
               ));
             }
           });
@@ -457,11 +472,13 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   }
 
   // 修改处理编辑消息的方法
-  void _handleEditMessage(String content, int index) {
+  void _handleEditMessage(ChatMessage message) {
+    var index = _messages.indexOf(message);
+
     setState(() {
       _isEditingUserMsg = true;
       _editingIndex = index;
-      _inputController.text = content;
+      _inputController.text = message.content;
     });
     // 请求焦点，唤起键盘
     _inputFocusNode.requestFocus();
@@ -756,6 +773,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           data:
               "${CP_NAME_MAP[_selectedModel?.platform]} > ${_selectedModel?.model}",
           velocity: 30,
+          width: 0.5.sw,
           style: TextStyle(
             fontSize: 14.sp,
             fontWeight: FontWeight.bold,
@@ -911,12 +929,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
             children: [
               ChatMessageItem(
                 message: message,
-                onEdit: message.role == CusRole.user.name
-                    ? (newContent) => _handleEditMessage(newContent, index)
-                    : null,
-                onRegenerate: message.role == CusRole.assistant.name
-                    ? () => _handleRegenerate(message)
-                    : null,
+                onLongPress: _isStreaming ? null : showMessageOptions,
               ),
               if (isAssistant && !_isStreaming)
                 Padding(
@@ -934,6 +947,92 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           );
         },
       ),
+    );
+  }
+
+  void showMessageOptions(
+    ChatMessage message,
+    LongPressStartDetails details,
+  ) {
+    // 添加振动反馈
+    HapticFeedback.mediumImpact();
+
+    // 只有用户消息可以编辑
+    final bool isUser = message.role == CusRole.user.name;
+    // 只有AI消息可以重新生成
+    final bool isAssistant = message.role == CusRole.assistant.name;
+
+    // 获取点击位置
+    final Offset overlayPosition = details.globalPosition;
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        overlayPosition.dx,
+        overlayPosition.dy,
+        overlayPosition.dx + 200,
+        overlayPosition.dy + 100,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.sp),
+      ),
+      elevation: 8,
+      items: [
+        PopupMenuItem(
+          height: 40.sp,
+          child: buildMenuItemWithIcon(
+            icon: Icons.copy,
+            text: '复制文本',
+            // color: Colors.grey,
+          ),
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: message.content));
+            EasyLoading.showToast('已复制到剪贴板');
+          },
+        ),
+        PopupMenuItem(
+          height: 40.sp,
+          child: buildMenuItemWithIcon(
+            icon: Icons.text_fields,
+            text: '选择文本',
+            // color: Colors.blue,
+          ),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) => TextSelectionDialog(
+                  text: message.reasoningContent != null &&
+                          message.reasoningContent!.isNotEmpty
+                      ? '【推理过程】\n${message.reasoningContent!}\n\n【AI响应】\n${message.content}'
+                      : message.content),
+            );
+          },
+        ),
+        if (isUser)
+          PopupMenuItem(
+            height: 40.sp,
+            child: buildMenuItemWithIcon(
+              icon: Icons.edit,
+              text: '编辑消息',
+              // color: Colors.orange,
+            ),
+            onTap: () {
+              _handleEditMessage(message);
+            },
+          ),
+        if (isAssistant)
+          PopupMenuItem(
+            height: 40.sp,
+            child: buildMenuItemWithIcon(
+              icon: Icons.refresh,
+              text: '重新生成',
+              // color: Colors.green,
+            ),
+            onTap: () {
+              _handleRegenerate(message);
+            },
+          ),
+      ],
     );
   }
 

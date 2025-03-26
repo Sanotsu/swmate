@@ -77,6 +77,9 @@ BranchChatMessageExport _$BranchChatMessageExportFromJson(
       contentVoicePath: json['contentVoicePath'] as String?,
       imagesUrl: json['imagesUrl'] as String?,
       videosUrl: json['videosUrl'] as String?,
+      references: (json['references'] as List<dynamic>?)
+          ?.map((e) => e as Map<String, dynamic>)
+          .toList(),
       promptTokens: (json['promptTokens'] as num?)?.toInt(),
       completionTokens: (json['completionTokens'] as num?)?.toInt(),
       totalTokens: (json['totalTokens'] as num?)?.toInt(),
@@ -99,6 +102,7 @@ Map<String, dynamic> _$BranchChatMessageExportToJson(
       'contentVoicePath': instance.contentVoicePath,
       'imagesUrl': instance.imagesUrl,
       'videosUrl': instance.videosUrl,
+      'references': instance.references,
       'promptTokens': instance.promptTokens,
       'completionTokens': instance.completionTokens,
       'totalTokens': instance.totalTokens,

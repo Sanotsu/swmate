@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../services/cus_get_storage.dart';
-import '../../_chat_components/_small_tool_widgets.dart';
+import '../../../services/cus_get_storage.dart';
+import '../_chat_components/_small_tool_widgets.dart';
 
-class CharacterChatBackgroundPicker extends StatefulWidget {
-  const CharacterChatBackgroundPicker({super.key});
+class ChatBackgroundPickerPage extends StatefulWidget {
+  const ChatBackgroundPickerPage({
+    super.key,
+    required this.chatType,
+    required this.title,
+  });
+
+  final String chatType;
+  final String title;
 
   @override
-  State<CharacterChatBackgroundPicker> createState() =>
-      _CharacterChatBackgroundPickerState();
+  State<ChatBackgroundPickerPage> createState() =>
+      _ChatBackgroundPickerPageState();
 }
 
-class _CharacterChatBackgroundPickerState
-    extends State<CharacterChatBackgroundPicker> {
+class _ChatBackgroundPickerPageState
+    extends State<ChatBackgroundPickerPage> {
   final MyGetStorage _storage = MyGetStorage();
   String? _selectedBackground;
   double _opacity = 0.2;
@@ -35,8 +42,12 @@ class _CharacterChatBackgroundPickerState
   }
 
   Future<void> _loadSettings() async {
-    final background = await _storage.getCharacterChatBackground();
-    final opacity = await _storage.getCharacterChatBackgroundOpacity();
+    final background = widget.chatType == 'branch'
+        ? await _storage.getBranchChatBackground()
+        : await _storage.getCharacterChatBackground();
+    final opacity = widget.chatType == 'branch'
+        ? await _storage.getBranchChatBackgroundOpacity()
+        : await _storage.getCharacterChatBackgroundOpacity();
 
     setState(() {
       _selectedBackground = background;
@@ -58,13 +69,18 @@ class _CharacterChatBackgroundPickerState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('角色通用背景'),
+        title: Text(widget.title),
         actions: [
           TextButton(
             onPressed: () {
               // 取消操作，恢复初始设置
-              _storage.saveCharacterChatBackground(_initialBackground);
-              _storage.saveCharacterChatBackgroundOpacity(_initialOpacity);
+              if (widget.chatType == 'branch') {
+                _storage.saveBranchChatBackground(_initialBackground);
+                _storage.saveBranchChatBackgroundOpacity(_initialOpacity);
+              } else {
+                _storage.saveCharacterChatBackground(_initialBackground);
+                _storage.saveCharacterChatBackgroundOpacity(_initialOpacity);
+              }
               Navigator.pop(context);
             },
             child: const Text('取消'),
@@ -287,10 +303,18 @@ class _CharacterChatBackgroundPickerState
   }
 
   Future<void> _saveBackground(String? path) async {
-    await _storage.saveCharacterChatBackground(path);
+    if (widget.chatType == 'branch') {
+      await _storage.saveBranchChatBackground(path);
+    } else {
+      await _storage.saveCharacterChatBackground(path);
+    }
   }
 
   Future<void> _saveOpacity(double opacity) async {
-    await _storage.saveCharacterChatBackgroundOpacity(opacity);
+    if (widget.chatType == 'branch') {
+      await _storage.saveBranchChatBackgroundOpacity(opacity);
+    } else {
+      await _storage.saveCharacterChatBackgroundOpacity(opacity);
+    }
   }
 }

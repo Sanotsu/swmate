@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../common/llm_spec/constant_llm_enum.dart';
 import '../../../../models/brief_ai_tools/branch_chat/branch_chat_session.dart';
 
-class ChatHistoryDrawer extends StatelessWidget {
+class BranchChatHistoryDrawer extends StatelessWidget {
   // 历史对话列表
   final List<BranchChatSession> sessions;
   // 当前选中的对话
@@ -13,7 +13,7 @@ class ChatHistoryDrawer extends StatelessWidget {
   // 删除或重命名对话后，要刷新对话列表
   final Function(BranchChatSession, String) onRefresh;
 
-  const ChatHistoryDrawer({
+  const BranchChatHistoryDrawer({
     super.key,
     required this.sessions,
     this.currentSessionId,
