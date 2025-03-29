@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../../../common/components/tool_widget.dart';
@@ -8,8 +7,9 @@ import '../../../../common/components/voice_chat_bubble.dart';
 import '../../../../common/constants/constants.dart';
 import '../../../../models/brief_ai_tools/branch_chat/branch_chat_message.dart';
 import '../../_chat_components/_small_tool_widgets.dart';
+import '../../../../common/components/cus_markdown_renderer.dart';
 
-class BranchMessageItem extends StatelessWidget {
+class BranchMessageItem extends StatefulWidget {
   // 用于展示的消息
   final BranchChatMessage message;
   final bool? isUseBgImage;
@@ -25,16 +25,28 @@ class BranchMessageItem extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final isUser = message.role == CusRole.user.name ||
-        message.role == CusRole.system.name;
+  State<BranchMessageItem> createState() => _BranchMessageItemState();
+}
 
+class _BranchMessageItemState extends State<BranchMessageItem> {
+  // 添加状态缓存变量，避免重复计算
+  late final bool _isUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _isUser = widget.message.role == CusRole.user.name ||
+        widget.message.role == CusRole.system.name;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.all(4.sp),
       color: Colors.transparent,
       child: Column(
         crossAxisAlignment:
-            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            _isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           // 头像、模型名、时间戳(头像旁边的时间和模型名不缩放，避免显示溢出)
           // buildHorizontalAvatar 横向排版时不必，因为Flexible有缩放会换行
@@ -42,31 +54,31 @@ class BranchMessageItem extends StatelessWidget {
             data: MediaQuery.of(context).copyWith(
               textScaler: const TextScaler.linear(1),
             ),
-            child: _buildAvatarAndTimestamp(isUser),
+            child: _buildAvatarAndTimestamp(),
           ),
 
           // 显示消息内容
-          _buildMessageContent(isUser),
+          _buildMessageContent(context),
 
           // 如果是语音输入，显示语言文件，可点击播放
-          if (message.contentVoicePath != null &&
-              message.contentVoicePath!.trim() != "")
+          if (widget.message.contentVoicePath != null &&
+              widget.message.contentVoicePath!.trim() != "")
             _buildVoicePlayer(),
 
           // 显示图片
-          if (message.imagesUrl != null) _buildImage(context),
+          if (widget.message.imagesUrl != null) _buildImage(context),
         ],
       ),
     );
   }
 
   // 头像和时间戳
-  Widget _buildAvatarAndTimestamp(bool isUser) {
+  Widget _buildAvatarAndTimestamp() {
     return Row(
       mainAxisAlignment:
-          isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+          _isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
       children: [
-        if (!isUser) _buildAvatar(isUser),
+        if (!_isUser) _buildAvatar(),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 3.sp),
           child: Column(
@@ -74,38 +86,39 @@ class BranchMessageItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 显示模型标签
-              if (!isUser && message.modelLabel != null)
+              if (!_isUser && widget.message.modelLabel != null)
                 Text(
-                  message.modelLabel!,
+                  widget.message.modelLabel!,
                   style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                 ),
 
               // 显示模型响应时间
-              if (message.content.trim().isNotEmpty)
+              if (widget.message.content.trim().isNotEmpty)
                 Text(
-                  DateFormat(constDatetimeFormat).format(message.createTime),
+                  DateFormat(constDatetimeFormat)
+                      .format(widget.message.createTime),
                   style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                 ),
             ],
           ),
         ),
-        if (isUser) _buildAvatar(isUser),
+        if (_isUser) _buildAvatar(),
       ],
     );
   }
 
   // 头像
-  Widget _buildAvatar(bool isUser) {
+  Widget _buildAvatar() {
     return Container(
       margin: EdgeInsets.only(
-        right: isUser ? 0 : 4.sp,
-        left: isUser ? 4.sp : 0,
+        right: _isUser ? 0 : 4.sp,
+        left: _isUser ? 4.sp : 0,
       ),
       child: CircleAvatar(
         radius: 15.sp,
-        backgroundColor: isUser ? Colors.blue : Colors.green,
+        backgroundColor: _isUser ? Colors.blue : Colors.green,
         child: Icon(
-          isUser ? Icons.person : Icons.code,
+          _isUser ? Icons.person : Icons.code,
           color: Colors.white,
         ),
       ),
@@ -113,104 +126,76 @@ class BranchMessageItem extends StatelessWidget {
   }
 
   // 对话消息正文部分
-  Widget _buildMessageContent(bool isUser) {
-    Color textColor = message.role == CusRole.user.name
-        ? isUseBgImage == true
+  Widget _buildMessageContent(BuildContext context) {
+    Color textColor = widget.message.role == CusRole.user.name
+        ? widget.isUseBgImage == true
             ? Colors.blue
             : Colors.white
-        : message.role == CusRole.system.name
+        : widget.message.role == CusRole.system.name
             ? Colors.grey
             : Colors.black;
-    Color bgColor = isUser ? Colors.blue : Colors.grey.shade100;
+    Color bgColor = _isUser ? Colors.blue : Colors.grey.shade100;
 
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 4.sp),
-      padding: EdgeInsets.all(8.sp),
-      decoration: BoxDecoration(
-        color: isUseBgImage == true ? Colors.transparent : bgColor,
-        borderRadius: BorderRadius.circular(8.sp),
-        border: Border.all(
-          color: isUseBgImage == true ? textColor : Colors.transparent,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment:
-            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          // 联网搜索结果
-          if (message.references?.isNotEmpty == true)
-            buildReferencesExpansionTile(message.references),
-
-          // 深度思考
-          if (message.reasoningContent != null &&
-              message.reasoningContent!.isNotEmpty)
-            _buildThinkingProcess(message),
-
-          // 常规显示内容
-          GestureDetector(
-            onLongPressStart: onLongPress != null
-                ? (details) => onLongPress!(message, details)
-                : null,
-            child: MarkdownBody(
-              data: message.content,
-              // selectable: true,
-              styleSheet: MarkdownStyleSheet(
-                p: TextStyle(color: textColor),
-              ),
-            ),
+    // 优化：为常规消息内容添加RepaintBoundary，避免重绘扩散
+    return RepaintBoundary(
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 4.sp),
+        padding: EdgeInsets.all(8.sp),
+        decoration: BoxDecoration(
+          color: widget.isUseBgImage == true ? Colors.transparent : bgColor,
+          borderRadius: BorderRadius.circular(8.sp),
+          border: Border.all(
+            color: widget.isUseBgImage == true ? textColor : Colors.transparent,
           ),
-        ],
+        ),
+        child: Column(
+          crossAxisAlignment:
+              _isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            // 联网搜索结果 - 懒加载，只在有引用时才构建
+            if (widget.message.references?.isNotEmpty == true)
+              buildReferencesExpansionTile(widget.message.references),
+
+            // 深度思考 - 懒加载，只在有思考内容时才构建
+            if (widget.message.reasoningContent != null &&
+                widget.message.reasoningContent!.isNotEmpty)
+              _buildThinkingProcess(),
+
+            GestureDetector(
+              onLongPressStart: widget.onLongPress != null
+                  ? (details) => widget.onLongPress!(widget.message, details)
+                  : null,
+              // 使用MarkdownRenderer.instance.render来渲染内容
+              child:
+                  CusMarkdownRenderer.instance.render(widget.message.content),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   // DS 的 R 系列有深度思考部分，单独展示
-  Widget _buildThinkingProcess(BranchChatMessage message) {
-    // 创建一个基础的 TextStyle，深度思考的文字颜色和大小
-    final tempStyle = TextStyle(color: Colors.black54, fontSize: 13.5.sp);
-
+  Widget _buildThinkingProcess() {
     return Container(
       padding: EdgeInsets.only(bottom: 8.sp),
       child: ExpansionTile(
         title: Text(
-          message.content.trim().isEmpty
+          widget.message.content.trim().isEmpty
               ? '思考中'
-              : '已深度思考(用时${(message.thinkingDuration ?? 0) / 1000}秒)',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+              : '已深度思考(用时${(widget.message.thinkingDuration ?? 0) / 1000}秒)',
+          style: const TextStyle(
+              fontWeight: FontWeight.bold, color: Colors.black54),
         ),
-        // 默认展开
-        initiallyExpanded: true,
+        // 默认折叠，避免初始渲染太多内容
+        initiallyExpanded: false,
         children: [
           Padding(
             padding: EdgeInsets.only(left: 24.sp),
-            // child: Text(
-            //   message.reasoningContent ?? '',
-            //   style: TextStyle(color: Colors.black54, fontSize: 13.5.sp),
-            // ),
-
-            /// 使用 MarkdownBody 显示深度思考内容
-            child: MarkdownBody(
-              data: message.reasoningContent ?? '',
-              selectable: true,
-              styleSheet: MarkdownStyleSheet(
-                // 复用 tempStyle
-                p: tempStyle,
-                h1: tempStyle,
-                h2: tempStyle,
-                h3: tempStyle,
-                h4: tempStyle,
-                h5: tempStyle,
-                h6: tempStyle,
-                strong: tempStyle,
-                em: tempStyle,
-                blockquote: tempStyle,
-                listBullet: tempStyle,
-                tableHead: tempStyle,
-                tableBody: tempStyle,
-                // 隐藏换行线
-                horizontalRuleDecoration: BoxDecoration(
-                  color: Colors.transparent,
-                ),
+            // 使用高性能MarkdownRenderer来渲染深度思考内容，可以利用缓存机制
+            child: RepaintBoundary(
+              child: CusMarkdownRenderer.instance.render(
+                widget.message.reasoningContent ?? '',
               ),
             ),
           ),
@@ -222,7 +207,7 @@ class BranchMessageItem extends StatelessWidget {
   // 简单的音频播放
   Widget _buildVoicePlayer() {
     return VoiceWaveBubble(
-      path: message.contentVoicePath!,
+      path: widget.message.contentVoicePath!,
     );
   }
 
@@ -234,11 +219,14 @@ class BranchMessageItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(8.sp),
         child: SizedBox(
           width: 0.3.sw,
-          child: buildImageView(
-            message.imagesUrl!.split(',')[0],
-            context,
-            isFileUrl: true,
-            imageErrorHint: '图片异常，请开启新对话',
+          // 添加RepaintBoundary，避免图片重绘影响其他元素
+          child: RepaintBoundary(
+            child: buildImageView(
+              widget.message.imagesUrl!.split(',')[0],
+              context,
+              isFileUrl: true,
+              imageErrorHint: '图片异常，请开启新对话',
+            ),
           ),
         ),
       ),

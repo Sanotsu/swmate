@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
@@ -9,6 +8,7 @@ import '../../../../common/components/voice_chat_bubble.dart';
 import '../../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 
 import '../../_chat_components/_small_tool_widgets.dart';
+import '../../../../common/components/cus_markdown_renderer.dart';
 
 class ChatMessageItem extends StatefulWidget {
   // 用于展示的消息
@@ -133,59 +133,55 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
             : Colors.black;
     Color bgColor = isUser ? Colors.blue : Colors.grey.shade100;
 
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 4.sp),
-      padding: EdgeInsets.all(8.sp),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8.sp),
-      ),
-      child: Column(
-        crossAxisAlignment:
-            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          // 联网搜索参考内容
-          if (widget.message.references?.isNotEmpty == true)
-            buildReferencesExpansionTile(widget.message.references),
+    return RepaintBoundary(
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 4.sp),
+        padding: EdgeInsets.all(8.sp),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(8.sp),
+        ),
+        child: Column(
+          crossAxisAlignment:
+              isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            // 联网搜索参考内容
+            if (widget.message.references?.isNotEmpty == true)
+              buildReferencesExpansionTile(widget.message.references),
 
-          // 深度思考
-          if (widget.message.reasoningContent != null &&
-              widget.message.reasoningContent!.isNotEmpty)
-            _buildThinkingProcess(widget.message),
+            // 深度思考
+            if (widget.message.reasoningContent != null &&
+                widget.message.reasoningContent!.isNotEmpty)
+              _buildThinkingProcess(widget.message),
 
-          // 常规显示内容
-          GestureDetector(
-            onLongPressStart: widget.onLongPress != null
-                ? (details) => widget.onLongPress!(widget.message, details)
-                : null,
-            child: MarkdownBody(
-              data: widget.message.content,
-              // selectable: true,
-              styleSheet: MarkdownStyleSheet(
-                p: TextStyle(color: textColor),
+            // 常规显示内容
+            GestureDetector(
+              onLongPressStart: widget.onLongPress != null
+                  ? (details) => widget.onLongPress!(widget.message, details)
+                  : null,
+              child: CusMarkdownRenderer.instance.render(
+                widget.message.content,
+                textColor: textColor,
               ),
             ),
-          ),
 
-          if (widget.message.role != CusRole.user.name &&
-              widget.message.content.isEmpty &&
-              (widget.message.reasoningContent != null &&
-                  widget.message.reasoningContent!.isEmpty))
-            SizedBox(
-              width: 16.sp,
-              height: 16.sp,
-              child: CircularProgressIndicator(strokeWidth: 2.sp),
-            ),
-        ],
+            if (widget.message.role != CusRole.user.name &&
+                widget.message.content.isEmpty &&
+                (widget.message.reasoningContent != null &&
+                    widget.message.reasoningContent!.isEmpty))
+              SizedBox(
+                width: 16.sp,
+                height: 16.sp,
+                child: CircularProgressIndicator(strokeWidth: 2.sp),
+              ),
+          ],
+        ),
       ),
     );
   }
 
   // DS 的 R 系列有深度思考部分，单独展示
   Widget _buildThinkingProcess(ChatMessage message) {
-    // 创建一个基础的 TextStyle，深度思考的文字颜色和大小
-    final tempStyle = TextStyle(color: Colors.black54, fontSize: 13.5.sp);
-
     return Container(
       padding: EdgeInsets.only(bottom: 8.sp),
       child: ExpansionTile(
@@ -204,34 +200,10 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
         children: [
           Padding(
             padding: EdgeInsets.only(left: 24.sp),
-            // child: Text(
-            //   message.reasoningContent ?? '',
-            //   style: TextStyle(color: Colors.black54, fontSize: 13.5.sp),
-            // ),
-
-            /// 使用 MarkdownBody 显示深度思考内容
-            child: MarkdownBody(
-              data: message.reasoningContent ?? '',
-              selectable: true,
-              styleSheet: MarkdownStyleSheet(
-                // 复用 tempStyle
-                p: tempStyle,
-                h1: tempStyle,
-                h2: tempStyle,
-                h3: tempStyle,
-                h4: tempStyle,
-                h5: tempStyle,
-                h6: tempStyle,
-                strong: tempStyle,
-                em: tempStyle,
-                blockquote: tempStyle,
-                listBullet: tempStyle,
-                tableHead: tempStyle,
-                tableBody: tempStyle,
-                // 隐藏换行线
-                horizontalRuleDecoration: BoxDecoration(
-                  color: Colors.transparent,
-                ),
+            child: RepaintBoundary(
+              child: CusMarkdownRenderer.instance.render(
+                widget.message.reasoningContent ?? '',
+                textColor: Colors.black54,
               ),
             ),
           ),

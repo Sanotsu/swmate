@@ -26,6 +26,7 @@ import '../_chat_pages/chat_export_import_page.dart';
 import '../_chat_pages/chat_background_picker_page.dart';
 import '../_chat_components/model_filter.dart';
 import '../_chat_components/model_selector.dart';
+import '../../../common/components/cus_markdown_renderer.dart';
 
 import 'components/branch_message_item.dart';
 import 'components/branch_tree_dialog.dart';
@@ -185,6 +186,10 @@ class _BranchChatPageState extends State<BranchChatPage>
     inputController.dispose();
     scrollController.dispose();
     cancelResponse?.call();
+    
+    // 清理Markdown渲染缓存，释放内存
+    CusMarkdownRenderer.instance.clearCache();
+    
     super.dispose();
   }
 
@@ -892,6 +897,17 @@ class _BranchChatPageState extends State<BranchChatPage>
         itemCount: displayMessages.length,
         // 使用cacheExtent提前渲染一些项，使滚动更流畅
         cacheExtent: 1000.0,
+        // 添加性能优化：使用findChildIndexCallback帮助Flutter更有效地识别items
+        findChildIndexCallback: (key) {
+          if (key is ValueKey<String>) {
+            final index = displayMessages.indexWhere((msg) => 'msg_${msg.messageId}' == key.value);
+            return index >= 0 ? index : null;
+          }
+          return null;
+        },
+        // 添加额外性能优化：滚动到不可见区域时，可回收组件
+        addAutomaticKeepAlives: false,
+        // 消息列表项构建
         itemBuilder: (context, index) {
           final message = displayMessages[index];
 
@@ -899,39 +915,45 @@ class _BranchChatPageState extends State<BranchChatPage>
           final isStreamingMessage = message.messageId == 'streaming';
           final hasMultipleBranches = !isStreamingMessage &&
               branchManager.getBranchCount(allMessages, message) > 1;
-
-          return Column(
-            children: [
-              BranchMessageItem(
-                message: message,
-                onLongPress: isStreaming ? null : showMessageOptions,
-                isUseBgImage:
-                    backgroundImage != null && backgroundImage!.isNotEmpty,
-              ),
-              BranchMessageActions(
-                message: message,
-                messages: allMessages,
-                onRegenerate: () => handleResponseRegenerate(message),
-                hasMultipleBranches: hasMultipleBranches,
-                // 2025-03-12 这里有问题，message.id始终是0。
-                // 理论上，在流式生成中也就当作在重新生成中，重新生成按钮就不可用，改为加载图标
-                // isRegenerating: message.id == regeneratingMessageId,
-                isRegenerating: isStreaming,
-                currentBranchIndex: isStreamingMessage
-                    ? 0
-                    : branchManager.getBranchIndex(
-                        allMessages,
-                        message,
-                      ),
-                totalBranches: isStreamingMessage
-                    ? 1
-                    : branchManager.getBranchCount(
-                        allMessages,
-                        message,
-                      ),
-                onSwitchBranch: handleSwitchBranch,
-              ),
-            ],
+              
+          // 为每个消息项添加唯一key，优化重建
+          return KeyedSubtree(
+            key: ValueKey('msg_${message.messageId}'),
+            child: Column(
+              children: [
+                // 使用const构造函数创建小部件可以减少重建，但BranchMessageItem不能使用const因为它依赖于消息内容
+                BranchMessageItem(
+                  key: ValueKey('content_${message.messageId}'),
+                  message: message,
+                  onLongPress: isStreaming ? null : showMessageOptions,
+                  isUseBgImage:
+                      backgroundImage != null && backgroundImage!.isNotEmpty,
+                ),
+                // 为分支操作添加条件渲染，避免不必要的构建
+                if (!isStreamingMessage || hasMultipleBranches)
+                  BranchMessageActions(
+                    key: ValueKey('actions_${message.messageId}'),
+                    message: message,
+                    messages: allMessages,
+                    onRegenerate: () => handleResponseRegenerate(message),
+                    hasMultipleBranches: hasMultipleBranches,
+                    isRegenerating: isStreaming,
+                    currentBranchIndex: isStreamingMessage
+                        ? 0
+                        : branchManager.getBranchIndex(
+                            allMessages,
+                            message,
+                          ),
+                    totalBranches: isStreamingMessage
+                        ? 1
+                        : branchManager.getBranchCount(
+                            allMessages,
+                            message,
+                          ),
+                    onSwitchBranch: handleSwitchBranch,
+                  ),
+              ],
+            ),
           );
         },
       ),

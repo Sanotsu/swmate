@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../common/components/cus_markdown_renderer.dart';
 import '../../../common/components/simple_marquee_or_text.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants/constants.dart';
@@ -227,6 +228,9 @@ class _CharacterChatPageState extends State<CharacterChatPage>
     if (isNewEmptySession && currentSession.messages.isEmpty) {
       store.deleteSession(currentSession.id);
     }
+
+    // 清理Markdown渲染缓存，释放内存
+    CusMarkdownRenderer.instance.clearCache();
 
     super.dispose();
   }
@@ -934,6 +938,18 @@ class _CharacterChatPageState extends State<CharacterChatPage>
         itemCount: currentSession.messages.length,
         // 使用cacheExtent提前渲染一些项，使滚动更流畅
         cacheExtent: 1000.0,
+        // 添加性能优化：使用findChildIndexCallback帮助Flutter更有效地识别items
+        findChildIndexCallback: (key) {
+          if (key is ValueKey<String>) {
+            final index = currentSession.messages
+                .indexWhere((msg) => 'msg_${msg.id}' == key.value);
+            return index >= 0 ? index : null;
+          }
+          return null;
+        },
+        // 添加额外性能优化：滚动到不可见区域时，可回收组件
+        addAutomaticKeepAlives: false,
+        // 消息列表项构建
         itemBuilder: (context, index) {
           final message = currentSession.messages[index];
 
@@ -945,10 +961,15 @@ class _CharacterChatPageState extends State<CharacterChatPage>
                 .firstOrNull;
           }
 
-          return CharacterMessageItem(
-            message: message,
-            character: character,
-            onLongPress: showMessageOptions,
+          // 为每个消息项添加唯一key，优化重建
+          return KeyedSubtree(
+            key: ValueKey('msg_${message.id}'),
+            child: CharacterMessageItem(
+              key: ValueKey('content_${message.id}'),
+              message: message,
+              character: character,
+              onLongPress: showMessageOptions,
+            ),
           );
         },
       ),

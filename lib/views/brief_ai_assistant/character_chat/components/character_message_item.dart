@@ -176,10 +176,13 @@ class CharacterMessageItem extends StatelessWidget {
       );
     }
 
-    return Column(
-      crossAxisAlignment:
-          isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: list,
+    // 优化：为常规消息内容添加RepaintBoundary，避免重绘扩散
+    return RepaintBoundary(
+      child: Column(
+        crossAxisAlignment:
+            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: list,
+      ),
     );
   }
 
