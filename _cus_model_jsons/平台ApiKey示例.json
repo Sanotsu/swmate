@@ -7,8 +7,11 @@
   "USER_LINGYIWANWU_API_KEY": "xxx",
   "USER_ZHIPU_API_KEY": "xxx.xxx",
 
-  "USER_SILICON_CLOUD_API_KEY": "sk-xxx",
+  "USER_SILICONCLOUD_API_KEY": "sk-xxx",
   "USER_INFINI_GEN_STUDIO_API_KEY": "sk-xxx",
+
+  "USER_VOLCENGINE_API_KEY": "xxx",
+  "USER_VOLCESBOT_API_KEY": "xxx",
 
   "USER_XFYUN_APP_ID": "xxx",
   "USER_XFYUN_API_KEY": "xxx",

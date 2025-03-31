@@ -24,6 +24,7 @@ class SoundsMessageButton extends StatefulWidget {
     this.builder,
     this.onChanged,
     this.onSendSounds,
+    this.customDecoration,
   });
 
   /// 自定义发送按钮视图
@@ -40,6 +41,9 @@ class SoundsMessageButton extends StatefulWidget {
 
   /// 语音输入时遮罩配置
   final RecordingMaskOverlayData maskData;
+
+  /// 2025-03-27 自定义的按钮装饰
+  final Decoration? customDecoration;
 
   @override
   State<SoundsMessageButton> createState() => _SoundsMessageButtonState();
@@ -214,14 +218,15 @@ class _SoundsMessageButtonState extends State<SoundsMessageButton> {
             height: 44.sp,
             width: double.infinity,
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4.sp),
-              color: Colors.white,
-              border: Border.all(color: Colors.grey, width: 1.sp),
-              boxShadow: const [
-                BoxShadow(color: Color(0xffeeeeee), blurRadius: 2)
-              ],
-            ),
+            decoration: widget.customDecoration ??
+                BoxDecoration(
+                  borderRadius: BorderRadius.circular(4.sp),
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey, width: 1.sp),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0xffeeeeee), blurRadius: 2)
+                  ],
+                ),
             child: Text(
               value.title,
               style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),

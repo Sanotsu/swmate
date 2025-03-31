@@ -5,13 +5,14 @@ Smart Work&Life Mate
 使用 flutter 开发的一个“智能工作生活类助手”应用。主要包含：
 
 - 以简单参数调用各个云平台部署的在线大模型 API 为基底的“**AI 智能助手**”，(简称“工具”)。
-  - 2025-03-04 大模型 API 调用**只保留其 HTTP API 兼容 openAI API 结构的**平台和模型，不再兼容其他平台自己定义的 API 结构，具体如下：
+  - 2025-03-04 大模型 API 调用**只保留其 HTTP API 兼容 openAI API 结构的**平台和模型，不再兼容其他平台自己定义的 API 结构，具体如下(2025-03-31)：
   - 对话模型：
     - [阿里](https://help.aliyun.com/zh/model-studio/developer-reference/compatibility-of-openai-with-dashscope)
     - [百度](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Fm2vrveyu)
     - [腾讯](https://console.cloud.tencent.com/hunyuan/start)
     - [智谱](https://open.bigmodel.cn/dev/api/normal-model/glm-4)
     - [深度求索(DeepSeek)](https://api-docs.deepseek.com/zh-cn/)
+    - [火山引擎(火山方舟)](https://www.volcengine.com/docs/82379/1330310)
     - [零一万物](https://platform.lingyiwanwu.com/docs/api-reference)
     - [无问芯穹](https://docs.infini-ai.com/gen-studio/api/maas.html#/operations/chatCompletions)
     - [硅基流动](https://docs.siliconflow.cn/cn/api-reference/chat-completions/chat-completions)
@@ -35,9 +36,7 @@ _2025-02-17_
 
 当然，如果对 [硅基流动平台](https://siliconflow.cn/zh-cn/models) 感兴趣，还能用下我的邀请码注册，那就更好了，谢谢：
 
-```
-https://cloud.siliconflow.cn/i/tRIcST68
-```
+[https://cloud.siliconflow.cn/i/tRIcST68](https://cloud.siliconflow.cn/i/tRIcST68)
 
 该平台有很多不同的大模型 API 可以调用，比如最新的 DeepSeek、Qwen、Llama、stable-diffusion 等。
 很多轻量级的模型可以免费使用，一些小需求可以节约时间，不必频繁切换。
@@ -50,31 +49,43 @@ https://cloud.siliconflow.cn/i/tRIcST68
 
 ## AI 智能助手
 
-目前简单包括了 AI 助手、AI 绘图、AI 视频。
+目前简单包括了 智能助手、角色扮演、AI 绘图、AI 视频。
 
 - APP 启动首页就是 AI 助手，可以进行常规的聊天、问答、图像识别对话等。
 - 可以切换底部导航栏的“工具”标签，使用 AI 绘图、AI 视频等。
 
-### AI 助手
+### 智能助手
 
-AI 助手，就是调用各个平台中的语言大模型 API，进行聊天、问答等；可以切换大模型类别(文本对话、图片理解等)使用特定功能。
+智能助手，就是调用各个平台中的语言大模型 API，进行聊天、问答等；可以切换大模型类别(文本对话、图片理解等)使用特定功能。
 
 ![助手页面](./_doc/screenshots/brief_version/对话页面.jpg)
 
 - 选定使用对话模型类别 -> 选定指定平台部署的指定模型，输入框输入内容，点击“发送”图标，开始聊天
-- 除了打字文本输入，也支持语音(转换文字)输入 _(这个组件后续有时间再优化一下)_
+- 简单的 LaTeX、代码高亮等应该是可以正常显示的；对话分支支持删除和切换
+- 长按消息体有更多选项(用户消息和 AI 响应消息略有不同)
+- 右上角有更多功能按钮，比如切换对话背景、手动添加模型
+- 如果平台有 DeepSeek R 系列深度思考(默认的)功能，返回中有 `reasoning_content` 字段，会显示在对话列表中当作思考内容。
+- 如果是使用火山方舟添加联网插件的应用，也可以查看联网搜索结果列表。
+- 除了打字文本输入，也支持 60 秒以内语音(转换文字)输入 _(这个组件后续有时间再优化一下)_
   - 实际实现是先调用讯飞的语音转写 API，把语音转为了文字，再调用大模型的 API
   - 直接发送语音就直接是转化后的文字，有可能会识别错，可以在页面中查看转化后的文本，发送文本
   - 有保存原语音文件在设备本地应用缓存，所以点击可以听原语音
-- 可以查看最近的对话（点击对话主页面右上角的历史记录图标），点击指定对话历史记录，可以继续交流
-  - 历史记录是存在设备本地的 sqlite 数据库中的
-- 如果平台有 DeepSeek R 系列深度思考(默认的)功能，返回中有`reasoning_content`字段，会显示在对话框中当作思考内容。
+
+### AI 角色扮演
+
+简单默认设置了 system prompt，可以自行配置一些栏位。
+
+![助手页面](./_doc/screenshots/brief_version/角色扮演.jpg)
+
+- 可以自行添加默认角色，简单的角色描述、性格特点、场景设定、偏好模型等配置
+- 还可以添加角色头像、聊天背景图
+- 在聊天页面，右下角可以展开查看角色头像；右上角有更多功能按钮，比如一次性和多个角色对话
 
 ### AI 绘图/视频
 
 ![图片视频生成](./_doc/screenshots/brief_version/助手工具.jpg)
 
-从“工具”页面进入的“AI 助手”，和首页直接显示的唯一区别，就是没有底部导航栏。
+从“工具”页面进入的“简洁助手”，是之前缓存在 sqlite 的实现方式，功能少一些。
 
 AI 绘图/视频结构和操作类似，所以放在一起说。
 
@@ -94,7 +105,7 @@ AI 绘图/视频结构和操作类似，所以放在一起说。
 
 ![配置和其他工具](./_doc/screenshots/brief_version/导入配置等.jpg)
 
-在对话主页面中，右上角有个调整对话消息文本字体大小的按钮，点击之后在弹窗的 slider 中拖动调整。
+高级助手、角色扮演的对话可以单独导出，也可以在设置页面和其他内容一起全量备份。
 
 打包好的 apk 是直接使用我个人密钥的一些免费的大模型，都是比较基础的。可以自行导入平台模型和密钥使用自己的资源。
 
@@ -122,8 +133,13 @@ AI 绘图/视频结构和操作类似，所以放在一起说。
   "USER_LINGYIWANWU_API_KEY": "xxx",
   "USER_ZHIPU_API_KEY": "xxx",
 
-  "USER_SILICON_CLOUD_API_KEY": "sk-xxx",
+  "USER_SILICONCLOUD_API_KEY": "sk-xxx",
   "USER_INFINI_GEN_STUDIO_API_KEY": "sk-xxx",
+
+  // 火山方舟的预置推理接入点
+  "USER_VOLCENGINE_API_KEY": "xxx",
+  // 自定义推理接入点(比较简单的联网应用)
+  "USER_VOLCESBOT_API_KEY": "xxx",
 
   // 讯飞, 语音转写需要
   "USER_XFYUN_APP_ID": "xxx",
@@ -144,8 +160,24 @@ AI 绘图/视频结构和操作类似，所以放在一起说。
 
 #### 大模型规格 json 结构
 
+<details>
+
+<summary>大模型规格 json 结构</summary>
+
 ```json
 [
+  {
+    "platform": "<*代码中自定义的平台代号，枚举值>",
+    "model": "<*指定平台中使用的模型代号，必须与API文档中一致，会用于构建http请求>",
+    "modelType": "<*代码中自定义的模型类型代号，枚举值>",
+    "name": "<模型名称，用于显示，随意，可识别出即可>",
+    "contextLength": "<上下文长度>",
+    "isFree": false, // 是否免费
+    "inputPrice": 6, // 输入价格(对话模型)
+    "outputPrice": 6, // 输出价格(对话模型)
+    "costPer": 0.05, // 单次调用价格(绘图/视频模型)
+    "gmtRelease": "<平台中模型发布时间>"
+  },
   {
     "platform": "lingyiwanwu",
     "model": "yi-lightning",
@@ -165,18 +197,33 @@ AI 绘图/视频结构和操作类似，所以放在一起说。
     "isFree": false,
     "costPer": 0.05,
     "gmtRelease": "2024-08-01"
-  },
+  }
+  // ……
+]
+```
+
+</details>
+
+---
+
+2025-03-07 已经简化，必要栏位只需要**平台、模型名、模型类型**即可。
+
+```json
+[
   {
     "platform": "<*代码中自定义的平台代号，枚举值>",
     "model": "<*指定平台中使用的模型代号，必须与API文档中一致，会用于构建http请求>",
-    "modelType": "<*代码中自定义的模型类型代号，枚举值>",
-    "name": "<模型名称，用于显示，随意，可识别出即可>",
-    "contextLength": "<上下文长度>",
-    "isFree": false, // 是否免费
-    "inputPrice": 6, // 输入价格(对话模型)
-    "outputPrice": 6, // 输出价格(对话模型)
-    "costPer": 0.05, // 单次调用价格(绘图/视频模型)
-    "gmtRelease": "<平台中模型发布时间>"
+    "modelType": "<*代码中自定义的模型类型代号，枚举值>"
+  },
+  {
+    "platform": "aliyun",
+    "model": "deepseek-r1",
+    "modelType": "reasoner"
+  },
+  {
+    "platform": "aliyun",
+    "model": "deepseek-v3",
+    "modelType": "cc"
   }
   // ……
 ]
@@ -196,6 +243,11 @@ enum ApiPlatform {
 
   siliconCloud, // 硅基流动
   infini, // 无问芯穹的 genStudio
+
+  // 2025-03-24 火山引擎默认调用和关联应用(比如配置了联网搜索)使用的url不一样
+  // 避免出现冲突，分成两个且互不包含
+  volcengine,
+  volcesBot,
 }
 ```
 
@@ -204,6 +256,7 @@ enum ApiPlatform {
 ```ts
 enum LLModelType {
   cc, // 文本对话
+  reasoner, // 深度思考
   vision, // 图片解读
   tti, // 文本生图
   iti, // 图片生图
@@ -222,11 +275,12 @@ enum LLModelType {
 
 - [ ] AI 工具部分:
   - [ ] 高级请求参数配置(temperature、max_tokens 等比较常用但暂没支持用户配置)
+    - [x] AI 助手模块(对话模块)的更多参数配置
   - [ ] 测试低成本让少量模型可联网搜索
-  - [ ] 对话消息展示的 Markdown 格式结合 LaTeX
-  - [ ] AI 助手可编辑某个输入对话的消息，并记录对话分支
+  - [x] 对话消息展示的 Markdown 格式结合 LaTeX
+  - [x] AI 助手可编辑某个输入对话的消息，并记录对话分支
   - [ ] 静默继续流式输出(助手模块切换到其他页面时输出继续而不是终止)
-  - [ ] 添加角色卡功能，可少量预设，支持用户自行导入
+  - [x] 添加角色卡功能，可少量预设，支持用户自行导入
   - [ ] 一键保存整个对话为 Markdown 文件？
   - [ ] 多 Agent 的群聊、角色扮演？
   - [ ] 免费云端数据库用于数据存储？
@@ -325,9 +379,14 @@ _这个其实是之前(2024-04-09)就单独开发好的 app 了，功能融合�
 
 目前其实没有用户这个概念，除了调用 API 和一些网络图片，都没有需要联网的东西。
 
-这个模块目前仅有一个"备份恢复"功能。
+这个模块目前仅有一个"备份恢复"功能，存储方式因为各种原因不一致：
 
-因为智能助手的对话记录、极简记账的账单条目、随机菜品的菜品列表等，都是本地 sqlite 存储的，所以备份就是把 db 中的数据导出成 json 文件并压缩，恢复就是把压缩包的 json 存入数据库中。
+- 简洁助手的对话记录、自定义模型列表、极简记账的账单条目、随机菜品的菜品列表等，都是本地 sqlite 存储的
+- 高级助手的对话记录使用 objectbox 存储
+- 角色扮演的对话记录使用文件存储
+- API Key 是缓存，不会备份出来
+
+备份就是把各种存储中的数据导出成 json 文件并压缩，恢复就是把压缩包的 json 存入数据库中。
 
 **注意**：
 
@@ -340,6 +399,35 @@ _这个其实是之前(2024-04-09)就单独开发好的 app 了，功能融合�
 ## 开发环境
 
 在一个 Windows 7 中使用 Visual Box 7 安装的 Ubuntu20.04 LTS 虚拟机中使用 VSCode 进行开发。
+
+2025-03-20 使用最新 flutter 版本：
+
+```sh
+$ flutter --version
+Flutter 3.29.2 • channel stable • https://github.com/flutter/flutter.git
+Framework • revision c236373904 (7 天前) • 2025-03-13 16:17:06 -0400
+Engine • revision 18b71d647a
+Tools • Dart 3.7.2 • DevTools 2.42.3
+```
+
+<details>
+
+<summary>关于使用讯飞云语音转文字的相关说明</summary>
+
+之前使用 audio_waveforms 录制语音和展示波形，但是录制的格式不支持讯飞云语音转文字的 pcm（pcm_s16le），wav，speex(speex-wb)。  
+所以使用 ffmpeg_kit_flutter 把 m4a 转换为 pcm 格式，然后给讯飞云转文字。
+
+但是新版本 flutter3.29 之后，ffmpeg_kit_flutter 启动运行会[项目报错](https://github.com/arthenica/ffmpeg-kit/issues/1110)。  
+准备替换为 record 库，直接录制 wav、 pcm 格式，然后给讯飞云转文字。但是识别效果极差，完全不对，且 VoiceWaveBubble 无法正常使用。
+
+虽然 ffmpeg_kit_flutter 已经是 DISCONTINUED 状态，2025-04-01 之后该库部分二进制文件也会被删除，之后就无法使用。
+但还是继续使用 audio_waveforms 录制 m4a 格式，然后使用 ffmpeg_kit_flutter 转换为 pcm 格式给讯飞云转文字。
+
+之后再找找其他方式。
+
+</details>
+
+---
 
 2024-11-04 使用最新 flutter 版本：
 

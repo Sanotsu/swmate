@@ -22,7 +22,7 @@
     "gmtRelease": "2025-02-07"
   },
   {
-    "platform": "lingyiwanwu",
+    "platform": "infini",
     "model": "deepseek-r1-distill-qwen-32b",
     "modelType": "cc",
     "name": "deepseek-r1-distill-qwen-32b",

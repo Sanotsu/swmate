@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../common/llm_spec/cus_brief_llm_model.dart';
-import '../../../../common/llm_spec/constant_llm_enum.dart';
+import '../../../common/llm_spec/cus_brief_llm_model.dart';
+import '../../../common/llm_spec/constant_llm_enum.dart';
 
 class ModelSelector extends StatefulWidget {
   final List<CusBriefLLMSpec> models;
@@ -46,9 +46,11 @@ class _ModelSelectorState extends State<ModelSelector> {
     if (_searchKeyword.isEmpty) return widget.models;
 
     return widget.models.where((model) {
-      return model.name.toLowerCase().contains(_searchKeyword) ||
-          CP_NAME_MAP[model.platform]!.toLowerCase().contains(_searchKeyword) ||
-          model.modelType.name.toLowerCase().contains(_searchKeyword);
+      return (model.name?.toLowerCase().contains(_searchKeyword) ?? false) ||
+          (CP_NAME_MAP[model.platform]!
+              .toLowerCase()
+              .contains(_searchKeyword)) ||
+          (model.modelType.name.toLowerCase().contains(_searchKeyword));
     }).toList();
   }
 
@@ -109,7 +111,7 @@ class _ModelSelectorState extends State<ModelSelector> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(model.name),
+                      Text(model.name ?? model.model),
                     ],
                   ),
                   selected: model == widget.selectedModel,

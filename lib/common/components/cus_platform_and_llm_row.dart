@@ -130,7 +130,7 @@ class _CusPlatformAndLlmRowState extends State<CusPlatformAndLlmRow> {
               value: e,
               alignment: AlignmentDirectional.centerStart,
               child: Text(
-                e.name,
+                e.name ?? e.model,
                 style: TextStyle(color: Colors.blue, fontSize: 15.sp),
               ),
             ))

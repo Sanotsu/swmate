@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'brief_ai_assistant/chat/index.dart';
+import 'brief_ai_assistant/branch_chat/branch_chat_page.dart';
 import 'brief_ai_assistant/index.dart';
 import 'life_tools/index.dart';
 import 'user_and_settings/index.dart';
@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     _widgetOptions = [
-      const BriefChatScreen(),
+      const BranchChatPage(),
       const BriefAITools(),
       const LifeToolIndex(),
       const UserAndSettings(),

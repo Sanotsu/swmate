@@ -2,9 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+import '../../../common/components/cus_markdown_renderer.dart';
+import '../../../common/components/simple_marquee_or_text.dart';
 import '../../../common/components/tool_widget.dart';
 import '../../../common/constants/constants.dart';
 import '../../../common/llm_spec/cus_brief_llm_model.dart';
@@ -13,14 +17,19 @@ import '../../../common/utils/db_tools/db_brief_ai_tool_helper.dart';
 import '../../../models/brief_ai_tools/chat_completions/chat_completion_response.dart';
 import '../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 import '../../../services/cus_get_storage.dart';
+import '../../../services/chat_service.dart';
+import '../../../services/model_manager_service.dart';
+import '../../../common/utils/advanced_options_utils.dart';
+
+import '../_chat_components/_small_tool_widgets.dart';
+
+import '../_chat_components/text_selection_dialog.dart';
 import 'components/chat_input.dart';
 import 'components/chat_message_item.dart';
-import 'components/model_filter.dart';
-import 'components/model_selector.dart';
-import '../../../services/chat_service.dart';
+import '../_chat_components/model_filter.dart';
+import '../_chat_components/model_selector.dart';
 import 'components/chat_history_drawer.dart';
 import 'components/message_actions.dart';
-import '../../../services/model_manager_service.dart';
 
 class BriefChatScreen extends StatefulWidget {
   const BriefChatScreen({super.key});
@@ -72,6 +81,21 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   // 输入框展开收起工具栏时，悬浮按钮(新加对话、滚动到底部)位置需要动态变化，始终在输入框的上方
   double _inputHeight = 0;
 
+  // 添加高级参数状态
+  bool _advancedEnabled = false;
+  Map<String, dynamic>? _advancedOptions;
+
+  // 添加是否在编辑用户消息
+  bool _isEditingUserMsg = false;
+  // 被编辑的用户消息的索引
+  int? _editingIndex;
+
+  // 添加输入框控制器
+  final TextEditingController _inputController = TextEditingController();
+
+  // 添加输入框焦点控制
+  final FocusNode _inputFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -80,6 +104,15 @@ class _BriefChatScreenState extends State<BriefChatScreen>
 
     // 获取缓存中的正文文本缩放比例
     _textScaleFactor = MyGetStorage().getChatListAreaScale();
+
+    // 获取缓存的高级选项配置
+    if (_selectedModel != null) {
+      _advancedEnabled =
+          MyGetStorage().getAdvancedOptionsEnabled(_selectedModel!);
+      if (_advancedEnabled) {
+        _advancedOptions = MyGetStorage().getAdvancedOptions(_selectedModel!);
+      }
+    }
 
     // 监听滚动事件
     _scrollController.addListener(() {
@@ -120,6 +153,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           await ModelManagerService.getAvailableModelByTypes([
         LLModelType.cc,
         LLModelType.vision,
+        LLModelType.reasoner,
       ]);
 
       if (!mounted) return;
@@ -193,18 +227,21 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       _messages = [];
       _currentChat = null;
 
+      // 开启新对话后，没有对话列表，所以不显示滚动到底部按钮
+      _showScrollToBottom = false;
+
       // 创建新对话后，重置内容高度
       _resetContentHeight();
     });
   }
 
-  // 切换模型
+  // 切换模型类型
   void _handleTypeChanged(LLModelType type) {
-    _createNewChat();
-
     setState(() {
       _selectedType = type;
+
       // 如果当前选中的模型不是新类型的，则清空选择
+      // 因为切换类型时，一定会触发模型选择器，在模型选择的地方有重新创建对话，所以这里不用重新创建
       if (_selectedModel?.modelType != type) {
         _selectedModel = null;
       }
@@ -247,6 +284,13 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       // 如果没有点击模型，则使用选定分类的第一个模型
       setState(() => _selectedModel = filteredModels.first);
     }
+
+    // 选择指定模型后，加载对应类型上次缓存的高级选项配置
+    _advancedEnabled =
+        MyGetStorage().getAdvancedOptionsEnabled(_selectedModel!);
+    _advancedOptions = _advancedEnabled
+        ? MyGetStorage().getAdvancedOptions(_selectedModel!)
+        : null;
 
     // 2025-03-03 切换模型后也直接重建对话好了？？？此时就不用重置内容高度了
     _createNewChat();
@@ -291,10 +335,11 @@ class _BriefChatScreenState extends State<BriefChatScreen>
               dateTime: m.dateTime,
               role: m.role,
               content: m.content,
-              thinkingDuration: m.thinkingDuration,
               reasoningContent: m.reasoningContent,
-              imageUrl: m.imageUrl,
+              thinkingDuration: m.thinkingDuration,
               contentVoicePath: m.contentVoicePath,
+              imageUrl: m.imageUrl,
+              references: m.references,
               modelLabel: m.modelLabel ?? _selectedModel!.name,
             ))
         .toList();
@@ -326,6 +371,9 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   ) async {
     var startTime = DateTime.now();
     DateTime? endTime;
+
+    // 2025-03-24 联网搜索参考内容
+    List<Map<String, dynamic>>? references = [];
 
     try {
       stream.listen(
@@ -360,14 +408,22 @@ class _BriefChatScreenState extends State<BriefChatScreen>
             }
 
             if (_messages.last.role == CusRole.assistant.name) {
+              if (ccr.searchResults != null) {
+                references.addAll(ccr.searchResults!);
+              }
+
               // 更新现有消息(出错也是正常流，但额外手动的cusText)
               _messages.last.content += content;
               _messages.last.reasoningContent =
                   (_messages.last.reasoningContent ?? "") + reasoningContent;
+              _messages.last.references = references;
               _messages.last.promptTokens = ccr.usage?.promptTokens;
               _messages.last.completionTokens = ccr.usage?.completionTokens;
               _messages.last.totalTokens = ccr.usage?.totalTokens;
             } else {
+              if (ccr.searchResults != null) {
+                references.addAll(ccr.searchResults!);
+              }
               // 创建新的助手消息
               _messages.add(ChatMessage(
                 messageId: ccr.id,
@@ -376,6 +432,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                 content: content,
                 reasoningContent: reasoningContent,
                 modelLabel: _selectedModel?.name,
+                references: references,
               ));
             }
           });
@@ -415,7 +472,31 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     }
   }
 
-  // 发送消息
+  // 修改处理编辑消息的方法
+  void _handleEditMessage(ChatMessage message) {
+    var index = _messages.indexOf(message);
+
+    setState(() {
+      _isEditingUserMsg = true;
+      _editingIndex = index;
+      _inputController.text = message.content;
+    });
+    // 请求焦点，唤起键盘
+    _inputFocusNode.requestFocus();
+  }
+
+  // 修改取消编辑方法
+  void _handleEditCancel() {
+    setState(() {
+      _isEditingUserMsg = false;
+      _editingIndex = null;
+      _inputController.clear();
+    });
+    // 取消焦点，收起键盘
+    _inputFocusNode.unfocus();
+  }
+
+  // 修改发送消息方法
   Future<void> _handleSendMessage(
     String text, {
     File? image,
@@ -427,20 +508,39 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       return;
     }
 
-    // 添加用户消息
-    setState(() {
-      _messages.add(ChatMessage(
-        messageId: DateTime.now().toString(),
-        dateTime: DateTime.now(),
-        role: CusRole.user.name,
-        content: text,
-        imageUrl: image?.path,
-        contentVoicePath: voice?.path,
-      ));
+    // 处理JSON格式响应
+    if (_advancedEnabled &&
+        _advancedOptions?["response_format"] == "json_object") {
+      text = "$text(请严格按照json格式输出)";
+    }
 
-      // 在每次添加了对话之后，都把整个对话列表存入对话历史中去
-      _saveChatHistory();
-    });
+    // 如果是编辑模式
+    if (_isEditingUserMsg && _editingIndex != null) {
+      setState(() {
+        // 更新消息内容
+        _messages[_editingIndex!].content = text;
+        // 移除该消息之后的所有消息
+        _messages.removeRange(_editingIndex! + 1, _messages.length);
+        // 退出编辑模式
+        _isEditingUserMsg = false;
+        _editingIndex = null;
+      });
+    } else {
+      // 正常添加新消息
+      setState(() {
+        _messages.add(ChatMessage(
+          messageId: DateTime.now().toString(),
+          dateTime: DateTime.now(),
+          role: CusRole.user.name,
+          content: text,
+          imageUrl: image?.path,
+          contentVoicePath: voice?.path,
+        ));
+      });
+    }
+
+    // 保存对话历史
+    _saveChatHistory();
 
     try {
       setState(() => _isStreaming = true);
@@ -453,6 +553,8 @@ class _BriefChatScreenState extends State<BriefChatScreen>
         _messages,
         image: image,
         voice: voice,
+        // 只有启用了高级选项才传递参数
+        advancedOptions: _advancedEnabled ? _advancedOptions : null,
       );
       _cancelResponse = cancelFunc;
       if (!mounted) return;
@@ -490,6 +592,8 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       final (stream, cancelFunc) = await ChatService.sendMessage(
         _selectedModel!,
         _messages,
+        // 只在启用时传入高级参数
+        advancedOptions: _advancedEnabled ? _advancedOptions : null,
       );
       _cancelResponse = cancelFunc;
       if (!mounted) return;
@@ -611,6 +715,34 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     return await _dbHelper.queryBriefChatHistoryList();
   }
 
+  // 显示高级选项弹窗
+  Future<void> _showAdvancedOptions() async {
+    if (_selectedModel == null) return;
+
+    final result = await AdvancedOptionsUtils.showAdvancedOptions(
+      context: context,
+      platform: _selectedModel!.platform,
+      modelType: _selectedModel!.modelType,
+      currentEnabled: _advancedEnabled,
+      currentOptions: _advancedOptions ?? {},
+    );
+
+    if (result != null) {
+      setState(() {
+        _advancedEnabled = result.enabled;
+        _advancedOptions = result.enabled ? result.options : null;
+      });
+
+      // 保存到缓存
+      await MyGetStorage()
+          .setAdvancedOptionsEnabled(_selectedModel!, result.enabled);
+      await MyGetStorage().setAdvancedOptions(
+        _selectedModel!,
+        result.enabled ? result.options : null,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -628,21 +760,37 @@ class _BriefChatScreenState extends State<BriefChatScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          children: [
-            Text(
+        // title: Column(
+        //   children: [
+        //     Text(
+        //       "${CP_NAME_MAP[_selectedModel?.platform]} > ${_selectedModel?.model}",
+        //       style: TextStyle(fontSize: 14.sp, color: Colors.blue),
+        //       maxLines: 2,
+        //       overflow: TextOverflow.ellipsis,
+        //     ),
+        //   ],
+        // ),
+        title: SimpleMarqueeOrText(
+          data:
               "${CP_NAME_MAP[_selectedModel?.platform]} > ${_selectedModel?.model}",
-              style: TextStyle(fontSize: 14.sp, color: Colors.blue),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+          velocity: 30,
+          width: 0.5.sw,
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+          ),
         ),
         actions: [
-          // IconButton(
-          //   icon: const Icon(Icons.add),
-          //   onPressed: _isStreaming ? null : _createNewChat,
-          // ),
+          // 更多参数按钮
+          IconButton(
+            icon: Icon(
+              Icons.tune,
+              color: _advancedEnabled ? Theme.of(context).primaryColor : null,
+            ),
+            tooltip: '更多参数',
+            onPressed: _isStreaming ? null : _showAdvancedOptions,
+          ),
           IconButton(
             icon: const Icon(Icons.format_size_outlined),
             onPressed: _isStreaming ? null : _adjustTextScale,
@@ -695,23 +843,24 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                 onTypeChanged: _isStreaming ? null : _handleTypeChanged,
                 onModelSelect: _isStreaming ? null : _showModelSelector,
                 isStreaming: _isStreaming,
-                supportedTypes: [LLModelType.cc, LLModelType.vision],
+                supportedTypes: [
+                  LLModelType.cc,
+                  LLModelType.vision,
+                  LLModelType.reasoner
+                ],
               ),
               Divider(height: 10.sp),
 
               /// 消息列表
               Expanded(
                 child:
-                    _messages.isEmpty ? _buildEmptyHint() : _buildMessageList(),
+                    _messages.isEmpty ? buildEmptyHint() : _buildMessageList(),
               ),
 
               /// 流式响应时显示进度条
               if (_isStreaming)
                 Padding(
                   padding: EdgeInsets.symmetric(
-                    // 这里需要减去悬浮按钮的宽度，避免遮挡滚动到底部悬浮按钮；再留点间隔避免和按钮紧挨着
-                    // horizontal: 48.sp + 8.sp,
-                    // vertical: 5.sp,
                     /// 调整位置之后，还是滚动条贯穿屏幕，悬浮按钮放在滚动条上方，和谐一点
                     horizontal: 8.sp,
                   ),
@@ -744,12 +893,16 @@ class _BriefChatScreenState extends State<BriefChatScreen>
               /// 输入框
               ChatInput(
                 model: _selectedModel,
+                controller: _inputController,
+                focusNode: _inputFocusNode,
                 onSend: _handleSendMessage,
                 onCancel: _cancelResponse,
                 isStreaming: _isStreaming,
                 onHeightChanged: (height) {
                   setState(() => _inputHeight = height);
                 },
+                isEditing: _isEditingUserMsg,
+                onEditCancel: _handleEditCancel,
               ),
             ],
           ),
@@ -761,33 +914,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
     );
   }
 
-  // 构建空提示
-  Widget _buildEmptyHint() {
-    return Padding(
-      padding: EdgeInsets.all(32.sp),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.chat, size: 36.sp, color: Colors.blue),
-            Text(
-              '嗨，我是思文',
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              '我可以帮您完成很多任务，让我们开始吧！',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 构建消息列表
+  // 修改消息列表构建方法中的 ChatMessageItem
   Widget _buildMessageList() {
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(
@@ -796,32 +923,142 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       child: ListView.builder(
         controller: _scrollController,
         itemCount: _messages.length,
+        // 列表底部留一点高度，避免工具按钮和悬浮按钮重叠
+        padding: EdgeInsets.only(bottom: 50.sp),
+        // 增加缓存范围
+        cacheExtent: 1000.0,
+        // 让ListView自动管理RepaintBoundary
+        addRepaintBoundaries: true,
+        // 添加额外性能优化：滚动到不可见区域时，可回收组件
+        addAutomaticKeepAlives: false,
+        // 添加性能优化：使用findChildIndexCallback帮助Flutter更有效地识别items
+        findChildIndexCallback: (key) {
+          if (key is ValueKey<String>) {
+            final index = _messages
+                .indexWhere((msg) => 'msg_${msg.messageId}' == key.value);
+            return index >= 0 ? index : null;
+          }
+          return null;
+        },
+        // 消息列表项构建
         itemBuilder: (context, index) {
           final message = _messages[index];
           final isAssistant = message.role == CusRole.assistant.name;
-          return Column(
-            children: [
-              ChatMessageItem(message: message, showModelLabel: true),
-              // 不在流式响应时在助手消息下方显示操作按钮
-              if (isAssistant && !_isStreaming)
-                Padding(
-                  // 底部留出一点间距，避免和悬浮按钮重叠
-                  padding: EdgeInsets.only(left: 8.sp, bottom: 48.sp),
-                  child: SizedBox(
-                    height: 20.sp,
-                    child: MessageActions(
-                      content: message.content,
-                      onRegenerate: () => _handleRegenerate(message),
-                      // 是否正在重新生成(当前消息是否是重新生成消息)
-                      isRegenerating: index == _regeneratingIndex,
-                      // tokens: message.totalTokens,
-                    ),
+          // 为每个消息项添加唯一key，优化重建
+          return KeyedSubtree(
+            key: ValueKey('msg_${message.messageId}'),
+            child: Column(
+              children: [
+                RepaintBoundary(
+                  child: ChatMessageItem(
+                    key: ValueKey('content_${message.messageId}'),
+                    message: message,
+                    onLongPress: _isStreaming ? null : showMessageOptions,
                   ),
                 ),
-            ],
+                if (isAssistant && !_isStreaming)
+                  Padding(
+                    padding: EdgeInsets.only(left: 8.sp, bottom: 48.sp),
+                    child: SizedBox(
+                      height: 20.sp,
+                      child: MessageActions(
+                        content: message.content,
+                        onRegenerate: () => _handleRegenerate(message),
+                        isRegenerating: index == _regeneratingIndex,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           );
         },
       ),
+    );
+  }
+
+  void showMessageOptions(
+    ChatMessage message,
+    LongPressStartDetails details,
+  ) {
+    // 添加振动反馈
+    HapticFeedback.mediumImpact();
+
+    // 只有用户消息可以编辑
+    final bool isUser = message.role == CusRole.user.name;
+    // 只有AI消息可以重新生成
+    final bool isAssistant = message.role == CusRole.assistant.name;
+
+    // 获取点击位置
+    final Offset overlayPosition = details.globalPosition;
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        overlayPosition.dx,
+        overlayPosition.dy,
+        overlayPosition.dx + 200,
+        overlayPosition.dy + 100,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.sp),
+      ),
+      elevation: 8,
+      items: [
+        PopupMenuItem(
+          height: 40.sp,
+          child: buildMenuItemWithIcon(
+            icon: Icons.copy,
+            text: '复制文本',
+            // color: Colors.grey,
+          ),
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: message.content));
+            EasyLoading.showToast('已复制到剪贴板');
+          },
+        ),
+        PopupMenuItem(
+          height: 40.sp,
+          child: buildMenuItemWithIcon(
+            icon: Icons.text_fields,
+            text: '选择文本',
+            // color: Colors.blue,
+          ),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) => TextSelectionDialog(
+                  text: message.reasoningContent != null &&
+                          message.reasoningContent!.isNotEmpty
+                      ? '【推理过程】\n${message.reasoningContent!}\n\n【AI响应】\n${message.content}'
+                      : message.content),
+            );
+          },
+        ),
+        if (isUser)
+          PopupMenuItem(
+            height: 40.sp,
+            child: buildMenuItemWithIcon(
+              icon: Icons.edit,
+              text: '编辑消息',
+              // color: Colors.orange,
+            ),
+            onTap: () {
+              _handleEditMessage(message);
+            },
+          ),
+        if (isAssistant)
+          PopupMenuItem(
+            height: 40.sp,
+            child: buildMenuItemWithIcon(
+              icon: Icons.refresh,
+              text: '重新生成',
+              // color: Colors.green,
+            ),
+            onTap: () {
+              _handleRegenerate(message);
+            },
+          ),
+      ],
     );
   }
 
@@ -848,7 +1085,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                 padding: EdgeInsets.symmetric(vertical: 16.sp),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(14.sp),
                     //
                   ),
@@ -902,8 +1139,14 @@ class _BriefChatScreenState extends State<BriefChatScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _cancelResponse?.call();
+    _inputFocusNode.dispose(); // 记得释放焦点
+    _inputController.dispose();
     _scrollController.dispose();
+    _cancelResponse?.call();
+
+    // 清理Markdown渲染缓存，释放内存
+    CusMarkdownRenderer.instance.clearCache();
+
     super.dispose();
   }
 }

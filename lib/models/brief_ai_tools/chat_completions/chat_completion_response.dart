@@ -28,7 +28,7 @@ class ChatCompletionResponse {
   @JsonKey(readValue: readJsonValue)
   final ChatCompletionUsage? usage;
 
-  @JsonKey(readValue: readJsonValue)
+  @JsonKey(readValue: readReferenceValue)
   final List<Map<String, dynamic>>? searchResults;
 
   @JsonKey(readValue: readJsonValue)

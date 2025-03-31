@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
+
 import '../common/llm_spec/cus_brief_llm_model.dart';
 import '../common/llm_spec/constant_llm_enum.dart';
+import '../models/brief_ai_tools/branch_chat/branch_chat_message.dart';
 import '../models/brief_ai_tools/chat_completions/chat_completion_response.dart';
 import '../models/brief_ai_tools/chat_competion/com_cc_state.dart';
 import 'dart:io';
@@ -10,6 +12,7 @@ import '../common/constants/default_models.dart';
 import '../services/cus_get_storage.dart';
 import '../models/brief_ai_tools/chat_completions/chat_completion_request.dart';
 import '../apis/chat_completion/openai_compatible_apis.dart';
+import '../common/constants/advanced_options_presets.dart';
 
 /// 2025-02-13 改版后所有平台都使用open API兼容的版本，不兼容的就不用了。
 ///     讯飞每个模型的AK都单独的，太麻烦了，而且效果并不出类拔萃，放弃支持它平台的调用了
@@ -49,8 +52,10 @@ class ChatService {
         return 'https://api.siliconflow.cn/v1';
       case ApiPlatform.infini:
         return 'https://cloud.infini-ai.com/maas/v1';
-      default:
-        throw Exception('不支持的平台');
+      case ApiPlatform.volcengine:
+        return 'https://ark.cn-beijing.volces.com/api/v3';
+      case ApiPlatform.volcesBot:
+        return 'https://ark.cn-beijing.volces.com/api/v3/bots';
     }
   }
 
@@ -97,14 +102,18 @@ class ChatService {
           break;
 
         case ApiPlatform.siliconCloud:
-          apiKey = userKeys[ApiPlatformAKLabel.USER_SILICON_CLOUD_API_KEY.name];
+          apiKey = userKeys[ApiPlatformAKLabel.USER_SILICONCLOUD_API_KEY.name];
           break;
         case ApiPlatform.infini:
           apiKey =
               userKeys[ApiPlatformAKLabel.USER_INFINI_GEN_STUDIO_API_KEY.name];
           break;
-        default:
-          throw Exception('不支持的平台');
+        case ApiPlatform.volcengine:
+          apiKey = userKeys[ApiPlatformAKLabel.USER_VOLCENGINE_API_KEY.name];
+          break;
+        case ApiPlatform.volcesBot:
+          apiKey = userKeys[ApiPlatformAKLabel.USER_VOLCESBOT_API_KEY.name];
+          break;
       }
 
       if (apiKey == null || apiKey.isEmpty) {
@@ -134,6 +143,7 @@ class ChatService {
     File? image,
     File? voice,
     bool stream = true,
+    Map<String, dynamic>? advancedOptions,
   }) async {
     final headers = await _getHeaders(model);
     final baseUrl = "${_getBaseUrl(model.platform)}/chat/completions";
@@ -158,15 +168,188 @@ class ChatService {
       }
     }).toList();
 
+    // 处理高级参数
+    Map<String, dynamic>? additionalParams;
+    if (advancedOptions != null) {
+      additionalParams = AdvancedOptionsManager.buildAdvancedParams(
+        advancedOptions,
+        model.platform,
+      );
+    }
+
+    // 2025-03-25 智谱GLM4 支持 web_search
+    if (model.platform == ApiPlatform.zhipu) {
+      additionalParams = {
+        'tools': [
+          {
+            "type": "web_search",
+            "web_search": {"enable": true, "search_result": true}
+          }
+        ]
+      };
+    }
+
     final request = ChatCompletionRequest(
       model: model.model,
       messages: messagesList,
       stream: stream,
-      temperature: 0.7,
+      additionalParams: additionalParams,
     );
 
-    final requestBody = request.toRequestBody(model.platform);
+    final requestBody = request.toRequestBody();
+
+    // print('常规流式响应请求体: $requestBody');
+    return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
+  }
+
+  /// 分支对话发送消息调用大模型API(和常规的类似)
+  static Future<(Stream<ChatCompletionResponse>, VoidCallback)>
+      sendBranchMessage(
+    CusBriefLLMSpec model,
+    List<BranchChatMessage> messages, {
+    bool stream = true,
+    Map<String, dynamic>? advancedOptions,
+  }) async {
+    final headers = await _getHeaders(model);
+    final baseUrl = "${_getBaseUrl(model.platform)}/chat/completions";
+
+    // 处理高级参数
+    Map<String, dynamic>? additionalParams;
+    if (advancedOptions != null) {
+      additionalParams = AdvancedOptionsManager.buildAdvancedParams(
+        advancedOptions,
+        model.platform,
+      );
+    }
+
+    // 2025-03-25 文档中智谱AI模型支持 web_search，但实测没有用
+    // 高级的Web-Search-Pro工具0.03元/次，且单独API调用，还要手动处理成输入token处理？
+    if (model.platform == ApiPlatform.zhipu) {
+      additionalParams = {
+        'tools': [
+          {
+            "type": "web_search",
+            "web_search": {
+              "enable": true,
+              "search_result": true,
+              // "search_query": messages.last.content
+            }
+          }
+        ]
+      };
+    }
+
+    final request = ChatCompletionRequest(
+      model: model.model,
+      messages: _buildAPIContent(messages),
+      stream: stream,
+      additionalParams: additionalParams,
+    );
+
+    final requestBody = request.toRequestBody();
+    // print('分支对话请求体: $requestBody');
 
     return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
   }
+
+  /// 角色对话发送消息调用大模型API
+  static Future<(Stream<ChatCompletionResponse>, VoidCallback)>
+      sendCharacterMessage(
+    CusBriefLLMSpec model,
+    List<Map<String, dynamic>> messages, {
+    bool stream = true,
+    Map<String, dynamic>? advancedOptions,
+  }) async {
+    final headers = await _getHeaders(model);
+    final baseUrl = "${_getBaseUrl(model.platform)}/chat/completions";
+
+    // 处理高级参数
+    Map<String, dynamic>? additionalParams;
+    if (advancedOptions != null) {
+      additionalParams = AdvancedOptionsManager.buildAdvancedParams(
+        advancedOptions,
+        model.platform,
+      );
+    }
+
+    final request = ChatCompletionRequest(
+      model: model.model,
+      messages: messages,
+      stream: stream,
+      additionalParams: additionalParams,
+    );
+
+    final requestBody = request.toRequestBody();
+    // print('角色对话请求体: $requestBody');
+
+    return getStreamResponse(baseUrl, headers, requestBody, stream: stream);
+  }
+}
+
+List<Map<String, dynamic>> _buildAPIContent(List<BranchChatMessage> messages) {
+  final messagesList = messages.map((m) {
+    // 初始化内容列表
+    final contentList = [];
+
+    // 添加文本内容
+    if (m.content.isNotEmpty) {
+      // 如果只有文本内容，则直接添加
+      if (m.imagesUrl != null || m.videosUrl != null) {
+        contentList.add({'type': 'text', 'text': m.content});
+      } else {
+        return {
+          'role': m.role,
+          'content': m.content,
+        };
+      }
+    }
+
+    // 处理图片(按逗号分割图片地址)
+    if (m.imagesUrl != null && m.imagesUrl!.trim().isNotEmpty) {
+      final imageUrls = m.imagesUrl!.split(',');
+      for (final url in imageUrls) {
+        final bytes = File(url.trim()).readAsBytesSync();
+        final base64Image = base64Encode(bytes);
+        contentList.add({
+          'type': 'image_url',
+          'image_url': {'url': 'data:image/jpeg;base64,$base64Image'}
+        });
+      }
+    }
+
+    // 暂时不启用
+    // // 处理视频(按逗号分割视频地址)
+    // if (m.videosUrl != null && m.videosUrl!.trim().isNotEmpty) {
+    //   final videoUrls = m.videosUrl!.split(',');
+    //   for (final url in videoUrls) {
+    //     final bytes = File(url.trim()).readAsBytesSync();
+    //     final base64Video = base64Encode(bytes);
+    //     contentList.add({
+    //       'type': 'video_url',
+    //       'video_url': {'url': 'data:video/mp4;base64,$base64Video'}
+    //     });
+    //   }
+    // }
+
+    // // 处理音频(暂时只有单个音频，仅支持mp3格式)
+    // if (m.contentVoicePath != null && m.contentVoicePath!.trim().isNotEmpty) {
+    //   final bytes = File(m.contentVoicePath!).readAsBytesSync();
+    //   final base64Audio = base64Encode(bytes);
+    //   contentList.add({
+    //     'type': 'input_audio',
+    //     'input_audio': {
+    //       'data': 'data:audio/mp3;base64,$base64Audio',
+    //       'format': 'mp3',
+    //     }
+    //   });
+    // }
+
+    // 返回最终的消息结构
+    return {
+      'role': m.role,
+      'content': contentList,
+    };
+  }).toList();
+
+  return messagesList;
 }

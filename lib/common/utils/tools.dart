@@ -174,6 +174,19 @@ String formatFileSize(int bytes, {int decimals = 2}) {
   return '${(bytes / pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
 }
 
+// 将字符串中每个单词的首字母大写
+String capitalizeWords(String input) {
+  if (input.trim().isEmpty) {
+    return input;
+  }
+
+  // 使用正则表达式匹配单词的首字母
+  return input.replaceAllMapped(RegExp(r'(^|\s|_|-)\w'), (match) {
+    // 将匹配到的首字母大写，同时保留前缀（如空格、下划线、中线等）
+    return match.group(0)!.toUpperCase();
+  });
+}
+
 /// 格式化Duration为 HH:MM:SS格式
 formatDurationToString(Duration d) =>
     d.toString().split('.').first.padLeft(8, "0");
@@ -488,8 +501,8 @@ Future<String> getAITranslation(
     ApiPlatform.zhipu,
     "glm-4-flash",
     LLModelType.cc,
-    "glm-4-flash",
-    true,
+    name: "glm-4-flash",
+    isFree: true,
     isBuiltin: true,
     cusLlmSpecId: Uuid().v4(),
   );

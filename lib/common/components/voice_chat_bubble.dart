@@ -100,9 +100,7 @@ class _VoiceWaveBubbleState extends State<VoiceWaveBubble> {
                 onPressed: () async {
                   controller.playerState.isPlaying
                       ? await controller.pausePlayer()
-                      : await controller.startPlayer(
-                          finishMode: FinishMode.pause,
-                        );
+                      : await controller.startPlayer();
                 },
                 icon: Icon(
                   controller.playerState.isPlaying
@@ -133,9 +131,7 @@ class _VoiceWaveBubbleState extends State<VoiceWaveBubble> {
                 onPressed: () async {
                   controller.playerState.isPlaying
                       ? await controller.pausePlayer()
-                      : await controller.startPlayer(
-                          finishMode: FinishMode.pause,
-                        );
+                      : await controller.startPlayer();
                 },
                 icon: Icon(
                   controller.playerState.isPlaying

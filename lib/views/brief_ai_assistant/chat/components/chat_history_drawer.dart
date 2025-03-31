@@ -125,7 +125,8 @@ class ChatHistoryDrawer extends StatelessWidget {
           style: TextStyle(fontSize: 12.sp),
         ),
         selected: isSelected,
-        selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
+        selectedTileColor:
+            Theme.of(context).primaryColor.withValues(alpha: 0.1),
         onTap: () {
           onHistorySelect(history);
           Navigator.pop(context);

@@ -158,3 +158,6 @@ linux
 **/*demo*
 **/*bugreport*
 .aider*
+
+# 2025-03-21 升级后运行时生成的文件夹，应该没用
+android/app/.cxx/

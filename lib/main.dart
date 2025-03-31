@@ -15,6 +15,7 @@ import 'services/model_manager_service.dart';
 import 'services/network_service.dart';
 import 'views/home.dart';
 import 'services/cus_get_storage.dart';
+import 'models/brief_ai_tools/branch_chat/branch_store.dart';
 
 GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -48,9 +49,21 @@ class AppCatchError {
 
           // 只在首次启动时初始化内置模型
           // if (MyGetStorage().isFirstLaunch()) {
-            await ModelManagerService.initBuiltinModelsTest();
-            await MyGetStorage().markLaunched();
+          await ModelManagerService.initBuiltinModelsTest();
+          await MyGetStorage().markLaunched();
           // }
+
+          // 初始化 ObjectBox
+          final store = await BranchStore.create();
+
+          // 在应用退出时关闭 Store
+          WidgetsBinding.instance.addObserver(
+            LifecycleEventHandler(
+              detached: () async {
+                store.store.close();
+              },
+            ),
+          );
 
           NetworkStatusService().initialize();
           runApp(const SWMateApp());
@@ -82,6 +95,28 @@ class AppCatchError {
         error.toString().contains("登录出错") ||
         error.toString().toLowerCase().contains("invalid")) {
       print(error);
+    }
+  }
+}
+
+/// 生命周期事件处理器
+class LifecycleEventHandler extends WidgetsBindingObserver {
+  final AsyncCallback? detached;
+
+  LifecycleEventHandler({
+    this.detached,
+  });
+
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    switch (state) {
+      case AppLifecycleState.detached:
+        if (detached != null) {
+          await detached!();
+        }
+        break;
+      default:
+        break;
     }
   }
 }

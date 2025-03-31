@@ -164,7 +164,7 @@ class _DishWheelIndexState extends State<DishWheelIndex>
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: Colors.pink.withOpacity(0.1),
+          color: Colors.pink.withValues(alpha: 0.1),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

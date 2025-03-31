@@ -68,3 +68,20 @@ dynamic readErrorMsgValue(Map json, String key) {
   // 2024-11-04 注意，讯飞的报错使用了message栏位，但是成功该栏位也有值"Success"，需要特殊处理
   return json["message"] ?? json['Message'] ?? json["msg"] ?? json["Msg"];
 }
+
+// 2025-03-24 不同平台联网搜索参考内容不一样，所以需要单独处理
+dynamic readReferenceValue(Map json, String key) {
+  // 尝试从多个可能的键中读取值
+  // 例如时error_msg,会匹配error_msg、ErrorMsg、errorMsg
+  var possibleKeys = generatePossibleKeys(key);
+
+  for (var possibleKey in possibleKeys) {
+    if (json.containsKey(possibleKey)) {
+      return json[possibleKey];
+    }
+  }
+
+  // 2025-03-24 火山引擎的联网搜索参考内容是references
+  // 2025-03-25 智谱的联网搜索参考内容是 web_search
+  return json["references"] ?? json["web_search"];
+}

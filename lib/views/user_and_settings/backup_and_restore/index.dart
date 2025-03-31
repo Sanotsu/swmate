@@ -19,6 +19,9 @@ import '../../../common/utils/db_tools/init_db.dart';
 import '../../../common/utils/db_tools/db_life_tool_helper.dart';
 import '../../../common/utils/db_tools/ddl_life_tool.dart';
 import '../../../common/utils/tools.dart';
+import '../../../models/brief_ai_tools/branch_chat/branch_chat_export_data.dart';
+import '../../../models/brief_ai_tools/branch_chat/branch_store.dart';
+import '../../../models/brief_ai_tools/character_chat/character_store.dart';
 import '../../../models/life_tools/brief_accounting_state.dart';
 import '../../../models/life_tools/dish_state.dart';
 import '../../../models/brief_ai_tools/chat_competion/com_cc_state.dart';
@@ -34,6 +37,11 @@ const ZIP_FILE_PREFIX = "思文智能助手全量数据备份_";
 const ZIP_TEMP_DIR_AT_EXPORT = "temp_zip";
 const ZIP_TEMP_DIR_AT_UNZIP = "temp_de_zip";
 const ZIP_TEMP_DIR_AT_RESTORE = "temp_auto_zip";
+
+// 2025-03-26 角色会话和分支会话的文件名
+const CHARACTER_CARD_LIST_FILE_NAME = 'swmate_character_card_list.json';
+const CHARACTER_CHAT_HISTORY_FILE_NAME = 'swmate_character_chat_history.json';
+const BRANCH_CHAT_HISTORY_FILE_NAME = 'swmate_branch_chat_history.json';
 
 class BackupAndRestore extends StatefulWidget {
   const BackupAndRestore({super.key});
@@ -180,6 +188,9 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
     // 临时存放所有json文件的文件夹
     Directory tempDirectory = Directory(tempJsonsPath);
 
+    /// 2025-03-26 非sqlite的高级助手使用的objectbox和角色扮演使用的json文件，也在这里静默导出
+    await _handleBranchChatExport(tempDirectory);
+    await _handleCharacterAndChatExport(tempDirectory);
     // 创建压缩文件
     final encoder = ZipFileEncoder();
     encoder.create(p.join(tempZipDir.path, zipName));
@@ -198,6 +209,61 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
 
     // 压缩完成后，清空临时json文件夹中文件
     await _deleteFilesInDirectory(tempJsonsPath);
+  }
+
+  _handleBranchChatExport(Directory tempDirectory) async {
+    try {
+      // 1. 获取所有会话数据
+      final store = await BranchStore.create();
+      final sessions = store.sessionBox.getAll();
+
+      // 2. 转换为导出格式
+      final exportData = BranchChatExportData(
+        sessions: sessions
+            .map((session) => BranchChatSessionExport.fromSession(session))
+            .toList(),
+      );
+
+      // 3. 在指定目录创建文件
+      final file = File(
+        '${tempDirectory.path}${Platform.pathSeparator}$BRANCH_CHAT_HISTORY_FILE_NAME',
+      );
+      await file.writeAsString(
+        const JsonEncoder.withIndent('  ').convert(exportData.toJson()),
+      );
+    } catch (e) {
+      debugPrint('导出高级助手会话数据出错: $e');
+    }
+  }
+
+  _handleCharacterAndChatExport(Directory tempDirectory) async {
+    try {
+      final store = CharacterStore();
+      await store.initialize();
+
+      // 1. 获取所有会话数据
+      final chatJsonList = store.sessions.map((s) => s.toJson()).toList();
+
+      final chatFile = File(
+        '${tempDirectory.path}${Platform.pathSeparator}$CHARACTER_CHAT_HISTORY_FILE_NAME',
+      );
+
+      await chatFile.writeAsString(jsonEncode(chatJsonList));
+
+      // 2 只导出非系统角色
+      final cardJsonList = store.characters
+          .where((c) => !c.isSystem)
+          .map((c) => c.toJson())
+          .toList();
+
+      final cardFile = File(
+        '${tempDirectory.path}${Platform.pathSeparator}$CHARACTER_CARD_LIST_FILE_NAME',
+      );
+
+      await cardFile.writeAsString(jsonEncode(cardJsonList));
+    } catch (e) {
+      debugPrint('导出角色及其对话记录数据出错: $e');
+    }
   }
 
 // 删除指定文件夹下所有文件
@@ -373,11 +439,34 @@ class _BackupAndRestoreState extends State<BackupAndRestore> {
     for (File file in jsonFiles) {
       debugPrint("执行json保存到db时对应的json文件：${file.path}");
 
+      // 获取文件名
+      var filename = p.basename(file.path).toLowerCase();
+
+      // 2025-03-26 这里是角色会话和分支会话的还原
+      if (filename == BRANCH_CHAT_HISTORY_FILE_NAME) {
+        final store = await BranchStore.create();
+        await store.importSessionHistory(file);
+        continue;
+      }
+
+      if (filename == CHARACTER_CARD_LIST_FILE_NAME) {
+        final store = CharacterStore();
+        await store.importCharacters(file.path);
+        continue;
+      }
+
+      if (filename == CHARACTER_CHAT_HISTORY_FILE_NAME) {
+        final store = CharacterStore();
+        // 在导入角色会话时，会自动导入记录中用到的角色卡列表
+        await store.importSessionHistory(file.path);
+        continue;
+      }
+
+      // 读取json文件内容
       String jsonData = await file.readAsString();
       // db导出时json文件是列表
+      // 2025-03-26 分支对话的json文件是对象
       List jsonMapList = json.decode(jsonData);
-
-      var filename = p.basename(file.path).toLowerCase();
 
       // 根据不同文件名，构建不同的数据
       if (filename == "${LifeToolDdl.tableNameOfBillItem}.json") {

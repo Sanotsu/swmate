@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class MessageActions extends StatelessWidget {
@@ -28,9 +29,7 @@ class MessageActions extends StatelessWidget {
           tooltip: '复制内容',
           onPressed: () {
             Clipboard.setData(ClipboardData(text: content));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('已复制到剪贴板')),
-            );
+            EasyLoading.showSuccess('已复制到剪贴板');
           },
         ),
         // 重新生成按钮
