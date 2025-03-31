@@ -5,6 +5,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:math';
 
 import '../../../common/constants/constants.dart';
 import '../../../common/utils/tools.dart';
@@ -186,10 +187,10 @@ class _BranchChatPageState extends State<BranchChatPage>
     inputController.dispose();
     scrollController.dispose();
     cancelResponse?.call();
-    
+
     // 清理Markdown渲染缓存，释放内存
     CusMarkdownRenderer.instance.clearCache();
-    
+
     super.dispose();
   }
 
@@ -879,35 +880,22 @@ class _BranchChatPageState extends State<BranchChatPage>
   /// 消息列表和消息相关的方法
   ///
   ///******************************************* */
-
-  /// 构建消息列表
   Widget buildMessageList() {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(
         textScaler: TextScaler.linear(textScaleFactor),
       ),
       child: ListView.builder(
+        // 启用列表缓存
+        cacheExtent: 1000.0, // 增加缓存范围
+        addAutomaticKeepAlives: true,
+        // 让ListView自动管理RepaintBoundary
+        addRepaintBoundaries: true,
+        // 使用itemCount限制构建数量
+        itemCount: displayMessages.length,
         controller: scrollController,
         // 列表底部留一点高度，避免工具按钮和悬浮按钮重叠
         padding: EdgeInsets.only(bottom: 50.sp),
-        itemCount: displayMessages.length,
-        // 使用cacheExtent提前渲染一些项，使滚动更流畅
-        cacheExtent: 1000.0,
-        // 添加性能优化：使用findChildIndexCallback帮助Flutter更有效地识别items
-        findChildIndexCallback: (key) {
-          if (key is ValueKey<String>) {
-            final index = displayMessages.indexWhere((msg) => 'msg_${msg.messageId}' == key.value);
-            return index >= 0 ? index : null;
-          }
-          return null;
-        },
-        // 添加额外性能优化：滚动到不可见区域时，可回收组件
-        addAutomaticKeepAlives: false,
-        // 消息列表项构建
         itemBuilder: (context, index) {
           final message = displayMessages[index];
 
@@ -915,45 +903,45 @@ class _BranchChatPageState extends State<BranchChatPage>
           final isStreamingMessage = message.messageId == 'streaming';
           final hasMultipleBranches = !isStreamingMessage &&
               branchManager.getBranchCount(allMessages, message) > 1;
-              
-          // 为每个消息项添加唯一key，优化重建
-          return KeyedSubtree(
-            key: ValueKey('msg_${message.messageId}'),
-            child: Column(
-              children: [
-                // 使用const构造函数创建小部件可以减少重建，但BranchMessageItem不能使用const因为它依赖于消息内容
-                BranchMessageItem(
-                  key: ValueKey('content_${message.messageId}'),
+
+          // 使用RepaintBoundary包装每个列表项
+          return Column(
+            children: [
+              // 渲染消息体比较复杂，使用RepaintBoundary包装
+              RepaintBoundary(
+                child: BranchMessageItem(
+                  key: ValueKey(message.messageId),
                   message: message,
                   onLongPress: isStreaming ? null : showMessageOptions,
                   isUseBgImage:
                       backgroundImage != null && backgroundImage!.isNotEmpty,
                 ),
-                // 为分支操作添加条件渲染，避免不必要的构建
-                if (!isStreamingMessage || hasMultipleBranches)
-                  BranchMessageActions(
-                    key: ValueKey('actions_${message.messageId}'),
-                    message: message,
-                    messages: allMessages,
-                    onRegenerate: () => handleResponseRegenerate(message),
-                    hasMultipleBranches: hasMultipleBranches,
-                    isRegenerating: isStreaming,
-                    currentBranchIndex: isStreamingMessage
-                        ? 0
-                        : branchManager.getBranchIndex(
-                            allMessages,
-                            message,
-                          ),
-                    totalBranches: isStreamingMessage
-                        ? 1
-                        : branchManager.getBranchCount(
-                            allMessages,
-                            message,
-                          ),
-                    onSwitchBranch: handleSwitchBranch,
-                  ),
-              ],
-            ),
+              ),
+              // 为分支操作添加条件渲染，避免不必要的构建
+              if (!isStreamingMessage || hasMultipleBranches)
+                // 操作组件渲染不复杂，不使用RepaintBoundary包装
+                BranchMessageActions(
+                  key: ValueKey('actions_${message.messageId}'),
+                  message: message,
+                  messages: allMessages,
+                  onRegenerate: () => handleResponseRegenerate(message),
+                  hasMultipleBranches: hasMultipleBranches,
+                  isRegenerating: isStreaming,
+                  currentBranchIndex: isStreamingMessage
+                      ? 0
+                      : branchManager.getBranchIndex(
+                          allMessages,
+                          message,
+                        ),
+                  totalBranches: isStreamingMessage
+                      ? 1
+                      : branchManager.getBranchCount(
+                          allMessages,
+                          message,
+                        ),
+                  onSwitchBranch: handleSwitchBranch,
+                ),
+            ],
           );
         },
       ),
@@ -1160,15 +1148,81 @@ class _BranchChatPageState extends State<BranchChatPage>
 
       final contextMessages = currentMessages.sublist(0, messageIndex);
 
-      // 获取同级分支并计算新的分支索引
+      // 判断当前所处的分支路径是否是在修改用户消息后新创建的分支
+      // 核心判断逻辑：当前分支路径与要重新生成的消息分支路径的关系
+      bool isAfterUserEdit = false;
+
+      // 获取当前分支路径的所有部分
+      final List<String> currentPathParts = currentBranchPath.split('/');
+      final List<String> messagePathParts = message.branchPath.split('/');
+
+      // 情况1: 当前分支路径比消息路径长，且前缀相同，说明已经在新分支上
+      if (currentPathParts.length > messagePathParts.length) {
+        bool isPrefixSame = true;
+        for (int i = 0; i < messagePathParts.length; i++) {
+          if (messagePathParts[i] != currentPathParts[i]) {
+            isPrefixSame = false;
+            break;
+          }
+        }
+
+        if (isPrefixSame) {
+          // 检查是否是由于用户编辑创建的新分支
+          final userMessages = allMessages
+              .where((m) =>
+                  m.role == CusRole.user.name &&
+                  m.branchPath == currentBranchPath)
+              .toList();
+
+          isAfterUserEdit = userMessages.isNotEmpty;
+        }
+      }
+
+      // 情况2: 分支路径不同，但共享相同父路径，检查是否已经切换到不同分支
+      else if (!currentBranchPath.startsWith(message.branchPath) &&
+          !message.branchPath.startsWith(currentBranchPath)) {
+        // 找到最近的共同父路径
+        int commonPrefixLength = 0;
+        for (int i = 0;
+            i < min(currentPathParts.length, messagePathParts.length);
+            i++) {
+          if (currentPathParts[i] == messagePathParts[i]) {
+            commonPrefixLength++;
+          } else {
+            break;
+          }
+        }
+
+        if (commonPrefixLength > 0) {
+          // 如果有共同父路径，判断当前路径是否包含用户消息
+          final userMessagesOnCurrentPath = allMessages
+              .where((m) =>
+                  m.role == CusRole.user.name &&
+                  m.branchPath == currentBranchPath)
+              .toList();
+
+          isAfterUserEdit = userMessagesOnCurrentPath.isNotEmpty;
+        }
+      }
+
+      // 获取重新生成位置的同级分支
       final siblings = branchManager.getSiblingBranches(allMessages, message);
       final availableSiblings = siblings
           .where((m) => allMessages.contains(m))
           .toList()
         ..sort((a, b) => a.branchIndex.compareTo(b.branchIndex));
-      final newBranchIndex = availableSiblings.isEmpty
-          ? 0
-          : availableSiblings.last.branchIndex + 1;
+
+      // 计算新的分支索引
+      int newBranchIndex;
+      if (isAfterUserEdit) {
+        // 如果是在用户编辑后新创建的分支上，AI响应索引应该从0开始
+        newBranchIndex = 0;
+      } else {
+        // 常规情况下，使用当前同级分支的最大索引+1
+        newBranchIndex = availableSiblings.isEmpty
+            ? 0
+            : availableSiblings.last.branchIndex + 1;
+      }
 
       // 构建新的分支路径
       String newPath;
@@ -1564,20 +1618,25 @@ class _BranchChatPageState extends State<BranchChatPage>
 
       // 找到要编辑的消息在当前分支中的位置
       final messageIndex = currentMessages.indexOf(message);
-      if (messageIndex == -1) return;
+      if (messageIndex == -1) {
+        debugPrint("警告：找不到要编辑的消息在当前分支中的位置");
+        return;
+      }
 
       // 获取同级分支
       final siblings = branchManager.getSiblingBranches(allMessages, message);
 
-      // 创建新分支
+      // 创建新分支索引
       final newBranchIndex =
           siblings.isEmpty ? 0 : siblings.last.branchIndex + 1;
 
       // 构建新的分支路径
       String newPath;
       if (message.parent.target == null) {
+        // 根消息
         newPath = newBranchIndex.toString();
       } else {
+        // 子消息
         final parentPath = message.branchPath.substring(
           0,
           message.branchPath.lastIndexOf('/'),
@@ -1591,7 +1650,7 @@ class _BranchChatPageState extends State<BranchChatPage>
         content: content,
         role: CusRole.user.name,
         parent: message.parent.target,
-        branchIndex: newBranchIndex, // 只使用 branchIndex 参数
+        branchIndex: newBranchIndex,
         // ???添加媒体文件的存储(有更多类型时就继续处理)
         contentVoicePath: message.contentVoicePath,
         imagesUrl: message.imagesUrl,
@@ -1621,13 +1680,45 @@ class _BranchChatPageState extends State<BranchChatPage>
       return;
     }
 
+    // 获取最后一条消息
+    final lastMessage = currentMessages.last;
+
+    // 判断分支状态：三种主要情况
+    // 1. 全新对话中的第一个用户消息
+    // 2. 常规对话中继续发消息
+    // 3. 修改用户消息后创建的新分支
+
+    bool isFirstMessage = currentMessages.length == 1;
+    bool isUserEditedBranch = false;
+
+    // 如果是用户消息，检查是否是由于编辑创建的新分支
+    if (lastMessage.role == CusRole.user.name) {
+      // 获取同级的其他用户消息分支
+      final siblings =
+          branchManager.getSiblingBranches(allMessages, lastMessage);
+
+      // 如果有多个同级用户消息，说明是编辑后创建的分支
+      isUserEditedBranch = siblings.length > 1 || lastMessage.branchIndex > 0;
+    }
+
+    // 确定AI响应的分支索引
+    int branchIndex;
+
+    if (lastMessage.role == CusRole.user.name &&
+        (isFirstMessage || isUserEditedBranch)) {
+      // 如果是首条用户消息或编辑用户消息后创建的分支，AI响应索引应为0
+      branchIndex = 0;
+    } else {
+      // 在常规对话中，使用最后一条消息的索引
+      branchIndex = lastMessage.branchIndex;
+    }
+
     await _generateAIResponseCommon(
       contextMessages: currentMessages,
       newBranchPath: currentBranchPath,
-      newBranchIndex:
-          currentMessages.isEmpty ? 0 : currentMessages.last.branchIndex,
-      depth: currentMessages.isEmpty ? 0 : currentMessages.last.depth,
-      parentMessage: currentMessages.last,
+      newBranchIndex: branchIndex,
+      depth: lastMessage.depth,
+      parentMessage: lastMessage,
     );
   }
 
@@ -1758,23 +1849,44 @@ class _BranchChatPageState extends State<BranchChatPage>
   }
 
   // 滚动到底部
-  void _scrollToBottom({int? times}) {
-    // 统一在这里等待布局更新完成，才滚动到底部
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !scrollController.hasClients) return;
+  // void _scrollToBottom({int? times}) {
+  //   // 统一在这里等待布局更新完成，才滚动到底部
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     if (!mounted || !scrollController.hasClients) return;
 
-      // 延迟50ms，避免内容高度还没更新
-      Future.delayed(const Duration(milliseconds: 50), () {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: times ?? 500),
-          curve: Curves.easeOut,
-        );
-      });
+  //     // 延迟50ms，避免内容高度还没更新
+  //     Future.delayed(const Duration(milliseconds: 50), () {
+  //       scrollController.animateTo(
+  //         scrollController.position.maxScrollExtent,
+  //         duration: Duration(milliseconds: times ?? 500),
+  //         curve: Curves.easeOut,
+  //       );
+  //     });
 
-      setState(() {
-        isUserScrolling = false;
-      });
-    });
+  //     setState(() {
+  //       isUserScrolling = false;
+  //     });
+  //   });
+  // }
+
+  Future<void> _scrollToBottom({int? times}) async {
+    if (!mounted) return;
+
+    await Future.delayed(Duration.zero);
+    if (!mounted || !scrollController.hasClients) return;
+
+    final position = scrollController.position;
+    if (!position.hasContentDimensions ||
+        position.maxScrollExtent <= position.minScrollExtent) {
+      return;
+    }
+
+    await scrollController.animateTo(
+      position.maxScrollExtent,
+      duration: Duration(milliseconds: times ?? 500),
+      curve: Curves.easeOut,
+    );
+
+    if (mounted) setState(() => isUserScrolling = false);
   }
 }

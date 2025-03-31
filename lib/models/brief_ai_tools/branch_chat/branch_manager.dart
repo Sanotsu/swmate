@@ -91,11 +91,11 @@ class BranchManager {
     final parentMessage = message.parent.target!;
     final siblings = allMessages
         .where((m) =>
-                m.parent.target?.id == parentMessage.id &&
-                m.depth == message.depth &&
-                m.branchPath
-                    .startsWith(parentMessage.branchPath) // 确保是同一分支路径下的消息
-            )
+            m.parent.target?.id == parentMessage.id &&
+            m.role == message.role &&
+            m.depth == message.depth &&
+            // 确保是同一分支路径下的消息
+            m.branchPath.startsWith(parentMessage.branchPath))
         .toList();
 
     // 按分支路径排序，确保新增的分支正确插入

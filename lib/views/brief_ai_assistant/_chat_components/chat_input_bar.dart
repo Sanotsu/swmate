@@ -712,6 +712,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
         enabled: !widget.isStreaming,
         maxLines: 3,
         minLines: 1,
+        onChanged: (value) {
+          _notifyHeightChange();
+        },
         decoration: InputDecoration(
           hintText: widget.isEditing ? '编辑消息...' : '输入消息...',
           border: OutlineInputBorder(

@@ -923,6 +923,14 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       child: ListView.builder(
         controller: _scrollController,
         itemCount: _messages.length,
+        // 列表底部留一点高度，避免工具按钮和悬浮按钮重叠
+        padding: EdgeInsets.only(bottom: 50.sp),
+        // 增加缓存范围
+        cacheExtent: 1000.0,
+        // 让ListView自动管理RepaintBoundary
+        addRepaintBoundaries: true,
+        // 添加额外性能优化：滚动到不可见区域时，可回收组件
+        addAutomaticKeepAlives: false,
         // 添加性能优化：使用findChildIndexCallback帮助Flutter更有效地识别items
         findChildIndexCallback: (key) {
           if (key is ValueKey<String>) {
@@ -932,8 +940,6 @@ class _BriefChatScreenState extends State<BriefChatScreen>
           }
           return null;
         },
-        // 添加额外性能优化：滚动到不可见区域时，可回收组件
-        addAutomaticKeepAlives: false,
         // 消息列表项构建
         itemBuilder: (context, index) {
           final message = _messages[index];
@@ -943,10 +949,12 @@ class _BriefChatScreenState extends State<BriefChatScreen>
             key: ValueKey('msg_${message.messageId}'),
             child: Column(
               children: [
-                ChatMessageItem(
-                  key: ValueKey('content_${message.messageId}'),
-                  message: message,
-                  onLongPress: _isStreaming ? null : showMessageOptions,
+                RepaintBoundary(
+                  child: ChatMessageItem(
+                    key: ValueKey('content_${message.messageId}'),
+                    message: message,
+                    onLongPress: _isStreaming ? null : showMessageOptions,
+                  ),
                 ),
                 if (isAssistant && !_isStreaming)
                   Padding(

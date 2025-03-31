@@ -938,6 +938,7 @@ class _CharacterChatPageState extends State<CharacterChatPage>
         itemCount: currentSession.messages.length,
         // 使用cacheExtent提前渲染一些项，使滚动更流畅
         cacheExtent: 1000.0,
+        addRepaintBoundaries: true,
         // 添加性能优化：使用findChildIndexCallback帮助Flutter更有效地识别items
         findChildIndexCallback: (key) {
           if (key is ValueKey<String>) {

@@ -28,7 +28,12 @@ class BranchMessageItem extends StatefulWidget {
   State<BranchMessageItem> createState() => _BranchMessageItemState();
 }
 
-class _BranchMessageItemState extends State<BranchMessageItem> {
+class _BranchMessageItemState extends State<BranchMessageItem>
+    with AutomaticKeepAliveClientMixin {
+  // 添加缓存标记，避免滚动时重建
+  @override
+  bool get wantKeepAlive => true;
+
   // 添加状态缓存变量，避免重复计算
   late final bool _isUser;
 
@@ -41,6 +46,8 @@ class _BranchMessageItemState extends State<BranchMessageItem> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return Container(
       margin: EdgeInsets.all(4.sp),
       color: Colors.transparent,
@@ -136,41 +143,38 @@ class _BranchMessageItemState extends State<BranchMessageItem> {
             : Colors.black;
     Color bgColor = _isUser ? Colors.blue : Colors.grey.shade100;
 
-    // 优化：为常规消息内容添加RepaintBoundary，避免重绘扩散
-    return RepaintBoundary(
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 4.sp),
-        padding: EdgeInsets.all(8.sp),
-        decoration: BoxDecoration(
-          color: widget.isUseBgImage == true ? Colors.transparent : bgColor,
-          borderRadius: BorderRadius.circular(8.sp),
-          border: Border.all(
-            color: widget.isUseBgImage == true ? textColor : Colors.transparent,
-          ),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 4.sp),
+      padding: EdgeInsets.all(8.sp),
+      decoration: BoxDecoration(
+        color: widget.isUseBgImage == true ? Colors.transparent : bgColor,
+        borderRadius: BorderRadius.circular(8.sp),
+        border: Border.all(
+          color: widget.isUseBgImage == true ? textColor : Colors.transparent,
         ),
-        child: Column(
-          crossAxisAlignment:
-              _isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            // 联网搜索结果 - 懒加载，只在有引用时才构建
-            if (widget.message.references?.isNotEmpty == true)
-              buildReferencesExpansionTile(widget.message.references),
+      ),
+      child: Column(
+        crossAxisAlignment:
+            _isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          // 联网搜索结果 - 懒加载，只在有引用时才构建
+          if (widget.message.references?.isNotEmpty == true)
+            buildReferencesExpansionTile(widget.message.references),
 
-            // 深度思考 - 懒加载，只在有思考内容时才构建
-            if (widget.message.reasoningContent != null &&
-                widget.message.reasoningContent!.isNotEmpty)
-              _buildThinkingProcess(),
+          // 深度思考 - 懒加载，只在有思考内容时才构建
+          if (widget.message.reasoningContent != null &&
+              widget.message.reasoningContent!.isNotEmpty)
+            _buildThinkingProcess(),
 
-            GestureDetector(
-              onLongPressStart: widget.onLongPress != null
-                  ? (details) => widget.onLongPress!(widget.message, details)
-                  : null,
-              // 使用MarkdownRenderer.instance.render来渲染内容
-              child:
-                  CusMarkdownRenderer.instance.render(widget.message.content),
+          GestureDetector(
+            onLongPressStart: widget.onLongPress != null
+                ? (details) => widget.onLongPress!(widget.message, details)
+                : null,
+            child: RepaintBoundary(
+              child: buildCusMarkdown(widget.message.content),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -194,7 +198,7 @@ class _BranchMessageItemState extends State<BranchMessageItem> {
             padding: EdgeInsets.only(left: 24.sp),
             // 使用高性能MarkdownRenderer来渲染深度思考内容，可以利用缓存机制
             child: RepaintBoundary(
-              child: CusMarkdownRenderer.instance.render(
+              child: buildCusMarkdown(
                 widget.message.reasoningContent ?? '',
               ),
             ),

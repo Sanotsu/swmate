@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import '../../../../common/components/cus_markdown_renderer.dart';
 import '../../../../common/components/tool_widget.dart';
 import '../../../../common/components/voice_chat_bubble.dart';
 import '../../../../common/constants/constants.dart';
@@ -127,19 +128,22 @@ class CharacterMessageItem extends StatelessWidget {
 
     // 文本消息，一般都有
     list.add(
-      MarkdownBody(
-        data: message.content,
-        styleSheet: MarkdownStyleSheet(
-          p: TextStyle(
-            fontSize: 14.sp,
-            color: isUser ? Colors.blue : Colors.black,
-          ),
-          code: TextStyle(
-            fontSize: 12.sp,
-            backgroundColor: Colors.grey.withValues(alpha: 0.2),
-          ),
-        ),
-      ),
+      // 2025-03-31 本来觉得角色扮演不需要特别优化的md显示的
+      RepaintBoundary(child: buildCusMarkdown(message.content)),
+
+      // MarkdownBody(
+      //   data: message.content,
+      //   styleSheet: MarkdownStyleSheet(
+      //     p: TextStyle(
+      //       fontSize: 14.sp,
+      //       color: isUser ? Colors.blue : Colors.black,
+      //     ),
+      //     code: TextStyle(
+      //       fontSize: 12.sp,
+      //       backgroundColor: Colors.grey.withValues(alpha: 0.2),
+      //     ),
+      //   ),
+      // ),
     );
 
     // 语音消息

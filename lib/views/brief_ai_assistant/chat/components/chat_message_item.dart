@@ -27,9 +27,15 @@ class ChatMessageItem extends StatefulWidget {
   State<ChatMessageItem> createState() => _ChatMessageItemState();
 }
 
-class _ChatMessageItemState extends State<ChatMessageItem> {
+class _ChatMessageItemState extends State<ChatMessageItem>
+    with AutomaticKeepAliveClientMixin {
+  // 添加缓存标记，避免滚动时重建
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final isUser = widget.message.role == CusRole.user.name ||
         widget.message.role == CusRole.system.name;
 
@@ -133,49 +139,49 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
             : Colors.black;
     Color bgColor = isUser ? Colors.blue : Colors.grey.shade100;
 
-    return RepaintBoundary(
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 4.sp),
-        padding: EdgeInsets.all(8.sp),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(8.sp),
-        ),
-        child: Column(
-          crossAxisAlignment:
-              isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            // 联网搜索参考内容
-            if (widget.message.references?.isNotEmpty == true)
-              buildReferencesExpansionTile(widget.message.references),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 4.sp),
+      padding: EdgeInsets.all(8.sp),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8.sp),
+      ),
+      child: Column(
+        crossAxisAlignment:
+            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          // 联网搜索参考内容
+          if (widget.message.references?.isNotEmpty == true)
+            buildReferencesExpansionTile(widget.message.references),
 
-            // 深度思考
-            if (widget.message.reasoningContent != null &&
-                widget.message.reasoningContent!.isNotEmpty)
-              _buildThinkingProcess(widget.message),
+          // 深度思考
+          if (widget.message.reasoningContent != null &&
+              widget.message.reasoningContent!.isNotEmpty)
+            _buildThinkingProcess(widget.message),
 
-            // 常规显示内容
-            GestureDetector(
-              onLongPressStart: widget.onLongPress != null
-                  ? (details) => widget.onLongPress!(widget.message, details)
-                  : null,
+          // 常规显示内容
+          GestureDetector(
+            onLongPressStart: widget.onLongPress != null
+                ? (details) => widget.onLongPress!(widget.message, details)
+                : null,
+            child: RepaintBoundary(
               child: CusMarkdownRenderer.instance.render(
                 widget.message.content,
                 textColor: textColor,
               ),
             ),
+          ),
 
-            if (widget.message.role != CusRole.user.name &&
-                widget.message.content.isEmpty &&
-                (widget.message.reasoningContent != null &&
-                    widget.message.reasoningContent!.isEmpty))
-              SizedBox(
-                width: 16.sp,
-                height: 16.sp,
-                child: CircularProgressIndicator(strokeWidth: 2.sp),
-              ),
-          ],
-        ),
+          if (widget.message.role != CusRole.user.name &&
+              widget.message.content.isEmpty &&
+              (widget.message.reasoningContent != null &&
+                  widget.message.reasoningContent!.isEmpty))
+            SizedBox(
+              width: 16.sp,
+              height: 16.sp,
+              child: CircularProgressIndicator(strokeWidth: 2.sp),
+            ),
+        ],
       ),
     );
   }
