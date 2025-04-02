@@ -97,11 +97,16 @@ class _VoiceWaveBubbleState extends State<VoiceWaveBubble> {
           children: [
             if (!widget.isSender && !controller.playerState.isStopped)
               IconButton(
-                onPressed: () async {
-                  controller.playerState.isPlaying
-                      ? await controller.pausePlayer()
-                      : await controller.startPlayer();
-                },
+                onPressed: controller.playerState.isPlaying
+                    ? () async {
+                        await controller.pausePlayer();
+                      }
+                    : () async {
+                        await controller.startPlayer();
+                        controller.setFinishMode(
+                          finishMode: FinishMode.pause,
+                        );
+                      },
                 icon: Icon(
                   controller.playerState.isPlaying
                       ? Icons.stop
@@ -128,11 +133,16 @@ class _VoiceWaveBubbleState extends State<VoiceWaveBubble> {
             // 如果是用户发送，按钮在后面
             if (widget.isSender && !controller.playerState.isStopped)
               IconButton(
-                onPressed: () async {
-                  controller.playerState.isPlaying
-                      ? await controller.pausePlayer()
-                      : await controller.startPlayer();
-                },
+                onPressed: controller.playerState.isPlaying
+                    ? () async {
+                        await controller.pausePlayer();
+                      }
+                    : () async {
+                        await controller.startPlayer();
+                        controller.setFinishMode(
+                          finishMode: FinishMode.pause,
+                        );
+                      },
                 icon: Icon(
                   controller.playerState.isPlaying
                       ? Icons.stop

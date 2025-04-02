@@ -559,7 +559,13 @@ class _BranchChatPageState extends State<BranchChatPage>
   }
 
   /// 显示对话分支树
+  /// 2025-04-02 这个可以优化只穿当前展示会话的消息即可，而不是从所有里面取
   void showBranchTree() {
+    if (allMessages.isEmpty || displayMessages.isEmpty) {
+      commonHintDialog(context, "提示", "无可展示的对话消息");
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) => BranchTreeDialog(
@@ -740,9 +746,11 @@ class _BranchChatPageState extends State<BranchChatPage>
           // 删除会话
           await store.deleteSession(session);
           loadSessions();
+          loadMessages();
 
           // 如果删除的是当前会话，创建新会话
           if (session.id == currentSessionId) {
+            print("xxxxxxxxxxxxxxxxxx");
             createNewChat();
           }
         }
@@ -1597,6 +1605,7 @@ class _BranchChatPageState extends State<BranchChatPage>
       inputController.clear();
       await loadMessages();
       await _generateAIResponse();
+      loadSessions();
     } catch (e) {
       if (!mounted) return;
       commonExceptionDialog(context, "异常提示", "发送消息失败: $e");
