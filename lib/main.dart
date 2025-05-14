@@ -11,6 +11,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:proste_logger/proste_logger.dart';
 
+import 'common/utils/db_tools/init_db.dart';
 import 'services/model_manager_service.dart';
 import 'services/network_service.dart';
 import 'views/home.dart';
@@ -49,6 +50,12 @@ class AppCatchError {
 
           // 只在首次启动时初始化内置模型
           // if (MyGetStorage().isFirstLaunch()) {
+
+          // 初始化并升级数据库
+          final dbInit = DBInit();
+          // 这会等待数据库初始化和升级完成
+          await dbInit.database;
+
           await ModelManagerService.initBuiltinModelsTest();
           await MyGetStorage().markLaunched();
           // }

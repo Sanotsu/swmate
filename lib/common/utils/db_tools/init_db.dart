@@ -59,9 +59,19 @@ class DBInit {
     print("初始化 DB sqlite数据库存放的地址：$path");
 
     // 在给定路径上打开/创建数据库
-    var dietaryDb = await openDatabase(path, version: 1, onCreate: _createDb);
+    // var db = await openDatabase(path, version: 1, onCreate: _createDb);
+
+    // 为了数据库栏位有更新，我们需要修改数据库版本号(1到2)，以触发_upgradeDb方法，添加表栏位
+    // 确保每次表结构变更，处理修改ddl语句，还要增加数据库版本号，并在_upgradeDb做对应处理
+    var db = await openDatabase(
+      path,
+      version: 2,
+      onCreate: _createDb,
+      onUpgrade: _upgradeDb,
+    );
+
     dbFilePath = path;
-    return dietaryDb;
+    return db;
   }
 
   // 创建训练数据库相关表
@@ -76,6 +86,35 @@ class DBInit {
       txn.execute(BriefAIToolDdl.ddlForCusBriefLlmSpec);
       txn.execute(BriefAIToolDdl.ddlForMediaGenerationHistory);
     });
+  }
+
+  // 数据库升级
+  void _upgradeDb(Database db, int oldVersion, int newVersion) async {
+    print("数据库升级 _upgradeDb 从 $oldVersion 到 $newVersion");
+
+    if (oldVersion < 2) {
+      // 版本1升级到版本2的变更
+      await db.transaction((txn) async {
+        // 添加新列到 BriefAIToolDdl.ddlForCusBriefLlmSpec 表
+        try {
+          await txn.execute(
+              'ALTER TABLE ${BriefAIToolDdl.tableNameOfCusBriefLlmSpec} ADD COLUMN baseUrl TEXT');
+          await txn.execute(
+              'ALTER TABLE ${BriefAIToolDdl.tableNameOfCusBriefLlmSpec} ADD COLUMN apiKey TEXT');
+          await txn.execute(
+              'ALTER TABLE ${BriefAIToolDdl.tableNameOfCusBriefLlmSpec} ADD COLUMN description TEXT');
+          // 可以添加多个ALTER TABLE语句
+          print("数据库升级成功完成");
+        } catch (e) {
+          print("升级表时出错: $e");
+          // 处理错误，可能列已存在
+          return;
+        }
+
+        // 如果需要创建新表
+        // await txn.execute('CREATE TABLE ...');
+      });
+    }
   }
 
   // 关闭数据库

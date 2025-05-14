@@ -224,8 +224,9 @@ class _BranchChatPageState extends State<BranchChatPage>
     // 获取可用模型列表
     final availableModels = await ModelManagerService.getAvailableModelByTypes([
       LLModelType.cc,
-      LLModelType.vision,
       LLModelType.reasoner,
+      LLModelType.vision,
+      LLModelType.vision_reasoner,
     ]);
 
     if (!mounted) return;
@@ -750,7 +751,6 @@ class _BranchChatPageState extends State<BranchChatPage>
 
           // 如果删除的是当前会话，创建新会话
           if (session.id == currentSessionId) {
-            print("xxxxxxxxxxxxxxxxxx");
             createNewChat();
           }
         }
@@ -843,9 +843,7 @@ class _BranchChatPageState extends State<BranchChatPage>
         modelList.where((m) => m.modelType == selectedType).toList();
 
     if (filteredModels.isEmpty && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('当前类型没有可用的模型')),
-      );
+      EasyLoading.showInfo("当前类型没有可用的模型");
       return;
     }
 

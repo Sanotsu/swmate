@@ -152,8 +152,9 @@ class _BriefChatScreenState extends State<BriefChatScreen>
       final availableModels =
           await ModelManagerService.getAvailableModelByTypes([
         LLModelType.cc,
-        LLModelType.vision,
         LLModelType.reasoner,
+        LLModelType.vision,
+        LLModelType.vision_reasoner,
       ]);
 
       if (!mounted) return;
@@ -255,9 +256,7 @@ class _BriefChatScreenState extends State<BriefChatScreen>
         _modelList.where((m) => m.modelType == _selectedType).toList();
 
     if (filteredModels.isEmpty && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('当前类型没有可用的模型')),
-      );
+      EasyLoading.showInfo("当前类型没有可用的模型");
       return;
     }
 
@@ -845,8 +844,9 @@ class _BriefChatScreenState extends State<BriefChatScreen>
                 isStreaming: _isStreaming,
                 supportedTypes: [
                   LLModelType.cc,
+                  LLModelType.reasoner,
                   LLModelType.vision,
-                  LLModelType.reasoner
+                  LLModelType.vision_reasoner,
                 ],
               ),
               Divider(height: 10.sp),

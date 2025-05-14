@@ -5,7 +5,6 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../../../apis/voice_recognition/xunfei_apis.dart';
@@ -58,7 +57,6 @@ class ChatInput extends StatefulWidget {
 }
 
 class _ChatInputState extends State<ChatInput> {
-  bool _isRecording = false;
   final _audioRecorder = AudioRecorder();
   File? _selectedImage;
   File? _selectedVoice;
@@ -132,9 +130,7 @@ class _ChatInputState extends State<ChatInput> {
   @override
   Widget build(BuildContext context) {
     final hasVisionAbility = widget.model?.modelType == LLModelType.vision;
-    final hasVoiceAbility = widget.model?.modelType == LLModelType.audio;
-    final hasTools =
-        (hasVisionAbility || hasVoiceAbility) && !widget.isStreaming;
+    final hasTools = hasVisionAbility && !widget.isStreaming;
 
     return Column(
       key: _containerKey,
@@ -177,11 +173,6 @@ class _ChatInputState extends State<ChatInput> {
                       _buildVisionToolButton(
                           Icons.camera, ImageSource.camera, '相机'),
                     ],
-                    if (hasVoiceAbility)
-                      IconButton(
-                        icon: Icon(_isRecording ? Icons.stop : Icons.mic),
-                        onPressed: _handleVoiceInput,
-                      ),
                   ],
                 ),
               ],
@@ -396,43 +387,6 @@ class _ChatInputState extends State<ChatInput> {
 
     if (image != null) {
       setState(() => _selectedImage = File(image.path));
-    }
-  }
-
-  Future<void> _handleVoiceInput() async {
-    if (_isRecording) {
-      final path = await _audioRecorder.stop();
-      setState(() {
-        _isRecording = false;
-      });
-
-      if (path != null) {
-        widget.onSend(
-          widget.controller.text,
-          voice: File(path),
-        );
-      }
-    } else {
-      try {
-        if (await _audioRecorder.hasPermission()) {
-          final tempDir = await getTemporaryDirectory();
-          final path =
-              '${tempDir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-
-          await _audioRecorder.start(
-            const RecordConfig(
-              encoder: AudioEncoder.aacLc,
-              bitRate: 128000,
-              sampleRate: 44100,
-            ),
-            path: path,
-          );
-
-          setState(() => _isRecording = true);
-        }
-      } catch (e) {
-        debugPrint('录音失败: $e');
-      }
     }
   }
 

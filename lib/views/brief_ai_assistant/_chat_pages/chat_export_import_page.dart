@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:swmate/common/components/tool_widget.dart';
@@ -161,10 +162,7 @@ class _ChatExportImportPageState extends State<ChatExportImportPage> {
             const JsonEncoder.withIndent('  ').convert(exportData.toJson()),
           );
 
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('导出成功：${file.path}')),
-          );
+          EasyLoading.showSuccess("导出成功：${file.path}");
         }
       } catch (e) {
         if (!mounted) return;
@@ -254,13 +252,9 @@ class _ChatExportImportPageState extends State<ChatExportImportPage> {
           if (skippedCount > 0) {
             message += '，跳过 $skippedCount 个重复会话';
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          EasyLoading.showInfo(message);
         } else if (skippedCount > 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('所有会话($skippedCount 个)均已存在，未导入任何内容')),
-          );
+          EasyLoading.showInfo('所有会话($skippedCount 个)均已存在，未导入任何内容');
         }
       }
     } catch (e) {

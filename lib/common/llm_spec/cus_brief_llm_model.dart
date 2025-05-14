@@ -37,6 +37,12 @@ class CusBriefLLMSpec {
   // 是否是内置模型(内置模型不允许删除)
   bool isBuiltin;
 
+  // 用户自定义平台模型，直接存入url、model、apikey等关键信息
+  String? baseUrl;
+  String? apiKey;
+  // 预留一个想随意填写的栏位，供记录其他内容
+  String? description;
+
   CusBriefLLMSpec(
     this.platform,
     this.model,
@@ -51,6 +57,9 @@ class CusBriefLLMSpec {
     this.gmtRelease,
     this.gmtCreate,
     this.isBuiltin = false,
+    this.baseUrl,
+    this.apiKey,
+    this.description,
   });
 
   // 从字符串转
@@ -81,6 +90,9 @@ class CusBriefLLMSpec {
       gmtCreate:
           map['gmtCreate'] != null ? DateTime.parse(map['gmtCreate']) : null,
       isBuiltin: map['isBuiltin'] == 1 ? true : false,
+      baseUrl: map['baseUrl'],
+      apiKey: map['apiKey'],
+      description: map['description'],
     );
   }
 
@@ -99,6 +111,9 @@ class CusBriefLLMSpec {
       'gmtRelease': gmtRelease?.toIso8601String(),
       'gmtCreate': gmtCreate?.toIso8601String(),
       'isBuiltin': isBuiltin ? 1 : 0,
+      'baseUrl': baseUrl,
+      'apiKey': apiKey,
+      'description': description,
     };
   }
 
@@ -128,7 +143,10 @@ class CusBriefLLMSpec {
           contextLength == other.contextLength &&
           gmtRelease == other.gmtRelease &&
           gmtCreate == other.gmtCreate &&
-          isBuiltin == other.isBuiltin;
+          isBuiltin == other.isBuiltin &&
+          baseUrl == other.baseUrl &&
+          apiKey == other.apiKey &&
+          description == other.description;
 
   @override
   int get hashCode =>
@@ -144,5 +162,8 @@ class CusBriefLLMSpec {
       contextLength.hashCode ^
       gmtRelease.hashCode ^
       gmtCreate.hashCode ^
-      isBuiltin.hashCode;
+      isBuiltin.hashCode ^
+      baseUrl.hashCode ^
+      apiKey.hashCode ^
+      description.hashCode;
 }

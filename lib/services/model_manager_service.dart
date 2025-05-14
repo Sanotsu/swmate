@@ -100,6 +100,9 @@ class ModelManagerService {
           return userKeys[ApiPlatformAKLabel.USER_VOLCESBOT_API_KEY.name]
                   ?.isNotEmpty ??
               false;
+        // 2025-04-11 默认就是自定义模型(云平台不在我预设中)，密钥和地址在模型规格中，直接返回true
+        default:
+          return true;
       }
     }).toList();
   }
@@ -149,22 +152,15 @@ class ModelManagerService {
         return false;
       }
 
-      // // 验证必填字段
-      // if (json['model'] == null ||
-      //     json['modelType'] == null ||
-      //     json['name'] == null ||
-      //     json['isFree'] == null) {
-      //   return false;
-      // }
-
-      // // 验证价格字段
-      // if (json['isFree'] == false) {
-      //   if ((json['inputPrice'] == null &&
-      //       json['outputPrice'] == null &&
-      //       json['costPer'] == null)) {
-      //     return false;
-      //   }
-      // }
+      // 如果是自定义平台，还需要baseurl 和 apikey
+      if (json['platform'] == ApiPlatform.custom.name) {
+        if (json['baseUrl'] == null ||
+            (json['baseUrl'] as String).trim().isEmpty ||
+            json['apiKey'] == null ||
+            (json['apiKey'] as String).trim().isEmpty) {
+          return false;
+        }
+      }
 
       return true;
     } catch (e) {
@@ -174,7 +170,8 @@ class ModelManagerService {
 
   // 删除用户导入的模型(内置模型不能删除)
   static Future<bool> deleteUserModel(String modelId) async {
-    if (modelId.endsWith('_builtin')) return false;
+    // 如果有其他同类型的模型，可以删除内置的
+    // if (modelId.endsWith('_builtin')) return false;
 
     await _dbHelper.deleteBriefCusLLMSpecById(modelId);
     return true;

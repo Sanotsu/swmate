@@ -314,9 +314,7 @@ class AdvancedOptionsManager {
     LLModelType.iti: [],
     LLModelType.ttv: [],
     LLModelType.itv: [],
-    LLModelType.audio: [],
     LLModelType.video: [],
-    LLModelType.omni: [],
   };
 
   /// 2 指定平台、指定模型类型特有参数配置

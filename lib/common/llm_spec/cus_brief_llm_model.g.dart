@@ -25,6 +25,9 @@ CusBriefLLMSpec _$CusBriefLLMSpecFromJson(Map<String, dynamic> json) =>
           ? null
           : DateTime.parse(json['gmtCreate'] as String),
       isBuiltin: json['isBuiltin'] as bool? ?? false,
+      baseUrl: json['baseUrl'] as String?,
+      apiKey: json['apiKey'] as String?,
+      description: json['description'] as String?,
     );
 
 Map<String, dynamic> _$CusBriefLLMSpecToJson(CusBriefLLMSpec instance) =>
@@ -42,9 +45,13 @@ Map<String, dynamic> _$CusBriefLLMSpecToJson(CusBriefLLMSpec instance) =>
       'gmtRelease': instance.gmtRelease?.toIso8601String(),
       'gmtCreate': instance.gmtCreate?.toIso8601String(),
       'isBuiltin': instance.isBuiltin,
+      'baseUrl': instance.baseUrl,
+      'apiKey': instance.apiKey,
+      'description': instance.description,
     };
 
 const _$ApiPlatformEnumMap = {
+  ApiPlatform.custom: 'custom',
   ApiPlatform.aliyun: 'aliyun',
   ApiPlatform.baidu: 'baidu',
   ApiPlatform.tencent: 'tencent',
@@ -59,16 +66,13 @@ const _$ApiPlatformEnumMap = {
 
 const _$LLModelTypeEnumMap = {
   LLModelType.cc: 'cc',
-  LLModelType.vision: 'vision',
   LLModelType.reasoner: 'reasoner',
+  LLModelType.vision: 'vision',
+  LLModelType.vision_reasoner: 'vision_reasoner',
   LLModelType.tti: 'tti',
   LLModelType.iti: 'iti',
   LLModelType.image: 'image',
   LLModelType.ttv: 'ttv',
   LLModelType.itv: 'itv',
   LLModelType.video: 'video',
-  LLModelType.audio: 'audio',
-  LLModelType.asr: 'asr',
-  LLModelType.tts: 'tts',
-  LLModelType.omni: 'omni',
 };

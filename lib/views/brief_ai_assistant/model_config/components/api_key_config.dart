@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:swmate/common/components/tool_widget.dart';
 import '../../../../services/cus_get_storage.dart';
 
 class ApiKeyConfig extends StatefulWidget {
@@ -51,14 +53,11 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
       _loadApiKeys();
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('API KEY 导入成功')),
-      );
+
+      EasyLoading.showInfo("API KEY 导入成功");
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('导入失败: $e')),
-      );
+      commonExceptionDialog(context, "导入失败", e.toString());
     }
   }
 
@@ -85,10 +84,7 @@ class _ApiKeyConfigState extends State<ApiKeyConfig> {
       await MyGetStorage().clearUserAKMap();
       _loadApiKeys(); // 重新加载数据
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已清除所有 API Key')),
-      );
+      EasyLoading.showInfo("已清除所有 API Key");
     }
   }
 
