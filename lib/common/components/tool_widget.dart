@@ -516,7 +516,9 @@ commonExceptionDialog(BuildContext context, String title, String message) {
     builder: (context) {
       return AlertDialog(
         title: Text(title),
-        content: Text(message, style: const TextStyle(fontSize: 13)),
+        content: SingleChildScrollView(
+          child: Text(message, style: const TextStyle(fontSize: 13)),
+        ),
         actions: [
           TextButton(
             onPressed: () {

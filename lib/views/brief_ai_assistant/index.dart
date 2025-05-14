@@ -217,20 +217,24 @@ class _BriefAIToolsState extends State<BriefAITools> {
                     title: "高级助手",
                     icon: Icons.psychology,
                     accentColor: Colors.blue.shade600,
-                    isNew: true,
-                  ),
-                  FeatureGridCard(
-                    targetPage: const CharacterListPage(),
-                    title: "角色扮演",
-                    icon: Icons.people_alt,
-                    accentColor: Colors.purple.shade600,
-                    isNew: true,
                   ),
                   FeatureGridCard(
                     targetPage: const BriefChatScreen(),
                     title: "简洁助手",
                     icon: Icons.chat_bubble_outline,
                     accentColor: Colors.green.shade600,
+                  ),
+                  FeatureGridCard(
+                    targetPage: const BriefModelConfig(),
+                    title: "模型管理",
+                    icon: Icons.grid_3x3,
+                    accentColor: Colors.blue.shade600,
+                  ),
+                  FeatureGridCard(
+                    targetPage: const CharacterListPage(),
+                    title: "角色扮演",
+                    icon: Icons.people_alt,
+                    accentColor: Colors.purple.shade600,
                   ),
                   FeatureGridCard(
                     targetPage: const BriefImageScreen(),

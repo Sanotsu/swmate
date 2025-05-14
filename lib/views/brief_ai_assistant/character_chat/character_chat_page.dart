@@ -546,8 +546,9 @@ class _CharacterChatPageState extends State<CharacterChatPage>
   Future<void> selectModel() async {
     final availableModels = await ModelManagerService.getAvailableModelByTypes([
       LLModelType.cc,
-      LLModelType.vision,
       LLModelType.reasoner,
+      LLModelType.vision,
+      LLModelType.vision_reasoner,
     ]);
 
     if (!mounted) return;

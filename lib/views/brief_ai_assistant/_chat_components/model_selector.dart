@@ -106,14 +106,19 @@ class _ModelSelectorState extends State<ModelSelector> {
               itemCount: _filteredModels.length,
               itemBuilder: (context, index) {
                 final model = _filteredModels[index];
+
+                // 自定义导入未预设平台的模型，平台名称从url中取
+                var cusPlat = CP_NAME_MAP[model.platform];
+                if (model.baseUrl != null && model.baseUrl!.isNotEmpty) {
+                  var temps = model.baseUrl!.split('/');
+                  if (temps.length > 2) {
+                    cusPlat = temps[2];
+                  }
+                }
+
                 return ListTile(
-                  title: Text('${CP_NAME_MAP[model.platform]}'),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(model.name ?? model.model),
-                    ],
-                  ),
+                  title: Text(model.name ?? model.model),
+                  subtitle: Text(cusPlat ?? '<未知>'),
                   selected: model == widget.selectedModel,
                   onTap: () => widget.onModelChanged(model),
                   trailing: model == widget.selectedModel

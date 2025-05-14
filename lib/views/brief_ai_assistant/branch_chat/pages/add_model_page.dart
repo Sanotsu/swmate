@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../common/llm_spec/constant_llm_enum.dart';
@@ -16,15 +17,25 @@ class AddModelPage extends StatefulWidget {
 class _AddModelPageState extends State<AddModelPage> {
   ApiPlatform? _selectedPlatform;
   LLModelType? _selectedModelType;
+
+  final _formKey = GlobalKey<FormState>();
   final _modelNameController = TextEditingController();
   final _apiKeyController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  final _baseUrlController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
   @override
   void dispose() {
     _modelNameController.dispose();
     _apiKeyController.dispose();
+    _descriptionController.dispose();
+    _baseUrlController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -48,6 +59,7 @@ class _AddModelPageState extends State<AddModelPage> {
                   labelText: '选择平台',
                   border: OutlineInputBorder(),
                 ),
+                menuMaxHeight: 0.5.sh,
                 items: ApiPlatform.values.map((platform) {
                   return DropdownMenuItem(
                     value: platform,
@@ -74,7 +86,8 @@ class _AddModelPageState extends State<AddModelPage> {
                 items: [
                   LLModelType.cc,
                   LLModelType.reasoner,
-                  LLModelType.vision
+                  LLModelType.vision,
+                  LLModelType.vision_reasoner
                 ].map((type) {
                   return DropdownMenuItem(
                     value: type,
@@ -89,16 +102,29 @@ class _AddModelPageState extends State<AddModelPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 16.sp),
+              SizedBox(height: 16),
+
+              // 如果选择的平台是自定义，则显示url输入框
+              if (_selectedPlatform == ApiPlatform.custom) ...[
+                _buildTextField(
+                  controller: _baseUrlController,
+                  labelText: '请求地址',
+                  hintText: '比如:https://api.deepseek.com/v1',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '请输入请求地址';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 16),
+              ],
 
               // 模型名称输入
-              TextFormField(
+              _buildTextField(
                 controller: _modelNameController,
-                decoration: const InputDecoration(
-                  labelText: '模型名',
-                  hintText: '请输入模型名(作为请求参数的那个)',
-                  border: OutlineInputBorder(),
-                ),
+                labelText: '模型名',
+                hintText: '请输入模型名(作为请求参数的那个,比如:deepseek-reasoner)',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return '请输入模型名';
@@ -106,16 +132,13 @@ class _AddModelPageState extends State<AddModelPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 16.sp),
+              SizedBox(height: 16),
 
               // API Key输入
-              TextFormField(
+              _buildTextField(
                 controller: _apiKeyController,
-                decoration: const InputDecoration(
-                  labelText: 'API Key',
-                  hintText: '请输入API Key',
-                  border: OutlineInputBorder(),
-                ),
+                labelText: 'API Key',
+                hintText: '请输入API Key',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return '请输入API Key';
@@ -123,6 +146,15 @@ class _AddModelPageState extends State<AddModelPage> {
                   return null;
                 },
               ),
+              SizedBox(height: 16),
+
+              // 描述输入
+              _buildTextField(
+                controller: _descriptionController,
+                labelText: '描述(非必填)',
+                hintText: '请输入描述(非必填)',
+              ),
+
               SizedBox(height: 32.sp),
 
               // 提交按钮
@@ -131,6 +163,26 @@ class _AddModelPageState extends State<AddModelPage> {
           ),
         ),
       ),
+    );
+  }
+
+  // 文本输入框
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    required String hintText,
+    FormFieldValidator<String>? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: hintText,
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      ),
+      validator: validator,
+      style: TextStyle(fontSize: 14),
     );
   }
 
@@ -148,25 +200,43 @@ class _AddModelPageState extends State<AddModelPage> {
             _modelNameController.text.trim(),
             _selectedModelType!,
             name: _modelNameController.text.trim(),
+            baseUrl: _baseUrlController.text.trim(),
+            apiKey: _apiKeyController.text.trim(),
+            description: _descriptionController.text.trim(),
             cusLlmSpecId: const Uuid().v4(),
             gmtCreate: DateTime.now(),
           );
 
           // 1. 保存模型规格到数据库
-          await DBBriefAIToolHelper().insertBriefCusLLMSpecList([modelSpec]);
+          try {
+            await DBBriefAIToolHelper().insertBriefCusLLMSpecList([modelSpec]);
+          } catch (e) {
+            if (!mounted) return;
+            if (e.toString().contains("code 2067")) {
+              EasyLoading.showError("该模型已存在,请检查‘平台+模型+模型类型’是否重复");
+            } else {
+              EasyLoading.showError(
+                "新增模型出错,${e.toString()}",
+                duration: Duration(seconds: 5),
+              );
+            }
+
+            return;
+          }
 
           // 2. 保存API Key到缓存(只更新指定平台的AK)
           // 2025-03-14 这里需要根据平台枚举值，来确定对应的AK Label
           // 所以AK Label的枚举值，需要完整包含上面平台的枚举值
-          final akLabel = ApiPlatformAKLabel.values.firstWhere(
-            (label) => label.name.contains(
-              modelSpec.platform.name.toUpperCase(),
-            ),
+          final akLabelList = ApiPlatformAKLabel.values.where(
+            (label) =>
+                label.name.contains(modelSpec.platform.name.toUpperCase()),
           );
-          await MyGetStorage().updatePlatformApiKey(
-            akLabel,
-            _apiKeyController.text.trim(),
-          );
+          if (akLabelList.isNotEmpty) {
+            await MyGetStorage().updatePlatformApiKey(
+              akLabelList.first,
+              _apiKeyController.text.trim(),
+            );
+          }
 
           // 3. 返回新加的模型规格用于被选中
           if (!mounted) return;

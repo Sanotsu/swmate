@@ -63,16 +63,13 @@ Map<String, dynamic> _$MediaGenerationHistoryToJson(
 
 const _$LLModelTypeEnumMap = {
   LLModelType.cc: 'cc',
-  LLModelType.vision: 'vision',
   LLModelType.reasoner: 'reasoner',
+  LLModelType.vision: 'vision',
+  LLModelType.vision_reasoner: 'vision_reasoner',
   LLModelType.tti: 'tti',
   LLModelType.iti: 'iti',
   LLModelType.image: 'image',
   LLModelType.ttv: 'ttv',
   LLModelType.itv: 'itv',
   LLModelType.video: 'video',
-  LLModelType.audio: 'audio',
-  LLModelType.asr: 'asr',
-  LLModelType.tts: 'tts',
-  LLModelType.omni: 'omni',
 };

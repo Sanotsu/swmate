@@ -119,16 +119,6 @@ class _ChatInputBarState extends State<ChatInputBar> {
           ),
         ]);
         break;
-      case LLModelType.audio:
-        tools.add(
-          ToolItem(
-            icon: Icons.mic,
-            label: '音频',
-            type: 'upload_audio',
-            onTap: _handleAudioUpload,
-          ),
-        );
-        break;
       case LLModelType.cc:
       default:
         break;
@@ -271,11 +261,6 @@ class _ChatInputBarState extends State<ChatInputBar> {
         rethrow;
       }
     }
-  }
-
-  // 处理音频上传
-  Future<void> _handleAudioUpload() async {
-    // TODO: 实现音频上传
   }
 
   // 清理选中的媒体文件

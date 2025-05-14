@@ -67,6 +67,7 @@ class _ModelSelectorDialogState extends State<ModelSelectorDialog> {
                   LLModelType.cc,
                   LLModelType.reasoner,
                   LLModelType.vision,
+                  LLModelType.vision_reasoner,
                 ].map((type) {
                   final count =
                       widget.models.where((m) => m.modelType == type).length;

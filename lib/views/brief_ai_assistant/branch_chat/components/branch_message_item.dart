@@ -191,8 +191,7 @@ class _BranchMessageItemState extends State<BranchMessageItem>
           style: const TextStyle(
               fontWeight: FontWeight.bold, color: Colors.black54),
         ),
-        // 默认折叠，避免初始渲染太多内容
-        initiallyExpanded: false,
+        initiallyExpanded: true,
         children: [
           Padding(
             padding: EdgeInsets.only(left: 24.sp),
