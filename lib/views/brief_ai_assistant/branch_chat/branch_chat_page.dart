@@ -44,7 +44,13 @@ import 'pages/add_model_page.dart';
 /// 除非是某个函数内部使用且不再全局其他地方也能使用的方法设为私有，其他都不加下划线
 ///
 class BranchChatPage extends StatefulWidget {
-  const BranchChatPage({super.key});
+  // 切换全屏的回调(如果为null，则不显示全屏按钮)
+  final VoidCallback? onToggleFullScreen;
+
+  const BranchChatPage({
+    super.key,
+    this.onToggleFullScreen,
+  });
 
   @override
   State<BranchChatPage> createState() => _BranchChatPageState();
@@ -127,6 +133,8 @@ class _BranchChatPageState extends State<BranchChatPage>
 
   // 添加会话列表状态
   List<BranchChatSession> sessionList = [];
+
+  bool _isFullScreen = false;
 
   ///******************************************* */
   ///
@@ -392,6 +400,16 @@ class _BranchChatPageState extends State<BranchChatPage>
     }
   }
 
+  void _toggleFullScreen() {
+    setState(() {
+      _isFullScreen = !_isFullScreen;
+    });
+
+    if (widget.onToggleFullScreen != null) {
+      widget.onToggleFullScreen!(); // 调用父组件的回调
+    }
+  }
+
   ///******************************************* */
   ///
   /// 构建UI，从上往下放置相关内容
@@ -486,6 +504,21 @@ class _BranchChatPageState extends State<BranchChatPage>
           /// 悬浮按钮(前面是显示新加对话按钮，后面显示滚动到底部按钮)
           /// 2025-03-13 不放在下面最外层的Stack，是因为如果放在那里，抽屉显示历史记录时，悬浮按钮还在其上层
           buildFloatingButton(),
+
+          // 2025-06-09 如果是打开app直接进入的高级助手页面，可以显示一个全屏按钮
+          // 点击之后隐藏底部导航栏
+          if (widget.onToggleFullScreen != null)
+            Positioned(
+              top: 40,
+              left: 0,
+              child: FloatingActionButton(
+                onPressed: _toggleFullScreen,
+                mini: true,
+                child: Icon(
+                  _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -496,7 +529,13 @@ class _BranchChatPageState extends State<BranchChatPage>
         buildBackground(),
 
         // 主页面
-        mainScaffold,
+        GestureDetector(
+          // 允许子控件（如TextField）接收点击事件
+          behavior: HitTestBehavior.translucent,
+          // 点击空白处可以移除焦点，关闭键盘
+          onTap: unfocusHandle,
+          child: mainScaffold,
+        )
       ],
     );
   }

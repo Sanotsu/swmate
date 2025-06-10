@@ -47,7 +47,7 @@ Future<StreamWithCancel<ComCCResp>> getCCRespWithCancel(
 
   var headers = await ChatService.getHeaders(llmSpec);
   return getSseCcResponse(
-    ChatService.getBaseUrl(llmSpec.platform),
+    "${ChatService.getBaseUrl(llmSpec.platform)}/chat/completions",
     headers,
     body.toJson(),
     stream: stream,
@@ -83,7 +83,7 @@ Future<ComCCResp> getCCResp(
 
   try {
     var respData = await HttpUtils.post(
-      path: ChatService.getBaseUrl(llmSpec.platform),
+      path: "${ChatService.getBaseUrl(llmSpec.platform)}/chat/completions",
       method: CusHttpMethod.post,
       responseType: CusRespType.json,
       headers: headers,

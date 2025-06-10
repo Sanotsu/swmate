@@ -11,7 +11,7 @@ import '../../../get_app_key_helper.dart';
 
 var baseUsda = "https://trackapi.nutritionix.com/v2";
 
-Future<Map<String, String>> _getNutritionixHeaders() async {
+Map<String, String> _getNutritionixHeaders() {
   return {
     'Content-Type': 'application/json',
     'x-app-id': getStoredUserKey(
@@ -65,7 +65,7 @@ Future<NixNaturalNutrientResp> searchNixNutrientFoodByNL(
         // 页面请求上有的，加上试一下
         // 是否行检测，如果是true，那一行只能有1种食物
         "line_delimited": false,
-        "claims": true,
+        // "claims": true,
         "taxonomy": true,
         "use_raw_foods": false
       },
@@ -196,7 +196,7 @@ Future<NixNaturalExerciseResp> searchNixExerciseByNL(
       path: "$baseUsda/natural/exercise",
       // 因为上拉下拉有加载圈，就不显示请求的加载了
       showLoading: false,
-      // 因为存在404找不到单词也保存，但单独处理了，就不在http拦截器中报错了
+      // 因为存在404找不到单词也报错，但单独处理了，就不在http拦截器中报错了
       showErrorMessage: false,
       headers: _getNutritionixHeaders(),
       data: params,

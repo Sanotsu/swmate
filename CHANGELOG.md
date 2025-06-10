@@ -2,6 +2,20 @@
 
 一些较大变更、新功能、bug 修复等记录放在此处，仅做参看的提交更新.
 
+## 0.4.4-beta.1
+
+- feat:
+  - 在直接启动 APP 进入的高级助手页面中，添加全屏/退出全屏按钮
+    - 全屏时不显示底部导航栏
+- fix:
+  - 修正“生活”模块中有用到大模型 API 时都报错的问题，具体：
+    - 实用工具 -> 猫狗之家 -> AI 识别品种
+    - 实用工具 -> 英英词典 -> AI 翻译
+    - 图片动漫 -> MAL 动漫排行 -> 动画详情的翻译按钮
+    - 饮食健康 -> 热量计算器
+    - 内置翻译固定为免费的 GLM-4-Flash-250414
+  - 不再使用`ffmpeg_kit_flutter`相关库、直接编写原生 [AudioConverterPlugin.kt](android/app/src/main/kotlin/com/swm/swmate/AudioConverterPlugin.kt) 实现简单的 m4a 音频文件转 pcm 格式，减少 apk 体积。
+
 ## 0.4.3-beta.1
 
 - feat:
