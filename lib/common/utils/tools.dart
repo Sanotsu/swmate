@@ -12,12 +12,11 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:uuid/uuid.dart';
 
-import '../constants/inner_system_prompt.dart';
 import '../../apis/chat_completion/common_cc_apis.dart';
 import '../../models/brief_ai_tools/chat_competion/com_cc_resp.dart';
 import '../constants/constants.dart';
+import '../constants/inner_system_prompt.dart';
 import '../llm_spec/constant_llm_enum.dart';
 import '../llm_spec/cus_brief_llm_model.dart';
 
@@ -482,10 +481,12 @@ Future<String> getAITranslation(
   String? systemPrompt,
   TargetLanguage? tl,
 }) async {
-  if (systemPrompt == null && tl == TargetLanguage.english) {
-    systemPrompt = translateToEnglish();
-  } else {
-    systemPrompt = translateToChinese();
+  if (systemPrompt == null) {
+    if (tl == TargetLanguage.english) {
+      systemPrompt = translateToEnglish();
+    } else {
+      systemPrompt = translateToChinese();
+    }
   }
 
   List<CCMessage> msgs = [
@@ -499,12 +500,12 @@ Future<String> getAITranslation(
   // 2025-02-28 这里非常简单的使用指定内嵌的一个模型，理论上这个模型一定在的，也便宜
   CusBriefLLMSpec model = CusBriefLLMSpec(
     ApiPlatform.zhipu,
-    "glm-4-flash",
+    "glm-4-flash-250414",
     LLModelType.cc,
     name: "glm-4-flash",
     isFree: true,
     isBuiltin: true,
-    cusLlmSpecId: Uuid().v4(),
+    cusLlmSpecId: "FOR_TRANSLATION_glm-4-flash_builtin",
   );
 
   // 完全没处理错误情况

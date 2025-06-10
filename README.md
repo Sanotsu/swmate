@@ -1,4 +1,10 @@
-2025-05-14：
+## 2025-06-09：
+
+随着新的项目 [Sanotsu/SuChat-Lite](https://github.com/Sanotsu/SuChat-Lite) 中逐步完善了本项目已有的功能、以及添加了新的功能，这个项目更新频率会大幅降低，最终可能会合并成一个。
+
+查看本项目的 [CHANGELOG](CHANGELOG.md) 了解更新内容。
+
+## 2025-05-14：
 
 推荐使用新的项目 [Sanotsu/SuChat-Lite](https://github.com/Sanotsu/SuChat-Lite)，一些主要改动：
 
@@ -14,7 +20,7 @@
 ![桌面端主页](_doc/suchat_snapshots/suchat_chat_page.jpg)
 
 移动端截图:
-![移动端截图](_doc/suchat_snapshots/snapshot.jpg)
+![移动端截图](_doc/suchat_snapshots/suchat_mobile.jpg)
 
 ---
 
@@ -439,25 +445,6 @@ Framework • revision c236373904 (7 天前) • 2025-03-13 16:17:06 -0400
 Engine • revision 18b71d647a
 Tools • Dart 3.7.2 • DevTools 2.42.3
 ```
-
-<details>
-
-<summary>关于使用讯飞云语音转文字的相关说明</summary>
-
-之前使用 audio_waveforms 录制语音和展示波形，但是录制的格式不支持讯飞云语音转文字的 pcm（pcm_s16le），wav，speex(speex-wb)。  
-所以使用 ffmpeg_kit_flutter 把 m4a 转换为 pcm 格式，然后给讯飞云转文字。
-
-但是新版本 flutter3.29 之后，ffmpeg_kit_flutter 启动运行会[项目报错](https://github.com/arthenica/ffmpeg-kit/issues/1110)。  
-准备替换为 record 库，直接录制 wav、 pcm 格式，然后给讯飞云转文字。但是识别效果极差，完全不对，且 VoiceWaveBubble 无法正常使用。
-
-虽然 ffmpeg_kit_flutter 已经是 DISCONTINUED 状态，2025-04-01 之后该库部分二进制文件也会被删除，之后就无法使用。
-但还是继续使用 audio_waveforms 录制 m4a 格式，然后使用 ffmpeg_kit_flutter 转换为 pcm 格式给讯飞云转文字。
-
-之后再找找其他方式。
-
-</details>
-
----
 
 <details>
 

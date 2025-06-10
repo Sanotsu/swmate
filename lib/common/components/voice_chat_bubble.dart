@@ -124,9 +124,10 @@ class _VoiceWaveBubbleState extends State<VoiceWaveBubble> {
             SizedBox(width: 5.sp),
             AudioFileWaveforms(
               // size: Size(widget.width ?? 200, 20),
-              size: Size(1.sw / 60 / 2 * voiceDuration, 20),
+              // size: Size(1.sw / 60 / 2 * voiceDuration, 20),
+              size: Size(0.3.sw, 20),
               playerController: controller,
-              waveformType: WaveformType.fitWidth,
+              waveformType: WaveformType.long,
               playerWaveStyle: playerWaveStyle,
             ),
 

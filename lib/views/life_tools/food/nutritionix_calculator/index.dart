@@ -115,7 +115,6 @@ class _NixSimpleCalculatorState extends State<NixSimpleCalculator>
   }
 
   Future<String> _translateText(String text) async {
-    // 如果tab索引为0,即查询食物；否则就是运动
     return await getAITranslation(
       text,
       systemPrompt: translateToEnglish(),
@@ -141,6 +140,7 @@ class _NixSimpleCalculatorState extends State<NixSimpleCalculator>
     });
 
     try {
+      // 如果tab索引为0,即查询食物；否则就是运动
       if (_tabController.index == 0) {
         var rst = await searchNixNutrientFoodByNL(query);
 
